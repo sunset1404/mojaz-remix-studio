@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays } from "lucide-react";
+import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import reciter1 from "@/assets/reciters/reciter1.jpg";
@@ -177,7 +177,12 @@ const Index = () => {
           className="rounded-2xl bg-primary/5 border border-primary/10 p-4">
 
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-foreground text-base">🎙️ المقرئون</h2>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Mic className="w-4 h-4 text-primary" />
+              </div>
+              <h2 className="font-bold text-foreground text-base">المقرئون</h2>
+            </div>
             <Link to="/reciters" className="flex items-center gap-1 text-xs text-primary font-semibold">
               المزيد <ChevronLeft className="w-3.5 h-3.5" />
             </Link>
