@@ -17,9 +17,9 @@ const topReciters = [
 ];
 
 const promoSlides = [
-  { title: "خصم 50% على الاشتراك السنوي", desc: "اغتنم الفرصة واشترك الآن بنصف السعر", emoji: "🎉", bg: "from-primary to-primary/80" },
-  { title: "ميزة جديدة: التسميع الصوتي", desc: "سجّل تلاوتك واحصل على تقييم فوري", emoji: "🎙️", bg: "from-gold to-gold/80" },
-  { title: "تحدّي الأسبوع: احفظ سورة الملك", desc: "شارك في التحدي واربح نجوم إضافية", emoji: "🏆", bg: "from-primary to-turquoise-dark" },
+  { title: "خصم 50% على الاشتراك السنوي", desc: "اغتنم الفرصة واشترك الآن بنصف السعر", emoji: "🎉", bg: "from-primary to-primary/80", dark: false },
+  { title: "ميزة جديدة: التسميع الصوتي", desc: "سجّل تلاوتك واحصل على تقييم فوري", emoji: "🎙️", bg: "from-beige to-beige-dark", dark: true },
+  { title: "تحدّي الأسبوع: احفظ سورة الملك", desc: "شارك في التحدي واربح نجوم إضافية", emoji: "🏆", bg: "from-primary to-turquoise-dark", dark: false },
 ];
 
 const quickStats = [
@@ -81,12 +81,12 @@ const Index = () => {
                   opacity: i === currentSlide ? 1 : 0.5,
                 }}
                 transition={{ type: "spring", stiffness: 200, damping: 30 }}
-                className={`absolute inset-0 bg-gradient-to-l ${slide.bg} rounded-2xl p-4 flex items-center gap-3 border border-primary-foreground/20`}
+                className={`absolute inset-0 bg-gradient-to-l ${slide.bg} rounded-2xl p-4 flex items-center gap-3 border ${slide.dark ? "border-beige-dark/30" : "border-primary-foreground/20"}`}
               >
                 <span className="text-3xl">{slide.emoji}</span>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-primary-foreground font-bold text-sm leading-tight">{slide.title}</h3>
-                  <p className="text-primary-foreground/80 text-xs mt-1 leading-tight">{slide.desc}</p>
+                  <h3 className={`font-bold text-sm leading-tight ${slide.dark ? "text-foreground" : "text-primary-foreground"}`}>{slide.title}</h3>
+                  <p className={`text-xs mt-1 leading-tight ${slide.dark ? "text-muted-foreground" : "text-primary-foreground/80"}`}>{slide.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -263,7 +263,7 @@ const Index = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-2xl">💎</span>
-                    <span className="text-primary-foreground/70 text-xs font-medium bg-primary-foreground/15 px-2 py-0.5 rounded-full">الباقة الذهبية</span>
+                    <span className="text-foreground text-xs font-medium bg-beige px-2.5 py-1 rounded-full border border-beige-dark/30">الباقة الذهبية</span>
                   </div>
                   <h3 className="text-primary-foreground font-bold text-lg mt-2">45 دقيقة متبقية</h3>
                   <p className="text-primary-foreground/70 text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
