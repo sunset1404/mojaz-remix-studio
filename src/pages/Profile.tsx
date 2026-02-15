@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
-import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Shield, Camera, Award } from "lucide-react";
+import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Shield, Camera, Award, CalendarDays } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const menuItems = [
   { icon: User, label: "البيانات الشخصية", desc: "الاسم، الجوال، البريد", path: "/profile/edit" },
   { icon: Award, label: "الإجازات والشهادات", desc: "إجازاتي وشهاداتي المعتمدة", path: "/certificates" },
-  
+  { icon: CalendarDays, label: "خطتي الأسبوعية", desc: "عرض وتعديل خطة الحفظ", path: "/weekly-plan" },
   { icon: Bell, label: "الإشعارات", desc: "تخصيص التنبيهات" },
   { icon: Moon, label: "المظهر", desc: "فاتح / داكن" },
   { icon: Shield, label: "الخصوصية والأمان", desc: "كلمة المرور، الجلسات" },
