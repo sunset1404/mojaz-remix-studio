@@ -230,9 +230,9 @@ const Index = () => {
               >
                 <Link
                   to={feature.path}
-                  className="glass-card rounded-2xl p-3 flex flex-col gap-1.5 hover:shadow-xl transition-all group block"
+                  className="glass-card rounded-2xl p-4 flex flex-col gap-2 hover:shadow-xl transition-all group block"
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
                     feature.color === "gold" ? "bg-gold/15" : "bg-primary/10"
                   }`}>
                     <feature.icon className={`w-5 h-5 ${
@@ -240,9 +240,10 @@ const Index = () => {
                     }`} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{feature.title}</h3>
-                    <p className="text-[11px] text-muted-foreground">{feature.desc}</p>
+                    <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">{feature.title}</h3>
+                    <p className="text-xs text-muted-foreground">{feature.desc}</p>
                   </div>
+                  <ChevronLeft className="w-4 h-4 text-muted-foreground self-start mt-auto group-hover:text-primary transition-colors" />
                 </Link>
               </motion.div>
             ))}
