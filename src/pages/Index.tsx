@@ -6,12 +6,14 @@ import reciter1 from "@/assets/reciters/reciter1.jpg";
 import reciter2 from "@/assets/reciters/reciter2.jpg";
 import reciter3 from "@/assets/reciters/reciter3.jpg";
 import reciter4 from "@/assets/reciters/reciter4.jpg";
+import reciter5 from "@/assets/reciters/reciter5.jpg";
 
 const topReciters = [
   { name: "أحمد العجمي", image: reciter1 },
   { name: "ماهر المعيقلي", image: reciter2 },
   { name: "عبدالرحمن السديس", image: reciter3 },
   { name: "سعد الغامدي", image: reciter4 },
+  { name: "فارس عبّاد", image: reciter5 },
 ];
 
 const promoSlides = [
@@ -173,9 +175,10 @@ const Index = () => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.65 }}
+          className="rounded-2xl bg-primary/5 border border-primary/10 p-4"
         >
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-foreground text-base">المقرئون</h2>
+            <h2 className="font-bold text-foreground text-base">🎙️ المقرئون</h2>
             <Link to="/reciters" className="flex items-center gap-1 text-xs text-primary font-semibold">
               المزيد <ChevronLeft className="w-3.5 h-3.5" />
             </Link>
