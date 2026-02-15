@@ -32,7 +32,7 @@ const BottomNav = () => {
                   active ? "animate-pulse-glow" : ""}`
                   }>
 
-                    <tab.icon className="w-5 h-5 text-primary-foreground" />
+                    <tab.icon className="w-6 h-6 text-primary-foreground" />
                   </motion.div> :
 
                 <motion.div
@@ -42,7 +42,7 @@ const BottomNav = () => {
                   }
                   whileTap={{ scale: 0.9 }}>
 
-                    <tab.icon className={`w-5 h-5 shrink-0 transition-colors ${
+                    <tab.icon className={`w-6 h-6 shrink-0 transition-colors ${
                   active ? "text-primary" : "text-muted-foreground"}`
                   } />
                     <AnimatePresence>
