@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Check, Clock, Star, BookOpen, ChevronRight, ChevronLeft, Pencil, Trash2, X, Mic, BookMarked, Award } from "lucide-react";
+import { Plus, Check, Clock, Star, BookOpen, ChevronRight, ChevronLeft, Pencil, Trash2, X, Mic, BookMarked, Award, Layers, FileText, BookOpenCheck } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -24,20 +24,28 @@ const goalTypes = [
   { key: "ijaza", label: "إجازة قرآنية", icon: Award, desc: "الحصول على إجازة في رواية" },
 ];
 
+const scopeTypes = [
+  { key: "full", label: "القرآن كاملاً", icon: BookOpenCheck, desc: "ختمة كاملة للقرآن الكريم" },
+  { key: "juz", label: "أجزاء محددة", icon: Layers, desc: "اختيار أجزاء معينة من القرآن" },
+  { key: "surah", label: "سور محددة", icon: FileText, desc: "اختيار سور معينة من القرآن" },
+];
+
 type Plan = {
   id: number;
   days: string[];
   time: string;
   goal: string;
   goalLabel: string;
+  scope: string;
+  scopeLabel: string;
 };
 
 const initialPlans: Plan[] = [
-  { id: 1, days: ["sat", "mon", "wed"], time: "بعد الفجر", goal: "hifz", goalLabel: "حفظ" },
-  { id: 2, days: ["sun", "tue", "thu"], time: "بعد المغرب", goal: "tasmee", goalLabel: "تسميع" },
+  { id: 1, days: ["sat", "mon", "wed"], time: "بعد الفجر", goal: "hifz", goalLabel: "حفظ", scope: "juz", scopeLabel: "أجزاء محددة" },
+  { id: 2, days: ["sun", "tue", "thu"], time: "بعد المغرب", goal: "tasmee", goalLabel: "تسميع", scope: "full", scopeLabel: "القرآن كاملاً" },
 ];
 
-const steps = ["الهدف", "الأيام", "الوقت"];
+const steps = ["الهدف", "المقدار", "الأيام", "الوقت"];
 
 const WeeklyPlan = () => {
   const navigate = useNavigate();
@@ -48,12 +56,14 @@ const WeeklyPlan = () => {
 
   // Wizard state
   const [selectedGoal, setSelectedGoal] = useState("");
+  const [selectedScope, setSelectedScope] = useState("");
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedTime, setSelectedTime] = useState("");
 
   const resetWizard = () => {
     setCurrentStep(0);
     setSelectedGoal("");
+    setSelectedScope("");
     setSelectedDays([]);
     setSelectedTime("");
     setEditingPlan(null);
@@ -68,6 +78,7 @@ const WeeklyPlan = () => {
   const openEditWizard = (plan: Plan) => {
     setEditingPlan(plan);
     setSelectedGoal(plan.goal);
+    setSelectedScope(plan.scope);
     setSelectedDays(plan.days);
     setSelectedTime(plan.time);
     setCurrentStep(0);
@@ -80,19 +91,23 @@ const WeeklyPlan = () => {
 
   const canNext = () => {
     if (currentStep === 0) return selectedGoal !== "";
-    if (currentStep === 1) return selectedDays.length > 0;
-    if (currentStep === 2) return selectedTime !== "";
+    if (currentStep === 1) return selectedScope !== "";
+    if (currentStep === 2) return selectedDays.length > 0;
+    if (currentStep === 3) return selectedTime !== "";
     return false;
   };
 
   const handleFinish = () => {
     const goalInfo = goalTypes.find(g => g.key === selectedGoal);
+    const scopeInfo = scopeTypes.find(s => s.key === selectedScope);
     const newPlan: Plan = {
       id: editingPlan ? editingPlan.id : Date.now(),
       days: selectedDays,
       time: selectedTime,
       goal: selectedGoal,
       goalLabel: goalInfo?.label || "",
+      scope: selectedScope,
+      scopeLabel: scopeInfo?.label || "",
     };
 
     if (editingPlan) {
@@ -170,9 +185,12 @@ const WeeklyPlan = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-foreground text-sm">{plan.goalLabel}</h3>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <Clock className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-[10px] text-muted-foreground">{plan.time}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-[10px] text-muted-foreground">{plan.time}</span>
+                          </div>
+                          <span className="text-[10px] text-gold font-semibold">• {plan.scopeLabel}</span>
                         </div>
                       </div>
                     </div>
@@ -265,7 +283,7 @@ const WeeklyPlan = () => {
                       }`}>{step}</span>
                     </div>
                     {i < steps.length - 1 && (
-                      <div className={`w-12 h-0.5 mx-1 mb-4 rounded-full transition-colors ${
+                      <div className={`w-8 h-0.5 mx-0.5 mb-4 rounded-full transition-colors ${
                         i < currentStep ? "bg-primary" : "bg-muted"
                       }`} />
                     )}
@@ -327,6 +345,47 @@ const WeeklyPlan = () => {
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -30 }}
+                    className="space-y-3"
+                  >
+                    <p className="text-sm text-muted-foreground mb-4">حدد مقدار الحفظ أو المراجعة</p>
+                    {scopeTypes.map((scope, idx) => {
+                      const bgTints = ["bg-primary/[0.03]", "bg-accent/30", "bg-accent/20"];
+                      return (
+                        <button
+                          key={scope.key}
+                          onClick={() => setSelectedScope(scope.key)}
+                          className={`w-full rounded-2xl p-4 flex items-center gap-3 transition-all border-2 ${
+                            selectedScope === scope.key
+                              ? "border-primary bg-primary/10 shadow-sm"
+                              : `border-border ${bgTints[idx % bgTints.length]} hover:border-primary/30`
+                          }`}
+                        >
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            selectedScope === scope.key ? "bg-primary/15" : "bg-muted/60"
+                          }`}>
+                            <scope.icon className="w-5 h-5 text-gold" />
+                          </div>
+                          <div className="text-right flex-1">
+                            <p className="font-bold text-foreground text-sm">{scope.label}</p>
+                            <p className="text-[10px] text-muted-foreground">{scope.desc}</p>
+                          </div>
+                          {selectedScope === scope.key && (
+                            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+
+                {currentStep === 2 && (
+                  <motion.div
+                    key="step2"
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -30 }}
                   >
                     <p className="text-sm text-muted-foreground mb-4">اختر أيام الأسبوع المناسبة</p>
                     <div className="grid grid-cols-2 gap-2">
@@ -361,9 +420,9 @@ const WeeklyPlan = () => {
                   </motion.div>
                 )}
 
-                {currentStep === 2 && (
+                {currentStep === 3 && (
                   <motion.div
-                    key="step2"
+                    key="step3"
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -30 }}
