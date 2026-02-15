@@ -254,25 +254,25 @@ const Index = () => {
           whileTap={{ scale: 0.98 }}
         >
           <Link to="/subscription" className="block">
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-primary via-primary to-turquoise-dark p-5 shadow-xl">
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-primary to-turquoise-dark p-5 shadow-xl">
               {/* Decorative elements */}
-              <div className="absolute top-0 left-0 w-28 h-28 rounded-full bg-beige/20 blur-2xl" />
-              <div className="absolute bottom-0 right-0 w-24 h-24 rounded-full bg-beige-dark/20 blur-xl" />
+              <div className="absolute top-0 left-0 w-28 h-28 rounded-full bg-gold/15 blur-2xl" />
+              <div className="absolute bottom-0 right-0 w-24 h-24 rounded-full bg-gold/10 blur-xl" />
               
               <div className="relative z-10 flex items-center gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">✦</span>
-                    <span className="text-turquoise-dark text-xs font-bold bg-beige px-3 py-1 rounded-full">الباقة الذهبية</span>
+                    <span className="text-gold text-lg">✦</span>
+                    <span className="text-turquoise-dark text-xs font-bold bg-gold px-3 py-1 rounded-full">الباقة الذهبية</span>
                   </div>
-                  <h3 className="text-beige font-bold text-lg">45 دقيقة متبقية</h3>
-                  <p className="text-beige/80 text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
+                  <h3 className="text-white font-bold text-lg">45 دقيقة متبقية</h3>
+                  <p className="text-gray-300 text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <div className="w-16 h-16 rounded-full bg-beige/15 border-[3px] border-beige/60 flex items-center justify-center">
-                    <span className="text-beige font-extrabold text-base">37%</span>
+                  <div className="w-16 h-16 rounded-full bg-gray-400/20 border-[3px] border-gold/70 flex items-center justify-center">
+                    <span className="text-gold font-extrabold text-base">37%</span>
                   </div>
-                  <span className="text-beige-dark text-[10px] font-medium">متبقي</span>
+                  <span className="text-gray-300 text-[10px] font-medium">متبقي</span>
                 </div>
               </div>
             </div>
