@@ -174,7 +174,7 @@ const Index = () => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.65 }}
-          className="rounded-2xl bg-primary/5 border border-primary/10 p-4">
+          className="glass-card rounded-2xl p-4">
 
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
