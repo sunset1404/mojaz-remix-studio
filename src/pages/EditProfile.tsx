@@ -11,7 +11,6 @@ const personalFields = [
   { icon: Calendar, key: "joinDate" as const, label: "تاريخ الانضمام", type: "text", editable: true },
 ];
 
-
 const EditProfile = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
@@ -100,7 +99,6 @@ const EditProfile = () => {
           ))}
         </div>
       </div>
-
 
       {/* Save Button - only visible in edit mode */}
       <AnimatePresence>
