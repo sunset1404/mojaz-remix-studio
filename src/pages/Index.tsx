@@ -17,9 +17,9 @@ const topReciters = [
 ];
 
 const promoSlides = [
-  { title: "خصم 50% على الاشتراك السنوي", desc: "اغتنم الفرصة واشترك الآن بنصف السعر", emoji: "🎉", bg: "from-primary to-primary/80", dark: false },
-  { title: "ميزة جديدة: التسميع الصوتي", desc: "سجّل تلاوتك واحصل على تقييم فوري", emoji: "🎙️", bg: "from-beige to-beige-dark", dark: true },
-  { title: "تحدّي الأسبوع: احفظ سورة الملك", desc: "شارك في التحدي واربح نجوم إضافية", emoji: "🏆", bg: "from-primary to-turquoise-dark", dark: false },
+  { title: "خصم 50% على الاشتراك السنوي", desc: "اغتنم الفرصة واشترك الآن بنصف السعر", emoji: "🎉", bg: "from-primary to-primary/80" },
+  { title: "ميزة جديدة: التسميع الصوتي", desc: "سجّل تلاوتك واحصل على تقييم فوري", emoji: "🎙️", bg: "from-gold to-gold/80" },
+  { title: "تحدّي الأسبوع: احفظ سورة الملك", desc: "شارك في التحدي واربح نجوم إضافية", emoji: "🏆", bg: "from-primary to-turquoise-dark" },
 ];
 
 const quickStats = [
@@ -81,12 +81,12 @@ const Index = () => {
                   opacity: i === currentSlide ? 1 : 0.5,
                 }}
                 transition={{ type: "spring", stiffness: 200, damping: 30 }}
-                className={`absolute inset-0 bg-gradient-to-l ${slide.bg} rounded-2xl p-4 flex items-center gap-3 border ${slide.dark ? "border-beige-dark/30" : "border-primary-foreground/20"}`}
+                className={`absolute inset-0 bg-gradient-to-l ${slide.bg} rounded-2xl p-4 flex items-center gap-3 border border-primary-foreground/20`}
               >
                 <span className="text-3xl">{slide.emoji}</span>
                 <div className="flex-1 min-w-0">
-                  <h3 className={`font-bold text-sm leading-tight ${slide.dark ? "text-foreground" : "text-primary-foreground"}`}>{slide.title}</h3>
-                  <p className={`text-xs mt-1 leading-tight ${slide.dark ? "text-muted-foreground" : "text-primary-foreground/80"}`}>{slide.desc}</p>
+                  <h3 className="text-primary-foreground font-bold text-sm leading-tight">{slide.title}</h3>
+                  <p className="text-primary-foreground/80 text-xs mt-1 leading-tight">{slide.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -255,27 +255,24 @@ const Index = () => {
         >
           <Link to="/subscription" className="block">
             <div className="relative rounded-2xl overflow-hidden bg-gradient-to-l from-primary via-primary/90 to-turquoise-dark p-5 shadow-lg">
-              {/* Decorative beige accents */}
-              <div className="absolute top-3 left-3 w-20 h-20 rounded-full bg-beige/10 blur-xl" />
-              <div className="absolute bottom-0 right-0 w-28 h-28 rounded-full bg-beige/8 blur-2xl" />
-              <div className="absolute top-1/2 left-1/4 w-12 h-12 rounded-full bg-gold/10 blur-lg" />
-              <div className="absolute top-3 left-3 w-16 h-16 rounded-full border border-beige/15 opacity-40" />
-              <div className="absolute bottom-2 left-10 w-8 h-8 rounded-full border border-beige/10 opacity-25" />
+              {/* Decorative elements */}
+              <div className="absolute top-3 left-3 w-16 h-16 rounded-full border border-primary-foreground/10 opacity-30" />
+              <div className="absolute bottom-2 left-10 w-8 h-8 rounded-full border border-primary-foreground/10 opacity-20" />
               
               <div className="relative z-10 flex items-center gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-2xl">💎</span>
-                    <span className="text-foreground text-xs font-medium bg-beige px-2.5 py-1 rounded-full border border-gold/20 shadow-sm">الباقة الذهبية</span>
+                    <span className="text-primary-foreground/70 text-xs font-medium bg-primary-foreground/15 px-2 py-0.5 rounded-full">الباقة الذهبية</span>
                   </div>
                   <h3 className="text-primary-foreground font-bold text-lg mt-2">45 دقيقة متبقية</h3>
-                  <p className="text-beige text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
+                  <p className="text-primary-foreground/70 text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <div className="w-14 h-14 rounded-full border-[3px] border-beige/40 flex items-center justify-center bg-beige/10">
-                    <span className="text-beige font-bold text-sm">37%</span>
+                  <div className="w-14 h-14 rounded-full border-[3px] border-primary-foreground/30 flex items-center justify-center">
+                    <span className="text-primary-foreground font-bold text-sm">37%</span>
                   </div>
-                  <span className="text-beige/70 text-[10px]">متبقي</span>
+                  <span className="text-primary-foreground/60 text-[10px]">متبقي</span>
                 </div>
               </div>
             </div>
