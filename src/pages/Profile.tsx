@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { User, Phone, Mail, MapPin, BookOpen, Award, Calendar, ChevronLeft, LogOut, Settings, Bell, Moon, Shield, Camera, GraduationCap } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const personalInfo = [
   { icon: Phone, label: "رقم الجوال", value: "+966 50 123 4567" },
@@ -78,12 +79,17 @@ const Profile = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <h2 className="font-bold text-foreground text-base mb-3 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <User className="w-4 h-4 text-primary" />
-            </div>
-            البيانات الشخصية
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-foreground text-base flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <User className="w-4 h-4 text-primary" />
+              </div>
+              البيانات الشخصية
+            </h2>
+            <Link to="/profile/edit" className="text-xs text-primary font-semibold flex items-center gap-1">
+              تعديل <ChevronLeft className="w-3.5 h-3.5" />
+            </Link>
+          </div>
           <div className="glass-card rounded-2xl overflow-hidden">
             {personalInfo.map((info, i) => (
               <motion.div
