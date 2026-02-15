@@ -45,13 +45,13 @@ const BottomNav = () => {
                     <tab.icon className={`w-6 h-6 shrink-0 transition-colors ${
                   active ? "text-primary" : "text-muted-foreground"}`
                   } />
-                    <AnimatePresence>
+                    <AnimatePresence mode="wait">
                       {active &&
                     <motion.span
                       initial={{ opacity: 0, width: 0 }}
                       animate={{ opacity: 1, width: "auto" }}
                       exit={{ opacity: 0, width: 0 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
                       className="text-[11px] font-medium text-primary whitespace-nowrap overflow-hidden">
 
                           {tab.label}
