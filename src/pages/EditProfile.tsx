@@ -1,13 +1,14 @@
-import { motion } from "framer-motion";
-import { User, Phone, Mail, MapPin, Calendar, ChevronRight, Camera, Save, GraduationCap } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Phone, Mail, MapPin, Calendar, ChevronRight, Camera, Save, GraduationCap, Pencil } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const personalInfo = [
-  { icon: Phone, key: "phone" as const, label: "رقم الجوال", type: "tel" },
-  { icon: Mail, key: "email" as const, label: "البريد الإلكتروني", type: "email" },
-  { icon: MapPin, key: "city" as const, label: "المدينة", type: "text" },
-  { icon: Calendar, key: "joinDate" as const, label: "تاريخ الانضمام", type: "text" },
+const personalFields = [
+  { icon: User, key: "name" as const, label: "الاسم الكامل", type: "text", editable: true },
+  { icon: Phone, key: "phone" as const, label: "رقم الجوال", type: "tel", editable: true },
+  { icon: Mail, key: "email" as const, label: "البريد الإلكتروني", type: "email", editable: false },
+  { icon: MapPin, key: "city" as const, label: "المدينة", type: "text", editable: true },
+  { icon: Calendar, key: "joinDate" as const, label: "تاريخ الانضمام", type: "text", editable: true },
 ];
 
 const ijazat = [
@@ -17,6 +18,7 @@ const ijazat = [
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({
     name: "عبدالله محمد",
     phone: "+966 50 123 4567",
@@ -35,7 +37,16 @@ const EditProfile = () => {
               <ChevronRight className="w-5 h-5 text-primary-foreground" />
             </button>
             <h1 className="text-lg font-bold text-primary-foreground">البيانات الشخصية</h1>
-            <div className="w-9" />
+            {!isEditing ? (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="w-9 h-9 rounded-xl bg-primary-foreground/15 flex items-center justify-center"
+              >
+                <Pencil className="w-4 h-4 text-primary-foreground" />
+              </button>
+            ) : (
+              <div className="w-9" />
+            )}
           </div>
 
           {/* Avatar */}
@@ -43,14 +54,20 @@ const EditProfile = () => {
             <div className="w-24 h-24 rounded-full bg-primary-foreground/20 backdrop-blur-sm border-4 border-primary-foreground/30 flex items-center justify-center overflow-hidden">
               <User className="w-10 h-10 text-primary-foreground/60" />
             </div>
-            <button className="absolute bottom-0 left-0 w-8 h-8 rounded-full bg-gold flex items-center justify-center shadow-lg border-2 border-primary-foreground">
-              <Camera className="w-4 h-4 text-gold-foreground" />
-            </button>
+            {isEditing && (
+              <motion.button
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute bottom-0 left-0 w-8 h-8 rounded-full bg-gold flex items-center justify-center shadow-lg border-2 border-primary-foreground"
+              >
+                <Camera className="w-4 h-4 text-gold-foreground" />
+              </motion.button>
+            )}
           </div>
         </motion.div>
       </div>
 
-      {/* Personal Info Fields */}
+      {/* Personal Info */}
       <div className="px-5 mt-6">
         <h2 className="font-bold text-foreground text-base mb-3 flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -59,47 +76,30 @@ const EditProfile = () => {
           البيانات الشخصية
         </h2>
 
-        {/* Name field */}
-        <motion.div
-          initial={{ x: 30, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="glass-card rounded-2xl p-4 mb-3"
-        >
-          <label className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
-            <User className="w-3.5 h-3.5 text-primary" />
-            الاسم الكامل
-          </label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full bg-transparent text-sm font-semibold text-foreground outline-none"
-            dir="rtl"
-          />
-        </motion.div>
-
-        {/* Other fields */}
         <div className="space-y-3">
-          {personalInfo.map((field, i) => (
+          {personalFields.map((field, i) => (
             <motion.div
               key={field.key}
               initial={{ x: 30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.25 + i * 0.06 }}
-              className="glass-card rounded-2xl p-4"
+              transition={{ delay: 0.2 + i * 0.06 }}
+              className={`glass-card rounded-2xl p-4 ${isEditing && !field.editable ? "opacity-60" : ""}`}
             >
               <label className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
                 <field.icon className="w-3.5 h-3.5 text-primary" />
                 {field.label}
               </label>
-              <input
-                type={field.type}
-                value={form[field.key]}
-                onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                className="w-full bg-transparent text-sm font-semibold text-foreground outline-none"
-                dir="rtl"
-              />
+              {isEditing && field.editable ? (
+                <input
+                  type={field.type}
+                  value={form[field.key]}
+                  onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                  className="w-full bg-transparent text-sm font-semibold text-foreground outline-none border-b border-primary/30 pb-1"
+                  dir="rtl"
+                />
+              ) : (
+                <p className="text-sm font-semibold text-foreground">{form[field.key]}</p>
+              )}
             </motion.div>
           ))}
         </div>
@@ -147,19 +147,25 @@ const EditProfile = () => {
         </motion.div>
       </div>
 
-      {/* Save Button */}
-      <div className="px-5 mt-6">
-        <motion.button
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          whileTap={{ scale: 0.97 }}
-          className="w-full gradient-primary text-primary-foreground py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg"
-        >
-          <Save className="w-5 h-5" />
-          حفظ التعديلات
-        </motion.button>
-      </div>
+      {/* Save Button - only visible in edit mode */}
+      <AnimatePresence>
+        {isEditing && (
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 30, opacity: 0 }}
+            className="px-5 mt-6"
+          >
+            <button
+              onClick={() => setIsEditing(false)}
+              className="w-full gradient-primary text-primary-foreground py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg"
+            >
+              <Save className="w-5 h-5" />
+              حفظ التعديلات
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
