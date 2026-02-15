@@ -1,7 +1,18 @@
 import { motion } from "framer-motion";
-import { BookOpen, Star, Calendar, Trophy, ChevronLeft } from "lucide-react";
+import { BookOpen, Star, Calendar, Trophy, ChevronLeft, ChevronLeft as ChevronMore } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
+import reciter1 from "@/assets/reciters/reciter1.jpg";
+import reciter2 from "@/assets/reciters/reciter2.jpg";
+import reciter3 from "@/assets/reciters/reciter3.jpg";
+import reciter4 from "@/assets/reciters/reciter4.jpg";
+
+const topReciters = [
+  { name: "أحمد العجمي", image: reciter1 },
+  { name: "ماهر المعيقلي", image: reciter2 },
+  { name: "عبدالرحمن السديس", image: reciter3 },
+  { name: "سعد الغامدي", image: reciter4 },
+];
 
 const promoSlides = [
   { title: "خصم 50% على الاشتراك السنوي", desc: "اغتنم الفرصة واشترك الآن بنصف السعر", emoji: "🎉", bg: "from-primary to-primary/80" },
@@ -17,7 +28,6 @@ const quickStats = [
 ];
 
 const features = [
-  { title: "المقرئون", desc: "اختر مقرئك المفضل", icon: "🎙️", path: "/reciters" },
   { title: "خطتي الأسبوعية", desc: "تابع تقدمك اليومي", icon: "📅", path: "/weekly-plan" },
   { title: "إنجازاتي", desc: "شاهد تقدمك", icon: "🏆", path: "/achievements" },
   { title: "الاشتراكات", desc: "اكتشف الباقات", icon: "💎", path: "/subscription" },
@@ -153,6 +163,49 @@ const Index = () => {
                 متابعة الحفظ
               </Link>
             </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Reciters Section */}
+      <div className="px-5 mt-6">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.65 }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-foreground text-base">المقرئون</h2>
+            <Link to="/reciters" className="flex items-center gap-1 text-xs text-primary font-semibold">
+              المزيد <ChevronLeft className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+            {topReciters.map((reciter, i) => (
+              <motion.div
+                key={reciter.name}
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.7 + i * 0.08 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link
+                  to="/reciters"
+                  className="flex flex-col items-center gap-2 w-[76px] group"
+                >
+                  <div className="w-[68px] h-[68px] rounded-2xl overflow-hidden ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all shadow-lg">
+                    <img
+                      src={reciter.image}
+                      alt={reciter.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="text-[11px] font-semibold text-foreground text-center leading-tight line-clamp-2">
+                    {reciter.name}
+                  </span>
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
       </div>
