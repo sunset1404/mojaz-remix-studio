@@ -9,6 +9,7 @@ import Subscription from "./pages/Subscription";
 import Achievements from "./pages/Achievements";
 import WeeklyPlan from "./pages/WeeklyPlan";
 import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/achievements" element={<Achievements />} />
             <Route path="/weekly-plan" element={<WeeklyPlan />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/edit" element={<EditProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />
