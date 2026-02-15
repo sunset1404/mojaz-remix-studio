@@ -41,7 +41,7 @@ const Index = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="gradient-primary px-6 pt-12 pb-10 rounded-b-[2.5rem] relative overflow-hidden"
+        className="gradient-primary px-6 pt-10 pb-7 rounded-b-[2.5rem] relative overflow-hidden"
       >
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-4 right-4 w-32 h-32 rounded-full border-2 border-primary-foreground/30 animate-float" />
@@ -57,7 +57,7 @@ const Index = () => {
           <h1 className="text-3xl font-bold text-primary-foreground font-cairo mb-1">
             مرحباً بك 👋
           </h1>
-          <p className="text-primary-foreground/80 text-sm mb-6">واصل رحلتك مع القرآن الكريم</p>
+          <p className="text-primary-foreground/80 text-sm mb-4">واصل رحلتك مع القرآن الكريم</p>
 
           {/* Promo Carousel */}
           <div className="relative overflow-hidden rounded-2xl h-24">
