@@ -304,7 +304,7 @@ const WeeklyPlan = () => {
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                             selectedGoal === goal.key ? "bg-primary/15" : "bg-muted/60"
                           }`}>
-                            <goal.icon className="w-5 h-5 text-primary" />
+                            <goal.icon className="w-5 h-5 text-gold" />
                           </div>
                           <div className="text-right flex-1">
                             <p className="font-bold text-foreground text-sm">{goal.label}</p>
