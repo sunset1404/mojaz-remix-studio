@@ -254,26 +254,25 @@ const Index = () => {
           whileTap={{ scale: 0.98 }}
         >
           <Link to="/subscription" className="block">
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-l from-primary via-primary/85 to-primary/70 p-5 shadow-lg">
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-primary to-turquoise-dark p-5 shadow-xl">
               {/* Decorative elements */}
-              <div className="absolute top-2 left-2 w-20 h-20 rounded-full bg-beige/10 blur-xl" />
-              <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full bg-beige/5 blur-2xl" />
-              <div className="absolute top-4 left-8 w-10 h-10 rounded-full border border-beige/15 opacity-40" />
+              <div className="absolute top-0 left-0 w-24 h-24 rounded-full bg-white/10 blur-2xl" />
+              <div className="absolute bottom-0 right-0 w-28 h-28 rounded-full bg-beige-dark/15 blur-xl" />
               
               <div className="relative z-10 flex items-center gap-4">
-                <div className="flex flex-col items-center gap-1">
-                  <div className="w-16 h-16 rounded-full bg-primary-foreground/10 border-[3px] border-beige/40 flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-beige font-bold text-base">37%</span>
-                  </div>
-                  <span className="text-beige/70 text-[10px] font-medium">متبقي</span>
-                </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">💎</span>
-                    <span className="text-beige text-xs font-semibold bg-beige/15 px-2.5 py-0.5 rounded-full backdrop-blur-sm">الباقة الذهبية</span>
+                    <span className="text-white text-xs font-bold bg-white/20 px-3 py-1 rounded-full">الباقة الذهبية</span>
                   </div>
-                  <h3 className="text-primary-foreground font-bold text-lg mt-2">45 دقيقة متبقية</h3>
-                  <p className="text-beige/70 text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
+                  <h3 className="text-white font-bold text-lg">45 دقيقة متبقية</h3>
+                  <p className="text-white/75 text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <div className="w-16 h-16 rounded-full bg-white/15 border-[3px] border-white/50 flex items-center justify-center">
+                    <span className="text-white font-extrabold text-base">37%</span>
+                  </div>
+                  <span className="text-white/70 text-[10px] font-medium">متبقي</span>
                 </div>
               </div>
             </div>
