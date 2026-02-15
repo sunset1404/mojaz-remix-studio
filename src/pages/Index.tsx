@@ -32,7 +32,6 @@ const quickStats = [
 const features = [
   { title: "خطتي الأسبوعية", desc: "تابع تقدمك اليومي", icon: "📅", path: "/weekly-plan" },
   { title: "إنجازاتي", desc: "شاهد تقدمك", icon: "🏆", path: "/achievements" },
-  { title: "الاشتراكات", desc: "اكتشف الباقات", icon: "💎", path: "/subscription" },
 ];
 
 const Index = () => {
@@ -243,6 +242,41 @@ const Index = () => {
               </motion.div>
             ))}
           </div>
+        </motion.div>
+      </div>
+
+      {/* Subscription Card */}
+      <div className="px-5 mt-6">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.9 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <Link to="/subscription" className="block">
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-l from-primary via-primary/90 to-turquoise-dark p-5 shadow-lg">
+              {/* Decorative elements */}
+              <div className="absolute top-3 left-3 w-16 h-16 rounded-full border border-primary-foreground/10 opacity-30" />
+              <div className="absolute bottom-2 left-10 w-8 h-8 rounded-full border border-primary-foreground/10 opacity-20" />
+              
+              <div className="relative z-10 flex items-center gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-2xl">💎</span>
+                    <span className="text-primary-foreground/70 text-xs font-medium bg-primary-foreground/15 px-2 py-0.5 rounded-full">الباقة الذهبية</span>
+                  </div>
+                  <h3 className="text-primary-foreground font-bold text-lg mt-2">45 دقيقة متبقية</h3>
+                  <p className="text-primary-foreground/70 text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <div className="w-14 h-14 rounded-full border-[3px] border-primary-foreground/30 flex items-center justify-center">
+                    <span className="text-primary-foreground font-bold text-sm">37%</span>
+                  </div>
+                  <span className="text-primary-foreground/60 text-[10px]">متبقي</span>
+                </div>
+              </div>
+            </div>
+          </Link>
         </motion.div>
       </div>
 
