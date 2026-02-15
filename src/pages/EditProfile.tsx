@@ -105,47 +105,6 @@ const EditProfile = () => {
         </div>
       </div>
 
-      {/* Ijazat */}
-      <div className="px-5 mt-6">
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <h2 className="font-bold text-foreground text-base mb-3 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gold/15 flex items-center justify-center">
-              <GraduationCap className="w-4 h-4 text-gold" />
-            </div>
-            الإجازات القرآنية
-          </h2>
-          <div className="space-y-3">
-            {ijazat.map((ij, i) => (
-              <motion.div
-                key={ij.title}
-                initial={{ x: 30, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.55 + i * 0.08 }}
-                className="glass-card rounded-2xl p-4"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-foreground text-sm">{ij.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">على يد {ij.sheikh}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{ij.date}</p>
-                  </div>
-                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 ${
-                    ij.status === "معتمدة"
-                      ? "bg-primary/10 text-primary"
-                      : "bg-gold/15 text-gold"
-                  }`}>
-                    {ij.status}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
 
       {/* Save Button - only visible in edit mode */}
       <AnimatePresence>
