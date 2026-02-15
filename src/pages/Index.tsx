@@ -132,7 +132,6 @@ const Index = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          <h2 className="text-lg font-bold text-foreground mb-3">تقدم اليوم</h2>
           <div className="glass-card rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-muted-foreground">سورة البقرة - الصفحة 15</span>
@@ -165,7 +164,6 @@ const Index = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.7 }}
         >
-          <h2 className="text-lg font-bold text-foreground mb-3">استكشف</h2>
           <div className="grid grid-cols-2 gap-3">
             {features.map((feature, i) => (
               <motion.div
@@ -192,25 +190,6 @@ const Index = () => {
         </motion.div>
       </div>
 
-      {/* Motivational Banner */}
-      <div className="px-5 mt-6">
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="gradient-gold rounded-2xl p-5 relative overflow-hidden"
-        >
-          <div className="absolute top-0 left-0 w-full h-full opacity-20">
-            <div className="absolute -top-4 -left-4 w-24 h-24 border-2 border-gold-foreground/30 rounded-full" />
-          </div>
-          <div className="relative z-10">
-            <p className="text-gold-foreground font-bold text-lg mb-1">🌟 لا تنسَ ورد اليوم!</p>
-            <p className="text-gold-foreground/80 text-sm">
-              "مَن قرأ حرفًا من كتاب الله فله به حسنة، والحسنة بعشر أمثالها"
-            </p>
-          </div>
-        </motion.div>
-      </div>
     </div>
   );
 };
