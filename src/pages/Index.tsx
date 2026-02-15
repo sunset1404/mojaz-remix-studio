@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
 import { BookOpen, Star, Calendar, Trophy, ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 
-const inspirationalQuotes = [
-  "خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ",
-  "إِنَّ هَذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ",
-  "اقْرَأُوا الْقُرْآنَ فَإِنَّهُ يَأْتِي يَوْمَ الْقِيَامَةِ شَفِيعًا لِأَصْحَابِهِ",
+const promoSlides = [
+  { title: "خصم 50% على الاشتراك السنوي", desc: "اغتنم الفرصة واشترك الآن بنصف السعر", emoji: "🎉", bg: "from-primary to-primary/80" },
+  { title: "ميزة جديدة: التسميع الصوتي", desc: "سجّل تلاوتك واحصل على تقييم فوري", emoji: "🎙️", bg: "from-gold to-gold/80" },
+  { title: "تحدّي الأسبوع: احفظ سورة الملك", desc: "شارك في التحدي واربح نجوم إضافية", emoji: "🏆", bg: "from-primary to-turquoise-dark" },
 ];
 
 const quickStats = [
@@ -23,7 +24,16 @@ const features = [
 ];
 
 const Index = () => {
-  const randomQuote = inspirationalQuotes[Math.floor(Math.random() * inspirationalQuotes.length)];
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % promoSlides.length);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(nextSlide, 4000);
+    return () => clearInterval(timer);
+  }, [nextSlide]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -49,11 +59,38 @@ const Index = () => {
           </h1>
           <p className="text-primary-foreground/80 text-sm mb-6">واصل رحلتك مع القرآن الكريم</p>
 
-          {/* Quote Card */}
-          <div className="bg-primary-foreground/15 backdrop-blur-sm rounded-2xl p-4 border border-primary-foreground/20">
-            <p className="text-primary-foreground font-amiri text-lg leading-relaxed text-center">
-              ❝ {randomQuote} ❞
-            </p>
+          {/* Promo Carousel */}
+          <div className="relative overflow-hidden rounded-2xl h-24">
+            {promoSlides.map((slide, i) => (
+              <motion.div
+                key={i}
+                initial={false}
+                animate={{
+                  x: `${(i - currentSlide) * 100}%`,
+                  opacity: i === currentSlide ? 1 : 0.5,
+                }}
+                transition={{ type: "spring", stiffness: 200, damping: 30 }}
+                className={`absolute inset-0 bg-gradient-to-l ${slide.bg} rounded-2xl p-4 flex items-center gap-3 border border-primary-foreground/20`}
+              >
+                <span className="text-3xl">{slide.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-primary-foreground font-bold text-sm leading-tight">{slide.title}</h3>
+                  <p className="text-primary-foreground/80 text-xs mt-1 leading-tight">{slide.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+            {/* Dots */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {promoSlides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentSlide(i)}
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${
+                    i === currentSlide ? "bg-primary-foreground w-4" : "bg-primary-foreground/40"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </motion.div>
       </motion.div>
