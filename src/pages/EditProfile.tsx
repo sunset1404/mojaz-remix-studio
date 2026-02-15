@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Phone, Mail, MapPin, Calendar, ChevronRight, Camera, Save, GraduationCap, Pencil } from "lucide-react";
+import { User, Phone, Mail, MapPin, Calendar, ChevronRight, Camera, Save, Pencil } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,10 +11,6 @@ const personalFields = [
   { icon: Calendar, key: "joinDate" as const, label: "تاريخ الانضمام", type: "text", editable: true },
 ];
 
-const ijazat = [
-  { title: "إجازة في رواية حفص عن عاصم", sheikh: "الشيخ أحمد العجمي", date: "1444 هـ", status: "معتمدة" },
-  { title: "إجازة في رواية ورش عن نافع", sheikh: "الشيخ ماهر المعيقلي", date: "1445 هـ", status: "قيد الإتمام" },
-];
 
 const EditProfile = () => {
   const navigate = useNavigate();
