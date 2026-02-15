@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { BookOpen, Star, Calendar, Trophy, ChevronLeft, ChevronLeft as ChevronMore } from "lucide-react";
+import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import reciter1 from "@/assets/reciters/reciter1.jpg";
@@ -30,8 +30,8 @@ const quickStats = [
 ];
 
 const features = [
-  { title: "خطتي الأسبوعية", desc: "تابع تقدمك اليومي", icon: "📅", path: "/weekly-plan" },
-  { title: "إنجازاتي", desc: "شاهد تقدمك", icon: "🏆", path: "/achievements" },
+  { title: "خطتي الأسبوعية", desc: "تابع تقدمك اليومي", icon: CalendarDays, color: "primary", path: "/weekly-plan" },
+  { title: "إنجازاتي", desc: "شاهد تقدمك", icon: Trophy, color: "gold", path: "/achievements" },
 ];
 
 const Index = () => {
@@ -232,7 +232,13 @@ const Index = () => {
                   to={feature.path}
                   className="glass-card rounded-2xl p-4 flex flex-col gap-2 hover:shadow-xl transition-all group block"
                 >
-                  <span className="text-3xl">{feature.icon}</span>
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
+                    feature.color === "gold" ? "bg-gold/15" : "bg-primary/10"
+                  }`}>
+                    <feature.icon className={`w-5 h-5 ${
+                      feature.color === "gold" ? "text-gold" : "text-primary"
+                    }`} />
+                  </div>
                   <div>
                     <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">{feature.title}</h3>
                     <p className="text-xs text-muted-foreground">{feature.desc}</p>
