@@ -10,6 +10,7 @@ import Achievements from "./pages/Achievements";
 import WeeklyPlan from "./pages/WeeklyPlan";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import Certificates from "./pages/Certificates";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/weekly-plan" element={<WeeklyPlan />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/edit" element={<EditProfile />} />
+            <Route path="/certificates" element={<Certificates />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />
