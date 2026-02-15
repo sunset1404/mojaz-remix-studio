@@ -233,7 +233,7 @@ const WeeklyPlan = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="w-full max-w-md bg-card rounded-t-3xl p-6 pb-10 max-h-[85vh] overflow-y-auto"
+              className="w-full max-w-md bg-card rounded-t-3xl p-6 pb-16 max-h-[85vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
               {/* Wizard Header */}
@@ -284,34 +284,42 @@ const WeeklyPlan = () => {
                     className="space-y-3"
                   >
                     <p className="text-sm text-muted-foreground mb-4">ما هدف هذه الخطة؟</p>
-                    {goalTypes.map(goal => (
-                      <button
-                        key={goal.key}
-                        onClick={() => setSelectedGoal(goal.key)}
-                        className={`w-full rounded-2xl p-4 flex items-center gap-3 transition-all border-2 ${
-                          selectedGoal === goal.key
-                            ? "border-primary bg-primary/5"
-                            : "border-border bg-card hover:border-primary/30"
-                        }`}
-                      >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          selectedGoal === goal.key ? "bg-primary/15" : "bg-muted"
-                        }`}>
-                          <goal.icon className={`w-5 h-5 ${
-                            selectedGoal === goal.key ? "text-primary" : "text-muted-foreground"
-                          }`} />
-                        </div>
-                        <div className="text-right flex-1">
-                          <p className="font-bold text-foreground text-sm">{goal.label}</p>
-                          <p className="text-[10px] text-muted-foreground">{goal.desc}</p>
-                        </div>
-                        {selectedGoal === goal.key && (
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                            <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                    {goalTypes.map((goal, idx) => {
+                      const bgTints = [
+                        "bg-primary/[0.03]",
+                        "bg-accent/30",
+                        "bg-primary/[0.06]",
+                        "bg-accent/20",
+                      ];
+                      return (
+                        <button
+                          key={goal.key}
+                          onClick={() => setSelectedGoal(goal.key)}
+                          className={`w-full rounded-2xl p-4 flex items-center gap-3 transition-all border-2 ${
+                            selectedGoal === goal.key
+                              ? "border-primary bg-primary/10 shadow-sm"
+                              : `border-border ${bgTints[idx % bgTints.length]} hover:border-primary/30`
+                          }`}
+                        >
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            selectedGoal === goal.key ? "bg-primary/15" : "bg-muted/60"
+                          }`}>
+                            <goal.icon className={`w-5 h-5 ${
+                              selectedGoal === goal.key ? "text-primary" : "text-muted-foreground"
+                            }`} />
                           </div>
-                        )}
-                      </button>
-                    ))}
+                          <div className="text-right flex-1">
+                            <p className="font-bold text-foreground text-sm">{goal.label}</p>
+                            <p className="text-[10px] text-muted-foreground">{goal.desc}</p>
+                          </div>
+                          {selectedGoal === goal.key && (
+                            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </motion.div>
                 )}
 
@@ -405,10 +413,10 @@ const WeeklyPlan = () => {
                   <button
                     onClick={() => canNext() && setCurrentStep(prev => prev + 1)}
                     disabled={!canNext()}
-                    className={`flex-1 py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-1.5 transition-all ${
+                    className={`flex-1 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-1.5 transition-all shadow-md ${
                       canNext()
-                        ? "gradient-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
+                        ? "gradient-primary text-primary-foreground shadow-primary/25"
+                        : "bg-muted text-muted-foreground shadow-none"
                     }`}
                   >
                     التالي
@@ -418,10 +426,10 @@ const WeeklyPlan = () => {
                   <button
                     onClick={() => canNext() && handleFinish()}
                     disabled={!canNext()}
-                    className={`flex-1 py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-1.5 transition-all ${
+                    className={`flex-1 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-1.5 transition-all shadow-md ${
                       canNext()
-                        ? "gradient-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
+                        ? "gradient-primary text-primary-foreground shadow-primary/25"
+                        : "bg-muted text-muted-foreground shadow-none"
                     }`}
                   >
                     <Check className="w-4 h-4" />
