@@ -233,7 +233,7 @@ const WeeklyPlan = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="w-full max-w-md bg-card rounded-t-3xl p-6 pb-16 max-h-[85vh] overflow-y-auto"
+              className="w-full max-w-md bg-card rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto flex flex-col"
               onClick={e => e.stopPropagation()}
             >
               {/* Wizard Header */}
@@ -304,9 +304,7 @@ const WeeklyPlan = () => {
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                             selectedGoal === goal.key ? "bg-primary/15" : "bg-muted/60"
                           }`}>
-                            <goal.icon className={`w-5 h-5 ${
-                              selectedGoal === goal.key ? "text-primary" : "text-muted-foreground"
-                            }`} />
+                            <goal.icon className="w-5 h-5 text-primary" />
                           </div>
                           <div className="text-right flex-1">
                             <p className="font-bold text-foreground text-sm">{goal.label}</p>
@@ -399,7 +397,7 @@ const WeeklyPlan = () => {
               </AnimatePresence>
 
               {/* Navigation Buttons */}
-              <div className="flex gap-3 mt-8">
+              <div className="flex gap-3 mt-8 mb-6">
                 {currentStep > 0 && (
                   <button
                     onClick={() => setCurrentStep(prev => prev - 1)}
