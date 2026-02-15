@@ -269,10 +269,10 @@ const Index = () => {
                   <p className="text-gray-300 text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <div className="w-16 h-16 rounded-full bg-gray-400/20 border-[3px] border-gold/70 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-turquoise-dark border-[3px] border-gold flex items-center justify-center shadow-lg">
                     <span className="text-gold font-extrabold text-base">37%</span>
                   </div>
-                  <span className="text-gray-300 text-[10px] font-medium">متبقي</span>
+                  <span className="text-white text-[10px] font-medium">متبقي</span>
                 </div>
               </div>
             </div>
