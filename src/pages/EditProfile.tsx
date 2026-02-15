@@ -1,7 +1,19 @@
 import { motion } from "framer-motion";
-import { User, Phone, Mail, MapPin, Calendar, ChevronRight, Camera, Save } from "lucide-react";
+import { User, Phone, Mail, MapPin, Calendar, ChevronRight, Camera, Save, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+const personalInfo = [
+  { icon: Phone, key: "phone" as const, label: "رقم الجوال", type: "tel" },
+  { icon: Mail, key: "email" as const, label: "البريد الإلكتروني", type: "email" },
+  { icon: MapPin, key: "city" as const, label: "المدينة", type: "text" },
+  { icon: Calendar, key: "joinDate" as const, label: "تاريخ الانضمام", type: "text" },
+];
+
+const ijazat = [
+  { title: "إجازة في رواية حفص عن عاصم", sheikh: "الشيخ أحمد العجمي", date: "1444 هـ", status: "معتمدة" },
+  { title: "إجازة في رواية ورش عن نافع", sheikh: "الشيخ ماهر المعيقلي", date: "1445 هـ", status: "قيد الإتمام" },
+];
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -10,17 +22,8 @@ const EditProfile = () => {
     phone: "+966 50 123 4567",
     email: "abdullah@email.com",
     city: "الرياض، المملكة العربية السعودية",
-    birthdate: "1420/05/10 هـ",
-    level: "المستوى 4",
+    joinDate: "15 رمضان 1445 هـ",
   });
-
-  const fields = [
-    { key: "name" as const, label: "الاسم الكامل", icon: User, type: "text" },
-    { key: "phone" as const, label: "رقم الجوال", icon: Phone, type: "tel" },
-    { key: "email" as const, label: "البريد الإلكتروني", icon: Mail, type: "email" },
-    { key: "city" as const, label: "المدينة", icon: MapPin, type: "text" },
-    { key: "birthdate" as const, label: "تاريخ الميلاد", icon: Calendar, type: "text" },
-  ];
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -31,7 +34,7 @@ const EditProfile = () => {
             <button onClick={() => navigate("/profile")} className="w-9 h-9 rounded-xl bg-primary-foreground/15 flex items-center justify-center">
               <ChevronRight className="w-5 h-5 text-primary-foreground" />
             </button>
-            <h1 className="text-lg font-bold text-primary-foreground">تعديل الملف الشخصي</h1>
+            <h1 className="text-lg font-bold text-primary-foreground">البيانات الشخصية</h1>
             <div className="w-9" />
           </div>
 
@@ -47,48 +50,111 @@ const EditProfile = () => {
         </motion.div>
       </div>
 
-      {/* Form Fields */}
-      <div className="px-5 mt-6 space-y-3">
-        {fields.map((field, i) => (
-          <motion.div
-            key={field.key}
-            initial={{ x: 30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2 + i * 0.06 }}
-            className="glass-card rounded-2xl p-4"
-          >
-            <label className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
-              <field.icon className="w-3.5 h-3.5 text-primary" />
-              {field.label}
-            </label>
-            <input
-              type={field.type}
-              value={form[field.key]}
-              onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-              className="w-full bg-transparent text-sm font-semibold text-foreground outline-none placeholder:text-muted-foreground/50"
-              dir="rtl"
-            />
-          </motion.div>
-        ))}
+      {/* Personal Info Fields */}
+      <div className="px-5 mt-6">
+        <h2 className="font-bold text-foreground text-base mb-3 flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <User className="w-4 h-4 text-primary" />
+          </div>
+          البيانات الشخصية
+        </h2>
 
-        {/* Read-only level */}
+        {/* Name field */}
         <motion.div
           initial={{ x: 30, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.55 }}
-          className="glass-card rounded-2xl p-4 opacity-60"
+          transition={{ delay: 0.2 }}
+          className="glass-card rounded-2xl p-4 mb-3"
         >
-          <p className="text-[10px] text-muted-foreground mb-2">المستوى الحالي</p>
-          <p className="text-sm font-semibold text-foreground">{form.level}</p>
+          <label className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
+            <User className="w-3.5 h-3.5 text-primary" />
+            الاسم الكامل
+          </label>
+          <input
+            type="text"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="w-full bg-transparent text-sm font-semibold text-foreground outline-none"
+            dir="rtl"
+          />
         </motion.div>
 
-        {/* Save Button */}
+        {/* Other fields */}
+        <div className="space-y-3">
+          {personalInfo.map((field, i) => (
+            <motion.div
+              key={field.key}
+              initial={{ x: 30, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.25 + i * 0.06 }}
+              className="glass-card rounded-2xl p-4"
+            >
+              <label className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
+                <field.icon className="w-3.5 h-3.5 text-primary" />
+                {field.label}
+              </label>
+              <input
+                type={field.type}
+                value={form[field.key]}
+                onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                className="w-full bg-transparent text-sm font-semibold text-foreground outline-none"
+                dir="rtl"
+              />
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Ijazat */}
+      <div className="px-5 mt-6">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h2 className="font-bold text-foreground text-base mb-3 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gold/15 flex items-center justify-center">
+              <GraduationCap className="w-4 h-4 text-gold" />
+            </div>
+            الإجازات القرآنية
+          </h2>
+          <div className="space-y-3">
+            {ijazat.map((ij, i) => (
+              <motion.div
+                key={ij.title}
+                initial={{ x: 30, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.55 + i * 0.08 }}
+                className="glass-card rounded-2xl p-4"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-foreground text-sm">{ij.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">على يد {ij.sheikh}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{ij.date}</p>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 ${
+                    ij.status === "معتمدة"
+                      ? "bg-primary/10 text-primary"
+                      : "bg-gold/15 text-gold"
+                  }`}>
+                    {ij.status}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Save Button */}
+      <div className="px-5 mt-6">
         <motion.button
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.7 }}
           whileTap={{ scale: 0.97 }}
-          className="w-full gradient-primary text-primary-foreground py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg mt-6"
+          className="w-full gradient-primary text-primary-foreground py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg"
         >
           <Save className="w-5 h-5" />
           حفظ التعديلات
