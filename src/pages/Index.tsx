@@ -148,28 +148,28 @@ const Index = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6 }}>
 
-          <div className="glass-card rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-muted-foreground">سورة البقرة - الصفحة 15</span>
-              <span className="text-sm font-bold text-primary">75%</span>
-            </div>
-            <div className="h-3 bg-muted rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: "75%" }}
-                transition={{ delay: 0.8, duration: 1, ease: "easeOut" }}
-                className="h-full gradient-primary rounded-full" />
+          
 
-            </div>
-            <div className="flex items-center gap-2 mt-4">
-              <Link
-                to="/weekly-plan"
-                className="flex-1 gradient-primary text-primary-foreground text-center py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity">
 
-                متابعة الحفظ
-              </Link>
-            </div>
-          </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         </motion.div>
       </div>
 
