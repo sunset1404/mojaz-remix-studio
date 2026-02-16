@@ -1,16 +1,32 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Star, BookOpen, Target, Award, Flame, Check, X } from "lucide-react";
+import { Trophy, Star, BookOpen, Target, Award, Flame, Check, X, BookOpenCheck, Crown, Zap, Clock, CalendarCheck } from "lucide-react";
 
-const achievements = [
-  { id: 1, title: "الخطوة الأولى", desc: "أكمل أول جلسة إقراء", icon: "🌟", earned: true, date: "15 يناير 2026" },
-  { id: 2, title: "قارئ منتظم", desc: "أكمل 7 أيام متتالية", icon: "🔥", earned: true, date: "22 يناير 2026" },
-  { id: 3, title: "حافظ الجزء", desc: "أتم حفظ جزء كامل", icon: "📖", earned: true, date: "5 فبراير 2026" },
-  { id: 4, title: "نجم التجويد", desc: "احصل على تقييم ممتاز في التجويد", icon: "⭐", earned: true, date: "10 فبراير 2026" },
-  { id: 5, title: "المثابر", desc: "أكمل 30 يوماً متتالياً", icon: "💪", earned: false, progress: 14, total: 30 },
-  { id: 6, title: "حافظ 5 أجزاء", desc: "أتم حفظ 5 أجزاء", icon: "🏆", earned: false, progress: 3, total: 5 },
-  { id: 7, title: "المتقن", desc: "أتم مراجعة 10 سور بإتقان", icon: "🎯", earned: false, progress: 6, total: 10 },
-  { id: 8, title: "الختمة", desc: "أتم ختم القرآن كاملاً", icon: "👑", earned: false, progress: 5, total: 30 },
+type Achievement = {
+  id: number;
+  title: string;
+  desc: string;
+  icon: React.ElementType;
+  earned: boolean;
+  date?: string;
+  progress?: number;
+  total?: number;
+  category: "quran" | "performance";
+};
+
+const achievements: Achievement[] = [
+  // إنجازات قرآنية
+  { id: 1, title: "الخطوة الأولى", desc: "أكمل أول جلسة إقراء", icon: BookOpen, earned: true, date: "15 يناير 2026", category: "quran" },
+  { id: 3, title: "حافظ الجزء", desc: "أتم حفظ جزء كامل", icon: BookOpenCheck, earned: true, date: "5 فبراير 2026", category: "quran" },
+  { id: 4, title: "نجم التجويد", desc: "احصل على تقييم ممتاز في التجويد", icon: Star, earned: true, date: "10 فبراير 2026", category: "quran" },
+  { id: 6, title: "حافظ 5 أجزاء", desc: "أتم حفظ 5 أجزاء", icon: Trophy, earned: false, progress: 3, total: 5, category: "quran" },
+  { id: 7, title: "المتقن", desc: "أتم مراجعة 10 سور بإتقان", icon: Target, earned: false, progress: 6, total: 10, category: "quran" },
+  { id: 8, title: "الختمة", desc: "أتم ختم القرآن كاملاً", icon: Crown, earned: false, progress: 5, total: 30, category: "quran" },
+  // إنجازات الأداء
+  { id: 2, title: "قارئ منتظم", desc: "أكمل 7 أيام متتالية", icon: Flame, earned: true, date: "22 يناير 2026", category: "performance" },
+  { id: 5, title: "المثابر", desc: "أكمل 30 يوماً متتالياً", icon: Zap, earned: false, progress: 14, total: 30, category: "performance" },
+  { id: 9, title: "48 ساعة إقراء", desc: "أكمل 48 ساعة من جلسات الإقراء", icon: Clock, earned: false, progress: 32, total: 48, category: "performance" },
+  { id: 10, title: "الملتزم", desc: "التزم بالخطة الأسبوعية لمدة شهر", icon: CalendarCheck, earned: false, progress: 2, total: 4, category: "performance" },
 ];
 
 const stats = [
@@ -170,45 +186,80 @@ const Achievements = () => {
         </motion.div>
       </div>
 
-      {/* Achievements List */}
+      {/* Achievements List - Categorized */}
       <div className="px-5 mt-6">
-        <h2 className="text-lg font-bold text-foreground mb-3">جميع الإنجازات</h2>
-        <div className="space-y-3">
-          {achievements.map((ach, i) => (
-            <motion.div
-              key={ach.id}
-              initial={{ x: 30, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.5 + i * 0.08 }}
-              className={`glass-card rounded-2xl p-4 flex items-center gap-4 ${
-                !ach.earned ? "opacity-70" : ""
-              }`}
-            >
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 ${
-                ach.earned ? "gradient-gold shadow-md" : "bg-muted"
-              }`}>
-                {ach.icon}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-foreground">{ach.title}</h3>
-                <p className="text-xs text-muted-foreground">{ach.desc}</p>
-                {ach.earned ? (
-                  <p className="text-xs text-primary mt-1">✓ مكتسب · {ach.date}</p>
-                ) : (
-                  <div className="mt-2">
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full gradient-primary rounded-full transition-all"
-                        style={{ width: `${((ach.progress || 0) / (ach.total || 1)) * 100}%` }}
-                      />
+        {/* إنجازات قرآنية */}
+        <h2 className="text-lg font-bold text-foreground mb-3">📖 إنجازات قرآنية</h2>
+        <div className="space-y-3 mb-6">
+          {achievements.filter(a => a.category === "quran").map((ach, i) => {
+            const AchIcon = ach.icon;
+            return (
+              <motion.div
+                key={ach.id}
+                initial={{ x: 30, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.5 + i * 0.08 }}
+                className={`glass-card rounded-2xl p-4 flex items-center gap-4 ${!ach.earned ? "opacity-70" : ""}`}
+              >
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
+                  ach.earned ? "bg-gold/20 shadow-md" : "bg-muted"
+                }`}>
+                  <AchIcon className={`w-6 h-6 ${ach.earned ? "text-gold" : "text-muted-foreground"}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-foreground">{ach.title}</h3>
+                  <p className="text-xs text-muted-foreground">{ach.desc}</p>
+                  {ach.earned ? (
+                    <p className="text-xs text-primary mt-1">✓ مكتسب · {ach.date}</p>
+                  ) : (
+                    <div className="mt-2">
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full gradient-gold rounded-full transition-all" style={{ width: `${((ach.progress || 0) / (ach.total || 1)) * 100}%` }} />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1">{ach.progress}/{ach.total}</p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">{ach.progress}/{ach.total}</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* إنجازات الأداء */}
+        <h2 className="text-lg font-bold text-foreground mb-3">⚡ إنجازات الأداء</h2>
+        <div className="space-y-3">
+          {achievements.filter(a => a.category === "performance").map((ach, i) => {
+            const AchIcon = ach.icon;
+            return (
+              <motion.div
+                key={ach.id}
+                initial={{ x: 30, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.7 + i * 0.08 }}
+                className={`glass-card rounded-2xl p-4 flex items-center gap-4 ${!ach.earned ? "opacity-70" : ""}`}
+              >
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
+                  ach.earned ? "bg-primary/10 shadow-md" : "bg-muted"
+                }`}>
+                  <AchIcon className={`w-6 h-6 ${ach.earned ? "text-primary" : "text-muted-foreground"}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-foreground">{ach.title}</h3>
+                  <p className="text-xs text-muted-foreground">{ach.desc}</p>
+                  {ach.earned ? (
+                    <p className="text-xs text-primary mt-1">✓ مكتسب · {ach.date}</p>
+                  ) : (
+                    <div className="mt-2">
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full gradient-primary rounded-full transition-all" style={{ width: `${((ach.progress || 0) / (ach.total || 1)) * 100}%` }} />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1">{ach.progress}/{ach.total}</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </div>
