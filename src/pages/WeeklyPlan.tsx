@@ -560,7 +560,11 @@ const WeeklyPlan = () => {
               <div className="flex gap-3 mt-8 mb-6">
                 {currentStep > 0 && (
                   <button
-                    onClick={() => setCurrentStep(prev => prev - 1)}
+                    onClick={() => {
+                      let prev = currentStep - 1;
+                      if (prev === 1 && selectedGoal === "ijaza") prev = 0;
+                      setCurrentStep(prev);
+                    }}
                     className="flex-1 py-3.5 rounded-xl border-2 border-border text-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -569,7 +573,16 @@ const WeeklyPlan = () => {
                 )}
                 {currentStep < steps.length - 1 ? (
                   <button
-                    onClick={() => canNext() && setCurrentStep(prev => prev + 1)}
+                    onClick={() => {
+                      if (!canNext()) return;
+                      let next = currentStep + 1;
+                      // Skip scope step for ijaza
+                      if (next === 1 && selectedGoal === "ijaza") {
+                        setSelectedScope("full");
+                        next = 2;
+                      }
+                      setCurrentStep(next);
+                    }}
                     disabled={!canNext()}
                     className={`flex-1 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-1.5 transition-all shadow-md ${
                       canNext()
