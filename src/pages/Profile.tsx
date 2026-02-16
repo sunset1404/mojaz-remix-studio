@@ -162,7 +162,7 @@ const Profile = () => {
                       </div>
                       <div className="flex-1 text-right">
                         <p className="font-semibold text-foreground text-sm">{item.label}</p>
-                        <p className="text-[10px] text-muted-foreground">{isDark ? "داكن" : "فاتح"}</p>
+                        <p className="text-[10px] text-foreground/50 font-normal">{isDark ? "داكن" : "فاتح"}</p>
                       </div>
                       <button
                         onClick={toggleTheme}
@@ -190,7 +190,7 @@ const Profile = () => {
                     </div>
                     <div className="flex-1 text-right">
                       <p className="font-semibold text-foreground text-sm">{item.label}</p>
-                      <p className="text-[10px] text-muted-foreground">{item.desc}</p>
+                      <p className="text-[10px] text-foreground/50 font-normal">{item.desc}</p>
                     </div>
                     <ChevronLeft className="w-4 h-4 text-muted-foreground" />
                   </div>
