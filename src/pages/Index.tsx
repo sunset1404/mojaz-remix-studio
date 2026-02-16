@@ -1,7 +1,7 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones } from "lucide-react";
 import { Link } from "react-router-dom";
-
+import { useState, useEffect, useCallback } from "react";
 import reciter1 from "@/assets/reciters/reciter1.jpg";
 import reciter2 from "@/assets/reciters/reciter2.jpg";
 import reciter3 from "@/assets/reciters/reciter3.jpg";
@@ -15,13 +15,11 @@ const topReciters = [
 { name: "سعد الغامدي", image: reciter4 },
 { name: "فارس عبّاد", image: reciter5 }];
 
-
 const promoSlides = [
-  { title: "قرآن الكريم", desc: "بمقرئين المعتمدين", icon: BookOpen, bg: "bg-primary", textColor: "text-primary-foreground" },
-  { title: "احصل على شهادات", desc: "معتمدة في الحفظ", icon: Award, bg: "bg-gold", textColor: "text-gold-foreground" },
-  { title: "استمع للتلاوات", desc: "بأصوات مميزة", icon: Headphones, bg: "bg-primary", textColor: "text-primary-foreground" },
+  { title: "القرآن الكريم", desc: "بمقرئين معتمدين", icon: BookOpen, bg: "gradient-primary", iconBg: "bg-white/20" },
+  { title: "شهادات معتمدة", desc: "احصل على شهادات في الحفظ", icon: Award, bg: "gradient-gold", iconBg: "bg-white/30" },
+  { title: "تلاوات مميزة", desc: "استمع بأصوات عذبة", icon: Headphones, bg: "gradient-primary", iconBg: "bg-white/20" },
 ];
-
 
 const quickStats = [
 { label: "أجزاء محفوظة", value: "5", icon: BookOpen, color: "primary" },
@@ -29,55 +27,87 @@ const quickStats = [
 { label: "أيام متتالية", value: "14", icon: Calendar, color: "primary" },
 { label: "إنجازات", value: "8", icon: Trophy, color: "gold" }];
 
-
 const features = [
 { title: "خطتي الأسبوعية", desc: "تابع تقدمك اليومي", icon: CalendarDays, color: "primary", path: "/weekly-plan" },
 { title: "إنجازاتي", desc: "شاهد تقدمك", icon: Trophy, color: "gold", path: "/achievements" }];
 
-
 const Index = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % promoSlides.length);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(nextSlide, 4000);
+    return () => clearInterval(timer);
+  }, [nextSlide]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Hero Section - Light background */}
-      <div className="px-6 pt-10 pb-4">
+      {/* Hero Section */}
+      <div className="px-6 pt-10 pb-3">
         <motion.div
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground font-cairo">
-            أهلاً بك 👋
+            أهلاً عبدالعزيز 👋
           </h1>
-          <button className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative">
             <Bell className="w-5 h-5 text-primary" />
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-gold rounded-full border-2 border-background" />
           </button>
         </motion.div>
       </div>
 
-      {/* Promo Cards - Horizontal scroll */}
-      <div className="px-5 mb-4">
+      {/* Full-width Promo Carousel */}
+      <div className="px-5 mb-2">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {promoSlides.map((slide, i) => (
+          className="relative overflow-hidden rounded-2xl"
+          style={{ height: '150px' }}>
+          <AnimatePresence mode="wait">
             <motion.div
-              key={i}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3 + i * 0.1 }}
-              className={`${slide.bg} rounded-2xl p-5 min-w-[200px] flex-shrink-0 flex flex-col gap-3 shadow-lg`}
-              style={{ minHeight: '140px' }}>
-              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                <slide.icon className={`w-6 h-6 ${slide.textColor}`} />
-              </div>
-              <div>
-                <h3 className={`font-bold text-base ${slide.textColor}`}>{slide.title}</h3>
-                <p className={`text-xs mt-1 ${slide.textColor} opacity-80`}>{slide.desc}</p>
+              key={currentSlide}
+              initial={{ x: -300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 300, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 250, damping: 30 }}
+              className={`absolute inset-0 ${promoSlides[currentSlide].bg} rounded-2xl p-6 flex items-center gap-5`}>
+              
+              {/* Decorative circles */}
+              <div className="absolute top-0 left-0 w-32 h-32 rounded-full bg-white/5 -translate-x-10 -translate-y-10" />
+              <div className="absolute bottom-0 right-0 w-24 h-24 rounded-full bg-white/5 translate-x-8 translate-y-8" />
+              
+              <div className="relative z-10 flex items-center gap-5 w-full">
+                <div className={`w-16 h-16 rounded-2xl ${promoSlides[currentSlide].iconBg} flex items-center justify-center shrink-0 shadow-lg`}>
+                  {(() => {
+                    const Icon = promoSlides[currentSlide].icon;
+                    return <Icon className="w-8 h-8 text-primary-foreground" />;
+                  })()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-xl text-primary-foreground leading-tight">{promoSlides[currentSlide].title}</h3>
+                  <p className="text-sm mt-1 text-primary-foreground/80">{promoSlides[currentSlide].desc}</p>
+                </div>
               </div>
             </motion.div>
-          ))}
+          </AnimatePresence>
+          
+          {/* Dots */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+            {promoSlides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentSlide(i)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  i === currentSlide ? "bg-primary-foreground w-6" : "bg-primary-foreground/40 w-2"
+                }`} />
+            ))}
+          </div>
         </motion.div>
       </div>
 
