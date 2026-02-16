@@ -28,9 +28,9 @@ const menuSections = [
     title: "الدعم والمساعدة",
     icon: Headphones,
     items: [
-      { icon: Headphones, label: "تواصل معنا", desc: "الدعم الفني والاستفسارات" },
-      { icon: Info, label: "عن التطبيق", desc: "الإصدار ١.٠.٠" },
-      { icon: FileText, label: "سياسة الخصوصية", desc: "الشروط والأحكام" },
+      { icon: Headphones, label: "تواصل معنا", desc: "الدعم الفني والاستفسارات", path: "/contact-us" },
+      { icon: Info, label: "عن التطبيق", desc: "الإصدار ١.٠.٠", path: "/about" },
+      { icon: FileText, label: "سياسة الخصوصية", desc: "الشروط والأحكام", path: "/privacy-policy" },
     ],
   },
 ];
