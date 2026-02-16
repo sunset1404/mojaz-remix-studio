@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Star, BookOpen, Target, Award, Flame } from "lucide-react";
+import { Trophy, Star, BookOpen, Target, Award, Flame, Check } from "lucide-react";
 
 const achievements = [
   { id: 1, title: "الخطوة الأولى", desc: "أكمل أول جلسة إقراء", icon: "🌟", earned: true, date: "15 يناير 2026" },
@@ -18,6 +19,21 @@ const stats = [
   { label: "أعلى سلسلة", value: "14 يوم", icon: Flame },
   { label: "تقييم عام", value: "4.8", icon: Star },
 ];
+
+const weekDays = [
+  { key: "sat", label: "س" },
+  { key: "sun", label: "ح" },
+  { key: "mon", label: "ن" },
+  { key: "tue", label: "ث" },
+  { key: "wed", label: "ر" },
+  { key: "thu", label: "خ" },
+  { key: "fri", label: "ج" },
+];
+
+// أيام الخطة الأسبوعية (من صفحة الخطة الدراسية)
+const planDays = ["sat", "mon", "wed"];
+// الأيام التي أنجز فيها الطالب مهامه
+const completedDays = ["sat", "mon"];
 
 const Achievements = () => {
   return (
@@ -55,6 +71,60 @@ const Achievements = () => {
               </div>
             </motion.div>
           ))}
+        </motion.div>
+      </div>
+
+      {/* Weekly Plan Progress */}
+      <div className="px-5 mt-4">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="glass-card rounded-2xl p-4"
+        >
+          <div className="flex items-center justify-between mb-3" dir="rtl">
+            <span className="font-bold text-foreground text-sm">تقدم الخطة الأسبوعية</span>
+            <span className="text-xs text-primary font-semibold">
+              {completedDays.length}/{planDays.length} أيام
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-1.5" dir="rtl">
+            {weekDays.map((day) => {
+              const isInPlan = planDays.includes(day.key);
+              const isDone = completedDays.includes(day.key);
+              return (
+                <div key={day.key} className="flex flex-col items-center gap-1.5 flex-1">
+                  <span className={`text-[10px] font-semibold ${isInPlan ? "text-foreground" : "text-muted-foreground/50"}`}>
+                    {day.label}
+                  </span>
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                      isDone
+                        ? "gradient-primary shadow-md"
+                        : isInPlan
+                        ? "bg-primary/10 border-2 border-dashed border-primary/30"
+                        : "bg-muted/50"
+                    }`}
+                  >
+                    {isDone ? (
+                      <Check className="w-4 h-4 text-primary-foreground" />
+                    ) : isInPlan ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {/* Progress bar */}
+          <div className="h-2 bg-muted rounded-full overflow-hidden mt-3">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${(completedDays.length / planDays.length) * 100}%` }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="h-full gradient-primary rounded-full"
+            />
+          </div>
         </motion.div>
       </div>
 
