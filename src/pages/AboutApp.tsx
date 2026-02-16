@@ -41,7 +41,7 @@ const AboutApp = () => {
         <div className="glass-card rounded-2xl p-6 text-center animate-fade-in" style={{ animationFillMode: "both" }}>
           <img src={logoMojaz} alt="شعار مجاز" className="w-24 h-28 object-contain mx-auto mb-4" />
           <h2 className="text-lg font-bold text-foreground">مجاز</h2>
-          <p className="text-sm text-muted-foreground mt-1">إجازات قرآنية بالسند المتصل</p>
+          <p className="text-sm text-muted-foreground mt-1">سند متصل بالسماء</p>
           <p className="text-[10px] text-muted-foreground mt-2">الإصدار 1.0.0</p>
         </div>
 
