@@ -157,9 +157,7 @@ const WeeklyPlan = () => {
               <ChevronRight className="w-5 h-5 text-primary-foreground" />
             </button>
             <h1 className="text-lg font-bold text-primary-foreground">خطتي الأسبوعية</h1>
-            <button onClick={openAddWizard} className="w-9 h-9 rounded-xl bg-primary-foreground/15 flex items-center justify-center">
-              <Plus className="w-5 h-5 text-primary-foreground" />
-            </button>
+            <div className="w-9 h-9" />
           </div>
           <p className="text-primary-foreground/70 text-xs text-center">إدارة خطط الحفظ والتسميع الخاصة بك</p>
         </motion.div>
