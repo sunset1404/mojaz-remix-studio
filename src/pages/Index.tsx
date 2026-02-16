@@ -279,25 +279,25 @@ const Index = () => {
           whileTap={{ scale: 0.98 }}>
 
           <Link to="/subscription" className="block">
-            <div className="relative rounded-2xl overflow-hidden gradient-gold p-5 shadow-xl">
+            <div className="relative rounded-2xl overflow-hidden gradient-primary p-5 shadow-xl">
               {/* Decorative elements */}
-              <div className="absolute top-0 left-0 w-28 h-28 rounded-full bg-white/10 -translate-x-8 -translate-y-8" />
-              <div className="absolute bottom-0 right-0 w-20 h-20 rounded-full bg-white/10 translate-x-6 translate-y-6" />
+              <div className="absolute top-0 left-0 w-28 h-28 rounded-full bg-white/5 -translate-x-8 -translate-y-8" />
+              <div className="absolute bottom-0 right-0 w-20 h-20 rounded-full bg-white/5 translate-x-6 translate-y-6" />
               
               <div className="relative z-10 flex items-center gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-primary-foreground text-lg">✦</span>
-                    <span className="text-gold-foreground text-xs font-bold bg-white/25 px-3 py-1 rounded-full">الباقة الذهبية</span>
+                    <span className="text-gold text-lg">✦</span>
+                    <span className="text-primary-foreground text-xs font-bold bg-gold/20 px-3 py-1 rounded-full">الباقة الذهبية</span>
                   </div>
-                  <h3 className="text-gold-foreground font-bold text-lg">45 دقيقة متبقية</h3>
-                  <p className="text-gold-foreground/70 text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
+                  <h3 className="text-primary-foreground font-bold text-lg">45 دقيقة متبقية</h3>
+                  <p className="text-primary-foreground/70 text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <div className="w-16 h-16 rounded-full bg-white/20 border-[3px] border-white/40 flex items-center justify-center shadow-lg">
-                    <span className="text-gold-foreground font-extrabold text-base">37%</span>
+                  <div className="w-16 h-16 rounded-full bg-gold/20 border-[3px] border-gold/40 flex items-center justify-center shadow-lg">
+                    <span className="text-primary-foreground font-extrabold text-base">37%</span>
                   </div>
-                  <span className="text-gold-foreground/80 text-[10px] font-medium">متبقي</span>
+                  <span className="text-primary-foreground/80 text-[10px] font-medium">متبقي</span>
                 </div>
               </div>
             </div>
