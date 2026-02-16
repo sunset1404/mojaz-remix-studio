@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Shield, Camera, Award, CalendarDays, Image, X } from "lucide-react";
+import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Shield, Camera, Award, CalendarDays, Image, X, Headphones, Info, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const menuSections = [
@@ -22,6 +22,15 @@ const menuSections = [
       { icon: Moon, label: "المظهر", desc: "فاتح / داكن" },
       { icon: BookOpen, label: "سجل الجلسات", desc: "تاريخ جلسات الإقراء" },
       { icon: Settings, label: "إعدادات التطبيق", desc: "الصوت، التخزين" },
+    ],
+  },
+  {
+    title: "الدعم والمساعدة",
+    icon: Headphones,
+    items: [
+      { icon: Headphones, label: "تواصل معنا", desc: "الدعم الفني والاستفسارات" },
+      { icon: Info, label: "عن التطبيق", desc: "الإصدار ١.٠.٠" },
+      { icon: FileText, label: "سياسة الخصوصية", desc: "الشروط والأحكام" },
     ],
   },
 ];
