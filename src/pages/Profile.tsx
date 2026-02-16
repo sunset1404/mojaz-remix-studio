@@ -108,7 +108,7 @@ const Profile = () => {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="gradient-primary px-6 pt-12 pb-8 rounded-b-[2.5rem] text-center relative">
+      <div className="gradient-primary px-6 pt-8 pb-5 rounded-b-[2.5rem] text-center relative">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
           <div className="relative mx-auto w-24 h-24 mb-3">
             <div className="w-24 h-24 rounded-full bg-primary-foreground/20 backdrop-blur-sm border-4 border-primary-foreground/30 flex items-center justify-center overflow-hidden">
