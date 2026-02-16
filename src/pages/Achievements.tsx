@@ -201,10 +201,10 @@ const Achievements = () => {
                 transition={{ delay: 0.5 + i * 0.08 }}
                 className={`glass-card rounded-2xl p-4 flex items-center gap-4 ${!ach.earned ? "opacity-70" : ""}`}
               >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
                   ach.earned ? "bg-gold/20 shadow-md" : "bg-muted"
                 }`}>
-                  <AchIcon className={`w-6 h-6 ${ach.earned ? "text-gold" : "text-muted-foreground"}`} />
+                  <AchIcon className={`w-5 h-5 ${ach.earned ? "text-gold" : "text-muted-foreground"}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-foreground">{ach.title}</h3>
@@ -238,10 +238,10 @@ const Achievements = () => {
                 transition={{ delay: 0.7 + i * 0.08 }}
                 className={`glass-card rounded-2xl p-4 flex items-center gap-4 ${!ach.earned ? "opacity-70" : ""}`}
               >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
                   ach.earned ? "bg-primary/10 shadow-md" : "bg-muted"
                 }`}>
-                  <AchIcon className={`w-6 h-6 ${ach.earned ? "text-primary" : "text-muted-foreground"}`} />
+                  <AchIcon className={`w-5 h-5 ${ach.earned ? "text-primary" : "text-muted-foreground"}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-foreground">{ach.title}</h3>
