@@ -99,13 +99,10 @@ const Reciters = () => {
           </div>
         )}
         {filtered.map((reciter, i) => (
-          <motion.div
+          <div
             key={reciter.id}
-            initial={{ x: 30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: i * 0.1 }}
-            whileTap={{ scale: 0.98 }}
-            className="glass-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:shadow-lg transition-all"
+            className="glass-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:shadow-lg active:scale-[0.98] transition-all animate-fade-in"
+            style={{ animationDelay: `${i * 40}ms`, animationFillMode: 'both' }}
           >
             <div className="relative w-14 h-14 rounded-2xl overflow-hidden shrink-0">
               <img src={reciter.avatar} alt={reciter.name} className="w-full h-full object-cover" />
@@ -139,7 +136,7 @@ const Reciters = () => {
                 <Video className="w-4 h-4 text-primary" />
               </button>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
