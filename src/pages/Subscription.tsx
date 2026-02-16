@@ -69,7 +69,10 @@ const Subscription = () => {
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
         >
-          <h1 className="text-2xl font-bold text-primary-foreground mb-2">💎 الاشتراكات</h1>
+          <h1 className="text-2xl font-bold text-primary-foreground mb-2 flex items-center justify-center gap-2">
+            <Sparkles className="w-6 h-6" />
+            الاشتراكات
+          </h1>
           <p className="text-primary-foreground/80 text-sm">اختر الباقة المناسبة لرحلتك القرآنية</p>
         </motion.div>
       </div>

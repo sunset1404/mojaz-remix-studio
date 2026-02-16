@@ -59,7 +59,10 @@ const Achievements = () => {
       {/* Header */}
       <div className="gradient-primary px-6 pt-12 pb-10 rounded-b-[2.5rem]">
         <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-          <h1 className="text-2xl font-bold text-primary-foreground mb-2">🏆 إنجازاتي</h1>
+          <h1 className="text-2xl font-bold text-primary-foreground mb-2 flex items-center justify-center gap-2">
+            <Trophy className="w-6 h-6" />
+            إنجازاتي
+          </h1>
           <p className="text-primary-foreground/80 text-sm">تابع مسيرتك وإنجازاتك القرآنية</p>
         </motion.div>
       </div>

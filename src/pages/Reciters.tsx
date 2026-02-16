@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Star, Phone, Video, Search, Heart } from "lucide-react";
+import { Star, Phone, Video, Search, Heart, Mic } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import sheikh1 from "@/assets/reciters/sheikh1.jpg";
@@ -53,9 +53,10 @@ const Reciters = () => {
         <motion.h1
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="text-2xl font-bold text-primary-foreground mb-4"
+          className="text-2xl font-bold text-primary-foreground mb-4 flex items-center justify-center gap-2"
         >
-          🎙️ المقرئون
+          <Mic className="w-6 h-6" />
+          المقرئون
         </motion.h1>
 
         <motion.div
