@@ -11,6 +11,7 @@ import WeeklyPlan from "./pages/WeeklyPlan";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import Certificates from "./pages/Certificates";
+import Payments from "./pages/Payments";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/edit" element={<EditProfile />} />
             <Route path="/certificates" element={<Certificates />} />
+            <Route path="/payments" element={<Payments />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />
