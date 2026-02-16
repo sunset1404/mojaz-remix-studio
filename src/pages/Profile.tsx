@@ -82,9 +82,9 @@ const Profile = () => {
         {menuSections.map((section) => (
           <div key={section.title}>
             {/* Section Header */}
-            <div className="flex items-center justify-end gap-2 mb-2.5 px-1">
-              <span className="text-sm font-bold text-foreground">{section.title}</span>
+            <div className="flex items-center gap-2 mb-2.5 px-1" dir="rtl">
               <section.icon className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-foreground">{section.title}</span>
             </div>
             {/* Section Items */}
             <div className="glass-card rounded-2xl overflow-hidden divide-y divide-border/50">
