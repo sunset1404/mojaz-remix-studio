@@ -50,7 +50,7 @@ const ContactUs = () => {
               style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
             >
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <item.icon className="w-5 h-5 text-primary" />
+                <item.icon className="w-5 h-5 text-gold" />
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-foreground text-sm">{item.label}</p>
