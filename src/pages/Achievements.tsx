@@ -82,13 +82,14 @@ const Achievements = () => {
           transition={{ delay: 0.3 }}
           className="glass-card rounded-2xl p-4"
         >
-          <div className="flex items-center justify-between mb-3" dir="rtl">
+          <div className="flex items-center justify-between mb-4" dir="rtl">
             <span className="font-bold text-foreground text-sm">تقدم الخطة الأسبوعية</span>
             <span className="text-xs text-primary font-semibold">
               {completedDays.length}/{planDays.length} أيام
             </span>
           </div>
-          <div className="flex items-center justify-between gap-1.5" dir="rtl">
+          {/* Day labels */}
+          <div className="flex items-center justify-between gap-1 mb-2" dir="rtl">
             {weekDays.map((day) => {
               const isInPlan = planDays.includes(day.key);
               const isDone = completedDays.includes(day.key);
@@ -116,14 +117,27 @@ const Achievements = () => {
               );
             })}
           </div>
-          {/* Progress bar */}
-          <div className="h-2 bg-muted rounded-full overflow-hidden mt-3">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${(completedDays.length / planDays.length) * 100}%` }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="h-full gradient-primary rounded-full"
-            />
+          {/* Segmented progress bar */}
+          <div className="flex items-center gap-1 mt-3" dir="rtl">
+            {weekDays.map((day) => {
+              const isDone = completedDays.includes(day.key);
+              const isInPlan = planDays.includes(day.key);
+              return (
+                <motion.div
+                  key={day.key}
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                  className={`flex-1 h-2 rounded-full ${
+                    isDone
+                      ? "gradient-primary"
+                      : isInPlan
+                      ? "bg-primary/20"
+                      : "bg-muted/60"
+                  }`}
+                />
+              );
+            })}
           </div>
         </motion.div>
       </div>
