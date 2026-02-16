@@ -142,13 +142,9 @@ const Profile = () => {
               {section.items.map((item) => {
                 const idx = itemIndex++;
                 const inner = (
-                  <motion.div
+                  <div
                     key={item.label}
-                    initial={{ x: 30, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.05 + idx * 0.03 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="p-4 flex items-center gap-3 w-full hover:bg-muted/30 transition-all"
+                    className="p-4 flex items-center gap-3 w-full hover:bg-muted/30 transition-all active:scale-[0.98]"
                   >
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                       <item.icon className="w-5 h-5 text-primary" />
@@ -158,7 +154,7 @@ const Profile = () => {
                       <p className="text-[10px] text-muted-foreground">{item.desc}</p>
                     </div>
                     <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-                  </motion.div>
+                  </div>
                 );
 
                 return item.path ? (
@@ -176,18 +172,14 @@ const Profile = () => {
         ))}
 
         {/* Logout */}
-        <motion.button
-          initial={{ x: 30, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.15 }}
-          whileTap={{ scale: 0.98 }}
-          className="rounded-xl p-4 flex items-center gap-3 w-full border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-all mt-4"
+        <button
+          className="rounded-xl p-4 flex items-center gap-3 w-full border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 active:scale-[0.98] transition-all mt-4"
         >
           <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
             <LogOut className="w-5 h-5 text-destructive" />
           </div>
           <p className="font-semibold text-destructive text-sm">تسجيل الخروج</p>
-        </motion.button>
+        </button>
       </div>
 
       <p className="text-center text-[10px] text-muted-foreground mt-6">الإصدار 1.0.0</p>
