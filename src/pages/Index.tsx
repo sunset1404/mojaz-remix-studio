@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic } from "lucide-react";
+import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
+
 import reciter1 from "@/assets/reciters/reciter1.jpg";
 import reciter2 from "@/assets/reciters/reciter2.jpg";
 import reciter3 from "@/assets/reciters/reciter3.jpg";
@@ -17,9 +17,10 @@ const topReciters = [
 
 
 const promoSlides = [
-{ title: "خصم 50% على الاشتراك السنوي", desc: "اغتنم الفرصة واشترك الآن بنصف السعر", emoji: "🎉", bg: "from-primary to-primary/80" },
-{ title: "ميزة جديدة: التسميع الصوتي", desc: "سجّل تلاوتك واحصل على تقييم فوري", emoji: "🎙️", bg: "from-gold to-gold/80" },
-{ title: "تحدّي الأسبوع: احفظ سورة الملك", desc: "شارك في التحدي واربح نجوم إضافية", emoji: "🏆", bg: "from-primary to-turquoise-dark" }];
+  { title: "قرآن الكريم", desc: "بمقرئين المعتمدين", icon: BookOpen, bg: "bg-primary", textColor: "text-primary-foreground" },
+  { title: "احصل على شهادات", desc: "معتمدة في الحفظ", icon: Award, bg: "bg-gold", textColor: "text-gold-foreground" },
+  { title: "استمع للتلاوات", desc: "بأصوات مميزة", icon: Headphones, bg: "bg-primary", textColor: "text-primary-foreground" },
+];
 
 
 const quickStats = [
@@ -35,75 +36,50 @@ const features = [
 
 
 const Index = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  const nextSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev + 1) % promoSlides.length);
-  }, []);
-
-  useEffect(() => {
-    const timer = setInterval(nextSlide, 4000);
-    return () => clearInterval(timer);
-  }, [nextSlide]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="gradient-primary px-6 pt-6 pb-5 rounded-b-[2.5rem] relative overflow-hidden">
+      {/* Hero Section - Light background */}
+      <div className="px-6 pt-10 pb-4">
+        <motion.div
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground font-cairo">
+            أهلاً بك 👋
+          </h1>
+          <button className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Bell className="w-5 h-5 text-primary" />
+          </button>
+        </motion.div>
+      </div>
 
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-4 right-4 w-32 h-32 rounded-full border-2 border-primary-foreground/30 animate-float" />
-          <div className="absolute bottom-8 left-8 w-20 h-20 rounded-full border border-primary-foreground/20 animate-float" style={{ animationDelay: "1s" }} />
-        </div>
-
+      {/* Promo Cards - Horizontal scroll */}
+      <div className="px-5 mb-4">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="relative z-10">
-
-          <h1 className="text-2xl font-bold text-primary-foreground font-cairo mb-3">
-            مرحباً بك 👋
-          </h1>
-
-          {/* Promo Carousel */}
-          <div className="relative overflow-hidden rounded-2xl h-24">
-            {promoSlides.map((slide, i) =>
+          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {promoSlides.map((slide, i) => (
             <motion.div
               key={i}
-              initial={false}
-              animate={{
-                x: `${(i - currentSlide) * 100}%`,
-                opacity: i === currentSlide ? 1 : 0.5
-              }}
-              transition={{ type: "spring", stiffness: 200, damping: 30 }}
-              className={`absolute inset-0 bg-gradient-to-l ${slide.bg} rounded-2xl p-4 flex items-center gap-3 border border-primary-foreground/20`}>
-
-                <span className="text-3xl">{slide.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-primary-foreground font-bold text-sm leading-tight">{slide.title}</h3>
-                  <p className="text-primary-foreground/80 text-xs mt-1 leading-tight">{slide.desc}</p>
-                </div>
-              </motion.div>
-            )}
-            {/* Dots */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {promoSlides.map((_, i) =>
-              <button
-                key={i}
-                onClick={() => setCurrentSlide(i)}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                i === currentSlide ? "bg-primary-foreground w-4" : "bg-primary-foreground/40"}`
-                } />
-
-              )}
-            </div>
-          </div>
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3 + i * 0.1 }}
+              className={`${slide.bg} rounded-2xl p-5 min-w-[200px] flex-shrink-0 flex flex-col gap-3 shadow-lg`}
+              style={{ minHeight: '140px' }}>
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                <slide.icon className={`w-6 h-6 ${slide.textColor}`} />
+              </div>
+              <div>
+                <h3 className={`font-bold text-base ${slide.textColor}`}>{slide.title}</h3>
+                <p className={`text-xs mt-1 ${slide.textColor} opacity-80`}>{slide.desc}</p>
+              </div>
+            </motion.div>
+          ))}
         </motion.div>
-      </motion.div>
+      </div>
 
       {/* Quick Stats */}
       <div className="px-5 -mt-5">
