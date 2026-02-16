@@ -18,6 +18,7 @@ import PrivacySecurity from "./pages/PrivacySecurity";
 import ContactUs from "./pages/ContactUs";
 import AboutApp from "./pages/AboutApp";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import ShareApp from "./pages/ShareApp";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/contact-us" element={<ContactUs />} />
             <Route path="/about" element={<AboutApp />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/share-app" element={<ShareApp />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />
