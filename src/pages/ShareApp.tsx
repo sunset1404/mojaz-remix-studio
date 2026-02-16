@@ -75,12 +75,8 @@ const ShareApp = () => {
         </div>
 
         {/* Share Message Preview */}
-        <div className="glass-card rounded-2xl p-5 animate-fade-in" style={{ animationDelay: "80ms", animationFillMode: "both" }}>
-          <h3 className="font-bold text-foreground text-sm mb-3">نص المشاركة</h3>
-          <div className="bg-muted/50 rounded-xl p-4 text-[12px] text-muted-foreground leading-relaxed whitespace-pre-line border border-border/50">
-            {SHARE_TEXT}
-          </div>
-        </div>
+
+
 
         {/* Share Actions */}
         <div className="glass-card rounded-2xl overflow-hidden divide-y divide-border/50 animate-fade-in" style={{ animationDelay: "160ms", animationFillMode: "both" }}>
@@ -114,20 +110,6 @@ const ShareApp = () => {
             <Copy className="w-4 h-4 text-muted-foreground" />
           </button>
 
-          {/* Native Share */}
-          <button
-            onClick={shareNative}
-            className="p-4 flex items-center gap-3 w-full hover:bg-muted/30 transition-all active:scale-[0.98]"
-          >
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Share2 className="w-5 h-5 text-gold" />
-            </div>
-            <div className="flex-1 text-right">
-              <p className="font-semibold text-foreground text-sm">مشاركة عبر تطبيقات أخرى</p>
-              <p className="text-[10px] text-muted-foreground">تويتر، تليجرام، وغيرها</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground rotate-180" />
-          </button>
         </div>
       </div>
     </div>
