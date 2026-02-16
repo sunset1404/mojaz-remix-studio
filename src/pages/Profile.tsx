@@ -135,28 +135,6 @@ const Profile = () => {
         </motion.div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="px-5 -mt-6">
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="glass-card rounded-2xl p-4 grid grid-cols-3 gap-2 text-center"
-        >
-          <div>
-            <p className="text-2xl font-bold text-primary">5</p>
-            <p className="text-[10px] text-muted-foreground">أجزاء محفوظة</p>
-          </div>
-          <div className="border-x border-border">
-            <p className="text-2xl font-bold text-gold">48</p>
-            <p className="text-[10px] text-muted-foreground">ساعة إقراء</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-primary">4</p>
-            <p className="text-[10px] text-muted-foreground">شهادات</p>
-          </div>
-        </motion.div>
-      </div>
 
       {/* Menu Sections */}
       <div className="px-5 mt-6 space-y-5">
