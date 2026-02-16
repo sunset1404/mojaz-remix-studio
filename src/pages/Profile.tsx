@@ -156,7 +156,7 @@ const Profile = () => {
                       className="p-4 flex items-center gap-3 w-full"
                     >
                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        {isDark ? <Sun className="w-5 h-5 text-primary" /> : <Moon className="w-5 h-5 text-primary" />}
+                        {isDark ? <Sun className="w-5 h-5 text-gold" /> : <Moon className="w-5 h-5 text-gold" />}
                       </div>
                       <div className="flex-1 text-right">
                         <p className="font-semibold text-foreground text-sm">{item.label}</p>
@@ -184,7 +184,7 @@ const Profile = () => {
                     className="p-4 flex items-center gap-3 w-full hover:bg-muted/30 transition-all active:scale-[0.98]"
                   >
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <item.icon className="w-5 h-5 text-primary" />
+                      <item.icon className="w-5 h-5 text-gold" />
                     </div>
                     <div className="flex-1 text-right">
                       <p className="font-semibold text-foreground text-sm">{item.label}</p>
