@@ -24,6 +24,7 @@ const Payments = () => {
           </Link>
           <h1 className="text-lg font-bold text-primary-foreground">المدفوعات والفواتير</h1>
         </div>
+        <p className="text-primary-foreground/70 text-sm text-center mt-2">إدارة بطاقاتك وسجل الدفعات والفواتير</p>
       </div>
 
       <div className="px-5 mt-6 space-y-6">
