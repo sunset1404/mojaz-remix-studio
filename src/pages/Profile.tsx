@@ -19,11 +19,11 @@ const menuSections = [
     title: "إعدادات التطبيق",
     icon: Settings,
     items: [
-      { icon: Bell, label: "الإشعارات", desc: "تخصيص التنبيهات" },
+      { icon: Bell, label: "الإشعارات", desc: "تخصيص التنبيهات", path: "/notifications" },
       { icon: Moon, label: "المظهر", desc: "فاتح / داكن" },
       { icon: BookOpen, label: "سجل الجلسات", desc: "تاريخ جلسات الإقراء" },
       { icon: Settings, label: "إعدادات التطبيق", desc: "الصوت، التخزين" },
-      { icon: Shield, label: "الخصوصية والأمان", desc: "كلمة المرور، الجلسات" },
+      { icon: Shield, label: "الخصوصية والأمان", desc: "كلمة المرور، الجلسات", path: "/privacy-security" },
     ],
   },
   {
