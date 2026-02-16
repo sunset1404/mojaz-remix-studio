@@ -62,7 +62,7 @@ const Profile = () => {
             <motion.div
               initial={{ y: 200 }} animate={{ y: 0 }} exit={{ y: 200 }}
               transition={{ type: "spring", damping: 25 }}
-              className="w-full max-w-md bg-card rounded-t-2xl p-5 pb-8 space-y-3"
+              className="w-full max-w-md bg-card rounded-t-2xl p-5 pb-24 space-y-3"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-2" dir="rtl">
