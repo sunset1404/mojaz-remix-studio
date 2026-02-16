@@ -187,44 +187,44 @@ const Index = () => {
               المزيد <ChevronLeft className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {topReciters.map((reciter, i) =>
             <motion.div
               key={reciter.name}
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.7 + i * 0.08 }}
-              whileTap={{ scale: 0.95 }}>
+              whileTap={{ scale: 0.97 }}>
 
-                <Link
-                to="/reciters"
-                className="flex flex-col items-center gap-2 w-[110px] bg-card rounded-2xl p-3 border border-border/50 shadow-sm group">
+                <div className="flex flex-col items-center gap-2.5 w-[130px] bg-card rounded-2xl p-4 border border-border/50 shadow-sm">
 
-                  <div className="relative">
-                    <div className="w-[60px] h-[60px] rounded-2xl overflow-hidden ring-2 ring-primary/20 shadow-md">
-                      <img
-                      src={reciter.image}
-                      alt={reciter.name}
-                      className="w-full h-full object-cover" />
+                  <Link to="/reciters" className="flex flex-col items-center gap-2">
+                    <div className="relative">
+                      <div className="w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md">
+                        <img
+                        src={reciter.image}
+                        alt={reciter.name}
+                        className="w-full h-full object-cover" />
+                      </div>
+                      <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[2.5px] border-card ${reciter.online ? "bg-green-500" : "bg-destructive"}`} />
                     </div>
-                    <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${reciter.online ? "bg-green-500" : "bg-destructive"}`} />
+                    <span className="text-xs font-semibold text-foreground text-center leading-tight line-clamp-1">
+                      {reciter.name}
+                    </span>
+                  </Link>
+                  <div className="flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 text-gold fill-current" />
+                    <span className="text-xs font-bold text-foreground">{reciter.rating}</span>
                   </div>
-                  <span className="text-[11px] font-semibold text-foreground text-center leading-tight line-clamp-1">
-                    {reciter.name}
-                  </span>
-                  <div className="flex items-center gap-0.5">
-                    <Star className="w-3 h-3 text-gold fill-current" />
-                    <span className="text-[10px] font-bold text-foreground">{reciter.rating}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-                      <Phone className="w-3.5 h-3.5 text-primary" />
+                  <div className="flex items-center gap-3">
+                    <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
+                      <Video className="w-4.5 h-4.5 text-primary" />
                     </button>
-                    <button className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-                      <Video className="w-3.5 h-3.5 text-primary" />
+                    <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
+                      <Phone className="w-4.5 h-4.5 text-primary" />
                     </button>
                   </div>
-                </Link>
+                </div>
               </motion.div>
             )}
           </div>
