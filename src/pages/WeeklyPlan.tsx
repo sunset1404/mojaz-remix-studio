@@ -59,6 +59,7 @@ const WeeklyPlan = () => {
   const [selectedScope, setSelectedScope] = useState("");
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedTime, setSelectedTime] = useState("");
+  const [customTime, setCustomTime] = useState("");
 
   const resetWizard = () => {
     setCurrentStep(0);
@@ -66,6 +67,7 @@ const WeeklyPlan = () => {
     setSelectedScope("");
     setSelectedDays([]);
     setSelectedTime("");
+    setCustomTime("");
     setEditingPlan(null);
     setShowWizard(false);
   };
@@ -81,6 +83,7 @@ const WeeklyPlan = () => {
     setSelectedScope(plan.scope);
     setSelectedDays(plan.days);
     setSelectedTime(plan.time);
+    setCustomTime(timeSlots.includes(plan.time) ? "" : plan.time);
     setCurrentStep(0);
     setShowWizard(true);
   };
@@ -434,7 +437,7 @@ const WeeklyPlan = () => {
                         return (
                           <button
                             key={time}
-                            onClick={() => setSelectedTime(time)}
+                            onClick={() => { setSelectedTime(time); setCustomTime(""); }}
                             className={`rounded-xl p-3.5 flex items-center justify-between transition-all border-2 ${
                               selected
                                 ? "border-primary bg-primary/5"
@@ -450,6 +453,35 @@ const WeeklyPlan = () => {
                           </button>
                         );
                       })}
+                    </div>
+                    {/* Custom time input */}
+                    <div className="mt-3">
+                      <button
+                        onClick={() => { setSelectedTime(customTime || ""); }}
+                        className={`w-full rounded-xl p-3.5 flex items-center gap-3 transition-all border-2 ${
+                          !timeSlots.includes(selectedTime) && selectedTime !== ""
+                            ? "border-primary bg-primary/5"
+                            : customTime ? "border-primary/30 bg-card" : "border-border bg-card hover:border-primary/30"
+                        }`}
+                      >
+                        <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <input
+                          type="text"
+                          placeholder="وقت مخصص (مثال: 10:30 صباحاً)"
+                          value={customTime}
+                          onChange={(e) => {
+                            setCustomTime(e.target.value);
+                            setSelectedTime(e.target.value);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex-1 bg-transparent text-sm font-semibold text-foreground placeholder:text-muted-foreground outline-none text-right"
+                        />
+                        {!timeSlots.includes(selectedTime) && selectedTime !== "" && (
+                          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
+                            <Check className="w-3 h-3 text-primary-foreground" />
+                          </div>
+                        )}
+                      </button>
                     </div>
                   </motion.div>
                 )}
