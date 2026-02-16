@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Sun, Shield, Camera, Award, CalendarDays, Image, X, Headphones, Info, FileText, CreditCard, PhoneCall } from "lucide-react";
+import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Sun, Shield, Camera, Award, CalendarDays, Image, X, Headphones, Info, FileText, CreditCard, PhoneCall, Star, Share2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const menuSections = [
@@ -30,6 +30,8 @@ const menuSections = [
     items: [
       { icon: Headphones, label: "تواصل معنا", desc: "الدعم الفني والاستفسارات", path: "/contact-us" },
       { icon: Info, label: "عن التطبيق", desc: "الإصدار ١.٠.٠", path: "/about" },
+      { icon: Star, label: "تقييم التطبيق", desc: "شاركنا رأيك وقيّم التجربة", isRate: true },
+      { icon: Share2, label: "مشاركة التطبيق", desc: "شارك التطبيق مع أصدقائك", isShare: true },
       { icon: FileText, label: "سياسة الخصوصية", desc: "الشروط والأحكام", path: "/privacy-policy" },
     ],
   },
@@ -193,6 +195,32 @@ const Profile = () => {
                     <ChevronLeft className="w-4 h-4 text-muted-foreground" />
                   </div>
                 );
+
+                if ('isRate' in item && item.isRate) {
+                  return (
+                    <button key={item.label} className="w-full block" onClick={() => {
+                      // In a real app, this would open the app store rating page
+                      window.open("https://play.google.com/store", "_blank");
+                    }}>
+                      {inner}
+                    </button>
+                  );
+                }
+
+                if ('isShare' in item && item.isShare) {
+                  return (
+                    <button key={item.label} className="w-full block" onClick={() => {
+                      const shareText = "تطبيق مجاز - إجازات قرآنية بالسند المتصل\nحمّل التطبيق الآن:\nhttps://mojaz.app";
+                      if (navigator.share) {
+                        navigator.share({ title: "تطبيق مجاز", text: shareText });
+                      } else {
+                        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
+                      }
+                    }}>
+                      {inner}
+                    </button>
+                  );
+                }
 
                 return item.path ? (
                   <Link key={item.label} to={item.path} className="block">
