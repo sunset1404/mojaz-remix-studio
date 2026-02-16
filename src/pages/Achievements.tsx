@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Star, BookOpen, Target, Award, Flame, Check } from "lucide-react";
+import { Trophy, Star, BookOpen, Target, Award, Flame, Check, X } from "lucide-react";
 
 const achievements = [
   { id: 1, title: "الخطوة الأولى", desc: "أكمل أول جلسة إقراء", icon: "🌟", earned: true, date: "15 يناير 2026" },
@@ -30,10 +30,12 @@ const weekDays = [
   { key: "fri", label: "ج" },
 ];
 
-// أيام الخطة الأسبوعية (من صفحة الخطة الدراسية)
+// أيام الخطة الأسبوعية
 const planDays = ["sat", "mon", "wed"];
-// الأيام التي أنجز فيها الطالب مهامه
-const completedDays = ["sat", "mon"];
+// الأيام المنجزة
+const completedDays = ["sat"];
+// الأيام التي فات موعدها ولم تُنجز
+const missedDays = ["mon"];
 
 const Achievements = () => {
   return (
@@ -88,30 +90,33 @@ const Achievements = () => {
               {completedDays.length}/{planDays.length} أيام
             </span>
           </div>
-          {/* Day labels */}
-          <div className="flex items-center justify-between gap-1 mb-2" dir="rtl">
-            {weekDays.map((day) => {
-              const isInPlan = planDays.includes(day.key);
-              const isDone = completedDays.includes(day.key);
+          {/* Day circles - only plan days */}
+          <div className="flex items-center justify-between gap-2" dir="rtl">
+            {planDays.map((dayKey) => {
+              const day = weekDays.find(d => d.key === dayKey);
+              const isDone = completedDays.includes(dayKey);
+              const isMissed = missedDays.includes(dayKey);
               return (
-                <div key={day.key} className="flex flex-col items-center gap-1.5 flex-1">
-                  <span className={`text-[10px] font-semibold ${isInPlan ? "text-foreground" : "text-muted-foreground/50"}`}>
-                    {day.label}
+                <div key={dayKey} className="flex flex-col items-center gap-1.5 flex-1">
+                  <span className="text-[10px] font-semibold text-foreground">
+                    {day?.label}
                   </span>
                   <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                       isDone
-                        ? "gradient-primary shadow-md"
-                        : isInPlan
-                        ? "bg-primary/10 border-2 border-dashed border-primary/30"
-                        : "bg-muted/50"
+                        ? "bg-green-500 shadow-md"
+                        : isMissed
+                        ? "bg-red-400 shadow-md"
+                        : "bg-muted"
                     }`}
                   >
                     {isDone ? (
-                      <Check className="w-4 h-4 text-primary-foreground" />
-                    ) : isInPlan ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
-                    ) : null}
+                      <Check className="w-4 h-4 text-white" />
+                    ) : isMissed ? (
+                      <X className="w-4 h-4 text-white" />
+                    ) : (
+                      <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+                    )}
                   </div>
                 </div>
               );
@@ -119,21 +124,17 @@ const Achievements = () => {
           </div>
           {/* Segmented progress bar */}
           <div className="flex items-center gap-1 mt-3" dir="rtl">
-            {weekDays.map((day) => {
-              const isDone = completedDays.includes(day.key);
-              const isInPlan = planDays.includes(day.key);
+            {planDays.map((dayKey) => {
+              const isDone = completedDays.includes(dayKey);
+              const isMissed = missedDays.includes(dayKey);
               return (
                 <motion.div
-                  key={day.key}
+                  key={dayKey}
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ delay: 0.4, duration: 0.5 }}
                   className={`flex-1 h-2 rounded-full ${
-                    isDone
-                      ? "gradient-primary"
-                      : isInPlan
-                      ? "bg-primary/20"
-                      : "bg-muted/60"
+                    isDone ? "bg-green-500" : isMissed ? "bg-red-400" : "bg-muted"
                   }`}
                 />
               );
