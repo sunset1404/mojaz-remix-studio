@@ -130,8 +130,8 @@ const Profile = () => {
 
       {/* Menu Sections */}
       <div className="px-5 mt-6 space-y-5">
-        {menuSections.map((section) => (
-          <div key={section.title}>
+        {menuSections.map((section, sIdx) => (
+          <div key={section.title} className="animate-fade-in" style={{ animationDelay: `${sIdx * 80}ms`, animationFillMode: 'both' }}>
             {/* Section Header */}
             <div className="flex items-center gap-2 mb-2.5 px-1" dir="rtl">
               <section.icon className="w-4 h-4 text-primary" />
