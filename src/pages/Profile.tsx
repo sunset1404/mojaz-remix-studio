@@ -146,7 +146,7 @@ const Profile = () => {
                     key={item.label}
                     initial={{ x: 30, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 + idx * 0.06 }}
+                    transition={{ delay: 0.05 + idx * 0.03 }}
                     whileTap={{ scale: 0.98 }}
                     className="p-4 flex items-center gap-3 w-full hover:bg-muted/30 transition-all"
                   >
@@ -179,7 +179,7 @@ const Profile = () => {
         <motion.button
           initial={{ x: 30, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.9 }}
+          transition={{ delay: 0.15 }}
           whileTap={{ scale: 0.98 }}
           className="rounded-xl p-4 flex items-center gap-3 w-full border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-all mt-4"
         >
