@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Star, Play, Search } from "lucide-react";
+import { Star, Phone, Video, Search } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
@@ -81,16 +81,14 @@ const Reciters = () => {
             whileTap={{ scale: 0.98 }}
             className="glass-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:shadow-lg transition-all"
           >
-            <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center text-2xl shrink-0">
+            <div className="relative w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center text-2xl shrink-0">
               {reciter.avatar}
+              <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${reciter.available ? "bg-green-500" : "bg-destructive"}`} />
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-foreground truncate">{reciter.name}</h3>
-                {reciter.available && (
-                  <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                )}
               </div>
               <p className="text-xs text-muted-foreground">{reciter.specialty}</p>
               <div className="flex items-center gap-3 mt-1">
@@ -101,9 +99,14 @@ const Reciters = () => {
               </div>
             </div>
 
-            <button className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-              <Play className="w-4 h-4 text-primary" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <Phone className="w-4 h-4 text-primary" />
+              </button>
+              <button className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <Video className="w-4 h-4 text-primary" />
+              </button>
+            </div>
           </motion.div>
         ))}
       </div>

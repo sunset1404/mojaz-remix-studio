@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones } from "lucide-react";
+import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones, Phone, Video } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import reciter1 from "@/assets/reciters/reciter1.jpg";
@@ -9,11 +9,11 @@ import reciter4 from "@/assets/reciters/reciter4.jpg";
 import reciter5 from "@/assets/reciters/reciter5.jpg";
 
 const topReciters = [
-{ name: "أحمد العجمي", image: reciter1 },
-{ name: "ماهر المعيقلي", image: reciter2 },
-{ name: "عبدالرحمن السديس", image: reciter3 },
-{ name: "سعد الغامدي", image: reciter4 },
-{ name: "فارس عبّاد", image: reciter5 }];
+{ name: "أحمد العجمي", image: reciter1, rating: 4.9, online: true },
+{ name: "ماهر المعيقلي", image: reciter2, rating: 4.8, online: true },
+{ name: "عبدالرحمن السديس", image: reciter3, rating: 5.0, online: false },
+{ name: "سعد الغامدي", image: reciter4, rating: 4.9, online: true },
+{ name: "فارس عبّاد", image: reciter5, rating: 4.6, online: false }];
 
 const promoSlides = [
 { title: "القرآن الكريم", desc: "بمقرئين معتمدين", icon: BookOpen, bg: "gradient-primary", iconBg: "bg-white/20" },
@@ -198,18 +198,32 @@ const Index = () => {
 
                 <Link
                 to="/reciters"
-                className="flex flex-col items-center gap-2 w-[76px] group">
+                className="flex flex-col items-center gap-2 w-[110px] bg-card rounded-2xl p-3 border border-border/50 shadow-sm group">
 
-                  <div className="w-[68px] h-[68px] rounded-2xl overflow-hidden ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all shadow-lg">
-                    <img
-                    src={reciter.image}
-                    alt={reciter.name}
-                    className="w-full h-full object-cover" />
-
+                  <div className="relative">
+                    <div className="w-[60px] h-[60px] rounded-2xl overflow-hidden ring-2 ring-primary/20 shadow-md">
+                      <img
+                      src={reciter.image}
+                      alt={reciter.name}
+                      className="w-full h-full object-cover" />
+                    </div>
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${reciter.online ? "bg-green-500" : "bg-destructive"}`} />
                   </div>
-                  <span className="text-[11px] font-semibold text-foreground text-center leading-tight line-clamp-2">
+                  <span className="text-[11px] font-semibold text-foreground text-center leading-tight line-clamp-1">
                     {reciter.name}
                   </span>
+                  <div className="flex items-center gap-0.5">
+                    <Star className="w-3 h-3 text-gold fill-current" />
+                    <span className="text-[10px] font-bold text-foreground">{reciter.rating}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                      <Phone className="w-3.5 h-3.5 text-primary" />
+                    </button>
+                    <button className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                      <Video className="w-3.5 h-3.5 text-primary" />
+                    </button>
+                  </div>
                 </Link>
               </motion.div>
             )}
