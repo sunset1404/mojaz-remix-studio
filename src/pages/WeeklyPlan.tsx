@@ -53,6 +53,7 @@ const WeeklyPlan = () => {
   const [showWizard, setShowWizard] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
 
   // Wizard state
   const [selectedGoal, setSelectedGoal] = useState("");
@@ -81,6 +82,10 @@ const WeeklyPlan = () => {
   };
 
   const openAddWizard = () => {
+    if (plans.length > 0) {
+      setShowLimitDialog(true);
+      return;
+    }
     resetWizard();
     setShowWizard(true);
   };
@@ -246,6 +251,51 @@ const WeeklyPlan = () => {
           </motion.button>
         )}
       </div>
+
+      {/* Limit Dialog */}
+      <AnimatePresence>
+        {showLimitDialog && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-center justify-center px-6"
+            onClick={() => setShowLimitDialog(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-card rounded-2xl p-6 w-full max-w-sm shadow-xl text-center"
+            >
+              <p className="text-foreground font-bold text-base mb-5">لديك خطة بالفعل</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowLimitDialog(false);
+                    openEditWizard(plans[0]);
+                  }}
+                  className="flex-1 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
+                >
+                  <Pencil className="w-4 h-4" />
+                  تعديل
+                </button>
+                <button
+                  onClick={() => {
+                    deletePlan(plans[0].id);
+                    setShowLimitDialog(false);
+                  }}
+                  className="flex-1 py-3 rounded-xl border-2 border-destructive/30 text-destructive font-semibold text-sm flex items-center justify-center gap-1.5"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  حذف
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Wizard Modal */}
       <AnimatePresence>
