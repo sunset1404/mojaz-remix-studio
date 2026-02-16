@@ -108,7 +108,7 @@ const Profile = () => {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="gradient-primary px-6 pt-12 pb-14 rounded-b-[2.5rem] text-center relative">
+      <div className="gradient-primary px-6 pt-12 pb-8 rounded-b-[2.5rem] text-center relative">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
           <div className="relative mx-auto w-24 h-24 mb-3">
             <div className="w-24 h-24 rounded-full bg-primary-foreground/20 backdrop-blur-sm border-4 border-primary-foreground/30 flex items-center justify-center overflow-hidden">
@@ -124,14 +124,6 @@ const Profile = () => {
           </div>
           <h1 className="text-xl font-bold text-primary-foreground">عبدالله محمد</h1>
           <p className="text-primary-foreground/70 text-sm">طالب · المستوى 4</p>
-          <div className="flex items-center justify-center gap-4 mt-3">
-            <div className="bg-primary-foreground/15 px-3 py-1 rounded-full">
-              <span className="text-primary-foreground text-xs">🔥 14 يوم متتالي</span>
-            </div>
-            <div className="bg-primary-foreground/15 px-3 py-1 rounded-full">
-              <span className="text-primary-foreground text-xs">⭐ 128 نجمة</span>
-            </div>
-          </div>
         </motion.div>
       </div>
 
