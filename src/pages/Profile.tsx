@@ -209,11 +209,15 @@ const Profile = () => {
 
                 if ('isShare' in item && item.isShare) {
                   return (
-                    <button key={item.label} className="w-full block" onClick={() => {
-                      const shareText = "تطبيق مجاز - إجازات قرآنية بالسند المتصل\nحمّل التطبيق الآن:\nhttps://mojaz.app";
-                      if (navigator.share) {
-                        navigator.share({ title: "تطبيق مجاز", text: shareText });
-                      } else {
+                    <button key={item.label} className="w-full block" onClick={async () => {
+                      const shareText = "تطبيق مجاز - سند متصل بالسماء\nحمّل التطبيق الآن:\nhttps://mojaz.app";
+                      try {
+                        if (navigator.share) {
+                          await navigator.share({ title: "تطبيق مجاز", text: shareText });
+                        } else {
+                          window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
+                        }
+                      } catch {
                         window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
                       }
                     }}>
