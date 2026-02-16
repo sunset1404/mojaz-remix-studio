@@ -14,7 +14,7 @@ const menuSections = [
     ],
   },
   {
-    title: "التطبيق",
+    title: "إعدادات التطبيق",
     icon: Settings,
     items: [
       { icon: Bell, label: "الإشعارات", desc: "تخصيص التنبيهات" },
