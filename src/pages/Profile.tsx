@@ -2,18 +2,32 @@ import { motion } from "framer-motion";
 import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Shield, Camera, Award, CalendarDays } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const menuItems = [
-  { icon: User, label: "البيانات الشخصية", desc: "الاسم، الجوال، البريد", path: "/profile/edit" },
-  { icon: Award, label: "الإجازات والشهادات", desc: "إجازاتي وشهاداتي المعتمدة", path: "/certificates" },
-  { icon: CalendarDays, label: "خطتي الأسبوعية", desc: "عرض وتعديل خطة الحفظ", path: "/weekly-plan" },
-  { icon: Bell, label: "الإشعارات", desc: "تخصيص التنبيهات" },
-  { icon: Moon, label: "المظهر", desc: "فاتح / داكن" },
-  { icon: Shield, label: "الخصوصية والأمان", desc: "كلمة المرور، الجلسات" },
-  { icon: BookOpen, label: "سجل الجلسات", desc: "تاريخ جلسات الإقراء" },
-  { icon: Settings, label: "إعدادات التطبيق", desc: "الصوت، التخزين" },
+const menuSections = [
+  {
+    title: "الحساب",
+    icon: User,
+    items: [
+      { icon: User, label: "البيانات الشخصية", desc: "الاسم، الجوال، البريد", path: "/profile/edit" },
+      { icon: Award, label: "الإجازات والشهادات", desc: "إجازاتي وشهاداتي المعتمدة", path: "/certificates" },
+      { icon: CalendarDays, label: "خطتي الأسبوعية", desc: "عرض وتعديل خطة الحفظ", path: "/weekly-plan" },
+      { icon: Shield, label: "الخصوصية والأمان", desc: "كلمة المرور، الجلسات" },
+    ],
+  },
+  {
+    title: "التطبيق",
+    icon: Settings,
+    items: [
+      { icon: Bell, label: "الإشعارات", desc: "تخصيص التنبيهات" },
+      { icon: Moon, label: "المظهر", desc: "فاتح / داكن" },
+      { icon: BookOpen, label: "سجل الجلسات", desc: "تاريخ جلسات الإقراء" },
+      { icon: Settings, label: "إعدادات التطبيق", desc: "الصوت، التخزين" },
+    ],
+  },
 ];
 
 const Profile = () => {
+  let itemIndex = 0;
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -63,39 +77,52 @@ const Profile = () => {
         </motion.div>
       </div>
 
-      {/* Menu Items */}
-      <div className="px-5 mt-6 space-y-2">
-        {menuItems.map((item, i) => {
-          const content = (
-            <motion.div
-              key={item.label}
-              initial={{ x: 30, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.3 + i * 0.06 }}
-              whileTap={{ scale: 0.98 }}
-              className="glass-card rounded-xl p-4 flex items-center gap-3 w-full hover:shadow-md transition-all"
-            >
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <item.icon className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 text-right">
-                <p className="font-semibold text-foreground text-sm">{item.label}</p>
-                <p className="text-[10px] text-muted-foreground">{item.desc}</p>
-              </div>
-              <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-            </motion.div>
-          );
+      {/* Menu Sections */}
+      <div className="px-5 mt-6 space-y-5">
+        {menuSections.map((section) => (
+          <div key={section.title}>
+            {/* Section Header */}
+            <div className="flex items-center justify-end gap-2 mb-2.5 px-1">
+              <span className="text-sm font-bold text-foreground">{section.title}</span>
+              <section.icon className="w-4 h-4 text-primary" />
+            </div>
+            {/* Section Items */}
+            <div className="glass-card rounded-2xl overflow-hidden divide-y divide-border/50">
+              {section.items.map((item) => {
+                const idx = itemIndex++;
+                const inner = (
+                  <motion.div
+                    key={item.label}
+                    initial={{ x: 30, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 + idx * 0.06 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="p-4 flex items-center gap-3 w-full hover:bg-muted/30 transition-all"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <item.icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 text-right">
+                      <p className="font-semibold text-foreground text-sm">{item.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{item.desc}</p>
+                    </div>
+                    <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+                  </motion.div>
+                );
 
-          return item.path ? (
-            <Link key={item.label} to={item.path} className="block">
-              {content}
-            </Link>
-          ) : (
-            <button key={item.label} className="w-full">
-              {content}
-            </button>
-          );
-        })}
+                return item.path ? (
+                  <Link key={item.label} to={item.path} className="block">
+                    {inner}
+                  </Link>
+                ) : (
+                  <button key={item.label} className="w-full">
+                    {inner}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
 
         {/* Logout */}
         <motion.button
