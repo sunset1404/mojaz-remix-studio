@@ -69,7 +69,7 @@ const Achievements = () => {
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.05 }}
           className="glass-card rounded-2xl p-4 grid grid-cols-2 gap-3"
         >
           {stats.map((stat, i) => (
@@ -77,7 +77,7 @@ const Achievements = () => {
               key={stat.label}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3 + i * 0.1 }}
+              transition={{ delay: 0.05 + i * 0.03 }}
               className="flex items-center gap-3 p-2"
             >
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -97,7 +97,7 @@ const Achievements = () => {
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.08 }}
           className="glass-card rounded-2xl p-4"
         >
           <div className="flex items-center justify-between mb-4" dir="rtl">
@@ -148,7 +148,7 @@ const Achievements = () => {
                   key={dayKey}
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.4, duration: 0.5 }}
+                  transition={{ delay: 0.1, duration: 0.5 }}
                   className={`flex-1 h-2 rounded-full ${
                     isDone ? "bg-green-500" : isMissed ? "bg-red-400" : "bg-muted"
                   }`}
@@ -164,7 +164,7 @@ const Achievements = () => {
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.1 }}
           className="glass-card rounded-2xl p-5"
         >
           <div className="flex items-center justify-between mb-2">
@@ -178,7 +178,7 @@ const Achievements = () => {
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: "68%" }}
-              transition={{ delay: 0.6, duration: 1 }}
+              transition={{ delay: 0.15, duration: 0.8 }}
               className="h-full gradient-gold rounded-full"
             />
           </div>
@@ -198,7 +198,7 @@ const Achievements = () => {
                 key={ach.id}
                 initial={{ x: 30, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.5 + i * 0.08 }}
+                transition={{ delay: 0.05 + i * 0.03 }}
                 className={`glass-card rounded-2xl p-4 flex items-center gap-4 ${!ach.earned ? "opacity-70" : ""}`}
               >
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
@@ -235,7 +235,7 @@ const Achievements = () => {
                 key={ach.id}
                 initial={{ x: 30, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.7 + i * 0.08 }}
+                transition={{ delay: 0.08 + i * 0.03 }}
                 className={`glass-card rounded-2xl p-4 flex items-center gap-4 ${!ach.earned ? "opacity-70" : ""}`}
               >
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
