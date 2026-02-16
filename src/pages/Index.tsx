@@ -141,37 +141,32 @@ const Index = () => {
         </motion.div>
       </div>
 
-      {/* Today's Progress */}
-      <div className="px-5 mt-6">
+      {/* Study Plan Card */}
+      <div className="px-5 mt-3">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}>
-
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+          transition={{ delay: 0.6 }}
+          whileTap={{ scale: 0.98 }}>
+          <Link to="/weekly-plan" className="block">
+            <div className="relative rounded-2xl overflow-hidden gradient-primary p-5 shadow-lg">
+              <div className="absolute top-0 left-0 w-28 h-28 rounded-full bg-white/5 -translate-x-8 -translate-y-8" />
+              <div className="absolute bottom-0 right-0 w-20 h-20 rounded-full bg-white/5 translate-x-6 translate-y-6" />
+              <div className="relative z-10 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                  <CalendarDays className="w-6 h-6 text-primary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg text-primary-foreground">خطتي الدراسية</h3>
+                  <p className="text-sm text-primary-foreground/75 mt-0.5">نظّم جلسات القراءة وتابع تقدمك</p>
+                </div>
+                <ChevronLeft className="w-5 h-5 text-primary-foreground/60 shrink-0" />
+              </div>
+            </div>
+          </Link>
         </motion.div>
       </div>
+
 
       {/* Reciters Section */}
       <div className="px-5 mt-6">
