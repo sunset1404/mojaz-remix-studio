@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Shield, Camera, Award, CalendarDays, Image, X, Headphones, Info, FileText, CreditCard, PhoneCall } from "lucide-react";
+import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Sun, Shield, Camera, Award, CalendarDays, Image, X, Headphones, Info, FileText, CreditCard, PhoneCall } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const menuSections = [
@@ -20,7 +20,7 @@ const menuSections = [
     icon: Settings,
     items: [
       { icon: Bell, label: "الإشعارات", desc: "تخصيص التنبيهات", path: "/notifications" },
-      { icon: Moon, label: "المظهر", desc: "فاتح / داكن" },
+      { icon: Moon, label: "المظهر", desc: "فاتح / داكن", isThemeToggle: true },
       { icon: Shield, label: "الخصوصية والأمان", desc: "كلمة المرور، الجلسات", path: "/privacy-security" },
     ],
   },
@@ -39,8 +39,16 @@ const Profile = () => {
   let itemIndex = 0;
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showImageOptions, setShowImageOptions] = useState(false);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const toggleTheme = () => {
+    const newDark = !isDark;
+    setIsDark(newDark);
+    document.documentElement.classList.toggle("dark", newDark);
+    localStorage.setItem("theme", newDark ? "dark" : "light");
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -139,6 +147,37 @@ const Profile = () => {
             <div className="glass-card rounded-2xl overflow-hidden divide-y divide-border/50">
               {section.items.map((item) => {
                 const idx = itemIndex++;
+
+                // Theme toggle row - special rendering
+                if ('isThemeToggle' in item && item.isThemeToggle) {
+                  return (
+                    <div
+                      key={item.label}
+                      className="p-4 flex items-center gap-3 w-full"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        {isDark ? <Sun className="w-5 h-5 text-primary" /> : <Moon className="w-5 h-5 text-primary" />}
+                      </div>
+                      <div className="flex-1 text-right">
+                        <p className="font-semibold text-foreground text-sm">{item.label}</p>
+                        <p className="text-[10px] text-muted-foreground">{isDark ? "داكن" : "فاتح"}</p>
+                      </div>
+                      <button
+                        onClick={toggleTheme}
+                        className={`w-12 h-7 rounded-full transition-all duration-300 relative ${
+                          isDark ? "bg-primary" : "bg-muted"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-1 w-5 h-5 rounded-full bg-primary-foreground shadow-sm transition-all duration-300 ${
+                            isDark ? "right-1" : "right-6"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  );
+                }
+
                 const inner = (
                   <div
                     key={item.label}
