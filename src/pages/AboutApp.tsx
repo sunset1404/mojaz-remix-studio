@@ -58,7 +58,7 @@ const AboutApp = () => {
         <div className="glass-card rounded-2xl overflow-hidden divide-y divide-border/50 animate-fade-in" style={{ animationDelay: "160ms", animationFillMode: "both" }}>
           <a href="https://iwtsp.com/966507040036" target="_blank" rel="noopener noreferrer" className="p-4 flex items-center gap-3 hover:bg-muted/30 transition-all active:scale-[0.98] block">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <MessageCircle className="w-5 h-5 text-primary" />
+              <MessageCircle className="w-5 h-5 text-gold" />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-foreground text-sm">واتساب</p>
@@ -68,7 +68,7 @@ const AboutApp = () => {
           </a>
           <a href="tel:0115205446" className="p-4 flex items-center gap-3 hover:bg-muted/30 transition-all active:scale-[0.98] block">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Phone className="w-5 h-5 text-primary" />
+              <Phone className="w-5 h-5 text-gold" />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-foreground text-sm">الرقم الموحد</p>
@@ -88,7 +88,7 @@ const AboutApp = () => {
                 href={social.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all active:scale-95"
+                className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-gold hover:bg-primary hover:text-primary-foreground transition-all active:scale-95"
                 aria-label={social.name}
               >
                 {social.icon}
