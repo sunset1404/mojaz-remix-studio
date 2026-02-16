@@ -15,6 +15,9 @@ import Payments from "./pages/Payments";
 import CallHistory from "./pages/CallHistory";
 import Notifications from "./pages/Notifications";
 import PrivacySecurity from "./pages/PrivacySecurity";
+import ContactUs from "./pages/ContactUs";
+import AboutApp from "./pages/AboutApp";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -40,6 +43,9 @@ const App = () => (
             <Route path="/call-history" element={<CallHistory />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/privacy-security" element={<PrivacySecurity />} />
+            <Route path="/contact-us" element={<ContactUs />} />
+            <Route path="/about" element={<AboutApp />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />
