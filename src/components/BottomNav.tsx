@@ -43,7 +43,7 @@ const BottomNav = () => {
                   whileTap={{ scale: 0.9 }}>
 
                     <tab.icon className={`w-6 h-6 shrink-0 transition-colors ${
-                  active ? "text-primary" : "text-muted-foreground"}`
+                  active ? "text-primary" : "text-turquoise-dark"}`
                   } />
                     <AnimatePresence mode="wait">
                       {active &&
