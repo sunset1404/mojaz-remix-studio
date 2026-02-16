@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Shield, Camera, Award, CalendarDays, Image, X, Headphones, Info, FileText, CreditCard } from "lucide-react";
+import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Shield, Camera, Award, CalendarDays, Image, X, Headphones, Info, FileText, CreditCard, PhoneCall } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const menuSections = [
@@ -12,6 +12,7 @@ const menuSections = [
       { icon: Award, label: "الإجازات والشهادات", desc: "إجازاتي وشهاداتي المعتمدة", path: "/certificates" },
       { icon: CalendarDays, label: "خطتي الأسبوعية", desc: "عرض وتعديل خطة الحفظ", path: "/weekly-plan" },
       { icon: CreditCard, label: "المدفوعات والفواتير", desc: "بطاقات الائتمان، سجل الدفعات", path: "/payments" },
+      { icon: PhoneCall, label: "سجل الجلسات", desc: "تاريخ جلسات الإقراء والتقييمات", path: "/call-history" },
     ],
   },
   {
