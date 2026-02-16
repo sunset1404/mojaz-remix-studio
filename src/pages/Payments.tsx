@@ -18,11 +18,11 @@ const Payments = () => {
     <div className="min-h-screen bg-background pb-24" dir="rtl">
       {/* Header */}
       <div className="gradient-primary px-6 pt-12 pb-6 rounded-b-[2rem] relative">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold text-primary-foreground">المدفوعات والفواتير</h1>
-          <Link to="/profile">
+        <div className="flex items-center justify-center relative">
+          <Link to="/profile" className="absolute right-0">
             <ChevronRight className="w-5 h-5 text-primary-foreground" />
           </Link>
+          <h1 className="text-lg font-bold text-primary-foreground">المدفوعات والفواتير</h1>
         </div>
       </div>
 
