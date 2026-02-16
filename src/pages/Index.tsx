@@ -16,10 +16,10 @@ const topReciters = [
 { name: "فارس عبّاد", image: reciter5 }];
 
 const promoSlides = [
-  { title: "القرآن الكريم", desc: "بمقرئين معتمدين", icon: BookOpen, bg: "gradient-primary", iconBg: "bg-white/20" },
-  { title: "شهادات معتمدة", desc: "احصل على شهادات في الحفظ", icon: Award, bg: "gradient-gold", iconBg: "bg-white/30" },
-  { title: "تلاوات مميزة", desc: "استمع بأصوات عذبة", icon: Headphones, bg: "gradient-primary", iconBg: "bg-white/20" },
-];
+{ title: "القرآن الكريم", desc: "بمقرئين معتمدين", icon: BookOpen, bg: "gradient-primary", iconBg: "bg-white/20" },
+{ title: "شهادات معتمدة", desc: "احصل على شهادات في الحفظ", icon: Award, bg: "gradient-gold", iconBg: "bg-white/30" },
+{ title: "تلاوات مميزة", desc: "استمع بأصوات عذبة", icon: Headphones, bg: "gradient-primary", iconBg: "bg-white/20" }];
+
 
 const quickStats = [
 { label: "أجزاء محفوظة", value: "5", icon: BookOpen, color: "primary" },
@@ -99,20 +99,20 @@ const Index = () => {
           
           {/* Dots */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-            {promoSlides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentSlide(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  i === currentSlide ? "bg-primary-foreground w-6" : "bg-primary-foreground/40 w-2"
-                }`} />
-            ))}
+            {promoSlides.map((_, i) =>
+            <button
+              key={i}
+              onClick={() => setCurrentSlide(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+              i === currentSlide ? "bg-primary-foreground w-6" : "bg-primary-foreground/40 w-2"}`
+              } />
+            )}
           </div>
         </motion.div>
       </div>
 
       {/* Quick Stats */}
-      <div className="px-5 -mt-5">
+      <div className="px-5 -mt-5 py-[19px]">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
