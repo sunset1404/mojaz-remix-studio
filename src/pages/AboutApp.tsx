@@ -1,5 +1,6 @@
-import { ChevronRight, Info, Star, Code, Heart } from "lucide-react";
+import { ChevronRight, Info, Code, Heart, Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import logoMojaz from "@/assets/logo-mojaz.webp";
 
 const AboutApp = () => {
   return (
@@ -19,26 +20,24 @@ const AboutApp = () => {
       <div className="px-5 mt-6 space-y-5">
         {/* App Info */}
         <div className="glass-card rounded-2xl p-6 text-center animate-fade-in" style={{ animationFillMode: "both" }}>
-          <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Star className="w-10 h-10 text-primary" />
-          </div>
-          <h2 className="text-lg font-bold text-foreground">مُقرئ</h2>
-          <p className="text-sm text-muted-foreground mt-1">منصة إقراء القرآن الكريم عن بُعد</p>
+          <img src={logoMojaz} alt="شعار مجاز" className="w-24 h-28 object-contain mx-auto mb-4" />
+          <h2 className="text-lg font-bold text-foreground">مجاز</h2>
+          <p className="text-sm text-muted-foreground mt-1">إجازات قرآنية بالسند المتصل</p>
           <p className="text-[10px] text-muted-foreground mt-2">الإصدار 1.0.0</p>
         </div>
 
         {/* Description */}
         <div className="glass-card rounded-2xl p-5 animate-fade-in" style={{ animationDelay: "80ms", animationFillMode: "both" }}>
-          <h3 className="font-bold text-foreground text-sm mb-2">عن المنصة</h3>
+          <h3 className="font-bold text-foreground text-sm mb-2">عن التطبيق</h3>
           <p className="text-[12px] text-muted-foreground leading-relaxed">
-            منصة مُقرئ هي منصة تعليمية متخصصة في إقراء القرآن الكريم عن بُعد، تربط الطلاب بنخبة من المقرئين المجازين. تهدف المنصة إلى تسهيل تعلم القرآن الكريم وإتقان تلاوته من أي مكان في العالم.
+            تطبيق مجاز هو تطبيق تابع لجمعية إقراء القرآن الكريم بمكة المكرمة، متخصص في الإجازات القرآنية بالسند المتصل. يربط الطلاب بنخبة من المقرئين المجازين، ويهدف إلى تسهيل تعلم القرآن الكريم وإتقان تلاوته من أي مكان في العالم.
           </p>
         </div>
 
         {/* Features */}
         <div className="glass-card rounded-2xl overflow-hidden divide-y divide-border/50 animate-fade-in" style={{ animationDelay: "160ms", animationFillMode: "both" }}>
           {[
-            { icon: Star, label: "جلسات إقراء مباشرة", desc: "تواصل مباشر مع المقرئين" },
+            { icon: Star, label: "جلسات إقراء مباشرة", desc: "تواصل مباشر مع المقرئين المجازين" },
             { icon: Code, label: "تقنية متقدمة", desc: "جودة صوت عالية وتجربة سلسة" },
             { icon: Heart, label: "مجتمع متعاون", desc: "بيئة تعليمية داعمة ومحفزة" },
           ].map((item, i) => (
@@ -54,7 +53,7 @@ const AboutApp = () => {
           ))}
         </div>
 
-        <p className="text-center text-[10px] text-muted-foreground mt-4">© 2025 مُقرئ. جميع الحقوق محفوظة.</p>
+        <p className="text-center text-[10px] text-muted-foreground mt-4">© 2025 مجاز - جمعية إقراء القرآن الكريم بمكة المكرمة. جميع الحقوق محفوظة.</p>
       </div>
     </div>
   );
