@@ -16,9 +16,9 @@ const topReciters = [
 { name: "فارس عبّاد", image: reciter5, rating: 4.6, online: false }];
 
 const promoSlides = [
-{ title: "القرآن الكريم", desc: "بمقرئين معتمدين", icon: BookOpen, bg: "gradient-primary", iconBg: "bg-white/20" },
-{ title: "شهادات معتمدة", desc: "احصل على شهادات في الحفظ", icon: Award, bg: "gradient-gold", iconBg: "bg-white/30" },
-{ title: "تلاوات مميزة", desc: "استمع بأصوات عذبة", icon: Headphones, bg: "gradient-primary", iconBg: "bg-white/20" }];
+{ title: "القرآن الكريم", desc: "بمقرئين معتمدين", icon: BookOpen, bg: "gradient-primary", iconBg: "bg-gold/20", iconColor: "text-gold" },
+{ title: "شهادات معتمدة", desc: "احصل على شهادات في الحفظ", icon: Award, bg: "gradient-gold", iconBg: "bg-primary/20", iconColor: "text-primary" },
+{ title: "تلاوات مميزة", desc: "استمع بأصوات عذبة", icon: Headphones, bg: "gradient-primary", iconBg: "bg-gold/20", iconColor: "text-gold" }];
 
 
 const quickStats = [
@@ -86,7 +86,7 @@ const Index = () => {
                 <div className={`w-16 h-16 rounded-2xl ${promoSlides[currentSlide].iconBg} flex items-center justify-center shrink-0 shadow-lg`}>
                   {(() => {
                     const Icon = promoSlides[currentSlide].icon;
-                    return <Icon className="w-8 h-8 text-primary-foreground" />;
+                    return <Icon className={`w-8 h-8 ${promoSlides[currentSlide].iconColor}`} />;
                   })()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -153,8 +153,8 @@ const Index = () => {
               <div className="absolute top-0 left-0 w-28 h-28 rounded-full bg-white/5 -translate-x-8 -translate-y-8" />
               <div className="absolute bottom-0 right-0 w-20 h-20 rounded-full bg-white/5 translate-x-6 translate-y-6" />
               <div className="relative z-10 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-                  <CalendarDays className="w-6 h-6 text-primary-foreground" />
+                <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
+                  <CalendarDays className="w-6 h-6 text-gold" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-lg text-primary-foreground">خطتي الدراسية</h3>
