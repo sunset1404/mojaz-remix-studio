@@ -54,6 +54,7 @@ const WeeklyPlan = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [showLimitDialog, setShowLimitDialog] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   // Wizard state
   const [selectedGoal, setSelectedGoal] = useState("");
@@ -103,6 +104,7 @@ const WeeklyPlan = () => {
 
   const deletePlan = (id: number) => {
     setPlans(prev => prev.filter(p => p.id !== id));
+    setDeleteConfirmId(null);
   };
 
   const canNext = () => {
@@ -216,7 +218,7 @@ const WeeklyPlan = () => {
                         <Pencil className="w-3.5 h-3.5 text-primary" />
                       </button>
                       <button
-                        onClick={() => deletePlan(plan.id)}
+                        onClick={() => setDeleteConfirmId(plan.id)}
                         className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center"
                       >
                         <Trash2 className="w-3.5 h-3.5 text-destructive" />
@@ -281,13 +283,50 @@ const WeeklyPlan = () => {
                 </button>
                 <button
                   onClick={() => {
-                    deletePlan(plans[0].id);
                     setShowLimitDialog(false);
+                    setDeleteConfirmId(plans[0].id);
                   }}
                   className="flex-1 py-3 rounded-xl border-2 border-destructive/30 text-destructive font-semibold text-sm flex items-center justify-center gap-1.5"
                 >
                   <Trash2 className="w-4 h-4" />
                   حذف
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Dialog */}
+      <AnimatePresence>
+        {deleteConfirmId !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-center justify-center px-6"
+            onClick={() => setDeleteConfirmId(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-card rounded-2xl p-6 w-full max-w-sm shadow-xl text-center"
+            >
+              <p className="text-foreground font-bold text-base mb-5">هل تريد حذف هذه الخطة؟</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => deletePlan(deleteConfirmId)}
+                  className="flex-1 py-3 rounded-xl bg-destructive text-destructive-foreground font-semibold text-sm"
+                >
+                  حذف
+                </button>
+                <button
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="flex-1 py-3 rounded-xl border-2 border-border text-foreground font-semibold text-sm"
+                >
+                  إلغاء
                 </button>
               </div>
             </motion.div>
