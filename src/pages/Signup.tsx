@@ -50,84 +50,40 @@ const Signup = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
-      {/* Colored top section with wave */}
-      <div className="relative w-full" style={{ minHeight: "34vh" }}>
-        <div className="absolute inset-0 gradient-primary" />
-        
-        {/* Decorative circles */}
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.15 }}
-          transition={{ duration: 1.2 }}
-          className="absolute top-8 right-8 w-32 h-32 rounded-full border-2 border-primary-foreground/30"
-        />
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.1 }}
-          transition={{ duration: 1.2, delay: 0.2 }}
-          className="absolute -top-10 -left-10 w-48 h-48 rounded-full border-2 border-primary-foreground/20"
-        />
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.08 }}
-          transition={{ duration: 1, delay: 0.4 }}
-          className="absolute bottom-16 left-6 w-20 h-20 rounded-full bg-primary-foreground/20"
-        />
+    <div className="min-h-screen flex flex-col relative overflow-hidden"
+      style={{ background: "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 40%, hsl(var(--gold) / 0.35) 85%, hsl(var(--gold) / 0.5) 100%)" }}
+    >
+      {/* Full-page decorative elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 0.1 }} transition={{ duration: 1.2 }}
+          className="absolute top-12 right-6 w-40 h-40 rounded-full border-2 border-primary-foreground/20" />
+        <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 0.08 }} transition={{ duration: 1.2, delay: 0.2 }}
+          className="absolute -top-12 -left-12 w-56 h-56 rounded-full border-2 border-primary-foreground/15" />
+        <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 0.06 }} transition={{ duration: 1, delay: 0.4 }}
+          className="absolute bottom-20 right-4 w-28 h-28 rounded-full bg-gold/15 blur-xl" />
+        <div className="absolute top-16 right-24 w-3 h-3 rounded-full bg-gold/40" />
+        <div className="absolute top-32 left-10 w-2 h-2 rounded-full bg-gold/50" />
+      </div>
 
-        {/* Gold accent dots */}
-        <div className="absolute top-14 right-20 w-3 h-3 rounded-full bg-gold/40" />
-        <div className="absolute top-28 left-14 w-2 h-2 rounded-full bg-gold/50" />
-
-        {/* Logo and title */}
-        <div className="relative z-10 flex flex-col items-center justify-center h-full pt-10 pb-16">
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.6, type: "spring", stiffness: 150 }}
-            className="mb-3"
-          >
-            <div className="w-20 h-20 rounded-3xl overflow-hidden shadow-lg border-2 border-primary-foreground/30 p-1 bg-card/90 backdrop-blur-sm">
-              <img src={logoMojaz} alt="مجاز" className="w-full h-full object-contain rounded-2xl" />
-            </div>
-          </motion.div>
-          <motion.h1
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-2xl font-bold text-primary-foreground font-cairo"
-          >
-            إنشاء حساب جديد
-          </motion.h1>
-          <motion.p
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-primary-foreground/70 text-sm mt-1"
-          >
-            انضم إلينا الآن
-          </motion.p>
-        </div>
-
-        {/* Wave SVG */}
-        <div className="absolute bottom-0 left-0 right-0 overflow-hidden leading-[0]">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto" preserveAspectRatio="none">
-            <path
-              d="M0,60 C240,120 480,0 720,60 C960,120 1200,0 1440,60 L1440,120 L0,120 Z"
-              fill="hsl(var(--background))"
-            />
-          </svg>
-        </div>
+      {/* Logo and title */}
+      <div className="relative z-10 flex flex-col items-center pt-10 pb-5">
+        <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.6, type: "spring", stiffness: 150 }} className="mb-3">
+          <div className="w-20 h-20 rounded-3xl overflow-hidden shadow-lg border-2 border-primary-foreground/30 p-1 bg-card/90 backdrop-blur-sm">
+            <img src={logoMojaz} alt="مجاز" className="w-full h-full object-contain rounded-2xl" />
+          </div>
+        </motion.div>
+        <motion.h1 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
+          className="text-2xl font-bold text-primary-foreground font-cairo">إنشاء حساب جديد</motion.h1>
+        <motion.p initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
+          className="text-primary-foreground/70 text-sm mt-1">انضم إلينا الآن</motion.p>
       </div>
 
       {/* Form section */}
-      <div className="flex-1 flex flex-col items-center px-6 -mt-4 relative z-10 pb-8">
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.35, duration: 0.5 }}
-          className="w-full max-w-sm"
-        >
+      <div className="flex-1 flex flex-col items-center px-6 relative z-10 pb-8">
+        <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35, duration: 0.5 }}
+          className="w-full max-w-sm">
+          <div className="bg-card/90 backdrop-blur-xl rounded-3xl p-6 shadow-sm border border-primary-foreground/10">
           <form onSubmit={handleSignup} className="space-y-4">
             {/* Role Selection */}
             <div className="space-y-2">
@@ -199,11 +155,12 @@ const Signup = () => {
               )}
             </Button>
           </form>
+          </div>
 
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-            className="text-center mt-6 text-foreground/50">
+            className="text-center mt-6 text-primary-foreground/70">
             لديك حساب بالفعل؟{" "}
-            <Link to="/login" className="text-primary font-bold hover:underline">تسجيل الدخول</Link>
+            <Link to="/login" className="text-primary-foreground font-bold hover:underline">تسجيل الدخول</Link>
           </motion.p>
         </motion.div>
       </div>
