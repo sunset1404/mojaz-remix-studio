@@ -106,8 +106,7 @@ const WeeklyPlan = () => {
   };
 
   const openAddWizard = () => {
-    // For students: limit to one plan
-    if (!isReciter && plans.length > 0) {
+    if (plans.length > 0) {
       setShowLimitDialog(true);
       return;
     }
