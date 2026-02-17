@@ -310,7 +310,7 @@ const ReciterSignup = () => {
         {/* Progress line */}
         <div className="absolute top-[18px] left-[15%] right-[15%] h-0.5 bg-primary-foreground/20 -z-0" />
         <motion.div
-          className="absolute top-[18px] left-[15%] h-0.5 bg-primary-foreground"
+          className="absolute top-[18px] right-[15%] h-0.5 bg-primary-foreground"
           initial={{ width: "0%" }}
           animate={{ width: `${(step / 3) * 70}%` }}
           transition={{ duration: 0.4 }}
