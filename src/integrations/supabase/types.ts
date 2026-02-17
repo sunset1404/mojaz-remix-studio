@@ -101,6 +101,66 @@ export type Database = {
         }
         Relationships: []
       }
+      student_profiles: {
+        Row: {
+          created_at: string
+          education_level: string
+          email: string
+          full_name: string
+          gender: string
+          id: string
+          id_number: string
+          join_date: string | null
+          nationality: string
+          phone: string
+          preferred_riwaya: string
+          preferred_track: string
+          profession: string
+          quran_certifications: string | null
+          residence_country: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          education_level: string
+          email: string
+          full_name: string
+          gender: string
+          id?: string
+          id_number: string
+          join_date?: string | null
+          nationality: string
+          phone: string
+          preferred_riwaya?: string
+          preferred_track?: string
+          profession: string
+          quran_certifications?: string | null
+          residence_country: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          education_level?: string
+          email?: string
+          full_name?: string
+          gender?: string
+          id?: string
+          id_number?: string
+          join_date?: string | null
+          nationality?: string
+          phone?: string
+          preferred_riwaya?: string
+          preferred_track?: string
+          profession?: string
+          quran_certifications?: string | null
+          residence_country?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
