@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Check, User, Phone, MapPin, BookOpen, Clock, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import logoMojaz from "@/assets/logo-mojaz.webp";
 import CountrySelect from "@/components/CountrySelect";
+import { COUNTRY_CODES } from "@/data/countries";
 
 const getPasswordStrength = (pwd: string): { level: number; label: string; color: string } => {
   if (!pwd) return { level: 0, label: "", color: "" };
@@ -53,6 +54,7 @@ const ReciterSignup = () => {
   const [nationality, setNationality] = useState("");
   const [idNumber, setIdNumber] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneCode, setPhoneCode] = useState("+966");
   const [city, setCity] = useState("");
 
   // Step 2: Professional
@@ -120,7 +122,7 @@ const ReciterSignup = () => {
         gender,
         nationality,
         id_number: idNumber,
-        phone,
+        phone: `${phoneCode}${phone}`,
         city,
         profession,
         qualifications,
@@ -218,7 +220,7 @@ const ReciterSignup = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-foreground text-xs font-semibold">الجنسية</Label>
-                <CountrySelect value={nationality} onChange={setNationality} />
+                <CountrySelect value={nationality} onChange={(v) => { setNationality(v); if (COUNTRY_CODES[v]) setPhoneCode(COUNTRY_CODES[v]); }} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-foreground text-xs font-semibold">رقم الهوية</Label>
@@ -228,7 +230,16 @@ const ReciterSignup = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-foreground text-xs font-semibold">رقم الجوال</Label>
-                <Input placeholder="05xxxxxxxx" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} dir="ltr" required />
+                <div className="flex gap-1.5">
+                  <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}
+                    className="h-12 w-24 rounded-xl border border-primary/20 bg-card px-1.5 text-xs font-semibold text-foreground shadow-sm focus:border-primary" dir="ltr">
+                    {[...new Set(Object.values(COUNTRY_CODES))].sort().map((code) => (
+                      <option key={code} value={code}>{code}</option>
+                    ))}
+                  </select>
+                  <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => setPhone(e.target.value.replace(/^0+/, ''))}
+                    className={`flex-1 ${inputClass}`} dir="ltr" required />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-foreground text-xs font-semibold">مدينة الإقامة</Label>
