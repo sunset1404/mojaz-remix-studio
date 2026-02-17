@@ -8,7 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Check, User, Phone, MapPin, BookOpen, Clock, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import logoMojaz from "@/assets/logo-mojaz.webp";
-import { COUNTRIES } from "@/data/countries";
+import CountrySelect from "@/components/CountrySelect";
 
 const getPasswordStrength = (pwd: string): { level: number; label: string; color: string } => {
   if (!pwd) return { level: 0, label: "", color: "" };
@@ -218,13 +218,7 @@ const ReciterSignup = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-foreground text-xs font-semibold">الجنسية</Label>
-                <select value={nationality} onChange={(e) => setNationality(e.target.value)}
-                  className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
-                  <option value="">اختر الجنسية</option>
-                  {COUNTRIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                <CountrySelect value={nationality} onChange={setNationality} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-foreground text-xs font-semibold">رقم الهوية</Label>
