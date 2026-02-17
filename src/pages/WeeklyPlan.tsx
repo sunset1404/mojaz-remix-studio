@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Check, Clock, Star, BookOpen, ChevronRight, ChevronLeft, Pencil, Trash2, X, Mic, BookMarked, Award, Layers, FileText, BookOpenCheck } from "lucide-react";
+import { Plus, Check, Clock, BookOpen, ChevronRight, ChevronLeft, Pencil, Trash2, X, Mic, BookMarked, Award, Layers, FileText, BookOpenCheck, Users, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const allDays = [
   { key: "sat", label: "السبت" },
@@ -17,11 +18,20 @@ const timeSlots = [
   "بعد الفجر", "الصباح", "بعد الظهر", "بعد العصر", "بعد المغرب", "بعد العشاء",
 ];
 
-const goalTypes = [
+// أهداف الطالب
+const studentGoalTypes = [
   { key: "hifz", label: "حفظ", icon: BookOpen, desc: "حفظ آيات جديدة" },
   { key: "tasmee", label: "تسميع", icon: Mic, desc: "تسميع المحفوظ على شيخ" },
   { key: "tilawa", label: "تصحيح تلاوة", icon: BookMarked, desc: "تحسين النطق والتجويد" },
   { key: "ijaza", label: "إجازة قرآنية", icon: Award, desc: "الحصول على إجازة في رواية" },
+];
+
+// أهداف المقرئ
+const reciterGoalTypes = [
+  { key: "hifz_help", label: "مساعدة على الحفظ", icon: BookOpen, desc: "مساعدة الطلاب على حفظ القرآن" },
+  { key: "tilawa_fix", label: "تصحيح التلاوة", icon: BookMarked, desc: "تصحيح التلاوة والتجويد للطلاب" },
+  { key: "muraja3a", label: "مراجعة القرآن", icon: Users, desc: "مراجعة المحفوظ مع الطلاب" },
+  { key: "ijaza_grant", label: "منح الإجازات", icon: GraduationCap, desc: "منح إجازات قرآنية للطلاب المتقنين" },
 ];
 
 const scopeTypes = [
@@ -34,22 +44,35 @@ type Plan = {
   id: number;
   days: string[];
   time: string;
-  goal: string;
-  goalLabel: string;
+  goals: string[];
+  goalLabels: string[];
   scope: string;
   scopeLabel: string;
 };
 
-const initialPlans: Plan[] = [
-  { id: 1, days: ["sat", "mon", "wed"], time: "بعد الفجر", goal: "hifz", goalLabel: "حفظ", scope: "juz", scopeLabel: "أجزاء محددة" },
-  { id: 2, days: ["sun", "tue", "thu"], time: "بعد المغرب", goal: "tasmee", goalLabel: "تسميع", scope: "full", scopeLabel: "القرآن كاملاً" },
+const studentInitialPlans: Plan[] = [
+  { id: 1, days: ["sat", "mon", "wed"], time: "بعد الفجر", goals: ["hifz"], goalLabels: ["حفظ"], scope: "juz", scopeLabel: "أجزاء محددة" },
+  { id: 2, days: ["sun", "tue", "thu"], time: "بعد المغرب", goals: ["tasmee"], goalLabels: ["تسميع"], scope: "full", scopeLabel: "القرآن كاملاً" },
+];
+
+const reciterInitialPlans: Plan[] = [
+  { id: 1, days: ["sat", "mon", "wed"], time: "بعد الفجر", goals: ["hifz_help", "tilawa_fix"], goalLabels: ["مساعدة على الحفظ", "تصحيح التلاوة"], scope: "juz", scopeLabel: "أجزاء محددة" },
+  { id: 2, days: ["sun", "tue", "thu"], time: "بعد المغرب", goals: ["muraja3a"], goalLabels: ["مراجعة القرآن"], scope: "full", scopeLabel: "القرآن كاملاً" },
 ];
 
 const steps = ["الهدف", "المقدار", "الأيام", "الوقت"];
 
 const WeeklyPlan = () => {
   const navigate = useNavigate();
-  const [plans, setPlans] = useState<Plan[]>(initialPlans);
+  const { role } = useAuth();
+  const isReciter = role === "reciter";
+
+  const goalTypes = isReciter ? reciterGoalTypes : studentGoalTypes;
+  const subtitle = isReciter
+    ? "إدارة خطط الإقراء والجلسات الخاصة بك"
+    : "إدارة خطط الحفظ والتسميع الخاصة بك";
+
+  const [plans, setPlans] = useState<Plan[]>(isReciter ? reciterInitialPlans : studentInitialPlans);
   const [showWizard, setShowWizard] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
@@ -57,7 +80,7 @@ const WeeklyPlan = () => {
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   // Wizard state
-  const [selectedGoal, setSelectedGoal] = useState("");
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [selectedScope, setSelectedScope] = useState("");
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedTime, setSelectedTime] = useState("");
@@ -69,7 +92,7 @@ const WeeklyPlan = () => {
 
   const resetWizard = () => {
     setCurrentStep(0);
-    setSelectedGoal("");
+    setSelectedGoals([]);
     setSelectedScope("");
     setSelectedDays([]);
     setSelectedTime("");
@@ -83,7 +106,8 @@ const WeeklyPlan = () => {
   };
 
   const openAddWizard = () => {
-    if (plans.length > 0) {
+    // For students: limit to one plan
+    if (!isReciter && plans.length > 0) {
       setShowLimitDialog(true);
       return;
     }
@@ -93,7 +117,7 @@ const WeeklyPlan = () => {
 
   const openEditWizard = (plan: Plan) => {
     setEditingPlan(plan);
-    setSelectedGoal(plan.goal);
+    setSelectedGoals(plan.goals);
     setSelectedScope(plan.scope);
     setSelectedDays(plan.days);
     setSelectedTime(plan.time);
@@ -107,8 +131,25 @@ const WeeklyPlan = () => {
     setDeleteConfirmId(null);
   };
 
+  const toggleGoal = (key: string) => {
+    if (isReciter) {
+      // Reciter can select multiple goals
+      setSelectedGoals(prev =>
+        prev.includes(key) ? prev.filter(g => g !== key) : [...prev, key]
+      );
+    } else {
+      // Student selects single goal
+      setSelectedGoals([key]);
+    }
+  };
+
+  const shouldSkipScope = () => {
+    // Skip scope for ijaza (student) or ijaza_grant (reciter)
+    return selectedGoals.includes("ijaza") || selectedGoals.includes("ijaza_grant");
+  };
+
   const canNext = () => {
-    if (currentStep === 0) return selectedGoal !== "";
+    if (currentStep === 0) return selectedGoals.length > 0;
     if (currentStep === 1) return selectedScope !== "";
     if (currentStep === 2) return selectedDays.length > 0;
     if (currentStep === 3) return selectedTime !== "";
@@ -116,14 +157,14 @@ const WeeklyPlan = () => {
   };
 
   const handleFinish = () => {
-    const goalInfo = goalTypes.find(g => g.key === selectedGoal);
+    const goalLabels = selectedGoals.map(g => goalTypes.find(t => t.key === g)?.label || "");
     const scopeInfo = scopeTypes.find(s => s.key === selectedScope);
     const newPlan: Plan = {
       id: editingPlan ? editingPlan.id : Date.now(),
       days: selectedDays,
       time: selectedTime,
-      goal: selectedGoal,
-      goalLabel: goalInfo?.label || "",
+      goals: selectedGoals,
+      goalLabels,
       scope: selectedScope,
       scopeLabel: scopeInfo?.label || "",
     };
@@ -145,7 +186,8 @@ const WeeklyPlan = () => {
   const getDayLabel = (key: string) => allDays.find(d => d.key === key)?.label || key;
 
   const getGoalIcon = (goalKey: string) => {
-    const g = goalTypes.find(t => t.key === goalKey);
+    const allGoals = [...studentGoalTypes, ...reciterGoalTypes];
+    const g = allGoals.find(t => t.key === goalKey);
     return g ? g.icon : BookOpen;
   };
 
@@ -158,10 +200,12 @@ const WeeklyPlan = () => {
             <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-primary-foreground/15 flex items-center justify-center">
               <ChevronRight className="w-5 h-5 text-primary-foreground" />
             </button>
-            <h1 className="text-lg font-bold text-primary-foreground">خطتي الأسبوعية</h1>
+            <h1 className="text-lg font-bold text-primary-foreground">
+              {isReciter ? "خطة الإقراء الأسبوعية" : "خطتي الأسبوعية"}
+            </h1>
             <div className="w-9 h-9" />
           </div>
-          <p className="text-primary-foreground/70 text-xs text-center">إدارة خطط الحفظ والتسميع الخاصة بك</p>
+          <p className="text-primary-foreground/70 text-xs text-center">{subtitle}</p>
         </motion.div>
       </div>
 
@@ -185,7 +229,7 @@ const WeeklyPlan = () => {
         ) : (
           <div className="space-y-3">
             {plans.map((plan, i) => {
-              const GoalIcon = getGoalIcon(plan.goal);
+              const FirstGoalIcon = getGoalIcon(plan.goals[0]);
               return (
                 <motion.div
                   key={plan.id}
@@ -197,10 +241,10 @@ const WeeklyPlan = () => {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <GoalIcon className="w-5 h-5 text-primary" />
+                        <FirstGoalIcon className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-foreground text-sm">{plan.goalLabel}</h3>
+                        <h3 className="font-bold text-foreground text-sm">{plan.goalLabels.join(" · ")}</h3>
                         <div className="flex items-center gap-2 mt-1">
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3 text-muted-foreground" />
@@ -252,7 +296,7 @@ const WeeklyPlan = () => {
         )}
       </div>
 
-      {/* Limit Dialog */}
+      {/* Limit Dialog (student only) */}
       <AnimatePresence>
         {showLimitDialog && (
           <motion.div
@@ -399,7 +443,11 @@ const WeeklyPlan = () => {
                     exit={{ opacity: 0, x: -30 }}
                     className="space-y-3"
                   >
-                    <p className="text-sm text-muted-foreground mb-4">ما هدف هذه الخطة؟</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {isReciter
+                        ? "ما أهداف الإقراء في هذه الخطة؟ (يمكنك اختيار أكثر من هدف)"
+                        : "ما هدف هذه الخطة؟"}
+                    </p>
                     {goalTypes.map((goal, idx) => {
                       const bgTints = [
                         "bg-primary/[0.03]",
@@ -407,18 +455,19 @@ const WeeklyPlan = () => {
                         "bg-primary/[0.06]",
                         "bg-accent/20",
                       ];
+                      const isSelected = selectedGoals.includes(goal.key);
                       return (
                         <button
                           key={goal.key}
-                          onClick={() => setSelectedGoal(goal.key)}
+                          onClick={() => toggleGoal(goal.key)}
                           className={`w-full rounded-2xl p-4 flex items-center gap-3 transition-all border-2 ${
-                            selectedGoal === goal.key
+                            isSelected
                               ? "border-primary bg-primary/10 shadow-sm"
                               : `border-border ${bgTints[idx % bgTints.length]} hover:border-primary/30`
                           }`}
                         >
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                            selectedGoal === goal.key ? "bg-primary/15" : "bg-muted/60"
+                            isSelected ? "bg-primary/15" : "bg-muted/60"
                           }`}>
                             <goal.icon className="w-5 h-5 text-gold" />
                           </div>
@@ -426,7 +475,7 @@ const WeeklyPlan = () => {
                             <p className="font-bold text-foreground text-sm">{goal.label}</p>
                             <p className="text-[10px] text-muted-foreground">{goal.desc}</p>
                           </div>
-                          {selectedGoal === goal.key && (
+                          {isSelected && (
                             <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                               <Check className="w-3.5 h-3.5 text-primary-foreground" />
                             </div>
@@ -445,7 +494,9 @@ const WeeklyPlan = () => {
                     exit={{ opacity: 0, x: -30 }}
                     className="space-y-3"
                   >
-                    <p className="text-sm text-muted-foreground mb-4">حدد مقدار الحفظ أو المراجعة</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {isReciter ? "حدد نطاق الإقراء" : "حدد مقدار الحفظ أو المراجعة"}
+                    </p>
                     {scopeTypes.map((scope, idx) => {
                       const bgTints = ["bg-primary/[0.03]", "bg-accent/30", "bg-accent/20"];
                       return (
@@ -485,7 +536,9 @@ const WeeklyPlan = () => {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -30 }}
                   >
-                    <p className="text-sm text-muted-foreground mb-4">اختر أيام الأسبوع المناسبة</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {isReciter ? "اختر أيام الإقراء المناسبة" : "اختر أيام الأسبوع المناسبة"}
+                    </p>
                     <div className="grid grid-cols-2 gap-2">
                       {allDays.map(day => {
                         const selected = selectedDays.includes(day.key);
@@ -525,7 +578,9 @@ const WeeklyPlan = () => {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -30 }}
                   >
-                    <p className="text-sm text-muted-foreground mb-4">اختر الوقت المفضل</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {isReciter ? "اختر وقت الإقراء المفضل" : "اختر الوقت المفضل"}
+                    </p>
                     <div className="grid grid-cols-2 gap-2">
                       {timeSlots.map(time => {
                         const selected = selectedTime === time;
@@ -555,7 +610,6 @@ const WeeklyPlan = () => {
                         onClick={() => {
                           setShowCustomPicker(!showCustomPicker);
                           if (!showCustomPicker) {
-                            // Clear preset selection
                             const built = `${customHour}:${customMinute} ${customPeriod}`;
                             setCustomTime(built);
                             setSelectedTime(built);
@@ -649,7 +703,7 @@ const WeeklyPlan = () => {
                   <button
                     onClick={() => {
                       let prev = currentStep - 1;
-                      if (prev === 1 && selectedGoal === "ijaza") prev = 0;
+                      if (prev === 1 && shouldSkipScope()) prev = 0;
                       setCurrentStep(prev);
                     }}
                     className="flex-1 py-3.5 rounded-xl border-2 border-border text-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
@@ -663,8 +717,7 @@ const WeeklyPlan = () => {
                     onClick={() => {
                       if (!canNext()) return;
                       let next = currentStep + 1;
-                      // Skip scope step for ijaza
-                      if (next === 1 && selectedGoal === "ijaza") {
+                      if (next === 1 && shouldSkipScope()) {
                         setSelectedScope("full");
                         next = 2;
                       }
