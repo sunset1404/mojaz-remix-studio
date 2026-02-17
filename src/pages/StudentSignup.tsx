@@ -75,8 +75,11 @@ const StudentSignup = () => {
       }
     }
     if (step === 2) {
-      if (!preferredRiwaya || !preferredTrack) {
-        toast({ title: "مطلوب", description: "يرجى اختيار الرواية والمسار", variant: "destructive" }); return false;
+      if (!preferredTrack) {
+        toast({ title: "مطلوب", description: "يرجى اختيار المسار", variant: "destructive" }); return false;
+      }
+      if (preferredTrack === "الإجازة بالسند" && !preferredRiwaya) {
+        toast({ title: "مطلوب", description: "يرجى اختيار الرواية", variant: "destructive" }); return false;
       }
     }
     return true;
@@ -231,21 +234,16 @@ const StudentSignup = () => {
         return (
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-foreground text-xs font-semibold">6. الرواية أو القراءة المتقنّد لها *</Label>
-              <select value={preferredRiwaya} onChange={(e) => setPreferredRiwaya(e.target.value)}
-                className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
-                <option value="" disabled>اختر إجابة</option>
-                {RIWAYAT.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-foreground text-xs font-semibold">7. مسار الإقراء المفضل لك *</Label>
+              <Label className="text-foreground text-xs font-semibold">6. مسار الإقراء المفضل لك *</Label>
               <div className="grid grid-cols-1 gap-2">
                 {TRACKS.map((t) => (
                   <button
                     key={t}
                     type="button"
-                    onClick={() => setPreferredTrack(t)}
+                    onClick={() => {
+                      setPreferredTrack(t);
+                      if (t !== "الإجازة بالسند") setPreferredRiwaya("");
+                    }}
                     className={`w-full text-right px-4 py-3 rounded-xl border transition-all text-sm font-medium ${
                       preferredTrack === t
                         ? "border-primary bg-primary/10 text-primary shadow-sm"
@@ -264,6 +262,21 @@ const StudentSignup = () => {
                 ))}
               </div>
             </div>
+            {preferredTrack === "الإجازة بالسند" && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-1.5"
+              >
+                <Label className="text-foreground text-xs font-semibold">7. الرواية أو القراءة المتقنّد لها *</Label>
+                <select value={preferredRiwaya} onChange={(e) => setPreferredRiwaya(e.target.value)}
+                  className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
+                  <option value="" disabled>اختر إجابة</option>
+                  {RIWAYAT.map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </motion.div>
+            )}
           </div>
         );
     }
