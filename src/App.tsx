@@ -1,8 +1,10 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Reciters from "./pages/Reciters";
@@ -25,14 +27,29 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ReciterSignup from "./pages/ReciterSignup";
 import StudentSignup from "./pages/StudentSignup";
+import SignupSuccess from "./pages/SignupSuccess";
+import ReciterPending from "./pages/ReciterPending";
 import BottomNav from "./components/BottomNav";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><span className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full" /></div>;
+  const [checking, setChecking] = useState(true);
+  const [isReciter, setIsReciter] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setChecking(false); return; }
+    supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => {
+        setIsReciter(data?.role === "reciter");
+        setChecking(false);
+      });
+  }, [user]);
+
+  if (loading || checking) return <div className="min-h-screen flex items-center justify-center"><span className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full" /></div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (isReciter && window.location.pathname !== "/reciter-pending") return <Navigate to="/reciter-pending" replace />;
   return <>{children}</>;
 };
 
@@ -49,6 +66,8 @@ const AppRoutes = () => (
     <Route path="/signup" element={<AuthRoute><Signup /></AuthRoute>} />
     <Route path="/signup/reciter" element={<AuthRoute><ReciterSignup /></AuthRoute>} />
     <Route path="/signup/student" element={<AuthRoute><StudentSignup /></AuthRoute>} />
+    <Route path="/signup/success" element={<SignupSuccess />} />
+    <Route path="/reciter-pending" element={<ProtectedRoute><ReciterPending /></ProtectedRoute>} />
     <Route path="/" element={<ProtectedRoute><><Index /><BottomNav /></></ProtectedRoute>} />
     <Route path="/reciters" element={<ProtectedRoute><><Reciters /><BottomNav /></></ProtectedRoute>} />
     <Route path="/subscription" element={<ProtectedRoute><><Subscription /><BottomNav /></></ProtectedRoute>} />
