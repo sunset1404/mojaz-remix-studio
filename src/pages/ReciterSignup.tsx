@@ -209,7 +209,7 @@ const ReciterSignup = () => {
                 <Label className="text-foreground text-xs font-semibold">الجنس</Label>
                 <select value={gender} onChange={(e) => setGender(e.target.value)}
                   className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
-                  <option value="">اختر</option>
+                  <option value="" disabled>الجنس</option>
                   <option value="male">ذكر</option>
                   <option value="female">أنثى</option>
                 </select>
