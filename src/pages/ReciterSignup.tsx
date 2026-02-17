@@ -25,6 +25,7 @@ const ReciterSignup = () => {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Step 0: Account
   const [email, setEmail] = useState("");
@@ -55,8 +56,9 @@ const ReciterSignup = () => {
 
   const validateStep = () => {
     if (step === 0) {
-      if (!email || !password) { toast({ title: "مطلوب", description: "أدخل البريد وكلمة المرور", variant: "destructive" }); return false; }
+      if (!email || !password || !confirmPassword) { toast({ title: "مطلوب", description: "أدخل البريد وكلمة المرور وتأكيدها", variant: "destructive" }); return false; }
       if (password.length < 6) { toast({ title: "كلمة المرور قصيرة", description: "يجب أن تكون 6 أحرف على الأقل", variant: "destructive" }); return false; }
+      if (password !== confirmPassword) { toast({ title: "عدم تطابق", description: "كلمة المرور وتأكيدها غير متطابقتين", variant: "destructive" }); return false; }
     }
     if (step === 1) {
       if (!fullName || !gender || !nationality || !idNumber || !phone || !city) {
@@ -149,6 +151,17 @@ const ReciterSignup = () => {
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
                 </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-foreground text-sm font-semibold">تأكيد كلمة المرور</Label>
+              <div className="relative">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-gold/15 flex items-center justify-center">
+                  <Lock className="w-4 h-4 text-gold" />
+                </div>
+                <Input type={showPassword ? "text" : "password"} placeholder="أعد إدخال كلمة المرور"
+                  value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`pr-14 text-left ${inputClass}`} dir="ltr" required />
               </div>
             </div>
           </div>
