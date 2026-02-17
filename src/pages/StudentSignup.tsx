@@ -234,7 +234,7 @@ const StudentSignup = () => {
         return (
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-foreground text-xs font-semibold">6. ما هدفك من التسجيل؟ *</Label>
+              <Label className="text-foreground text-xs font-semibold">6. المسار القرآني الذي تودّ الالتحاق به *</Label>
               <div className="grid grid-cols-1 gap-2">
                 {TRACKS.map((t) => (
                   <button
