@@ -123,8 +123,8 @@ const StudentSignup = () => {
       });
     }
 
-    toast({ title: "تم إنشاء الحساب بنجاح", description: "يرجى التحقق من بريدك الإلكتروني لتأكيد الحساب" });
-    navigate("/login");
+    toast({ title: "تم إنشاء الحساب بنجاح" });
+    navigate("/signup/success?role=student");
     setLoading(false);
   };
 
