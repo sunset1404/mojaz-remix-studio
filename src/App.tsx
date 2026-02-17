@@ -24,6 +24,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ReciterSignup from "./pages/ReciterSignup";
+import StudentSignup from "./pages/StudentSignup";
 import BottomNav from "./components/BottomNav";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const AppRoutes = () => (
     <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
     <Route path="/signup" element={<AuthRoute><Signup /></AuthRoute>} />
     <Route path="/signup/reciter" element={<AuthRoute><ReciterSignup /></AuthRoute>} />
+    <Route path="/signup/student" element={<AuthRoute><StudentSignup /></AuthRoute>} />
     <Route path="/" element={<ProtectedRoute><><Index /><BottomNav /></></ProtectedRoute>} />
     <Route path="/reciters" element={<ProtectedRoute><><Reciters /><BottomNav /></></ProtectedRoute>} />
     <Route path="/subscription" element={<ProtectedRoute><><Subscription /><BottomNav /></></ProtectedRoute>} />

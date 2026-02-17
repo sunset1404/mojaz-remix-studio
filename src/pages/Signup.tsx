@@ -27,6 +27,10 @@ const Signup = () => {
       navigate("/signup/reciter");
       return;
     }
+    if (role === "student") {
+      navigate("/signup/student");
+      return;
+    }
     if (password.length < 6) {
       toast({ title: "كلمة المرور قصيرة", description: "يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });
       return;
@@ -98,6 +102,7 @@ const Signup = () => {
                   <motion.button key={r.value} type="button" whileTap={{ scale: 0.96 }}
                     onClick={() => {
                       if (r.value === "reciter") { navigate("/signup/reciter"); return; }
+                      if (r.value === "student") { navigate("/signup/student"); return; }
                       setRole(r.value);
                     }}
                     className={`flex flex-col items-center gap-1.5 p-3.5 rounded-2xl border-2 transition-all ${
