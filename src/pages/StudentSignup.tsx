@@ -33,7 +33,6 @@ const STEPS = [
 ];
 
 const EDUCATION_LEVELS = ["ثانوي", "دبلوم", "بكالوريوس", "ماجستير", "دكتوراه", "أخرى"];
-const CERTIFICATIONS = ["لا يوجد", "إجازة بالقراءات العشر", "إجازة برواية حفص", "إجازة برواية ورش", "إجازة برواية قالون", "أخرى"];
 const RIWAYAT = ["حفص عن عاصم", "ورش عن نافع", "قالون عن نافع", "شعبة عن عاصم", "الدوري عن أبي عمرو", "أخرى"];
 const TRACKS = ["حفظ القرآن الكريم", "التلاوة والتجويد", "الإجازة بالسند", "المراجعة والتثبيت"];
 
@@ -51,14 +50,10 @@ const StudentSignup = () => {
   // Step 1: Personal info
   const [fullName, setFullName] = useState("");
   const [gender, setGender] = useState("");
-  const [idNumber, setIdNumber] = useState("");
-  const [residenceCountry, setResidenceCountry] = useState("");
   const [nationality, setNationality] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneCode, setPhoneCode] = useState("+966");
-  const [profession, setProfession] = useState("");
   const [educationLevel, setEducationLevel] = useState("");
-  const [quranCertifications, setQuranCertifications] = useState<string[]>([]);
 
   // Step 2: Preferences
   const [preferredRiwaya, setPreferredRiwaya] = useState("");
@@ -67,12 +62,6 @@ const StudentSignup = () => {
 
   const inputClass = "h-12 rounded-xl border-primary/20 bg-card focus:border-primary focus:bg-card transition-colors shadow-sm";
 
-  const toggleCert = (item: string) => {
-    setQuranCertifications((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
-    );
-  };
-
   const validateStep = () => {
     if (step === 0) {
       if (!email || !password || !confirmPassword) { toast({ title: "مطلوب", description: "أدخل البريد وكلمة المرور وتأكيدها", variant: "destructive" }); return false; }
@@ -80,7 +69,7 @@ const StudentSignup = () => {
       if (password !== confirmPassword) { toast({ title: "عدم تطابق", description: "كلمة المرور وتأكيدها غير متطابقتين", variant: "destructive" }); return false; }
     }
     if (step === 1) {
-      if (!fullName || !gender || !idNumber || !residenceCountry || !nationality || !phone || !profession || !educationLevel) {
+      if (!fullName || !gender || !nationality || !phone || !educationLevel) {
         toast({ title: "مطلوب", description: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" }); return false;
       }
     }
@@ -116,14 +105,14 @@ const StudentSignup = () => {
         user_id: data.user.id,
         full_name: fullName,
         gender,
-        id_number: idNumber,
+        id_number: "",
         email,
-        residence_country: residenceCountry,
+        residence_country: "",
         nationality,
         phone: `${phoneCode}${phone}`,
-        profession,
+        profession: "",
         education_level: educationLevel,
-        quran_certifications: quranCertifications.join("، "),
+        quran_certifications: "",
         preferred_riwaya: preferredRiwaya,
         preferred_track: preferredTrack,
         join_date: joinDate,
@@ -214,27 +203,17 @@ const StudentSignup = () => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">3. رقم الهوية *</Label>
-                <Input placeholder="أدخل إجابتك هنا" value={idNumber} onChange={(e) => setIdNumber(e.target.value)} className={inputClass} dir="ltr" required />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">4. البريد الإلكتروني *</Label>
+                <Label className="text-foreground text-xs font-semibold">3. البريد الإلكتروني *</Label>
                 <Input type="email" value={email} disabled className={`${inputClass} opacity-60`} dir="ltr" />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">5. دولة الإقامة *</Label>
-                <CountrySelect value={residenceCountry} onChange={setResidenceCountry} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">6. الجنسية *</Label>
+                <Label className="text-foreground text-xs font-semibold">4. الجنسية *</Label>
                 <CountrySelect value={nationality} onChange={(v) => { setNationality(v); if (COUNTRY_CODES[v]) setPhoneCode(COUNTRY_CODES[v]); }} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">7. رقم الجوال *</Label>
+                <Label className="text-foreground text-xs font-semibold">5. رقم الجوال *</Label>
                 <div className="flex gap-1.5">
                   <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}
                     className="h-12 w-24 rounded-xl border border-primary/20 bg-card px-1.5 text-xs font-semibold text-foreground shadow-sm focus:border-primary" dir="ltr">
@@ -247,29 +226,12 @@ const StudentSignup = () => {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">8. المهنة *</Label>
-                <Input placeholder="أدخل إجابتك هنا" value={profession} onChange={(e) => setProfession(e.target.value)} className={inputClass} required />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">9. المؤهل الدراسي *</Label>
+                <Label className="text-foreground text-xs font-semibold">6. المؤهل الدراسي *</Label>
                 <select value={educationLevel} onChange={(e) => setEducationLevel(e.target.value)}
                   className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
                   <option value="" disabled>اختر إجابة</option>
                   {EDUCATION_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
                 </select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">10. إجازات قرآنية سابقة</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {CERTIFICATIONS.map((c) => (
-                    <button key={c} type="button" onClick={() => toggleCert(c)}
-                      className={`px-2.5 py-1.5 rounded-lg text-[10px] font-semibold border transition-all ${
-                        quranCertifications.includes(c) ? "border-primary bg-primary/15 text-primary" : "border-border/60 bg-card text-foreground/60 hover:border-primary/30"
-                      }`}>{c}</button>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
@@ -280,7 +242,7 @@ const StudentSignup = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">11. الرواية أو القراءة المتقنّد لها *</Label>
+                <Label className="text-foreground text-xs font-semibold">7. الرواية أو القراءة المتقنّد لها *</Label>
                 <select value={preferredRiwaya} onChange={(e) => setPreferredRiwaya(e.target.value)}
                   className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
                   <option value="" disabled>اختر إجابة</option>
@@ -288,7 +250,7 @@ const StudentSignup = () => {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">12. مسار الإقراء المفضل لك *</Label>
+                <Label className="text-foreground text-xs font-semibold">8. مسار الإقراء المفضل لك *</Label>
                 <select value={preferredTrack} onChange={(e) => setPreferredTrack(e.target.value)}
                   className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
                   <option value="" disabled>اختر إجابة</option>
@@ -297,7 +259,7 @@ const StudentSignup = () => {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-foreground text-xs font-semibold">13. تاريخ الالتحاق بالبرنامج</Label>
+              <Label className="text-foreground text-xs font-semibold">9. تاريخ الالتحاق بالبرنامج</Label>
               <Input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)}
                 className={inputClass} dir="ltr" />
             </div>
