@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Sun, Shield, Camera, Award, CalendarDays, Image, X, Headphones, Info, FileText, CreditCard, PhoneCall, Star, Share2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const menuSections = [
   {
@@ -38,6 +39,8 @@ const menuSections = [
 ];
 
 const Profile = () => {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
   let itemIndex = 0;
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showImageOptions, setShowImageOptions] = useState(false);
@@ -242,6 +245,10 @@ const Profile = () => {
 
         {/* Logout */}
         <button
+          onClick={async () => {
+            await signOut();
+            navigate("/login");
+          }}
           className="rounded-xl p-4 flex items-center gap-3 w-full border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 active:scale-[0.98] transition-all mt-4"
         >
           <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
