@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Sun, Shield, Camera, Award, CalendarDays, Image, X, Headphones, Info, FileText, CreditCard, PhoneCall, Star, Share2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const menuSections = [
   {
@@ -39,7 +40,7 @@ const menuSections = [
 ];
 
 const Profile = () => {
-  const { signOut } = useAuth();
+  const { signOut, user, role } = useAuth();
   const navigate = useNavigate();
   let itemIndex = 0;
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -47,6 +48,25 @@ const Profile = () => {
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [userName, setUserName] = useState("");
+  const roleLabel = role === "reciter" ? "مقرئ" : "طالب";
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchName = async () => {
+      if (role === "reciter") {
+        const { data } = await supabase.from("reciter_profiles").select("full_name").eq("user_id", user.id).maybeSingle();
+        if (data) setUserName(data.full_name);
+      } else if (role === "student") {
+        const { data } = await supabase.from("student_profiles").select("full_name").eq("user_id", user.id).maybeSingle();
+        if (data) setUserName(data.full_name);
+      } else {
+        const { data } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
+        if (data) setUserName(data.full_name);
+      }
+    };
+    fetchName();
+  }, [user, role]);
 
   const toggleTheme = () => {
     const newDark = !isDark;
@@ -133,8 +153,8 @@ const Profile = () => {
               <Camera className="w-4 h-4 text-gold-foreground" />
             </button>
           </div>
-          <h1 className="text-xl font-bold text-primary-foreground">عبدالله محمد</h1>
-          <p className="text-primary-foreground/70 text-sm">طالب · المستوى 4</p>
+          <h1 className="text-xl font-bold text-primary-foreground">{userName || "..."}</h1>
+          <p className="text-primary-foreground/70 text-sm">{roleLabel} · المستوى 4</p>
         </motion.div>
       </div>
 
