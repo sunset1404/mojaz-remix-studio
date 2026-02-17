@@ -52,7 +52,8 @@ const PhoneCodeSelect = ({ value, onChange }: PhoneCodeSelectProps) => {
       </button>
 
       {open && (
-        <div className="absolute z-50 top-full mt-1 w-48 bg-card border border-primary/20 rounded-xl shadow-lg overflow-hidden" dir="ltr">
+        <div className="fixed z-50 w-48 bg-card border border-primary/20 rounded-xl shadow-lg overflow-hidden" dir="ltr"
+          style={{ top: ref.current ? ref.current.getBoundingClientRect().bottom + 4 : 0, left: ref.current ? ref.current.getBoundingClientRect().left : 0 }}>
           <div className="p-2 border-b border-border/50">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
