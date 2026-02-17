@@ -1,17 +1,28 @@
-import { Home, Mic, Crown, Trophy, User } from "lucide-react";
+import { Home, Mic, Crown, Trophy, User, Users, Calendar } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
-const tabs = [
-{ path: "/profile", icon: User, label: "حسابي" },
-{ path: "/achievements", icon: Trophy, label: "إنجازاتي" },
-{ path: "/", icon: Home, label: "الرئيسية", main: true },
-{ path: "/reciters", icon: Mic, label: "المقرئون" },
-{ path: "/subscription", icon: Crown, label: "الاشتراك" }];
+const studentTabs = [
+  { path: "/profile", icon: User, label: "حسابي" },
+  { path: "/achievements", icon: Trophy, label: "إنجازاتي" },
+  { path: "/", icon: Home, label: "الرئيسية", main: true },
+  { path: "/reciters", icon: Mic, label: "المقرئون" },
+  { path: "/subscription", icon: Crown, label: "الاشتراك" },
+];
 
+const reciterTabs = [
+  { path: "/profile", icon: User, label: "حسابي" },
+  { path: "/achievements", icon: Trophy, label: "إنجازاتي" },
+  { path: "/", icon: Home, label: "الرئيسية", main: true },
+  { path: "/my-students", icon: Users, label: "طلابي" },
+  { path: "/sessions", icon: Calendar, label: "الجلسات" },
+];
 
 const BottomNav = () => {
   const location = useLocation();
+  const { role } = useAuth();
+  const tabs = role === "reciter" ? reciterTabs : studentTabs;
 
   return (
     <div className="fixed bottom-0 inset-x-0 z-50 max-w-md mx-auto">
