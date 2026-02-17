@@ -43,7 +43,7 @@ const scopeTypes = [
 type Plan = {
   id: number;
   days: string[];
-  time: string;
+  times: string[];
   goals: string[];
   goalLabels: string[];
   scope: string;
@@ -51,13 +51,13 @@ type Plan = {
 };
 
 const studentInitialPlans: Plan[] = [
-  { id: 1, days: ["sat", "mon", "wed"], time: "بعد الفجر", goals: ["hifz"], goalLabels: ["حفظ"], scope: "juz", scopeLabel: "أجزاء محددة" },
-  { id: 2, days: ["sun", "tue", "thu"], time: "بعد المغرب", goals: ["tasmee"], goalLabels: ["تسميع"], scope: "full", scopeLabel: "القرآن كاملاً" },
+  { id: 1, days: ["sat", "mon", "wed"], times: ["بعد الفجر"], goals: ["hifz"], goalLabels: ["حفظ"], scope: "juz", scopeLabel: "أجزاء محددة" },
+  { id: 2, days: ["sun", "tue", "thu"], times: ["بعد المغرب"], goals: ["tasmee"], goalLabels: ["تسميع"], scope: "full", scopeLabel: "القرآن كاملاً" },
 ];
 
 const reciterInitialPlans: Plan[] = [
-  { id: 1, days: ["sat", "mon", "wed"], time: "بعد الفجر", goals: ["hifz_help", "tilawa_fix"], goalLabels: ["مساعدة على الحفظ", "تصحيح التلاوة"], scope: "juz", scopeLabel: "أجزاء محددة" },
-  { id: 2, days: ["sun", "tue", "thu"], time: "بعد المغرب", goals: ["muraja3a"], goalLabels: ["مراجعة القرآن"], scope: "full", scopeLabel: "القرآن كاملاً" },
+  { id: 1, days: ["sat", "mon", "wed"], times: ["بعد الفجر", "بعد العصر"], goals: ["hifz_help", "tilawa_fix"], goalLabels: ["مساعدة على الحفظ", "تصحيح التلاوة"], scope: "juz", scopeLabel: "أجزاء محددة" },
+  { id: 2, days: ["sun", "tue", "thu"], times: ["بعد المغرب"], goals: ["muraja3a"], goalLabels: ["مراجعة القرآن"], scope: "full", scopeLabel: "القرآن كاملاً" },
 ];
 
 const steps = ["الهدف", "المقدار", "الأيام", "الوقت"];
@@ -83,7 +83,7 @@ const WeeklyPlan = () => {
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [selectedScope, setSelectedScope] = useState("");
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [selectedTime, setSelectedTime] = useState("");
+  const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
   const [customTime, setCustomTime] = useState("");
   const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [customHour, setCustomHour] = useState("12");
@@ -95,7 +95,7 @@ const WeeklyPlan = () => {
     setSelectedGoals([]);
     setSelectedScope("");
     setSelectedDays([]);
-    setSelectedTime("");
+    setSelectedTimes([]);
     setCustomTime("");
     setShowCustomPicker(false);
     setCustomHour("12");
@@ -120,8 +120,8 @@ const WeeklyPlan = () => {
     setSelectedGoals(plan.goals);
     setSelectedScope(plan.scope);
     setSelectedDays(plan.days);
-    setSelectedTime(plan.time);
-    setCustomTime(timeSlots.includes(plan.time) ? "" : plan.time);
+    setSelectedTimes(plan.times);
+    setCustomTime(plan.times.some(t => !timeSlots.includes(t)) ? plan.times.find(t => !timeSlots.includes(t)) || "" : "");
     setCurrentStep(0);
     setShowWizard(true);
   };
@@ -152,7 +152,7 @@ const WeeklyPlan = () => {
     if (currentStep === 0) return selectedGoals.length > 0;
     if (currentStep === 1) return selectedScope !== "";
     if (currentStep === 2) return selectedDays.length > 0;
-    if (currentStep === 3) return selectedTime !== "";
+    if (currentStep === 3) return selectedTimes.length > 0;
     return false;
   };
 
@@ -162,7 +162,7 @@ const WeeklyPlan = () => {
     const newPlan: Plan = {
       id: editingPlan ? editingPlan.id : Date.now(),
       days: selectedDays,
-      time: selectedTime,
+      times: selectedTimes,
       goals: selectedGoals,
       goalLabels,
       scope: selectedScope,
@@ -248,7 +248,7 @@ const WeeklyPlan = () => {
                         <div className="flex items-center gap-2 mt-1">
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-[10px] text-muted-foreground">{plan.time}</span>
+                            <span className="text-[10px] text-muted-foreground">{plan.times.join(" · ")}</span>
                           </div>
                           <span className="text-[10px] text-gold font-semibold">• {plan.scopeLabel}</span>
                         </div>
@@ -579,15 +579,24 @@ const WeeklyPlan = () => {
                     exit={{ opacity: 0, x: -30 }}
                   >
                     <p className="text-sm text-muted-foreground mb-4">
-                      {isReciter ? "اختر وقت الإقراء المفضل" : "اختر الوقت المفضل"}
+                      {isReciter ? "اختر أوقات الإقراء المفضلة (يمكنك اختيار عدة أوقات)" : "اختر الوقت المفضل"}
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       {timeSlots.map(time => {
-                        const selected = selectedTime === time;
+                        const selected = selectedTimes.includes(time);
                         return (
                           <button
                             key={time}
-                            onClick={() => { setSelectedTime(time); setCustomTime(""); }}
+                            onClick={() => {
+                              if (isReciter) {
+                                setSelectedTimes(prev =>
+                                  prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time]
+                                );
+                              } else {
+                                setSelectedTimes([time]);
+                                setCustomTime("");
+                              }
+                            }}
                             className={`rounded-xl p-3.5 flex items-center justify-between transition-all border-2 ${
                               selected
                                 ? "border-primary bg-primary/5"
@@ -612,22 +621,26 @@ const WeeklyPlan = () => {
                           if (!showCustomPicker) {
                             const built = `${customHour}:${customMinute} ${customPeriod}`;
                             setCustomTime(built);
-                            setSelectedTime(built);
+                            if (isReciter) {
+                              setSelectedTimes(prev => prev.includes(built) ? prev : [...prev, built]);
+                            } else {
+                              setSelectedTimes([built]);
+                            }
                           }
                         }}
                         className={`w-full rounded-xl p-3.5 flex items-center gap-3 transition-all border-2 ${
-                          !timeSlots.includes(selectedTime) && selectedTime !== ""
+                          selectedTimes.some(t => !timeSlots.includes(t))
                             ? "border-primary bg-primary/5"
                             : "border-border bg-card hover:border-primary/30"
                         }`}
                       >
                         <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
                         <span className={`flex-1 text-sm font-semibold text-right ${
-                          !timeSlots.includes(selectedTime) && selectedTime !== "" ? "text-foreground" : "text-muted-foreground"
+                          selectedTimes.some(t => !timeSlots.includes(t)) ? "text-foreground" : "text-muted-foreground"
                         }`}>
-                          {!timeSlots.includes(selectedTime) && selectedTime !== "" ? selectedTime : "وقت مخصص"}
+                          {selectedTimes.find(t => !timeSlots.includes(t)) || "وقت مخصص"}
                         </span>
-                        {!timeSlots.includes(selectedTime) && selectedTime !== "" && (
+                        {selectedTimes.some(t => !timeSlots.includes(t)) && (
                           <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
                             <Check className="w-3 h-3 text-primary-foreground" />
                           </div>
@@ -649,7 +662,11 @@ const WeeklyPlan = () => {
                                   setCustomPeriod(e.target.value);
                                   const built = `${customHour}:${customMinute} ${e.target.value}`;
                                   setCustomTime(built);
-                                  setSelectedTime(built);
+                                  // Remove old custom time and add new
+                                  setSelectedTimes(prev => {
+                                    const withoutCustom = prev.filter(t => timeSlots.includes(t));
+                                    return [...withoutCustom, built];
+                                  });
                                 }}
                                 className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center"
                               >
@@ -664,7 +681,10 @@ const WeeklyPlan = () => {
                                   setCustomMinute(e.target.value);
                                   const built = `${customHour}:${e.target.value} ${customPeriod}`;
                                   setCustomTime(built);
-                                  setSelectedTime(built);
+                                  setSelectedTimes(prev => {
+                                    const withoutCustom = prev.filter(t => timeSlots.includes(t));
+                                    return [...withoutCustom, built];
+                                  });
                                 }}
                                 className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center w-16"
                               >
@@ -680,7 +700,10 @@ const WeeklyPlan = () => {
                                   setCustomHour(e.target.value);
                                   const built = `${e.target.value}:${customMinute} ${customPeriod}`;
                                   setCustomTime(built);
-                                  setSelectedTime(built);
+                                  setSelectedTimes(prev => {
+                                    const withoutCustom = prev.filter(t => timeSlots.includes(t));
+                                    return [...withoutCustom, built];
+                                  });
                                 }}
                                 className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center w-16"
                               >
