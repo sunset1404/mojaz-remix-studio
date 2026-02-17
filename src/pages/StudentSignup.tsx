@@ -30,12 +30,12 @@ const getPasswordStrength = (pwd: string): { level: number; label: string; color
 const STEPS = [
   { title: "الحساب", icon: Lock },
   { title: "البيانات الشخصية", icon: User },
-  { title: "هدف التسجيل", icon: BookOpen },
+  { title: "الهدف", icon: BookOpen },
 ];
 
 const EDUCATION_LEVELS = ["ثانوي", "دبلوم", "بكالوريوس", "ماجستير", "دكتوراه", "أخرى"];
 const RIWAYAT = ["حفص عن عاصم", "ورش عن نافع", "قالون عن نافع", "شعبة عن عاصم", "الدوري عن أبي عمرو", "أخرى"];
-const TRACKS = ["حفظ القرآن الكريم", "التلاوة والتجويد", "الإجازة بالسند", "المراجعة والتثبيت"];
+const TRACKS = ["حفظ القرآن الكريم", "التلاوة والتجويد", "الحصول على إجازة قرآنية", "المراجعة والتثبيت"];
 
 const StudentSignup = () => {
   const navigate = useNavigate();
@@ -78,7 +78,7 @@ const StudentSignup = () => {
       if (!preferredTrack) {
         toast({ title: "مطلوب", description: "يرجى اختيار المسار", variant: "destructive" }); return false;
       }
-      if (preferredTrack === "الإجازة بالسند" && !preferredRiwaya) {
+      if (preferredTrack === "الحصول على إجازة قرآنية" && !preferredRiwaya) {
         toast({ title: "مطلوب", description: "يرجى اختيار الرواية", variant: "destructive" }); return false;
       }
     }
@@ -242,7 +242,7 @@ const StudentSignup = () => {
                     type="button"
                     onClick={() => {
                       setPreferredTrack(t);
-                      if (t !== "الإجازة بالسند") setPreferredRiwaya("");
+                      if (t !== "الحصول على إجازة قرآنية") setPreferredRiwaya("");
                     }}
                     className={`w-full text-right px-4 py-3 rounded-xl border transition-all text-sm font-medium ${
                       preferredTrack === t
@@ -262,7 +262,7 @@ const StudentSignup = () => {
                 ))}
               </div>
             </div>
-            {preferredTrack === "الإجازة بالسند" && (
+            {preferredTrack === "الحصول على إجازة قرآنية" && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
