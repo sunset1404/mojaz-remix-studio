@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
-import { Trophy, Star, BookOpen, Target, Award, Flame, Check, X, BookOpenCheck, Crown, Zap, Clock, CalendarCheck, Users, GraduationCap, Mic } from "lucide-react";
+import { Trophy, Star, BookOpen, Target, Award, Flame, Check, X, BookOpenCheck, Crown, Zap, Clock, CalendarCheck, Users, GraduationCap, Mic, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 type Achievement = {
   id: number;
@@ -57,22 +59,62 @@ const reciterStats = [
 ];
 
 const weekDays = [
-  { key: "sat", label: "س" },
-  { key: "sun", label: "ح" },
-  { key: "mon", label: "ن" },
-  { key: "tue", label: "ث" },
-  { key: "wed", label: "ر" },
-  { key: "thu", label: "خ" },
-  { key: "fri", label: "ج" },
+  { key: "السبت", label: "س" },
+  { key: "الأحد", label: "ح" },
+  { key: "الاثنين", label: "ن" },
+  { key: "الثلاثاء", label: "ث" },
+  { key: "الأربعاء", label: "ر" },
+  { key: "الخميس", label: "خ" },
+  { key: "الجمعة", label: "ج" },
 ];
 
-const planDays = ["sat", "mon", "wed"];
-const completedDays = ["sat"];
-const missedDays = ["mon"];
-
 const Achievements = () => {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const isReciter = role === "reciter";
+  const [planDays, setPlanDays] = useState<string[]>([]);
+  const [completedDays, setCompletedDays] = useState<string[]>([]);
+  const [missedDays, setMissedDays] = useState<string[]>([]);
+  const [loadingPlan, setLoadingPlan] = useState(true);
+
+  useEffect(() => {
+    const fetchPlan = async () => {
+      if (!user) { setLoadingPlan(false); return; }
+      const { data } = await supabase
+        .from("weekly_plans")
+        .select("days")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (data?.days) {
+        setPlanDays(data.days);
+        // Determine today's day name in Arabic
+        const today = new Date();
+        const dayIndex = today.getDay(); // 0=Sun
+        const dayMap = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+        const todayName = dayMap[dayIndex];
+        const orderedDays = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
+        const todayOrder = orderedDays.indexOf(todayName);
+
+        // Mock logic: days before today in the week that are in the plan
+        // In a real app you'd check session_records for actual completion
+        const done: string[] = [];
+        const missed: string[] = [];
+        data.days.forEach((d: string) => {
+          const dOrder = orderedDays.indexOf(d);
+          if (dOrder < todayOrder) {
+            // Simulate: check if there's a session on that day this week
+            // For now mark first past day as done, rest as missed
+            if (done.length === 0) done.push(d);
+            else missed.push(d);
+          }
+        });
+        setCompletedDays(done);
+        setMissedDays(missed);
+      }
+      setLoadingPlan(false);
+    };
+    fetchPlan();
+  }, [user]);
 
   const achievements = isReciter ? reciterAchievements : studentAchievements;
   const stats = isReciter ? reciterStats : studentStats;
