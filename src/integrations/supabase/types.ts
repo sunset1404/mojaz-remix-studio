@@ -41,6 +41,66 @@ export type Database = {
         }
         Relationships: []
       }
+      reciter_profiles: {
+        Row: {
+          city: string
+          created_at: string
+          full_name: string
+          gender: string
+          id: string
+          id_number: string
+          nationality: string
+          phone: string
+          preferred_days: string[]
+          preferred_times: string[]
+          preferred_track: string
+          profession: string
+          qualifications: string
+          quran_certifications: string
+          teaching_experience: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          full_name: string
+          gender: string
+          id?: string
+          id_number: string
+          nationality: string
+          phone: string
+          preferred_days?: string[]
+          preferred_times?: string[]
+          preferred_track?: string
+          profession: string
+          qualifications: string
+          quran_certifications: string
+          teaching_experience: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          full_name?: string
+          gender?: string
+          id?: string
+          id_number?: string
+          nationality?: string
+          phone?: string
+          preferred_days?: string[]
+          preferred_times?: string[]
+          preferred_track?: string
+          profession?: string
+          qualifications?: string
+          quran_certifications?: string
+          teaching_experience?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
