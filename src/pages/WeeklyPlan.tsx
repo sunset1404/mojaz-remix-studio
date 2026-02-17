@@ -1,8 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Check, Clock, BookOpen, ChevronRight, ChevronLeft, Pencil, Trash2, X, Mic, BookMarked, Award, Layers, FileText, BookOpenCheck, Users, GraduationCap } from "lucide-react";
-import { useState } from "react";
+import { Plus, Check, Clock, BookOpen, ChevronRight, ChevronLeft, Pencil, Trash2, X, Mic, BookMarked, Award, Layers, FileText, BookOpenCheck, Users, GraduationCap, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const allDays = [
   { key: "sat", label: "السبت" },
@@ -41,7 +43,7 @@ const scopeTypes = [
 ];
 
 type Plan = {
-  id: number;
+  id: string;
   days: string[];
   times: string[];
   goals: string[];
@@ -50,21 +52,11 @@ type Plan = {
   scopeLabel: string;
 };
 
-const studentInitialPlans: Plan[] = [
-  { id: 1, days: ["sat", "mon", "wed"], times: ["بعد الفجر"], goals: ["hifz"], goalLabels: ["حفظ"], scope: "juz", scopeLabel: "أجزاء محددة" },
-  { id: 2, days: ["sun", "tue", "thu"], times: ["بعد المغرب"], goals: ["tasmee"], goalLabels: ["تسميع"], scope: "full", scopeLabel: "القرآن كاملاً" },
-];
-
-const reciterInitialPlans: Plan[] = [
-  { id: 1, days: ["sat", "mon", "wed"], times: ["بعد الفجر", "بعد العصر"], goals: ["hifz_help", "tilawa_fix"], goalLabels: ["مساعدة على الحفظ", "تصحيح التلاوة"], scope: "juz", scopeLabel: "أجزاء محددة" },
-  { id: 2, days: ["sun", "tue", "thu"], times: ["بعد المغرب"], goals: ["muraja3a"], goalLabels: ["مراجعة القرآن"], scope: "full", scopeLabel: "القرآن كاملاً" },
-];
-
 const steps = ["الهدف", "المقدار", "الأيام", "الوقت"];
 
 const WeeklyPlan = () => {
   const navigate = useNavigate();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const isReciter = role === "reciter";
 
   const goalTypes = isReciter ? reciterGoalTypes : studentGoalTypes;
@@ -72,12 +64,13 @@ const WeeklyPlan = () => {
     ? "إدارة خطط الإقراء والجلسات الخاصة بك"
     : "إدارة خطط الحفظ والتسميع الخاصة بك";
 
-  const [plans, setPlans] = useState<Plan[]>(isReciter ? reciterInitialPlans : studentInitialPlans);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [showLimitDialog, setShowLimitDialog] = useState(false);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // Wizard state
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
@@ -105,6 +98,32 @@ const WeeklyPlan = () => {
     setShowWizard(false);
   };
 
+  // Load plans from database
+  useEffect(() => {
+    if (!user) return;
+    const fetchPlans = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("weekly_plans")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
+      if (data) {
+        setPlans(data.map(p => ({
+          id: p.id,
+          days: p.days,
+          times: p.times,
+          goals: p.goals,
+          goalLabels: p.goal_labels,
+          scope: p.scope,
+          scopeLabel: p.scope_label,
+        })));
+      }
+      setLoading(false);
+    };
+    fetchPlans();
+  }, [user]);
+
   const openAddWizard = () => {
     if (plans.length > 0) {
       setShowLimitDialog(true);
@@ -125,25 +144,25 @@ const WeeklyPlan = () => {
     setShowWizard(true);
   };
 
-  const deletePlan = (id: number) => {
+  const deletePlan = async (id: string) => {
+    if (!user) return;
+    await supabase.from("weekly_plans").delete().eq("id", id);
     setPlans(prev => prev.filter(p => p.id !== id));
     setDeleteConfirmId(null);
+    toast.success("تم حذف الخطة");
   };
 
   const toggleGoal = (key: string) => {
     if (isReciter) {
-      // Reciter can select multiple goals
       setSelectedGoals(prev =>
         prev.includes(key) ? prev.filter(g => g !== key) : [...prev, key]
       );
     } else {
-      // Student selects single goal
       setSelectedGoals([key]);
     }
   };
 
   const shouldSkipScope = () => {
-    // Skip scope for ijaza (student) or ijaza_grant (reciter)
     return selectedGoals.includes("ijaza") || selectedGoals.includes("ijaza_grant");
   };
 
@@ -155,23 +174,47 @@ const WeeklyPlan = () => {
     return false;
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
+    if (!user) return;
     const goalLabels = selectedGoals.map(g => goalTypes.find(t => t.key === g)?.label || "");
     const scopeInfo = scopeTypes.find(s => s.key === selectedScope);
-    const newPlan: Plan = {
-      id: editingPlan ? editingPlan.id : Date.now(),
-      days: selectedDays,
-      times: selectedTimes,
-      goals: selectedGoals,
-      goalLabels,
-      scope: selectedScope,
-      scopeLabel: scopeInfo?.label || "",
-    };
 
     if (editingPlan) {
-      setPlans(prev => prev.map(p => p.id === editingPlan.id ? newPlan : p));
+      const { error } = await supabase.from("weekly_plans").update({
+        goals: selectedGoals,
+        goal_labels: goalLabels,
+        scope: selectedScope,
+        scope_label: scopeInfo?.label || "",
+        days: selectedDays,
+        times: selectedTimes,
+      }).eq("id", editingPlan.id);
+
+      if (!error) {
+        setPlans(prev => prev.map(p => p.id === editingPlan.id ? {
+          ...p, goals: selectedGoals, goalLabels, scope: selectedScope,
+          scopeLabel: scopeInfo?.label || "", days: selectedDays, times: selectedTimes,
+        } : p));
+        toast.success("تم تعديل الخطة بنجاح");
+      }
     } else {
-      setPlans(prev => [...prev, newPlan]);
+      const { data, error } = await supabase.from("weekly_plans").insert({
+        user_id: user.id,
+        goals: selectedGoals,
+        goal_labels: goalLabels,
+        scope: selectedScope,
+        scope_label: scopeInfo?.label || "",
+        days: selectedDays,
+        times: selectedTimes,
+      }).select().single();
+
+      if (!error && data) {
+        setPlans(prev => [...prev, {
+          id: data.id, days: data.days, times: data.times,
+          goals: data.goals, goalLabels: data.goal_labels,
+          scope: data.scope, scopeLabel: data.scope_label,
+        }]);
+        toast.success("تم إنشاء الخطة بنجاح");
+      }
     }
     resetWizard();
   };
@@ -210,7 +253,11 @@ const WeeklyPlan = () => {
 
       {/* Plans List */}
       <div className="px-5 mt-6">
-        {plans.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
+          </div>
+        ) : plans.length === 0 ? (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -226,72 +273,71 @@ const WeeklyPlan = () => {
             </button>
           </motion.div>
         ) : (
-          <div className="space-y-3">
-            {plans.map((plan, i) => {
-              const FirstGoalIcon = getGoalIcon(plan.goals[0]);
-              return (
-                <motion.div
-                  key={plan.id}
-                  initial={{ x: 30, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 + i * 0.08 }}
-                  className="glass-card rounded-2xl p-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <FirstGoalIcon className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-foreground text-sm">{plan.goalLabels.join(" · ")}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-[10px] text-muted-foreground">{plan.times.join(" · ")}</span>
+          <>
+            <div className="space-y-3">
+              {plans.map((plan, i) => {
+                const FirstGoalIcon = getGoalIcon(plan.goals[0]);
+                return (
+                  <motion.div
+                    key={plan.id}
+                    initial={{ x: 30, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 + i * 0.08 }}
+                    className="glass-card rounded-2xl p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                          <FirstGoalIcon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-foreground text-sm">{plan.goalLabels.join(" · ")}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-[10px] text-muted-foreground">{plan.times.join(" · ")}</span>
+                            </div>
+                            <span className="text-[10px] text-gold font-semibold">• {plan.scopeLabel}</span>
                           </div>
-                          <span className="text-[10px] text-gold font-semibold">• {plan.scopeLabel}</span>
                         </div>
                       </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <button
+                          onClick={() => openEditWizard(plan)}
+                          className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-primary" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmId(plan.id)}
+                          className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-1.5 shrink-0">
-                      <button
-                        onClick={() => openEditWizard(plan)}
-                        className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"
-                      >
-                        <Pencil className="w-3.5 h-3.5 text-primary" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirmId(plan.id)}
-                        className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                      </button>
+                    <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-border/50">
+                      {plan.days.map(d => (
+                        <span key={d} className="text-[10px] bg-primary/10 text-primary font-semibold px-2.5 py-1 rounded-full">
+                          {getDayLabel(d)}
+                        </span>
+                      ))}
                     </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-border/50">
-                    {plan.days.map(d => (
-                      <span key={d} className="text-[10px] bg-primary/10 text-primary font-semibold px-2.5 py-1 rounded-full">
-                        {getDayLabel(d)}
-                      </span>
-                    ))}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-
-        {plans.length > 0 && (
-          <motion.button
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            onClick={openAddWizard}
-            className="w-full mt-4 glass-card rounded-2xl p-4 flex items-center justify-center gap-2 text-primary font-semibold text-sm hover:shadow-md transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            إضافة خطة جديدة
-          </motion.button>
+                  </motion.div>
+                );
+              })}
+            </div>
+            <motion.button
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              onClick={openAddWizard}
+              className="w-full mt-4 glass-card rounded-2xl p-4 flex items-center justify-center gap-2 text-primary font-semibold text-sm hover:shadow-md transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              إضافة خطة جديدة
+            </motion.button>
+          </>
         )}
       </div>
 

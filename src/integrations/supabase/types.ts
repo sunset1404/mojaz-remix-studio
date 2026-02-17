@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      certificates: {
+        Row: {
+          created_at: string
+          date: string | null
+          id: string
+          issuer: string | null
+          sheikh_name: string | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string | null
+          id?: string
+          issuer?: string | null
+          sheikh_name?: string | null
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string | null
+          id?: string
+          issuer?: string | null
+          sheikh_name?: string | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_settings: {
+        Row: {
+          created_at: string
+          id: string
+          new_messages: boolean
+          quran_reminders: boolean
+          session_reminders: boolean
+          sound: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_messages?: boolean
+          quran_reminders?: boolean
+          session_reminders?: boolean
+          sound?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_messages?: boolean
+          quran_reminders?: boolean
+          session_reminders?: boolean
+          sound?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payment_cards: {
+        Row: {
+          card_type: string
+          created_at: string
+          expiry: string
+          id: string
+          last4: string
+          user_id: string
+        }
+        Insert: {
+          card_type?: string
+          created_at?: string
+          expiry: string
+          id?: string
+          last4: string
+          user_id: string
+        }
+        Update: {
+          card_type?: string
+          created_at?: string
+          expiry?: string
+          id?: string
+          last4?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -101,6 +200,45 @@ export type Database = {
         }
         Relationships: []
       }
+      session_records: {
+        Row: {
+          created_at: string
+          date: string
+          duration: string
+          id: string
+          notes: string | null
+          other_user_name: string
+          rating: number | null
+          status: string
+          time: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          duration?: string
+          id?: string
+          notes?: string | null
+          other_user_name: string
+          rating?: number | null
+          status?: string
+          time: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          duration?: string
+          id?: string
+          notes?: string | null
+          other_user_name?: string
+          rating?: number | null
+          status?: string
+          time?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_profiles: {
         Row: {
           created_at: string
@@ -161,6 +299,36 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount: string
+          created_at: string
+          date: string
+          id: string
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          amount: string
+          created_at?: string
+          date: string
+          id?: string
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          amount?: string
+          created_at?: string
+          date?: string
+          id?: string
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -175,6 +343,45 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_plans: {
+        Row: {
+          created_at: string
+          days: string[]
+          goal_labels: string[]
+          goals: string[]
+          id: string
+          scope: string
+          scope_label: string
+          times: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days?: string[]
+          goal_labels?: string[]
+          goals?: string[]
+          id?: string
+          scope?: string
+          scope_label?: string
+          times?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days?: string[]
+          goal_labels?: string[]
+          goals?: string[]
+          id?: string
+          scope?: string
+          scope_label?: string
+          times?: string[]
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
