@@ -35,10 +35,11 @@ import BottomNav from "./components/BottomNav";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode; allowedRole?: "student" | "reciter" }) => {
+  const { user, role, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center"><span className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full" /></div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (allowedRole && role && role !== allowedRole) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
@@ -69,12 +70,12 @@ const AppRoutes = () => (
     } />
 
     {/* Student-only routes */}
-    <Route path="/reciters" element={<ProtectedRoute><><Reciters /><BottomNav /></></ProtectedRoute>} />
-    <Route path="/subscription" element={<ProtectedRoute><><Subscription /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/subscription" element={<ProtectedRoute allowedRole="student"><><Subscription /><BottomNav /></></ProtectedRoute>} />
 
     {/* Reciter-only routes */}
-    <Route path="/my-students" element={<ProtectedRoute><><MyStudents /><BottomNav /></></ProtectedRoute>} />
-    <Route path="/sessions" element={<ProtectedRoute><><Sessions /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/my-students" element={<ProtectedRoute allowedRole="reciter"><><MyStudents /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/sessions" element={<ProtectedRoute allowedRole="reciter"><><Sessions /><BottomNav /></></ProtectedRoute>} />
 
     {/* Shared routes */}
     <Route path="/achievements" element={<ProtectedRoute><><Achievements /><BottomNav /></></ProtectedRoute>} />
