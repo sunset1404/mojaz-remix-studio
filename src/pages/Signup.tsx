@@ -23,6 +23,10 @@ const Signup = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === "reciter") {
+      navigate("/signup/reciter");
+      return;
+    }
     if (password.length < 6) {
       toast({ title: "كلمة المرور قصيرة", description: "يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });
       return;

@@ -23,6 +23,7 @@ import ShareApp from "./pages/ShareApp";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ReciterSignup from "./pages/ReciterSignup";
 import BottomNav from "./components/BottomNav";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
     <Route path="/signup" element={<AuthRoute><Signup /></AuthRoute>} />
+    <Route path="/signup/reciter" element={<AuthRoute><ReciterSignup /></AuthRoute>} />
     <Route path="/" element={<ProtectedRoute><><Index /><BottomNav /></></ProtectedRoute>} />
     <Route path="/reciters" element={<ProtectedRoute><><Reciters /><BottomNav /></></ProtectedRoute>} />
     <Route path="/subscription" element={<ProtectedRoute><><Subscription /><BottomNav /></></ProtectedRoute>} />
