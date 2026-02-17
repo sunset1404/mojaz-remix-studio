@@ -207,26 +207,26 @@ const StudentSignup = () => {
                 <CountrySelect value={nationality} onChange={(v) => { setNationality(v); if (COUNTRY_CODES[v]) setPhoneCode(COUNTRY_CODES[v]); }} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">4. رقم الجوال *</Label>
-                <div className="flex gap-1.5">
-                  <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => setPhone(e.target.value.replace(/^0+/, ''))}
-                    className={`flex-1 ${inputClass}`} dir="ltr" required />
-                  <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}
-                    className="h-12 w-24 rounded-xl border border-primary/20 bg-card px-1.5 text-xs font-semibold text-foreground shadow-sm focus:border-primary" dir="ltr">
-                    {[...new Set(Object.values(COUNTRY_CODES))].sort().map((code) => (
-                      <option key={code} value={code}>{code}</option>
-                    ))}
-                  </select>
-                </div>
+                <Label className="text-foreground text-xs font-semibold">4. المؤهل الدراسي *</Label>
+                <select value={educationLevel} onChange={(e) => setEducationLevel(e.target.value)}
+                  className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
+                  <option value="" disabled>اختر إجابة</option>
+                  {EDUCATION_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+                </select>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-foreground text-xs font-semibold">5. المؤهل الدراسي *</Label>
-              <select value={educationLevel} onChange={(e) => setEducationLevel(e.target.value)}
-                className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
-                <option value="" disabled>اختر إجابة</option>
-                {EDUCATION_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
-              </select>
+              <Label className="text-foreground text-xs font-semibold">5. رقم الجوال *</Label>
+              <div className="flex gap-1.5">
+                <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => setPhone(e.target.value.replace(/^0+/, ''))}
+                  className={`flex-1 ${inputClass}`} dir="ltr" required />
+                <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}
+                  className="h-12 w-24 rounded-xl border border-primary/20 bg-card px-1.5 text-xs font-semibold text-foreground shadow-sm focus:border-primary" dir="ltr">
+                  {[...new Set(Object.values(COUNTRY_CODES))].sort().map((code) => (
+                    <option key={code} value={code}>{code}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         );
