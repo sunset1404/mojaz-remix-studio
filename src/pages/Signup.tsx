@@ -96,7 +96,10 @@ const Signup = () => {
               <div className="grid grid-cols-2 gap-3">
                 {roles.map((r) => (
                   <motion.button key={r.value} type="button" whileTap={{ scale: 0.96 }}
-                    onClick={() => setRole(r.value)}
+                    onClick={() => {
+                      if (r.value === "reciter") { navigate("/signup/reciter"); return; }
+                      setRole(r.value);
+                    }}
                     className={`flex flex-col items-center gap-1.5 p-3.5 rounded-2xl border-2 transition-all ${
                       role === r.value ? "border-primary bg-primary/10 shadow-sm" : "border-border/60 bg-card hover:border-primary/30"
                     }`}>
