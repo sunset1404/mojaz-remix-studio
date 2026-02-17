@@ -64,7 +64,7 @@ const ReciterSignup = () => {
   // Step 3: Preferences
   const [preferredDays, setPreferredDays] = useState<string[]>([]);
   const [preferredTimes, setPreferredTimes] = useState<string[]>([]);
-  const [preferredTrack, setPreferredTrack] = useState("");
+  const [preferredTrack, setPreferredTrack] = useState<string[]>([]);
 
   const toggleItem = (arr: string[], item: string, setter: (v: string[]) => void) => {
     setter(arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item]);
@@ -87,7 +87,7 @@ const ReciterSignup = () => {
       }
     }
     if (step === 3) {
-      if (preferredDays.length === 0 || preferredTimes.length === 0 || !preferredTrack) {
+      if (preferredDays.length === 0 || preferredTimes.length === 0 || preferredTrack.length === 0) {
         toast({ title: "مطلوب", description: "يرجى اختيار التفضيلات", variant: "destructive" }); return false;
       }
     }
@@ -128,7 +128,7 @@ const ReciterSignup = () => {
         teaching_experience: teachingExperience,
         preferred_days: preferredDays,
         preferred_times: preferredTimes,
-        preferred_track: preferredTrack,
+        preferred_track: preferredTrack.join("، "),
       });
     }
 
@@ -295,9 +295,9 @@ const ReciterSignup = () => {
               <Label className="text-foreground text-xs font-semibold">مسار الإقراء المفضل</Label>
               <div className="grid grid-cols-2 gap-2">
                 {TRACKS.map((track) => (
-                  <button key={track} type="button" onClick={() => setPreferredTrack(track)}
+                  <button key={track} type="button" onClick={() => toggleItem(preferredTrack, track, setPreferredTrack)}
                     className={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all text-center ${
-                      preferredTrack === track ? "border-primary bg-primary/15 text-primary" : "border-border/60 bg-card text-foreground/60 hover:border-primary/30"
+                      preferredTrack.includes(track) ? "border-primary bg-primary/15 text-primary" : "border-border/60 bg-card text-foreground/60 hover:border-primary/30"
                     }`}>{track}</button>
                 ))}
               </div>
