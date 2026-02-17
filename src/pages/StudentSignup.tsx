@@ -230,28 +230,39 @@ const StudentSignup = () => {
       case 2:
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">6. الرواية أو القراءة المتقنّد لها *</Label>
-                <select value={preferredRiwaya} onChange={(e) => setPreferredRiwaya(e.target.value)}
-                  className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
-                  <option value="" disabled>اختر إجابة</option>
-                  {RIWAYAT.map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">7. مسار الإقراء المفضل لك *</Label>
-                <select value={preferredTrack} onChange={(e) => setPreferredTrack(e.target.value)}
-                  className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
-                  <option value="" disabled>اختر إجابة</option>
-                  {TRACKS.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-xs font-semibold">6. الرواية أو القراءة المتقنّد لها *</Label>
+              <select value={preferredRiwaya} onChange={(e) => setPreferredRiwaya(e.target.value)}
+                className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
+                <option value="" disabled>اختر إجابة</option>
+                {RIWAYAT.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-foreground text-xs font-semibold">8. تاريخ الالتحاق بالبرنامج</Label>
-              <Input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)}
-                className={inputClass} dir="ltr" />
+              <Label className="text-foreground text-xs font-semibold">7. مسار الإقراء المفضل لك *</Label>
+              <div className="grid grid-cols-1 gap-2">
+                {TRACKS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setPreferredTrack(t)}
+                    className={`w-full text-right px-4 py-3 rounded-xl border transition-all text-sm font-medium ${
+                      preferredTrack === t
+                        ? "border-primary bg-primary/10 text-primary shadow-sm"
+                        : "border-primary/20 bg-card text-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{t}</span>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        preferredTrack === t ? "border-primary" : "border-muted-foreground/30"
+                      }`}>
+                        {preferredTrack === t && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         );
