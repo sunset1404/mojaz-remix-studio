@@ -144,7 +144,7 @@ const Login = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-center mt-8 text-primary-foreground/70"
+            className="text-center mt-8 text-card font-semibold drop-shadow-sm"
           >
             ليس لديك حساب؟{" "}
             <Link to="/signup" className="text-primary-foreground font-bold hover:underline">

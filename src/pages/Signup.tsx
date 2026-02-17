@@ -158,7 +158,7 @@ const Signup = () => {
           </div>
 
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-            className="text-center mt-6 text-primary-foreground/70">
+            className="text-center mt-6 text-card font-semibold drop-shadow-sm">
             لديك حساب بالفعل؟{" "}
             <Link to="/login" className="text-primary-foreground font-bold hover:underline">تسجيل الدخول</Link>
           </motion.p>
