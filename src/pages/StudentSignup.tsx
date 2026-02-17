@@ -30,7 +30,7 @@ const getPasswordStrength = (pwd: string): { level: number; label: string; color
 const STEPS = [
   { title: "الحساب", icon: Lock },
   { title: "البيانات الشخصية", icon: User },
-  { title: "تفضيلات الإجازة", icon: BookOpen },
+  { title: "هدف التسجيل", icon: BookOpen },
 ];
 
 const EDUCATION_LEVELS = ["ثانوي", "دبلوم", "بكالوريوس", "ماجستير", "دكتوراه", "أخرى"];
@@ -234,7 +234,7 @@ const StudentSignup = () => {
         return (
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-foreground text-xs font-semibold">6. مسار الإقراء المفضل لك *</Label>
+              <Label className="text-foreground text-xs font-semibold">6. ما هدفك من التسجيل؟ *</Label>
               <div className="grid grid-cols-1 gap-2">
                 {TRACKS.map((t) => (
                   <button
