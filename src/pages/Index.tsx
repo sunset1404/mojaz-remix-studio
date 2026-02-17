@@ -231,44 +231,6 @@ const Index = () => {
         </motion.div>
       </div>
 
-      {/* Features Grid */}
-      <div className="px-5 mt-6">
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.7 }}>
-
-          <div className="grid grid-cols-2 gap-3">
-            {features.map((feature, i) =>
-            <motion.div
-              key={feature.title}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.8 + i * 0.1 }}
-              whileTap={{ scale: 0.96 }}>
-
-                <Link
-                to={feature.path}
-                className="glass-card rounded-2xl p-4 flex flex-col gap-2 hover:shadow-xl transition-all group block">
-
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-                feature.color === "gold" ? "bg-gold/15" : "bg-primary/10"}`
-                }>
-                    <feature.icon className={`w-5 h-5 ${
-                  feature.color === "gold" ? "text-gold" : "text-primary"}`
-                  } />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">{feature.title}</h3>
-                    <p className="text-xs text-muted-foreground">{feature.desc}</p>
-                  </div>
-                  
-                </Link>
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
-      </div>
 
       {/* Subscription Card */}
       <div className="px-5 mt-6">
