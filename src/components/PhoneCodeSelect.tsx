@@ -18,7 +18,9 @@ const uniqueCodes = [...new Set(Object.values(COUNTRY_CODES))].sort();
 const PhoneCodeSelect = ({ value, onChange }: PhoneCodeSelectProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const ref = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const filtered = uniqueCodes.filter((code) => {
@@ -27,9 +29,23 @@ const PhoneCodeSelect = ({ value, onChange }: PhoneCodeSelectProps) => {
     return countries.some((c) => c.includes(search));
   });
 
+  const handleToggle = () => {
+    if (!open && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setOpen(!open);
+  };
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (
+        ref.current && !ref.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
+        setOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -43,7 +59,7 @@ const PhoneCodeSelect = ({ value, onChange }: PhoneCodeSelectProps) => {
     <div ref={ref} className="relative">
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={handleToggle}
         className="h-12 w-24 rounded-xl border border-primary/20 bg-card px-2 flex items-center justify-between text-xs font-semibold text-foreground shadow-sm transition-colors focus:border-primary"
         dir="ltr"
       >
@@ -52,8 +68,8 @@ const PhoneCodeSelect = ({ value, onChange }: PhoneCodeSelectProps) => {
       </button>
 
       {open && (
-        <div className="fixed z-50 w-48 bg-card border border-primary/20 rounded-xl shadow-lg overflow-hidden" dir="ltr"
-          style={{ top: ref.current ? ref.current.getBoundingClientRect().bottom + 4 : 0, left: ref.current ? ref.current.getBoundingClientRect().left : 0 }}>
+        <div ref={dropdownRef} className="fixed z-50 w-48 bg-card border border-primary/20 rounded-xl shadow-lg overflow-hidden" dir="ltr"
+          style={{ top: dropdownPos.top, left: dropdownPos.left }}>
           <div className="p-2 border-b border-border/50">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
