@@ -140,10 +140,10 @@ const Subscription = () => {
             <div className="flex items-start gap-3 mb-4">
               <div
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                  plan.popular ? "bg-primary-foreground/20" : "bg-primary/10"
+                  plan.popular ? "bg-white/20" : "bg-gold/10"
                 }`}
               >
-                <plan.icon className={`w-6 h-6 ${plan.popular ? "text-primary-foreground" : "text-primary"}`} />
+                <plan.icon className={`w-6 h-6 ${plan.popular ? "text-white" : "text-gold"}`} />
               </div>
               <div>
                 <h3 className={`text-lg font-bold ${plan.popular ? "" : "text-foreground"}`}>{plan.name}</h3>
