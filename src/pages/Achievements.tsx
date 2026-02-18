@@ -87,7 +87,7 @@ const Achievements = () => {
 
       if (data?.days) {
         setPlanDays(data.days);
-        // Determine today's day name in Arabic
+
         const today = new Date();
         const dayIndex = today.getDay(); // 0=Sun
         const dayMap = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
@@ -95,16 +95,43 @@ const Achievements = () => {
         const orderedDays = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
         const todayOrder = orderedDays.indexOf(todayName);
 
-        // Mock logic: days before today in the week that are in the plan
-        // In a real app you'd check session_records for actual completion
+        // Get start of current week (Saturday)
+        const satOffset = (dayIndex + 1) % 7; // days since last Saturday
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - satOffset);
+        weekStart.setHours(0, 0, 0, 0);
+
+        // Fetch session records for this week
+        const { data: sessions } = await supabase
+          .from("session_records")
+          .select("date")
+          .eq("user_id", user.id)
+          .eq("status", "مكتملة");
+
+        // Build a set of Arabic day names that have completed sessions this week
+        const sessionDayNames = new Set<string>();
+        if (sessions) {
+          sessions.forEach((s) => {
+            // date format could be "2026-02-15" or Arabic text - try parsing
+            const parsed = new Date(s.date);
+            if (!isNaN(parsed.getTime())) {
+              // Check if it falls within this week (Saturday to Friday)
+              const weekEnd = new Date(weekStart);
+              weekEnd.setDate(weekStart.getDate() + 7);
+              if (parsed >= weekStart && parsed < weekEnd) {
+                const sDayIndex = parsed.getDay();
+                sessionDayNames.add(dayMap[sDayIndex]);
+              }
+            }
+          });
+        }
+
         const done: string[] = [];
         const missed: string[] = [];
         data.days.forEach((d: string) => {
           const dOrder = orderedDays.indexOf(d);
           if (dOrder < todayOrder) {
-            // Simulate: check if there's a session on that day this week
-            // For now mark first past day as done, rest as missed
-            if (done.length === 0) done.push(d);
+            if (sessionDayNames.has(d)) done.push(d);
             else missed.push(d);
           }
         });
