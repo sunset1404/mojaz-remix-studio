@@ -1,5 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { Toaster } from "@/components/ui/toaster";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -40,6 +41,7 @@ import PartnerProfile from "./pages/PartnerProfile";
 import GiftSubscription from "./pages/GiftSubscription";
 import RedeemGift from "./pages/RedeemGift";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminSidebar from "./components/AdminSidebar";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
@@ -125,9 +127,14 @@ const AppLayout = () => {
 
   if (isAdmin) {
     return (
-      <div className="min-h-screen bg-background">
-        <AppRoutes />
-      </div>
+      <SidebarProvider defaultOpen={true}>
+        <div className="min-h-screen flex w-full bg-background" dir="rtl">
+          <AdminSidebar />
+          <main className="flex-1 overflow-auto">
+            <AppRoutes />
+          </main>
+        </div>
+      </SidebarProvider>
     );
   }
 
