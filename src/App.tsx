@@ -38,6 +38,7 @@ import PartnerStudents from "./pages/PartnerStudents";
 import PartnerProfile from "./pages/PartnerProfile";
 import GiftSubscription from "./pages/GiftSubscription";
 import RedeemGift from "./pages/RedeemGift";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const AppRoutes = () => (
           student={<><Index /><BottomNav /></>}
           reciter={<><ReciterHome /><BottomNav /></>}
           partner={<><PartnerHome /><BottomNav /></>}
+          admin={<AdminDashboard />}
         />
       </ProtectedRoute>
     } />

@@ -1,4 +1,4 @@
-import { Home, Mic, Crown, Trophy, User, Users, Calendar } from "lucide-react";
+import { Home, Mic, Crown, Trophy, User, Users, Calendar, LayoutDashboard, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,10 +26,18 @@ const partnerTabs = [
   { path: "/partner-students", icon: Users, label: "طلابي" },
 ];
 
+const adminTabs = [
+  { path: "/profile", icon: User, label: "حسابي" },
+  { path: "/admin/students", icon: Users, label: "الطلاب" },
+  { path: "/", icon: LayoutDashboard, label: "لوحة التحكم", main: true },
+  { path: "/admin/reciters", icon: Mic, label: "المقرئون" },
+  { path: "/admin/settings", icon: Settings, label: "الإعدادات" },
+];
+
 const BottomNav = () => {
   const location = useLocation();
   const { role } = useAuth();
-  const tabs = role === "partner" ? partnerTabs : role === "reciter" ? reciterTabs : studentTabs;
+  const tabs = role === "admin" ? adminTabs : role === "partner" ? partnerTabs : role === "reciter" ? reciterTabs : studentTabs;
 
   return (
     <div className="fixed bottom-0 inset-x-0 z-50 max-w-md mx-auto">
