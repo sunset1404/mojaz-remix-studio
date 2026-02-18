@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Settings, LogOut, ChevronRight
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocation, useNavigate } from "react-router-dom";
 import logoMojaz from "@/assets/logo-mojaz.webp";
 import {
   Sidebar,
@@ -20,19 +21,21 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 const mainMenuItems = [
-  { title: "لوحة التحكم", icon: LayoutDashboard, id: "dashboard", active: true },
-  { title: "الطلاب", icon: Users, id: "students" },
-  { title: "المقرئين", icon: GraduationCap, id: "reciters" },
-  { title: "الشركاء", icon: UserCheck, id: "partners" },
-  { title: "الجلسات", icon: Clock, id: "sessions" },
-  { title: "الشهادات", icon: Award, id: "certificates" },
-  { title: "الإهداءات", icon: Gift, id: "gifts" },
+  { title: "لوحة التحكم", icon: LayoutDashboard, id: "dashboard", path: "/" },
+  { title: "الطلاب", icon: Users, id: "students", path: "/admin/students" },
+  { title: "المقرئين", icon: GraduationCap, id: "reciters", path: "/admin/reciters" },
+  { title: "الشركاء", icon: UserCheck, id: "partners", path: "/admin/partners" },
+  { title: "الجلسات", icon: Clock, id: "sessions", path: "/admin/sessions" },
+  { title: "الشهادات", icon: Award, id: "certificates", path: "/admin/certificates" },
+  { title: "الإهداءات", icon: Gift, id: "gifts", path: "/admin/gifts" },
 ];
 
 const AdminSidebar = () => {
   const { signOut, user } = useAuth();
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <Sidebar side="right" collapsible="icon" className="border-l border-border/50">
@@ -65,31 +68,37 @@ const AdminSidebar = () => {
           )}
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainMenuItems.map((item) => (
+              {mainMenuItems.map((item) => {
+                const isActive = item.path === "/" 
+                  ? location.pathname === "/" 
+                  : location.pathname.startsWith(item.path);
+                return (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    isActive={item.active}
+                    isActive={isActive}
                     tooltip={item.title}
+                    onClick={() => navigate(item.path)}
                     className={`mx-2 rounded-xl transition-all duration-200 ${
-                      item.active 
+                      isActive 
                         ? "bg-primary/10 text-primary font-semibold hover:bg-primary/15" 
                         : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                     }`}
                   >
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      item.active ? "bg-primary/15" : "bg-transparent"
+                      isActive ? "bg-primary/15" : "bg-transparent"
                     }`}>
                       <item.icon className={`w-4 h-4 ${
-                        item.active ? "text-primary" : "text-gold"
+                        isActive ? "text-primary" : "text-gold"
                       }`} />
                     </div>
                     <span className="truncate">{item.title}</span>
-                    {item.active && !isCollapsed && (
+                    {isActive && !isCollapsed && (
                       <ChevronRight className="w-3 h-3 text-primary mr-auto" />
                     )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
