@@ -1,7 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones, Phone, Video } from "lucide-react";
+import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones, Phone, Video, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import reciter1 from "@/assets/reciters/reciter1.jpg";
 import reciter2 from "@/assets/reciters/reciter2.jpg";
 import reciter3 from "@/assets/reciters/reciter3.jpg";
@@ -32,7 +34,15 @@ const features = [
 { title: "إنجازاتي", desc: "شاهد تقدمك", icon: Trophy, color: "gold", path: "/achievements" }];
 
 const Index = () => {
+  const { user, avatarUrl } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("student_profiles").select("full_name").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => { if (data) setUserName(data.full_name); });
+  }, [user]);
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % promoSlides.length);
@@ -51,9 +61,18 @@ const Index = () => {
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground font-cairo">
-            أهلاً عبدالعزيز 👋
-          </h1>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full overflow-hidden ring-2 ring-primary/20 bg-muted flex items-center justify-center shrink-0">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="صورة المستخدم" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-5 h-5 text-muted-foreground" />
+              )}
+            </div>
+            <h1 className="text-2xl font-bold text-foreground font-cairo">
+              أهلاً {userName || "بك"} 👋
+            </h1>
+          </div>
           <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative">
             <Bell className="w-5 h-5 text-primary" />
             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-gold rounded-full border-2 border-background" />
