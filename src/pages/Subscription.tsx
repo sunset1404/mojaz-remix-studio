@@ -191,10 +191,10 @@ const Subscription = () => {
                 <div key={feature} className="flex items-center gap-2">
                   <div
                     className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      plan.popular ? "bg-primary-foreground/20" : "bg-primary/10"
+                      plan.popular ? "bg-primary/20" : "bg-gold/10"
                     }`}
                   >
-                    <Check className={`w-3 h-3 ${plan.popular ? "text-primary-foreground" : "text-primary"}`} />
+                    <Check className={`w-3 h-3 ${plan.popular ? "text-primary" : "text-gold"}`} />
                   </div>
                   <span className={`text-sm ${plan.popular ? "text-primary-foreground/90" : "text-foreground"}`}>
                     {feature}
