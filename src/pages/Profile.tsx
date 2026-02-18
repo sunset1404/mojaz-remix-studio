@@ -40,7 +40,7 @@ const menuSections = [
 ];
 
 const Profile = () => {
-  const { signOut, user, role } = useAuth();
+  const { signOut, user, role, avatarUrl, refreshAvatar } = useAuth();
   const navigate = useNavigate();
   let itemIndex = 0;
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -51,10 +51,14 @@ const Profile = () => {
   const [userName, setUserName] = useState("");
   const roleLabel = role === "partner" ? "شريك داعم" : role === "reciter" ? "مقرئ" : "طالب";
 
+  // Use cached avatar from context
+  useEffect(() => {
+    if (avatarUrl) setProfileImage(avatarUrl);
+  }, [avatarUrl]);
+
   useEffect(() => {
     if (!user) return;
-    const fetchData = async () => {
-      // Fetch name
+    const fetchName = async () => {
       if (role === "reciter") {
         const { data } = await supabase.from("reciter_profiles").select("full_name").eq("user_id", user.id).maybeSingle();
         if (data) setUserName(data.full_name);
@@ -65,14 +69,8 @@ const Profile = () => {
         const { data } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
         if (data) setUserName(data.full_name);
       }
-      // Fetch avatar
-      const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("user_id", user.id).maybeSingle();
-      if (profile?.avatar_url) {
-        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(profile.avatar_url);
-        if (urlData?.publicUrl) setProfileImage(urlData.publicUrl + "?t=" + Date.now());
-      }
     };
-    fetchData();
+    fetchName();
   }, [user, role]);
 
   const toggleTheme = () => {
@@ -102,9 +100,10 @@ const Profile = () => {
     // Save path in profiles
     await supabase.from("profiles").update({ avatar_url: filePath }).eq("user_id", user.id);
 
-    // Show image immediately
+    // Show image immediately and update context cache
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
     if (urlData?.publicUrl) setProfileImage(urlData.publicUrl + "?t=" + Date.now());
+    refreshAvatar();
   };
 
   return (
