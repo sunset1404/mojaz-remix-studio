@@ -19,10 +19,17 @@ const reciterTabs = [
   { path: "/sessions", icon: Calendar, label: "الجلسات" },
 ];
 
+const partnerTabs = [
+  { path: "/partner-profile", icon: User, label: "حسابي" },
+  { path: "/partner-dashboard", icon: Trophy, label: "المنجزات" },
+  { path: "/", icon: Home, label: "الرئيسية", main: true },
+  { path: "/partner-students", icon: Users, label: "طلابي" },
+];
+
 const BottomNav = () => {
   const location = useLocation();
   const { role } = useAuth();
-  const tabs = role === "reciter" ? reciterTabs : studentTabs;
+  const tabs = role === "partner" ? partnerTabs : role === "reciter" ? reciterTabs : studentTabs;
 
   return (
     <div className="fixed bottom-0 inset-x-0 z-50 max-w-md mx-auto">
