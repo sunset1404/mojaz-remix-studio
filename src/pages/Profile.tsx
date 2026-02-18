@@ -49,7 +49,7 @@ const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [userName, setUserName] = useState("");
-  const roleLabel = role === "reciter" ? "مقرئ" : "طالب";
+  const roleLabel = role === "partner" ? "شريك داعم" : role === "reciter" ? "مقرئ" : "طالب";
 
   useEffect(() => {
     if (!user) return;

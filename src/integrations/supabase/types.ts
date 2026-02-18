@@ -86,6 +86,96 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_profiles: {
+        Row: {
+          cost_per_minute: number
+          created_at: string
+          full_name: string
+          id: string
+          organization_name: string | null
+          phone: string | null
+          total_support_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cost_per_minute?: number
+          created_at?: string
+          full_name: string
+          id?: string
+          organization_name?: string | null
+          phone?: string | null
+          total_support_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cost_per_minute?: number
+          created_at?: string
+          full_name?: string
+          id?: string
+          organization_name?: string | null
+          phone?: string | null
+          total_support_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      partner_students: {
+        Row: {
+          assigned_at: string
+          id: string
+          partner_id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          id?: string
+          partner_id: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          assigned_at?: string
+          id?: string
+          partner_id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
+      partner_usage_logs: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          minutes_used: number
+          partner_id: string
+          session_date: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          minutes_used?: number
+          partner_id: string
+          session_date?: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          minutes_used?: number
+          partner_id?: string
+          session_date?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
       payment_cards: {
         Row: {
           card_type: string
@@ -236,6 +326,48 @@ export type Database = {
           status?: string
           time?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      student_achievements: {
+        Row: {
+          certificates_count: number
+          commitment_rate: number
+          completions: number
+          id: string
+          nationality: string | null
+          pages_memorized: number
+          parts_memorized: number
+          sessions_count: number
+          student_id: string
+          total_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          certificates_count?: number
+          commitment_rate?: number
+          completions?: number
+          id?: string
+          nationality?: string | null
+          pages_memorized?: number
+          parts_memorized?: number
+          sessions_count?: number
+          student_id: string
+          total_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          certificates_count?: number
+          commitment_rate?: number
+          completions?: number
+          id?: string
+          nationality?: string | null
+          pages_memorized?: number
+          parts_memorized?: number
+          sessions_count?: number
+          student_id?: string
+          total_minutes?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -400,7 +532,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "student" | "reciter"
+      app_role: "student" | "reciter" | "partner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -528,7 +660,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["student", "reciter"],
+      app_role: ["student", "reciter", "partner"],
     },
   },
 } as const

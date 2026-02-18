@@ -32,10 +32,14 @@ import ReciterPending from "./pages/ReciterPending";
 import MyStudents from "./pages/MyStudents";
 import Sessions from "./pages/Sessions";
 import BottomNav from "./components/BottomNav";
+import PartnerHome from "./pages/PartnerHome";
+import PartnerDashboard from "./pages/PartnerDashboard";
+import PartnerStudents from "./pages/PartnerStudents";
+import PartnerProfile from "./pages/PartnerProfile";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode; allowedRole?: "student" | "reciter" }) => {
+const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode; allowedRole?: "student" | "reciter" | "partner" }) => {
   const { user, role, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center"><span className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full" /></div>;
   if (!user) return <Navigate to="/login" replace />;
@@ -65,6 +69,7 @@ const AppRoutes = () => (
         <RoleBasedRoute
           student={<><Index /><BottomNav /></>}
           reciter={<><ReciterHome /><BottomNav /></>}
+          partner={<><PartnerHome /><BottomNav /></>}
         />
       </ProtectedRoute>
     } />
@@ -76,6 +81,11 @@ const AppRoutes = () => (
     {/* Reciter-only routes */}
     <Route path="/my-students" element={<ProtectedRoute allowedRole="reciter"><><MyStudents /><BottomNav /></></ProtectedRoute>} />
     <Route path="/sessions" element={<ProtectedRoute allowedRole="reciter"><><Sessions /><BottomNav /></></ProtectedRoute>} />
+
+    {/* Partner-only routes */}
+    <Route path="/partner-dashboard" element={<ProtectedRoute allowedRole="partner"><><PartnerDashboard /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/partner-students" element={<ProtectedRoute allowedRole="partner"><><PartnerStudents /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/partner-profile" element={<ProtectedRoute allowedRole="partner"><><PartnerProfile /><BottomNav /></></ProtectedRoute>} />
 
     {/* Shared routes */}
     <Route path="/achievements" element={<ProtectedRoute><><Achievements /><BottomNav /></></ProtectedRoute>} />
