@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Wallet, Users, Clock, Bell, ChevronLeft, TrendingDown, BarChart3 } from "lucide-react";
+import { Wallet, Users, Clock, Bell, ChevronLeft, TrendingDown, BarChart3, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 
 const PartnerHome = () => {
-  const { user } = useAuth();
+  const { user, avatarUrl } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [studentsCount, setStudentsCount] = useState(0);
   const [totalMinutes, setTotalMinutes] = useState(0);
@@ -50,9 +50,18 @@ const PartnerHome = () => {
       {/* Header */}
       <div className="px-6 pt-10 pb-3">
         <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground font-cairo">
-            أهلاً {profile?.full_name || "أيها الشريك"} 👋
-          </h1>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full overflow-hidden ring-2 ring-primary/20 bg-muted flex items-center justify-center shrink-0">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="صورة المستخدم" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-5 h-5 text-muted-foreground" />
+              )}
+            </div>
+            <h1 className="text-2xl font-bold text-foreground font-cairo">
+              أهلاً {profile?.full_name || "أيها الشريك"} 👋
+            </h1>
+          </div>
           <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative">
             <Bell className="w-5 h-5 text-primary" />
           </button>
