@@ -113,6 +113,25 @@ const AppRoutes = () => (
   </Routes>
 );
 
+const AppLayout = () => {
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
+
+  if (isAdmin) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppRoutes />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-md mx-auto relative min-h-screen bg-background shadow-2xl">
+      <AppRoutes />
+    </div>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -120,9 +139,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <div className="max-w-md mx-auto relative min-h-screen bg-background shadow-2xl">
-            <AppRoutes />
-          </div>
+          <AppLayout />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
