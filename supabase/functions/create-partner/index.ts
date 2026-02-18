@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
       .insert({
         user_id: userId,
         full_name,
+        email,
         phone: phone || null,
         organization_name: organization_name || null,
         total_support_amount: total_support_amount || 0,
