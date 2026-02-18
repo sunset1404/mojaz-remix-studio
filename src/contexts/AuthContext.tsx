@@ -9,16 +9,20 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   role: AppRole | null;
+  avatarUrl: string | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshAvatar: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   role: null,
+  avatarUrl: null,
   loading: true,
   signOut: async () => {},
+  refreshAvatar: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -27,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchRole = (userId: string) => {
@@ -40,25 +45,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
   };
 
+  const fetchAvatar = (userId: string) => {
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.avatar_url) {
+          const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(data.avatar_url);
+          if (urlData?.publicUrl) setAvatarUrl(urlData.publicUrl);
+        } else {
+          setAvatarUrl(null);
+        }
+      });
+  };
+
+  const refreshAvatar = () => {
+    if (user) fetchAvatar(user.id);
+  };
+
   useEffect(() => {
-    // First get the current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchRole(session.user.id);
+        fetchAvatar(session.user.id);
       }
       setLoading(false);
     });
 
-    // Then listen for auth changes (do NOT await inside this callback)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchRole(session.user.id);
+        fetchAvatar(session.user.id);
       } else {
         setRole(null);
+        setAvatarUrl(null);
       }
       setLoading(false);
     });
@@ -71,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, role, loading, signOut }}>
+    <AuthContext.Provider value={{ session, user, role, avatarUrl, loading, signOut, refreshAvatar }}>
       {children}
     </AuthContext.Provider>
   );
