@@ -124,6 +124,12 @@ const Login = () => {
               </div>
             </div>
 
+            <div className="flex justify-start">
+              <Link to="/forgot-password" className="text-xs text-primary hover:underline font-semibold">
+                نسيت كلمة المرور؟
+              </Link>
+            </div>
+
             <Button
               type="submit"
               className="w-full gradient-primary text-primary-foreground h-13 text-base font-bold rounded-2xl shadow-md hover:shadow-lg transition-shadow mt-2"
