@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Users, Award, GraduationCap, 
   FileText, Settings, UserCheck, Clock,
-  TrendingUp, LogOut, LayoutDashboard, Gift,
+  TrendingUp, LayoutDashboard, Gift,
   RefreshCw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
-import logoMojaz from "@/assets/logo-mojaz.webp";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 interface DashboardStats {
   totalStudents: number;
@@ -89,11 +89,11 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      {/* Top Navigation Bar */}
+      {/* Top Bar with Sidebar Trigger */}
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-card/90 border-b border-border/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img src={logoMojaz} alt="مجاز" className="h-10 w-10 rounded-xl object-cover" />
+          <div className="flex items-center gap-3">
+            <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
             <div>
               <h1 className="text-lg font-bold text-foreground">لوحة تحكم مجاز</h1>
               <p className="text-xs text-muted-foreground">نظام إدارة إقراء القرآن الكريم</p>
@@ -105,10 +105,6 @@ const AdminDashboard = () => {
               تحديث
             </Button>
             <span className="text-xs text-muted-foreground hidden sm:inline">{user?.email}</span>
-            <Button variant="outline" size="sm" onClick={signOut} className="gap-2 text-destructive hover:bg-destructive/10 border-destructive/30">
-              <LogOut className="w-4 h-4" />
-              خروج
-            </Button>
           </div>
         </div>
       </nav>
