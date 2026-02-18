@@ -127,7 +127,7 @@ const Subscription = () => {
             transition={{ delay: i * 0.15 }}
             className={`rounded-2xl p-5 relative overflow-hidden ${
               plan.popular
-                ? "gradient-primary text-primary-foreground shadow-xl"
+                ? "bg-gradient-to-br from-gold to-[hsl(43,74%,45%)] text-white shadow-xl"
                 : "glass-card"
             }`}
           >
@@ -215,7 +215,7 @@ const Subscription = () => {
               whileTap={{ scale: 0.97 }}
               className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
                 plan.popular
-                  ? "bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+                  ? "bg-white text-gold-foreground hover:bg-white/90"
                   : "gradient-primary text-primary-foreground hover:opacity-90"
               }`}
             >
