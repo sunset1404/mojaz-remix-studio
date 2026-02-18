@@ -39,6 +39,8 @@ import PartnerProfile from "./pages/PartnerProfile";
 import GiftSubscription from "./pages/GiftSubscription";
 import RedeemGift from "./pages/RedeemGift";
 import AdminDashboard from "./pages/AdminDashboard";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +66,8 @@ const AppRoutes = () => (
     <Route path="/signup/reciter" element={<AuthRoute><ReciterSignup /></AuthRoute>} />
     <Route path="/signup/student" element={<AuthRoute><StudentSignup /></AuthRoute>} />
     <Route path="/signup/success" element={<SignupSuccess />} />
+    <Route path="/forgot-password" element={<AuthRoute><ForgotPassword /></AuthRoute>} />
+    <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/reciter-pending" element={<ProtectedRoute><ReciterPending /></ProtectedRoute>} />
 
     {/* Role-based home */}
