@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones, Phone, Video, User } from "lucide-react";
+import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones, Phone, Video, User, Gift } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -280,6 +280,32 @@ const Index = () => {
                   </div>
                   <span className="text-primary-foreground/80 text-[10px] font-medium">متبقي</span>
                 </div>
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+      </div>
+
+      {/* Gift Subscription Card */}
+      <div className="px-5 mt-5 mb-4">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1 }}
+          whileTap={{ scale: 0.98 }}>
+          <Link to="/gift" className="block">
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[hsl(43,74%,49%)] to-[hsl(43,74%,38%)] p-5 shadow-xl">
+              <div className="absolute top-0 left-0 w-28 h-28 rounded-full bg-white/5 -translate-x-8 -translate-y-8" />
+              <div className="absolute bottom-0 right-0 w-20 h-20 rounded-full bg-white/5 translate-x-6 translate-y-6" />
+              <div className="relative z-10 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                  <Gift className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-white font-bold text-lg">أهدِ القرآن لمن تحب</h3>
+                  <p className="text-white/75 text-xs mt-0.5">اشتراك قرآني هدية ذات أثر باقٍ 🎁</p>
+                </div>
+                <ChevronLeft className="w-5 h-5 text-white/60 shrink-0" />
               </div>
             </div>
           </Link>

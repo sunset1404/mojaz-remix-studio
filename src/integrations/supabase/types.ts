@@ -53,6 +53,57 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_subscriptions: {
+        Row: {
+          amount: number
+          created_at: string
+          duration_months: number
+          gift_code: string
+          id: string
+          personal_message: string | null
+          plan_id: string
+          plan_name: string
+          recipient_name: string
+          recipient_phone: string
+          redeemed_at: string | null
+          redeemed_by: string | null
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          duration_months: number
+          gift_code: string
+          id?: string
+          personal_message?: string | null
+          plan_id: string
+          plan_name: string
+          recipient_name: string
+          recipient_phone: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          duration_months?: number
+          gift_code?: string
+          id?: string
+          personal_message?: string | null
+          plan_id?: string
+          plan_name?: string
+          recipient_name?: string
+          recipient_phone?: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          sender_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       notification_settings: {
         Row: {
           created_at: string
