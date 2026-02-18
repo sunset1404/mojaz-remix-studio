@@ -47,6 +47,7 @@ import ResetPassword from "./pages/ResetPassword";
 import AdminStudents from "./pages/AdminStudents";
 import AdminReciters from "./pages/AdminReciters";
 import AdminPartners from "./pages/AdminPartners";
+import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 
 const queryClient = new QueryClient();
 
@@ -132,6 +133,9 @@ const AppLayout = () => {
   const { role } = useAuth();
   const isNative = Capacitor.isNativePlatform();
   const isAdmin = role === "admin" && !isNative;
+
+  // Track user presence for online status
+  usePresenceTracker();
 
   if (isAdmin) {
     return (
