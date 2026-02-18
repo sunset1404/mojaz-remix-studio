@@ -36,6 +36,8 @@ import PartnerHome from "./pages/PartnerHome";
 import PartnerDashboard from "./pages/PartnerDashboard";
 import PartnerStudents from "./pages/PartnerStudents";
 import PartnerProfile from "./pages/PartnerProfile";
+import GiftSubscription from "./pages/GiftSubscription";
+import RedeemGift from "./pages/RedeemGift";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +79,10 @@ const AppRoutes = () => (
     {/* Student-only routes */}
     <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />
     <Route path="/subscription" element={<ProtectedRoute allowedRole="student"><><Subscription /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/gift" element={<ProtectedRoute allowedRole="student"><><GiftSubscription /><BottomNav /></></ProtectedRoute>} />
+
+    {/* Redeem gift - accessible to all authenticated users */}
+    <Route path="/redeem-gift" element={<ProtectedRoute><RedeemGift /></ProtectedRoute>} />
 
     {/* Reciter-only routes */}
     <Route path="/my-students" element={<ProtectedRoute allowedRole="reciter"><><MyStudents /><BottomNav /></></ProtectedRoute>} />

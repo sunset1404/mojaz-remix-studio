@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Check, Crown, Sparkles, Zap, ToggleLeft } from "lucide-react";
+import { Check, Crown, Sparkles, Zap, ToggleLeft, Gift, ChevronLeft } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 type Plan = {
   id: string;
@@ -223,6 +224,27 @@ const Subscription = () => {
             </motion.button>
           </motion.div>
         ))}
+      </div>
+      {/* Gift Banner */}
+      <div className="px-5 mt-4">
+        <Link to="/gift">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            whileTap={{ scale: 0.98 }}
+            className="rounded-2xl bg-gradient-to-r from-[hsl(43,74%,49%)] to-[hsl(43,74%,38%)] p-4 flex items-center gap-3 shadow-lg"
+          >
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <Gift className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-white font-bold text-sm">أهدِ اشتراكًا لمن تحب 🎁</h3>
+              <p className="text-white/70 text-xs">هدية ذات أثر باقٍ</p>
+            </div>
+            <ChevronLeft className="w-4 h-4 text-white/60" />
+          </motion.div>
+        </Link>
       </div>
     </div>
   );
