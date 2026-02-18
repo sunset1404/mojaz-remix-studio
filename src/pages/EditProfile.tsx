@@ -1,18 +1,54 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Phone, Mail, MapPin, Calendar, ChevronRight, Camera, Save, Pencil, Loader2 } from "lucide-react";
+import { User, Phone, Mail, MapPin, Calendar, ChevronRight, Camera, Save, Pencil, Loader2, Briefcase, GraduationCap, BookOpen, Clock, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const personalFields = [
-  { icon: User, key: "name" as const, label: "الاسم الكامل", type: "text", editable: true },
-  { icon: Phone, key: "phone" as const, label: "رقم الجوال", type: "tel", editable: true },
-  { icon: Mail, key: "email" as const, label: "البريد الإلكتروني", type: "email", editable: false },
-  { icon: MapPin, key: "city" as const, label: "المدينة", type: "text", editable: true },
-  { icon: Calendar, key: "joinDate" as const, label: "تاريخ الانضمام", type: "text", editable: false },
+type FieldDef = {
+  icon: React.ElementType;
+  key: string;
+  label: string;
+  type: "text" | "tel" | "email" | "textarea";
+  editable: boolean;
+  section: string;
+};
+
+const studentFields: FieldDef[] = [
+  { icon: User, key: "name", label: "الاسم الكامل", type: "text", editable: true, section: "personal" },
+  { icon: Phone, key: "phone", label: "رقم الجوال", type: "tel", editable: true, section: "personal" },
+  { icon: Mail, key: "email", label: "البريد الإلكتروني", type: "email", editable: false, section: "personal" },
+  { icon: MapPin, key: "city", label: "المدينة", type: "text", editable: true, section: "personal" },
+  { icon: Calendar, key: "joinDate", label: "تاريخ الانضمام", type: "text", editable: false, section: "personal" },
 ];
+
+const reciterFields: FieldDef[] = [
+  // البيانات الشخصية
+  { icon: User, key: "name", label: "الاسم الكامل", type: "text", editable: true, section: "personal" },
+  { icon: User, key: "gender", label: "الجنس", type: "text", editable: false, section: "personal" },
+  { icon: MapPin, key: "nationality", label: "الجنسية", type: "text", editable: false, section: "personal" },
+  { icon: Shield, key: "idNumber", label: "رقم الهوية", type: "text", editable: false, section: "personal" },
+  { icon: Phone, key: "phone", label: "رقم الجوال", type: "tel", editable: true, section: "personal" },
+  { icon: Mail, key: "email", label: "البريد الإلكتروني", type: "email", editable: false, section: "personal" },
+  { icon: MapPin, key: "city", label: "مدينة الإقامة", type: "text", editable: true, section: "personal" },
+  { icon: Calendar, key: "joinDate", label: "تاريخ الانضمام", type: "text", editable: false, section: "personal" },
+  // المؤهلات والخبرات
+  { icon: Briefcase, key: "profession", label: "المهنة", type: "text", editable: true, section: "qualifications" },
+  { icon: GraduationCap, key: "qualifications", label: "المؤهلات العلمية", type: "text", editable: true, section: "qualifications" },
+  { icon: BookOpen, key: "quranCertifications", label: "الإجازات القرآنية", type: "textarea", editable: true, section: "qualifications" },
+  { icon: BookOpen, key: "teachingExperience", label: "الخبرات التعليمية", type: "textarea", editable: true, section: "qualifications" },
+  // تفضيلات الإقراء
+  { icon: Calendar, key: "preferredDays", label: "أيام الإقراء المفضلة", type: "text", editable: false, section: "preferences" },
+  { icon: Clock, key: "preferredTimes", label: "أوقات الإقراء المفضلة", type: "text", editable: false, section: "preferences" },
+  { icon: BookOpen, key: "preferredTrack", label: "مسار الإقراء", type: "text", editable: false, section: "preferences" },
+];
+
+const sectionTitles: Record<string, { title: string; icon: React.ElementType }> = {
+  personal: { title: "البيانات الشخصية", icon: User },
+  qualifications: { title: "المؤهلات والخبرات", icon: GraduationCap },
+  preferences: { title: "تفضيلات الإقراء", icon: Clock },
+};
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -20,13 +56,7 @@ const EditProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    city: "",
-    joinDate: "",
-  });
+  const [form, setForm] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -37,16 +67,26 @@ const EditProfile = () => {
       if (role === "reciter") {
         const { data } = await supabase
           .from("reciter_profiles")
-          .select("full_name, phone, city, created_at")
+          .select("*")
           .eq("user_id", user.id)
           .maybeSingle();
         if (data) {
           setForm({
             name: data.full_name,
+            gender: data.gender === "male" ? "ذكر" : data.gender === "female" ? "أنثى" : data.gender,
+            nationality: data.nationality,
+            idNumber: data.id_number,
             phone: data.phone,
             email,
             city: data.city,
             joinDate: new Date(data.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" }),
+            profession: data.profession,
+            qualifications: data.qualifications,
+            quranCertifications: data.quran_certifications,
+            teachingExperience: data.teaching_experience,
+            preferredDays: data.preferred_days?.join("، ") || "",
+            preferredTimes: data.preferred_times?.join("، ") || "",
+            preferredTrack: data.preferred_track || "",
           });
         }
       } else if (role === "student") {
@@ -65,7 +105,6 @@ const EditProfile = () => {
           });
         }
       } else {
-        // fallback to profiles table
         const { data } = await supabase
           .from("profiles")
           .select("full_name, phone, created_at")
@@ -90,17 +129,23 @@ const EditProfile = () => {
     if (!user) return;
     setSaving(true);
     try {
-      // Update profiles table
       await supabase
         .from("profiles")
         .update({ full_name: form.name, phone: form.phone })
         .eq("user_id", user.id);
 
-      // Update role-specific table
       if (role === "reciter") {
         await supabase
           .from("reciter_profiles")
-          .update({ full_name: form.name, phone: form.phone, city: form.city })
+          .update({
+            full_name: form.name,
+            phone: form.phone,
+            city: form.city,
+            profession: form.profession,
+            qualifications: form.qualifications,
+            quran_certifications: form.quranCertifications,
+            teaching_experience: form.teachingExperience,
+          })
           .eq("user_id", user.id);
       } else if (role === "student") {
         await supabase
@@ -116,6 +161,46 @@ const EditProfile = () => {
     }
     setSaving(false);
   };
+
+  const fields = role === "reciter" ? reciterFields : studentFields;
+  const sections = role === "reciter"
+    ? ["personal", "qualifications", "preferences"]
+    : ["personal"];
+
+  const renderField = (field: FieldDef, i: number) => (
+    <motion.div
+      key={field.key}
+      initial={{ x: 30, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ delay: 0.1 + i * 0.04 }}
+      className={`glass-card rounded-2xl p-4 ${isEditing && !field.editable ? "opacity-60" : ""}`}
+    >
+      <label className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
+        <field.icon className="w-3.5 h-3.5 text-primary" />
+        {field.label}
+      </label>
+      {isEditing && field.editable ? (
+        field.type === "textarea" ? (
+          <textarea
+            value={form[field.key] || ""}
+            onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+            className="w-full bg-transparent text-sm font-semibold text-foreground outline-none border-b border-primary/30 pb-1 resize-none min-h-[60px]"
+            dir="rtl"
+          />
+        ) : (
+          <input
+            type={field.type}
+            value={form[field.key] || ""}
+            onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+            className="w-full bg-transparent text-sm font-semibold text-foreground outline-none border-b border-primary/30 pb-1"
+            dir={field.type === "tel" || field.type === "email" ? "ltr" : "rtl"}
+          />
+        )
+      ) : (
+        <p className="text-sm font-semibold text-foreground whitespace-pre-wrap">{form[field.key] || "—"}</p>
+      )}
+    </motion.div>
+  );
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -157,51 +242,34 @@ const EditProfile = () => {
         </motion.div>
       </div>
 
-      {/* Personal Info */}
-      <div className="px-5 mt-6">
-        <h2 className="font-bold text-foreground text-base mb-3 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <User className="w-4 h-4 text-primary" />
-          </div>
-          البيانات الشخصية
-        </h2>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 text-primary animate-spin" />
+        </div>
+      ) : (
+        <div className="px-5 mt-6 space-y-6">
+          {sections.map((sectionKey) => {
+            const sectionInfo = sectionTitles[sectionKey];
+            const sectionFields = fields.filter((f) => f.section === sectionKey);
+            const SectionIcon = sectionInfo.icon;
+            return (
+              <div key={sectionKey}>
+                <h2 className="font-bold text-foreground text-base mb-3 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <SectionIcon className="w-4 h-4 text-primary" />
+                  </div>
+                  {sectionInfo.title}
+                </h2>
+                <div className="space-y-3">
+                  {sectionFields.map((field, i) => renderField(field, i))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 text-primary animate-spin" />
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {personalFields.map((field, i) => (
-              <motion.div
-                key={field.key}
-                initial={{ x: 30, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.2 + i * 0.06 }}
-                className={`glass-card rounded-2xl p-4 ${isEditing && !field.editable ? "opacity-60" : ""}`}
-              >
-                <label className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
-                  <field.icon className="w-3.5 h-3.5 text-primary" />
-                  {field.label}
-                </label>
-                {isEditing && field.editable ? (
-                  <input
-                    type={field.type}
-                    value={form[field.key]}
-                    onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                    className="w-full bg-transparent text-sm font-semibold text-foreground outline-none border-b border-primary/30 pb-1"
-                    dir="rtl"
-                  />
-                ) : (
-                  <p className="text-sm font-semibold text-foreground">{form[field.key] || "—"}</p>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Save Button - only visible in edit mode */}
+      {/* Save Button */}
       <AnimatePresence>
         {isEditing && (
           <motion.div
