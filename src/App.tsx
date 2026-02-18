@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -119,7 +120,8 @@ const AppRoutes = () => (
 
 const AppLayout = () => {
   const { role } = useAuth();
-  const isAdmin = role === "admin";
+  const isNative = Capacitor.isNativePlatform();
+  const isAdmin = role === "admin" && !isNative;
 
   if (isAdmin) {
     return (
