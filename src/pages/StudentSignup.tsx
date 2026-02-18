@@ -60,6 +60,8 @@ const StudentSignup = () => {
   const [preferredRiwaya, setPreferredRiwaya] = useState("");
   const [preferredTrack, setPreferredTrack] = useState("");
   const [joinDate, setJoinDate] = useState("");
+  const [hasPreviousCertifications, setHasPreviousCertifications] = useState<"yes" | "no" | "">("");
+  const [previousCertifications, setPreviousCertifications] = useState("");
 
   const inputClass = "h-12 rounded-xl border-primary/20 bg-card focus:border-primary focus:bg-card transition-colors shadow-sm";
 
@@ -116,7 +118,7 @@ const StudentSignup = () => {
         phone: `${phoneCode}${phone}`,
         profession: "",
         education_level: educationLevel,
-        quran_certifications: "",
+        quran_certifications: hasPreviousCertifications === "yes" ? previousCertifications : "",
         preferred_riwaya: preferredRiwaya,
         preferred_track: preferredTrack,
         join_date: joinDate,
@@ -267,14 +269,68 @@ const StudentSignup = () => {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="space-y-1.5"
+                className="space-y-4"
               >
-                <Label className="text-foreground text-xs font-semibold">7. الرواية أو القراءة المتقنّد لها *</Label>
-                <select value={preferredRiwaya} onChange={(e) => setPreferredRiwaya(e.target.value)}
-                  className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
-                  <option value="" disabled>اختر إجابة</option>
-                  {RIWAYAT.map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
+                <div className="space-y-1.5">
+                  <Label className="text-foreground text-xs font-semibold">7. الرواية أو القراءة المتقنّد لها *</Label>
+                  <select value={preferredRiwaya} onChange={(e) => setPreferredRiwaya(e.target.value)}
+                    className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
+                    <option value="" disabled>اختر إجابة</option>
+                    {RIWAYAT.map((r) => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-foreground text-xs font-semibold">8. هل لديك إجازات قرآنية سابقة؟ *</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: "yes" as const, label: "نعم" },
+                      { value: "no" as const, label: "لا" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setHasPreviousCertifications(opt.value);
+                          if (opt.value === "no") setPreviousCertifications("");
+                        }}
+                        className={`px-4 py-3 rounded-xl border transition-all text-sm font-medium ${
+                          hasPreviousCertifications === opt.value
+                            ? "border-primary bg-primary/10 text-primary shadow-sm"
+                            : "border-primary/20 bg-card text-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            hasPreviousCertifications === opt.value ? "border-primary" : "border-muted-foreground/30"
+                          }`}>
+                            {hasPreviousCertifications === opt.value && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                          </div>
+                          <span>{opt.label}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {hasPreviousCertifications === "yes" && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-1.5"
+                  >
+                    <Label className="text-foreground text-xs font-semibold">9. اذكر الإجازات القرآنية السابقة *</Label>
+                    <textarea
+                      value={previousCertifications}
+                      onChange={(e) => setPreviousCertifications(e.target.value)}
+                      placeholder="مثال: إجازة في رواية حفص عن عاصم من الشيخ ..."
+                      rows={3}
+                      maxLength={500}
+                      className={`w-full ${inputClass} px-3 py-3 border border-primary/20 bg-card text-foreground resize-none rounded-xl text-sm`}
+                    />
+                  </motion.div>
+                )}
               </motion.div>
             )}
           </div>
