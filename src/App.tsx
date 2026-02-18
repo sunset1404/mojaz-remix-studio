@@ -45,6 +45,7 @@ import AdminSidebar from "./components/AdminSidebar";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AdminStudents from "./pages/AdminStudents";
+import AdminReciters from "./pages/AdminReciters";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,7 @@ const AppRoutes = () => (
 
     {/* Admin routes */}
     <Route path="/admin/students" element={<ProtectedRoute><AdminStudents /></ProtectedRoute>} />
+    <Route path="/admin/reciters" element={<ProtectedRoute><AdminReciters /></ProtectedRoute>} />
 
     {/* Student-only routes */}
     <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />
