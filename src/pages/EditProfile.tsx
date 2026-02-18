@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Phone, Mail, MapPin, Calendar, ChevronRight, Camera, Save, Pencil, Loader2, Briefcase, GraduationCap, BookOpen, Clock, Shield } from "lucide-react";
+import { User, Phone, Mail, MapPin, Calendar, ChevronRight, Camera, Save, Pencil, Loader2, Briefcase, GraduationCap, BookOpen, Clock, Shield, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,10 +17,15 @@ type FieldDef = {
 
 const studentFields: FieldDef[] = [
   { icon: User, key: "name", label: "الاسم الكامل", type: "text", editable: true, section: "personal" },
+  { icon: User, key: "gender", label: "الجنس", type: "text", editable: false, section: "personal" },
+  { icon: Globe, key: "nationality", label: "الجنسية", type: "text", editable: false, section: "personal" },
   { icon: Phone, key: "phone", label: "رقم الجوال", type: "tel", editable: true, section: "personal" },
   { icon: Mail, key: "email", label: "البريد الإلكتروني", type: "email", editable: false, section: "personal" },
-  { icon: MapPin, key: "city", label: "المدينة", type: "text", editable: true, section: "personal" },
+  { icon: GraduationCap, key: "educationLevel", label: "المؤهل الدراسي", type: "text", editable: false, section: "personal" },
   { icon: Calendar, key: "joinDate", label: "تاريخ الانضمام", type: "text", editable: false, section: "personal" },
+  // الهدف والمسار
+  { icon: BookOpen, key: "preferredTrack", label: "المسار القرآني", type: "text", editable: false, section: "goal" },
+  { icon: BookOpen, key: "preferredRiwaya", label: "الرواية", type: "text", editable: false, section: "goal" },
 ];
 
 const reciterFields: FieldDef[] = [
@@ -48,6 +53,7 @@ const sectionTitles: Record<string, { title: string; icon: React.ElementType }> 
   personal: { title: "البيانات الشخصية", icon: User },
   qualifications: { title: "المؤهلات والخبرات", icon: GraduationCap },
   preferences: { title: "تفضيلات الإقراء", icon: Clock },
+  goal: { title: "الهدف والمسار", icon: BookOpen },
 };
 
 const EditProfile = () => {
@@ -92,16 +98,20 @@ const EditProfile = () => {
       } else if (role === "student") {
         const { data } = await supabase
           .from("student_profiles")
-          .select("full_name, phone, residence_country, created_at, email")
+          .select("*")
           .eq("user_id", user.id)
           .maybeSingle();
         if (data) {
           setForm({
             name: data.full_name,
+            gender: data.gender === "male" ? "ذكر" : data.gender === "female" ? "أنثى" : data.gender,
+            nationality: data.nationality,
             phone: data.phone,
             email: data.email || email,
-            city: data.residence_country,
+            educationLevel: data.education_level,
             joinDate: new Date(data.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" }),
+            preferredTrack: data.preferred_track || "",
+            preferredRiwaya: data.preferred_riwaya || "",
           });
         }
       } else {
@@ -150,7 +160,7 @@ const EditProfile = () => {
       } else if (role === "student") {
         await supabase
           .from("student_profiles")
-          .update({ full_name: form.name, phone: form.phone, residence_country: form.city })
+          .update({ full_name: form.name, phone: form.phone })
           .eq("user_id", user.id);
       }
 
@@ -165,7 +175,7 @@ const EditProfile = () => {
   const fields = role === "reciter" ? reciterFields : studentFields;
   const sections = role === "reciter"
     ? ["personal", "qualifications", "preferences"]
-    : ["personal"];
+    : ["personal", "goal"];
 
   const renderField = (field: FieldDef, i: number) => (
     <motion.div
@@ -250,7 +260,7 @@ const EditProfile = () => {
         <div className="px-5 mt-6 space-y-6">
           {sections.map((sectionKey) => {
             const sectionInfo = sectionTitles[sectionKey];
-            const sectionFields = fields.filter((f) => f.section === sectionKey);
+            const sectionFields = fields.filter((f) => f.section === sectionKey && (f.editable || form[f.key]));
             const SectionIcon = sectionInfo.icon;
             return (
               <div key={sectionKey}>
