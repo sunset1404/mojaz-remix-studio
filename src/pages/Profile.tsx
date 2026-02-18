@@ -53,7 +53,8 @@ const Profile = () => {
 
   useEffect(() => {
     if (!user) return;
-    const fetchName = async () => {
+    const fetchData = async () => {
+      // Fetch name
       if (role === "reciter") {
         const { data } = await supabase.from("reciter_profiles").select("full_name").eq("user_id", user.id).maybeSingle();
         if (data) setUserName(data.full_name);
@@ -64,8 +65,14 @@ const Profile = () => {
         const { data } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
         if (data) setUserName(data.full_name);
       }
+      // Fetch avatar
+      const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("user_id", user.id).maybeSingle();
+      if (profile?.avatar_url) {
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(profile.avatar_url);
+        if (urlData?.publicUrl) setProfileImage(urlData.publicUrl + "?t=" + Date.now());
+      }
     };
-    fetchName();
+    fetchData();
   }, [user, role]);
 
   const toggleTheme = () => {
@@ -75,16 +82,29 @@ const Profile = () => {
     localStorage.setItem("theme", newDark ? "dark" : "light");
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setProfileImage(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file || !user) return;
     setShowImageOptions(false);
+
+    const filePath = `${user.id}/avatar.${file.name.split('.').pop()}`;
+
+    // Upload to storage
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      return;
+    }
+
+    // Save path in profiles
+    await supabase.from("profiles").update({ avatar_url: filePath }).eq("user_id", user.id);
+
+    // Show image immediately
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+    if (urlData?.publicUrl) setProfileImage(urlData.publicUrl + "?t=" + Date.now());
   };
 
   return (
