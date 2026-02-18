@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check, Crown, Sparkles, Zap, ToggleLeft, Gift, ChevronLeft } from "lucide-react";
+import { Check, Crown, Sparkles, Zap, Gift, ChevronLeft, Clock, Plus, Minus } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -225,6 +225,9 @@ const Subscription = () => {
           </motion.div>
         ))}
       </div>
+      {/* Extra Hours Section */}
+      <ExtraHoursSection />
+
       {/* Gift Banner */}
       <div className="px-5 mt-4">
         <Link to="/gift">
@@ -246,6 +249,81 @@ const Subscription = () => {
           </motion.div>
         </Link>
       </div>
+    </div>
+  );
+};
+
+const hourPackages = [
+  { hours: 1, price: 15, label: "ساعة واحدة" },
+  { hours: 3, price: 40, originalPrice: 45, label: "٣ ساعات" },
+  { hours: 5, price: 60, originalPrice: 75, label: "٥ ساعات" },
+  { hours: 10, price: 100, originalPrice: 150, label: "١٠ ساعات" },
+];
+
+const ExtraHoursSection = () => {
+  const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
+
+  return (
+    <div className="px-5 mt-6">
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.45 }}
+      >
+        <div className="flex items-center gap-2 mb-3 px-1">
+          <Clock className="w-4 h-4 text-primary" />
+          <h2 className="text-sm font-bold text-foreground">ساعات إضافية</h2>
+          <span className="text-[10px] text-muted-foreground">انتهت ساعاتك؟ أضف المزيد</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {hourPackages.map((pkg, i) => (
+            <motion.button
+              key={pkg.hours}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5 + i * 0.08 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => setSelectedPackage(selectedPackage === i ? null : i)}
+              className={`rounded-2xl p-4 text-center transition-all border-2 ${
+                selectedPackage === i
+                  ? "border-primary bg-primary/5 shadow-md"
+                  : "border-border/50 glass-card"
+              }`}
+            >
+              <div className={`w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center ${
+                selectedPackage === i ? "bg-primary/15" : "bg-muted"
+              }`}>
+                <Clock className={`w-5 h-5 ${selectedPackage === i ? "text-primary" : "text-muted-foreground"}`} />
+              </div>
+              <p className="font-bold text-foreground text-sm">{pkg.label}</p>
+              <div className="flex items-center justify-center gap-1 mt-1">
+                <span className="text-lg font-extrabold text-foreground">{pkg.price}</span>
+                <span className="text-[10px] text-muted-foreground">ريال</span>
+              </div>
+              {pkg.originalPrice && (
+                <p className="text-[10px] text-muted-foreground line-through">{pkg.originalPrice} ريال</p>
+              )}
+              {pkg.originalPrice && (
+                <span className="inline-block mt-1 text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                  وفّر {Math.round((1 - pkg.price / pkg.originalPrice) * 100)}%
+                </span>
+              )}
+            </motion.button>
+          ))}
+        </div>
+
+        {selectedPackage !== null && (
+          <motion.button
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            whileTap={{ scale: 0.97 }}
+            className="w-full mt-3 py-3 rounded-xl text-sm font-bold gradient-primary text-primary-foreground"
+          >
+            شراء {hourPackages[selectedPackage].label} - {hourPackages[selectedPackage].price} ريال
+          </motion.button>
+        )}
+      </motion.div>
     </div>
   );
 };
