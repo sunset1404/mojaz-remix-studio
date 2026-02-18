@@ -141,6 +141,7 @@ export type Database = {
         Row: {
           cost_per_minute: number
           created_at: string
+          email: string | null
           full_name: string
           id: string
           organization_name: string | null
@@ -152,6 +153,7 @@ export type Database = {
         Insert: {
           cost_per_minute?: number
           created_at?: string
+          email?: string | null
           full_name: string
           id?: string
           organization_name?: string | null
@@ -163,6 +165,7 @@ export type Database = {
         Update: {
           cost_per_minute?: number
           created_at?: string
+          email?: string | null
           full_name?: string
           id?: string
           organization_name?: string | null

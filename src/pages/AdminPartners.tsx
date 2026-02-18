@@ -33,6 +33,7 @@ interface PartnerProfile {
   full_name: string;
   organization_name: string | null;
   phone: string | null;
+  email: string | null;
   total_support_amount: number;
   cost_per_minute: number;
   created_at: string;
@@ -587,6 +588,7 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                                       </h4>
                                       <div className="space-y-1.5 text-xs">
                                         <div className="flex justify-between"><span className="text-muted-foreground">الاسم:</span><span className="font-medium text-foreground">{partner.full_name}</span></div>
+                                        <div className="flex justify-between"><span className="text-muted-foreground">البريد:</span><span className="font-medium text-foreground" dir="ltr">{partner.email || "غير محدد"}</span></div>
                                         <div className="flex justify-between"><span className="text-muted-foreground">الجهة:</span><span className="font-medium text-foreground">{partner.organization_name || "غير محدد"}</span></div>
                                         <div className="flex justify-between"><span className="text-muted-foreground">الجوال:</span><span className="font-medium text-foreground" dir="ltr">{partner.phone || "غير محدد"}</span></div>
                                         <div className="flex justify-between"><span className="text-muted-foreground">التسجيل:</span><span className="font-medium text-foreground">{new Date(partner.created_at).toLocaleDateString("ar-SA")}</span></div>
