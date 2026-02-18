@@ -15,7 +15,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 
 interface ReciterProfile {
   id: string;
@@ -48,7 +47,6 @@ const AdminReciters = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { onlineReciters } = useOnlineUsers();
 
   useEffect(() => { fetchData(); }, []);
 
@@ -191,24 +189,8 @@ const AdminReciters = () => {
         </div>
       </div>
 
-      {/* Online Users Banner */}
-      <div className="max-w-7xl mx-auto px-6 -mt-6 relative z-10 mb-4">
-        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-          <Card className="border-border/50 shadow-sm bg-card/95 backdrop-blur">
-            <CardContent className="p-4 flex items-center gap-3">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-              </span>
-              <span className="text-sm font-semibold text-foreground">متصلون الآن:</span>
-              <Badge className="bg-green-100 text-green-700 border-green-200 text-sm">{onlineReciters} مقرئ</Badge>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
       {/* Stats Cards */}
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-6 -mt-6 relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {statCards.map((stat, i) => (
             <motion.div key={stat.label} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.08 }}>
