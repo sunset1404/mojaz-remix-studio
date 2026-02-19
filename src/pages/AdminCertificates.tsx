@@ -72,6 +72,7 @@ interface StudentOption {
 interface ReciterOption {
   user_id: string;
   full_name: string;
+  certification_text: string | null;
 }
 
 const CERT_TYPES = [
@@ -126,7 +127,7 @@ const AdminCertificates = () => {
       const [certsRes, studentsRes, recitersRes] = await Promise.all([
         supabase.from("certificates").select("*").order("created_at", { ascending: false }),
         supabase.from("student_profiles").select("id, user_id, full_name, phone, email, preferred_riwaya, assigned_reciter_id, ijazah_status, preferred_track"),
-        supabase.from("reciter_profiles").select("user_id, full_name").eq("status", "approved"),
+        supabase.from("reciter_profiles").select("user_id, full_name, certification_text").eq("status", "approved"),
       ]);
       setCertificates(certsRes.data || []);
       setStudents(studentsRes.data || []);
@@ -138,7 +139,7 @@ const AdminCertificates = () => {
     }
   };
 
-  // When student is selected, auto-fill reciter, riwaya, phone, email
+  // When student is selected, auto-fill reciter, riwaya, phone, email, and certification text
   const handleStudentSelect = (studentUserId: string) => {
     setSelectedStudentId(studentUserId);
     const student = students.find(s => s.user_id === studentUserId);
@@ -148,10 +149,20 @@ const AdminCertificates = () => {
       setFormRiwaya(student.preferred_riwaya || "");
       if (student.assigned_reciter_id) {
         setSelectedReciterId(student.assigned_reciter_id);
+        const reciter = reciters.find(r => r.user_id === student.assigned_reciter_id);
+        setFormText(reciter?.certification_text || "");
       } else {
         setSelectedReciterId("");
+        setFormText("");
       }
     }
+  };
+
+  // When reciter is manually changed, update certification text
+  const handleReciterSelect = (reciterId: string) => {
+    setSelectedReciterId(reciterId);
+    const reciter = reciters.find(r => r.user_id === reciterId);
+    setFormText(reciter?.certification_text || "");
   };
 
   const getReciterName = (id: string) => reciters.find(r => r.user_id === id)?.full_name || "";
@@ -494,7 +505,7 @@ const AdminCertificates = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-muted-foreground">المقرئ/ة (يتم اختياره تلقائياً)</label>
-                <Select value={selectedReciterId} onValueChange={setSelectedReciterId}>
+                <Select value={selectedReciterId} onValueChange={handleReciterSelect}>
                   <SelectTrigger className="bg-card border-border/50">
                     <SelectValue placeholder="سيتم اختيار المقرئ تلقائياً عند اختيار الطالب" />
                   </SelectTrigger>

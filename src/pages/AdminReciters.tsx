@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   GraduationCap, Search, Phone, Mail, MessageCircle,
   Globe, UserCheck, TrendingUp, BookOpen,
   RefreshCw, ChevronDown, ChevronUp, Filter,
-  ArrowRight, Clock, CheckCircle, XCircle, ShieldCheck
+  ArrowRight, Clock, CheckCircle, XCircle, ShieldCheck, Award
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,6 +35,7 @@ interface ReciterProfile {
   id_number: string;
   status: string;
   created_at: string;
+  certification_text: string | null;
 }
 
 const AdminReciters = () => {
@@ -44,6 +46,8 @@ const AdminReciters = () => {
   const [genderFilter, setGenderFilter] = useState<string>("all");
   const [expandedReciter, setExpandedReciter] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [editingCertText, setEditingCertText] = useState<Record<string, string>>({});
+  const [savingCertText, setSavingCertText] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -83,6 +87,24 @@ const AdminReciters = () => {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const saveCertificationText = async (id: string) => {
+    try {
+      setSavingCertText(id);
+      const text = editingCertText[id] ?? "";
+      const { error } = await supabase
+        .from("reciter_profiles")
+        .update({ certification_text: text })
+        .eq("id", id);
+      if (error) throw error;
+      setReciters(prev => prev.map(r => r.id === id ? { ...r, certification_text: text } : r));
+      toast({ title: "تم حفظ نص الإجازة بنجاح ✅" });
+    } catch (error: any) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } finally {
+      setSavingCertText(null);
     }
   };
 
@@ -495,7 +517,31 @@ const AdminReciters = () => {
                                     </div>
                                   </div>
 
-                                  {/* Mobile Contact */}
+                                  {/* Certification Text */}
+                                  <div className="mt-4 pt-3 border-t border-border/20">
+                                    <h4 className="text-xs font-bold text-gold flex items-center gap-1 mb-2">
+                                      <Award className="w-3 h-3" /> نص الإجازة / الشهادة المعتمدة
+                                    </h4>
+                                    <Textarea
+                                      value={editingCertText[reciter.id] ?? reciter.certification_text ?? ""}
+                                      onChange={(e) => setEditingCertText(prev => ({ ...prev, [reciter.id]: e.target.value }))}
+                                      placeholder="أدخل نص الإجازة أو الشهادة المعتمدة لهذا المقرئ... (سيظهر تلقائياً عند إصدار إجازة أو شهادة)"
+                                      className="bg-card border-border/50 min-h-[80px] text-sm"
+                                    />
+                                    <div className="flex items-center justify-between mt-2">
+                                      <p className="text-[10px] text-muted-foreground">سيظهر هذا النص تلقائياً في صفحة إصدار الشهادات عند اختيار هذا المقرئ</p>
+                                      <Button
+                                        size="sm"
+                                        onClick={(e) => { e.stopPropagation(); saveCertificationText(reciter.id); }}
+                                        disabled={savingCertText === reciter.id}
+                                        className="gap-1.5 bg-gold hover:bg-gold/90 text-primary-foreground text-xs rounded-lg"
+                                      >
+                                        {savingCertText === reciter.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
+                                        حفظ النص
+                                      </Button>
+                                    </div>
+                                  </div>
+
                                   <div className="flex md:hidden items-center gap-2 mt-4 pt-3 border-t border-border/20">
                                     <Button variant="outline" size="sm" className="flex-1 gap-2 text-green-600 border-green-200 hover:bg-green-50"
                                       onClick={() => openWhatsApp(reciter.phone)}>
