@@ -62,7 +62,7 @@ const AdminStudents = () => {
     try {
       setLoading(true);
       const [studentsRes, achievementsRes] = await Promise.all([
-        supabase.from("student_profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("student_profiles").select("*").neq("preferred_track", "الحصول على إجازة قرآنية").order("created_at", { ascending: false }),
         supabase.from("student_achievements").select("*"),
       ]);
 
@@ -147,8 +147,8 @@ const AdminStudents = () => {
               <ArrowRight className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-lg font-bold text-foreground">إدارة الطلاب</h1>
-              <p className="text-xs text-muted-foreground">عرض وإدارة جميع الطلاب المسجلين</p>
+              <h1 className="text-lg font-bold text-foreground">طلاب الإقراء</h1>
+              <p className="text-xs text-muted-foreground">عرض وإدارة طلاب مسارات الإقراء (حفظ، تلاوة، مراجعة)</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -169,7 +169,7 @@ const AdminStudents = () => {
           <div className="relative z-10 max-w-7xl mx-auto">
             <div className="flex items-center gap-3 mb-2">
               <Users className="w-7 h-7 text-gold" />
-              <h2 className="text-2xl font-bold text-primary-foreground">لوحة إدارة الطلاب</h2>
+              <h2 className="text-2xl font-bold text-primary-foreground">لوحة إدارة طلاب الإقراء</h2>
             </div>
             <p className="text-primary-foreground/70 text-sm max-w-2xl">
               متابعة شاملة للطلاب المسجلين وأدائهم وإنجازاتهم في برنامج إقراء القرآن الكريم

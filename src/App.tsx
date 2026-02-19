@@ -47,6 +47,7 @@ import ResetPassword from "./pages/ResetPassword";
 import AdminStudents from "./pages/AdminStudents";
 import AdminReciters from "./pages/AdminReciters";
 import AdminPartners from "./pages/AdminPartners";
+import AdminIjazahStudents from "./pages/AdminIjazahStudents";
 
 const queryClient = new QueryClient();
 
@@ -90,6 +91,7 @@ const AppRoutes = () => (
 
     {/* Admin routes */}
     <Route path="/admin/students" element={<ProtectedRoute><AdminStudents /></ProtectedRoute>} />
+    <Route path="/admin/ijazah-students" element={<ProtectedRoute><AdminIjazahStudents /></ProtectedRoute>} />
     <Route path="/admin/reciters" element={<ProtectedRoute><AdminReciters /></ProtectedRoute>} />
     <Route path="/admin/partners" element={<ProtectedRoute><AdminPartners /></ProtectedRoute>} />
 
