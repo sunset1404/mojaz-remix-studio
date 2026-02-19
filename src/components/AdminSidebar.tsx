@@ -1,6 +1,6 @@
 import { 
   Users, GraduationCap, UserCheck, Clock, Award, Gift, 
-  LayoutDashboard, Settings, LogOut, ChevronRight, BookOpen, Palette
+  LayoutDashboard, Settings, LogOut, ChevronRight, BookOpen, Palette, ClipboardList
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -29,6 +29,7 @@ const mainMenuItems = [
   { title: "الجلسات", icon: Clock, id: "sessions", path: "/admin/sessions" },
   { title: "الشهادات", icon: Award, id: "certificates", path: "/admin/certificates" },
   { title: "الإهداءات", icon: Gift, id: "gifts", path: "/admin/gifts" },
+  { title: "الاختبارات", icon: ClipboardList, id: "exams", path: "/admin/exams" },
 ];
 
 const AdminSidebar = () => {
