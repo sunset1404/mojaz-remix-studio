@@ -311,43 +311,36 @@ export default function AdminExams() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/30">
-                        <TableHead className="text-right font-semibold">النوع</TableHead>
-                        <TableHead className="text-right font-semibold">التاريخ والوقت</TableHead>
-                        <TableHead className="text-right font-semibold">السعة</TableHead>
-                        <TableHead className="text-right font-semibold">لجنة الاختبار</TableHead>
-                        <TableHead className="text-right font-semibold">الحالة</TableHead>
-                        <TableHead className="text-right font-semibold">ملاحظات</TableHead>
                         <TableHead className="text-right font-semibold">إجراءات</TableHead>
+                        <TableHead className="text-right font-semibold">ملاحظات</TableHead>
+                        <TableHead className="text-right font-semibold">الحالة</TableHead>
+                        <TableHead className="text-right font-semibold">لجنة الاختبار</TableHead>
+                        <TableHead className="text-right font-semibold">السعة</TableHead>
+                        <TableHead className="text-right font-semibold">التاريخ والوقت</TableHead>
+                        <TableHead className="text-right font-semibold">النوع</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredExams.map((exam) => (
                         <TableRow key={exam.id} className="hover:bg-muted/20">
                           <TableCell>
-                            <Badge variant={exam.type === "admission" ? "secondary" : "outline"} className="text-xs">
-                              {exam.type === "admission" ? "قبول" : "استحقاق"}
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(exam)}>
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(exam.id)}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-[160px]">
+                            <span className="text-sm text-muted-foreground truncate block">{exam.notes || "—"}</span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={statusConfig[exam.status].variant} className="gap-1 text-xs">
+                              {statusConfig[exam.status].icon}
+                              {statusConfig[exam.status].label}
                             </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col gap-0.5">
-                              <span className="flex items-center gap-1 text-sm font-medium">
-                                <Calendar className="w-3 h-3 text-muted-foreground" />
-                                {exam.date}
-                              </span>
-                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Clock className="w-3 h-3" />
-                                {exam.time}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <Hash className="w-3.5 h-3.5 text-primary" />
-                              </div>
-                              <span className="font-semibold text-foreground">{exam.capacity}</span>
-                              <span className="text-xs text-muted-foreground">طالب</span>
-                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col gap-0.5 text-sm">
@@ -367,23 +360,30 @@ export default function AdminExams() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={statusConfig[exam.status].variant} className="gap-1 text-xs">
-                              {statusConfig[exam.status].icon}
-                              {statusConfig[exam.status].label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="max-w-[160px]">
-                            <span className="text-sm text-muted-foreground truncate block">{exam.notes || "—"}</span>
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Hash className="w-3.5 h-3.5 text-primary" />
+                              </div>
+                              <span className="font-semibold text-foreground">{exam.capacity}</span>
+                              <span className="text-xs text-muted-foreground">طالب</span>
+                            </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(exam)}>
-                                <Pencil className="w-3.5 h-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(exam.id)}>
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="flex items-center gap-1 text-sm font-medium">
+                                <Calendar className="w-3 h-3 text-muted-foreground" />
+                                {exam.date}
+                              </span>
+                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Clock className="w-3 h-3" />
+                                {exam.time}
+                              </span>
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={exam.type === "admission" ? "secondary" : "outline"} className="text-xs">
+                              {exam.type === "admission" ? "قبول" : "استحقاق"}
+                            </Badge>
                           </TableCell>
                         </TableRow>
                       ))}
