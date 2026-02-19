@@ -1,11 +1,12 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,7 @@ import {
   ArrowRight, RefreshCw, Plus, Eye, Trash2, CheckCircle,
   Upload, Image, Palette, Type, GraduationCap, Award,
   Save, FileImage, QrCode, Stamp, PenTool, User, Calendar,
-  FileText, Loader2, Settings2
+  FileText, Loader2, Settings2, Wand2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,14 +38,14 @@ import logoMojaz from "@/assets/logo-mojaz.webp";
 
 // Field definitions
 const TEMPLATE_FIELDS = [
-  { key: "studentName", label: "اسم الطالب", icon: User, defaultText: "محمد بن أحمد العمري" },
-  { key: "certText", label: "نص الإجازة/الشهادة", icon: FileText, defaultText: "يشهد بأن الطالب قد أتم حفظ القرآن الكريم كاملاً..." },
-  { key: "reciterName", label: "اسم المقرئ", icon: GraduationCap, defaultText: "الشيخ أحمد بن محمد العجمي" },
-  { key: "date", label: "التاريخ", icon: Calendar, defaultText: "١٤٤٦/٠٦/١٥ هـ" },
-  { key: "stamp", label: "الختم", icon: Stamp, defaultText: "" },
-  { key: "signature", label: "التوقيع", icon: PenTool, defaultText: "" },
-  { key: "logo", label: "شعار المنصة", icon: Image, defaultText: "" },
-  { key: "qrCode", label: "رمز التحقق QR", icon: QrCode, defaultText: "" },
+  { key: "studentName", label: "اسم الطالب", icon: User, isImage: false, defaultText: "محمد بن أحمد العمري" },
+  { key: "certText", label: "نص الإجازة/الشهادة", icon: FileText, isImage: false, defaultText: "يُجيز الشيخ الطالب المذكور في رواية حفص عن عاصم بالسند المتصل..." },
+  { key: "reciterName", label: "اسم المقرئ", icon: GraduationCap, isImage: false, defaultText: "الشيخ أحمد بن محمد العجمي" },
+  { key: "date", label: "التاريخ", icon: Calendar, isImage: false, defaultText: "١٤٤٦/٠٦/١٥ هـ" },
+  { key: "stamp", label: "الختم", icon: Stamp, isImage: true, defaultText: "" },
+  { key: "signature", label: "التوقيع", icon: PenTool, isImage: true, defaultText: "" },
+  { key: "logo", label: "شعار المنصة", icon: Image, isImage: true, defaultText: "" },
+  { key: "qrCode", label: "رمز التحقق QR", icon: QrCode, isImage: true, defaultText: "" },
 ] as const;
 
 type FieldKey = typeof TEMPLATE_FIELDS[number]["key"];
@@ -59,6 +60,7 @@ interface FieldConfig {
   visible: boolean;
   width: number;
   height: number;
+  customText?: string;
 }
 
 interface Template {
@@ -78,20 +80,48 @@ interface Template {
 const defaultFieldConfig = (key: FieldKey): FieldConfig => {
   const configs: Record<string, Partial<FieldConfig>> = {
     studentName: { x: 50, y: 35, fontSize: 28, width: 500, height: 40 },
-    certText: { x: 10, y: 45, fontSize: 16, width: 800, height: 120, textAlign: "center" },
-    reciterName: { x: 50, y: 72, fontSize: 20, width: 300, height: 30 },
+    certText: { x: 50, y: 50, fontSize: 15, width: 780, height: 140, textAlign: "center" },
+    reciterName: { x: 50, y: 72, fontSize: 20, width: 320, height: 30 },
     date: { x: 75, y: 85, fontSize: 14, width: 200, height: 25 },
-    stamp: { x: 20, y: 75, fontSize: 14, width: 100, height: 100 },
-    signature: { x: 50, y: 78, fontSize: 14, width: 150, height: 60 },
-    logo: { x: 42, y: 3, fontSize: 14, width: 120, height: 80 },
-    qrCode: { x: 85, y: 80, fontSize: 14, width: 80, height: 80 },
+    stamp: { x: 20, y: 78, fontSize: 14, width: 90, height: 90 },
+    signature: { x: 50, y: 80, fontSize: 14, width: 140, height: 55 },
+    logo: { x: 50, y: 8, fontSize: 14, width: 110, height: 75 },
+    qrCode: { x: 87, y: 82, fontSize: 14, width: 75, height: 75 },
   };
   return {
-    x: 50, y: 50, fontSize: 18, fontFamily: "Amiri", color: "#1a1a2e",
+    x: 50, y: 50, fontSize: 18, fontFamily: "Amiri", color: "#2c1810",
     textAlign: "center", visible: true, width: 200, height: 30,
+    customText: "",
     ...configs[key],
   };
 };
+
+// Default beautiful certificate template config
+const defaultCertificateFieldConfig = (): Record<string, FieldConfig> => ({
+  logo: { x: 50, y: 10, fontSize: 14, fontFamily: "Amiri", color: "#2c1810", textAlign: "center", visible: true, width: 100, height: 70, customText: "" },
+  studentName: { x: 50, y: 40, fontSize: 32, fontFamily: "Amiri", color: "#1a5c3a", textAlign: "center", visible: true, width: 500, height: 45, customText: "محمد بن أحمد العمري" },
+  certText: { x: 50, y: 57, fontSize: 14, fontFamily: "Amiri", color: "#3d2b1f", textAlign: "center", visible: true, width: 750, height: 60, customText: "أتمّ حفظ كتاب الله العزيز كاملاً على يد شيخه، وذلك بعد مجاهدة وصبر وإتقان، فشهدنا له بذلك وأجزنا له روايته." },
+  reciterName: { x: 25, y: 80, fontSize: 18, fontFamily: "Amiri", color: "#1a5c3a", textAlign: "center", visible: true, width: 280, height: 28, customText: "الشيخ أحمد بن محمد العجمي" },
+  date: { x: 75, y: 86, fontSize: 13, fontFamily: "Cairo", color: "#5a4a3a", textAlign: "center", visible: true, width: 180, height: 22, customText: "١٤٤٦/٠٦/١٥ هـ" },
+  stamp: { x: 22, y: 85, fontSize: 14, fontFamily: "Amiri", color: "#2c1810", textAlign: "center", visible: true, width: 80, height: 80, customText: "" },
+  signature: { x: 25, y: 90, fontSize: 14, fontFamily: "Amiri", color: "#2c1810", textAlign: "center", visible: true, width: 130, height: 45, customText: "" },
+  qrCode: { x: 88, y: 84, fontSize: 14, fontFamily: "Amiri", color: "#2c1810", textAlign: "center", visible: true, width: 70, height: 70, customText: "" },
+});
+
+// Default beautiful ijaza template config (taller text area for long Arabic text)
+const defaultIjazaFieldConfig = (): Record<string, FieldConfig> => ({
+  logo: { x: 50, y: 7, fontSize: 14, fontFamily: "Amiri", color: "#2c1810", textAlign: "center", visible: true, width: 90, height: 60, customText: "" },
+  studentName: { x: 50, y: 30, fontSize: 28, fontFamily: "Amiri", color: "#7c4b03", textAlign: "center", visible: true, width: 480, height: 40, customText: "محمد بن أحمد العمري" },
+  certText: {
+    x: 50, y: 55, fontSize: 13, fontFamily: "Amiri", color: "#2c1810", textAlign: "center", visible: true, width: 800, height: 200,
+    customText: "الحمد لله رب العالمين، والصلاة والسلام على سيد المرسلين، وعلى آله وصحبه أجمعين.\n\nأما بعد: فإنني أُجيز الطالب المذكور أعلاه رواية حفص عن عاصم من طريق الشاطبية، بالسند المتصل إلى سيدنا جبريل عليه السلام، ثم إلى رسول الله ﷺ، بشرط الأمانة في الأداء والتحلي بآداب حملة القرآن الكريم.\n\nوكتبه المجيز سائلاً الله التوفيق والقبول."
+  },
+  reciterName: { x: 25, y: 87, fontSize: 16, fontFamily: "Amiri", color: "#7c4b03", textAlign: "center", visible: true, width: 260, height: 24, customText: "الشيخ أحمد بن محمد العجمي" },
+  date: { x: 75, y: 91, fontSize: 12, fontFamily: "Cairo", color: "#5a4a3a", textAlign: "center", visible: true, width: 170, height: 20, customText: "١٤٤٦/٠٦/١٥ هـ" },
+  stamp: { x: 20, y: 90, fontSize: 14, fontFamily: "Amiri", color: "#2c1810", textAlign: "center", visible: true, width: 75, height: 75, customText: "" },
+  signature: { x: 25, y: 93, fontSize: 14, fontFamily: "Amiri", color: "#2c1810", textAlign: "center", visible: true, width: 120, height: 40, customText: "" },
+  qrCode: { x: 88, y: 90, fontSize: 14, fontFamily: "Amiri", color: "#2c1810", textAlign: "center", visible: true, width: 65, height: 65, customText: "" },
+});
 
 const FONTS = [
   { value: "Amiri", label: "أميري" },
@@ -101,10 +131,16 @@ const FONTS = [
   { value: "serif", label: "Serif" },
 ];
 
+// Beautiful certificate background (creamy gold)
+const CERTIFICATE_BG = "linear-gradient(135deg, #fdf8ee 0%, #f7edcf 40%, #fdf1d4 60%, #faf0e6 100%)";
+// Beautiful ijaza background (warm parchment)
+const IJAZA_BG = "linear-gradient(135deg, #fef9f0 0%, #f9edd8 30%, #fdf4e3 60%, #fef8ee 100%)";
+
 const AdminCertificateTemplates = () => {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [creatingDefault, setCreatingDefault] = useState(false);
   const [activeTab, setActiveTab] = useState("ijaza");
 
   // Editor state
@@ -142,12 +178,56 @@ const AdminCertificateTemplates = () => {
     }
   };
 
+  const createDefaultTemplates = async () => {
+    setCreatingDefault(true);
+    try {
+      // Delete existing defaults first
+      await supabase.from("certificate_templates").delete().in("name", ["القالب الافتراضي للإجازة", "القالب الافتراضي للشهادة"]);
+
+      const defaults = [
+        {
+          name: "القالب الافتراضي للإجازة",
+          type: "ijaza",
+          background_color: "#fef9f0",
+          background_image_url: null,
+          field_config: defaultIjazaFieldConfig() as any,
+          is_active: true,
+          logo_url: null,
+          width: 1200,
+          height: 1000,
+          created_by: user?.id,
+        },
+        {
+          name: "القالب الافتراضي للشهادة",
+          type: "certificate",
+          background_color: "#fdf8ee",
+          background_image_url: null,
+          field_config: defaultCertificateFieldConfig() as any,
+          is_active: true,
+          logo_url: null,
+          width: 1200,
+          height: 850,
+          created_by: user?.id,
+        },
+      ];
+
+      const { error } = await supabase.from("certificate_templates").insert(defaults);
+      if (error) throw error;
+      toast({ title: "تم إنشاء القوالب الافتراضية ✅", description: "قالب الإجازة وقالب الشهادة جاهزان" });
+      fetchTemplates();
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
+    } finally {
+      setCreatingDefault(false);
+    }
+  };
+
   const initNewTemplate = (type: string) => {
     setEditingTemplate(null);
     setTemplateName(type === "ijaza" ? "قالب إجازة جديد" : "قالب شهادة جديد");
     setTemplateType(type);
     setBgImageUrl(null);
-    setBgColor(type === "ijaza" ? "#faf8f0" : "#f0f5fa");
+    setBgColor(type === "ijaza" ? "#fef9f0" : "#fdf8ee");
     const configs: Record<string, FieldConfig> = {};
     TEMPLATE_FIELDS.forEach(f => { configs[f.key] = defaultFieldConfig(f.key); });
     setFieldConfigs(configs);
@@ -162,7 +242,6 @@ const AdminCertificateTemplates = () => {
     setTemplateType(template.type);
     setBgImageUrl(template.background_image_url);
     setBgColor(template.background_color || "#faf8f0");
-    // Merge saved configs with defaults
     const configs: Record<string, FieldConfig> = {};
     TEMPLATE_FIELDS.forEach(f => {
       configs[f.key] = {
@@ -208,21 +287,16 @@ const AdminCertificateTemplates = () => {
         field_config: fieldConfigs as any,
         logo_url: null,
         width: 1200,
-        height: 850,
+        height: templateType === "ijaza" ? 1000 : 850,
         created_by: user?.id,
       };
 
       if (editingTemplate) {
-        const { error } = await supabase
-          .from("certificate_templates")
-          .update(payload)
-          .eq("id", editingTemplate.id);
+        const { error } = await supabase.from("certificate_templates").update(payload).eq("id", editingTemplate.id);
         if (error) throw error;
         toast({ title: "تم تحديث القالب بنجاح ✅" });
       } else {
-        const { error } = await supabase
-          .from("certificate_templates")
-          .insert(payload);
+        const { error } = await supabase.from("certificate_templates").insert(payload);
         if (error) throw error;
         toast({ title: "تم إنشاء القالب بنجاح ✅" });
       }
@@ -237,13 +311,8 @@ const AdminCertificateTemplates = () => {
 
   const toggleActive = async (template: Template) => {
     try {
-      // Deactivate all templates of same type first
       await supabase.from("certificate_templates").update({ is_active: false }).eq("type", template.type);
-      // Activate this one
-      const { error } = await supabase
-        .from("certificate_templates")
-        .update({ is_active: !template.is_active })
-        .eq("id", template.id);
+      const { error } = await supabase.from("certificate_templates").update({ is_active: !template.is_active }).eq("id", template.id);
       if (error) throw error;
       toast({ title: template.is_active ? "تم إلغاء تفعيل القالب" : "تم تفعيل القالب ✅" });
       fetchTemplates();
@@ -270,8 +339,18 @@ const AdminCertificateTemplates = () => {
     }));
   };
 
+  const getFieldDisplayText = (field: typeof TEMPLATE_FIELDS[number]): string => {
+    const config = fieldConfigs[field.key];
+    if (config?.customText && config.customText.trim()) return config.customText;
+    return field.defaultText;
+  };
+
   const filteredTemplates = templates.filter(t => t.type === activeTab);
   const selectedFieldDef = TEMPLATE_FIELDS.find(f => f.key === selectedField);
+  const isImageField = selectedField ? ["stamp", "signature", "logo", "qrCode"].includes(selectedField) : false;
+
+  // Canvas aspect ratio based on type
+  const canvasRatio = templateType === "ijaza" ? "1200/1000" : "1200/850";
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -296,12 +375,22 @@ const AdminCertificateTemplates = () => {
 
       {/* Hero */}
       <div className="gradient-primary px-6 py-8">
-        <div className="max-w-7xl mx-auto flex items-center gap-3">
-          <Palette className="w-7 h-7 text-gold" />
-          <div>
-            <h2 className="text-xl font-bold text-primary-foreground">مصمم قوالب الشهادات والإجازات</h2>
-            <p className="text-primary-foreground/70 text-sm">أنشئ قوالب احترافية للإجازات والشهادات مع معاينة مباشرة</p>
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Palette className="w-7 h-7 text-gold" />
+            <div>
+              <h2 className="text-xl font-bold text-primary-foreground">مصمم قوالب الشهادات والإجازات</h2>
+              <p className="text-primary-foreground/70 text-sm">أنشئ قوالب احترافية مع معاينة مباشرة وتحرير كامل للنصوص</p>
+            </div>
           </div>
+          <Button
+            onClick={createDefaultTemplates}
+            disabled={creatingDefault}
+            className="gap-2 bg-gold hover:bg-gold/90 text-primary-foreground rounded-xl shadow-md"
+          >
+            {creatingDefault ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+            إنشاء القوالب الافتراضية
+          </Button>
         </div>
       </div>
 
@@ -332,10 +421,16 @@ const AdminCertificateTemplates = () => {
                 <Card className="border-border/50">
                   <CardContent className="py-16 text-center">
                     <FileImage className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">لا توجد قوالب {type === "ijaza" ? "إجازات" : "شهادات"} بعد</p>
-                    <Button onClick={() => initNewTemplate(type)} variant="outline" className="mt-3 gap-2">
-                      <Plus className="w-4 h-4" /> إنشاء قالب جديد
-                    </Button>
+                    <p className="text-muted-foreground text-sm mb-1">لا توجد قوالب {type === "ijaza" ? "إجازات" : "شهادات"} بعد</p>
+                    <p className="text-muted-foreground/60 text-xs mb-4">اضغط "إنشاء القوالب الافتراضية" لإنشاء قالب جاهز بهوية التطبيق</p>
+                    <div className="flex gap-2 justify-center">
+                      <Button onClick={createDefaultTemplates} variant="default" className="gap-2 bg-gold hover:bg-gold/90 text-primary-foreground">
+                        <Wand2 className="w-4 h-4" /> إنشاء القوالب الافتراضية
+                      </Button>
+                      <Button onClick={() => initNewTemplate(type)} variant="outline" className="gap-2">
+                        <Plus className="w-4 h-4" /> قالب مخصص
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ) : (
@@ -345,19 +440,26 @@ const AdminCertificateTemplates = () => {
                       <Card className={`border-border/50 overflow-hidden hover:shadow-lg transition-all cursor-pointer group ${template.is_active ? "ring-2 ring-primary" : ""}`}>
                         {/* Preview thumbnail */}
                         <div
-                          className="h-48 relative overflow-hidden"
+                          className="relative overflow-hidden"
                           style={{
+                            height: template.type === "ijaza" ? "220px" : "170px",
                             backgroundColor: template.background_color || "#faf8f0",
                             backgroundImage: template.background_image_url ? `url(${template.background_image_url})` : undefined,
                             backgroundSize: "cover",
                             backgroundPosition: "center",
                           }}
                         >
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="text-center opacity-60">
-                              <p className="text-xs font-bold" style={{ color: "#1a1a2e" }}>محمد بن أحمد العمري</p>
-                              <p className="text-[8px] mt-1 max-w-[200px]" style={{ color: "#333" }}>يشهد بأن الطالب قد أتم...</p>
-                            </div>
+                          {/* Decorative borders */}
+                          <div className="absolute inset-2 border border-yellow-600/30 rounded pointer-events-none" />
+                          <div className="absolute inset-3 border border-yellow-600/20 rounded pointer-events-none" />
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-4">
+                            <img src={logoMojaz} alt="شعار" className="w-8 h-6 object-contain opacity-70 mb-1" />
+                            <p className="text-[11px] font-bold text-center" style={{ color: "#1a5c3a", fontFamily: "Amiri" }}>
+                              {(template.field_config?.studentName as FieldConfig)?.customText || "محمد بن أحمد العمري"}
+                            </p>
+                            <p className="text-[7px] text-center leading-tight max-w-[180px] opacity-70" style={{ color: "#3d2b1f", fontFamily: "Amiri" }}>
+                              {((template.field_config?.certText as FieldConfig)?.customText || "نص الإجازة أو الشهادة...").slice(0, 80)}...
+                            </p>
                           </div>
                           {template.is_active && (
                             <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px]">
@@ -376,7 +478,7 @@ const AdminCertificateTemplates = () => {
                                 onClick={() => openEditTemplate(template)}>
                                 <Settings2 className="w-3.5 h-3.5" />
                               </Button>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary/10"
                                 onClick={() => toggleActive(template)}>
                                 <CheckCircle className={`w-3.5 h-3.5 ${template.is_active ? "text-primary" : "text-muted-foreground"}`} />
                               </Button>
@@ -399,20 +501,20 @@ const AdminCertificateTemplates = () => {
 
       {/* Template Editor Dialog */}
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
-        <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto p-0">
-          <DialogHeader className="p-4 pb-2 border-b border-border/30">
+        <DialogContent className="max-w-[95vw] w-[1200px] max-h-[96vh] overflow-hidden p-0 flex flex-col">
+          <DialogHeader className="p-4 pb-2 border-b border-border/30 shrink-0">
             <DialogTitle className="flex items-center gap-2 text-lg">
               <Palette className="w-5 h-5 text-gold" />
               {editingTemplate ? "تعديل القالب" : "إنشاء قالب جديد"}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              {templateType === "ijaza" ? "تصميم قالب الإجازة القرآنية" : "تصميم قالب الشهادة"}
+              {templateType === "ijaza" ? "تصميم قالب الإجازة القرآنية" : "تصميم قالب الشهادة"} — اضغط على أي عنصر في المعاينة لتحريره
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col lg:flex-row gap-0 divide-y lg:divide-y-0 lg:divide-x lg:divide-x-reverse divide-border/30">
+          <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x lg:divide-x-reverse divide-border/30 flex-1 min-h-0 overflow-hidden">
             {/* Left Panel: Controls */}
-            <div className="w-full lg:w-80 shrink-0 p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="w-full lg:w-80 shrink-0 p-4 space-y-4 overflow-y-auto">
               {/* Template Name */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">اسم القالب</Label>
@@ -476,6 +578,7 @@ const AdminCertificateTemplates = () => {
                           checked={config?.visible ?? true}
                           onCheckedChange={v => updateFieldConfig(field.key, { visible: v })}
                           className="scale-75"
+                          onClick={e => e.stopPropagation()}
                         />
                       </div>
                     );
@@ -490,6 +593,30 @@ const AdminCertificateTemplates = () => {
                     {selectedFieldDef && <selectedFieldDef.icon className="w-3.5 h-3.5" />}
                     خصائص: {selectedFieldDef?.label}
                   </h4>
+
+                  {/* Custom Text (for non-image fields) */}
+                  {!isImageField && (
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">نص العنصر</Label>
+                      {selectedField === "certText" ? (
+                        <Textarea
+                          value={fieldConfigs[selectedField].customText ?? selectedFieldDef?.defaultText ?? ""}
+                          onChange={e => updateFieldConfig(selectedField, { customText: e.target.value })}
+                          className="text-xs min-h-[80px] resize-none"
+                          placeholder={selectedFieldDef?.defaultText}
+                          dir="rtl"
+                        />
+                      ) : (
+                        <Input
+                          value={fieldConfigs[selectedField].customText ?? selectedFieldDef?.defaultText ?? ""}
+                          onChange={e => updateFieldConfig(selectedField, { customText: e.target.value })}
+                          className="text-xs"
+                          placeholder={selectedFieldDef?.defaultText}
+                          dir="rtl"
+                        />
+                      )}
+                    </div>
+                  )}
 
                   {/* Position X */}
                   <div className="space-y-1">
@@ -511,7 +638,7 @@ const AdminCertificateTemplates = () => {
                   </div>
 
                   {/* Text-specific properties */}
-                  {!["stamp", "signature", "logo", "qrCode"].includes(selectedField) && (
+                  {!isImageField && (
                     <>
                       <div className="space-y-1">
                         <Label className="text-[10px]">حجم الخط: {fieldConfigs[selectedField].fontSize}px</Label>
@@ -547,100 +674,138 @@ const AdminCertificateTemplates = () => {
                       </div>
                     </>
                   )}
+
+                  {/* Image field size */}
+                  {isImageField && (
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">الارتفاع: {fieldConfigs[selectedField].height}px</Label>
+                      <Slider value={[fieldConfigs[selectedField].height]} min={30} max={200} step={5}
+                        onValueChange={v => updateFieldConfig(selectedField, { height: v[0] })} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
             {/* Right Panel: Preview Canvas */}
-            <div className="flex-1 p-4">
-              <div className="flex items-center justify-between mb-3">
+            <div className="flex-1 p-4 flex flex-col min-h-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 shrink-0">
                 <div className="flex items-center gap-2">
                   <Eye className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm font-semibold text-foreground">المعاينة المباشرة</span>
+                  <Badge variant="outline" className="text-[10px]">
+                    {templateType === "ijaza" ? "إجازة قرآنية" : "شهادة"}
+                  </Badge>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => setPreviewMode(!previewMode)}>
-                    <Eye className="w-3.5 h-3.5" />
-                    {previewMode ? "وضع التحرير" : "معاينة كاملة"}
-                  </Button>
-                </div>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => setPreviewMode(!previewMode)}>
+                  <Eye className="w-3.5 h-3.5" />
+                  {previewMode ? "وضع التحرير" : "معاينة كاملة"}
+                </Button>
               </div>
 
-              {/* Canvas */}
-              <div className="relative border border-border/50 rounded-xl overflow-hidden shadow-lg" style={{ aspectRatio: "1200/850" }}>
-                <div
-                  ref={canvasRef}
-                  className="w-full h-full relative"
+              {/* Scrollable canvas area */}
+              <div className="flex-1 overflow-auto">
+                <div className="relative border border-border/50 rounded-xl overflow-hidden shadow-lg mx-auto"
                   style={{
-                    backgroundColor: bgColor,
-                    backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
+                    aspectRatio: canvasRatio,
+                    maxWidth: "100%",
+                    minHeight: "400px",
                   }}
                 >
-                  {/* Render fields */}
-                  {TEMPLATE_FIELDS.map(field => {
-                    const config = fieldConfigs[field.key];
-                    if (!config?.visible) return null;
-                    const isImage = ["stamp", "signature", "logo", "qrCode"].includes(field.key);
-
-                    return (
-                      <div
-                        key={field.key}
-                        onClick={() => !previewMode && setSelectedField(field.key)}
-                        className={`absolute transition-all ${!previewMode ? "cursor-pointer" : ""} ${
-                          !previewMode && selectedField === field.key ? "ring-2 ring-primary ring-offset-1 rounded" : ""
-                        }`}
-                        style={{
-                          left: `${config.x}%`,
-                          top: `${config.y}%`,
-                          transform: "translate(-50%, -50%)",
-                          width: `${config.width}px`,
-                          maxWidth: "90%",
-                        }}
-                      >
-                        {isImage ? (
-                          <div className="flex items-center justify-center rounded-lg"
-                            style={{ width: config.width, height: config.height }}>
-                            {field.key === "logo" ? (
-                              <img src={logoMojaz} alt="شعار" className="max-w-full max-h-full object-contain" />
-                            ) : field.key === "qrCode" ? (
-                              <div className="w-full h-full bg-foreground/5 border border-dashed border-foreground/20 rounded-lg flex items-center justify-center">
-                                <QrCode className="w-8 h-8 text-foreground/40" />
-                              </div>
-                            ) : (
-                              <div className="w-full h-full bg-foreground/5 border border-dashed border-foreground/20 rounded-lg flex items-center justify-center">
-                                <field.icon className="w-6 h-6 text-foreground/30" />
-                                <span className="text-[8px] text-foreground/40 mr-1">{field.label}</span>
-                              </div>
-                            )}
+                  {/* Beautiful decorative frame */}
+                  <div
+                    ref={canvasRef}
+                    className="w-full h-full relative"
+                    style={{
+                      backgroundColor: bgColor,
+                      backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  >
+                    {/* Decorative borders for certificate feel */}
+                    {!bgImageUrl && (
+                      <>
+                        <div className="absolute inset-3 border-2 pointer-events-none rounded" style={{ borderColor: "rgba(180,130,30,0.4)" }} />
+                        <div className="absolute inset-5 border pointer-events-none rounded" style={{ borderColor: "rgba(180,130,30,0.2)" }} />
+                        {/* Corner ornaments */}
+                        {[
+                          { top: "8px", right: "8px" },
+                          { top: "8px", left: "8px" },
+                          { bottom: "8px", right: "8px" },
+                          { bottom: "8px", left: "8px" },
+                        ].map((pos, i) => (
+                          <div key={i} className="absolute w-8 h-8 pointer-events-none" style={pos}>
+                            <svg viewBox="0 0 30 30" className="w-full h-full" style={{ opacity: 0.4 }}>
+                              <path d="M2,2 L12,2 M2,2 L2,12" stroke="#b4821e" strokeWidth="2" fill="none" />
+                            </svg>
                           </div>
-                        ) : (
-                          <p style={{
-                            fontSize: `${config.fontSize}px`,
-                            fontFamily: config.fontFamily,
-                            color: config.color,
-                            textAlign: config.textAlign as any,
-                            lineHeight: 1.6,
-                          }}>
-                            {field.defaultText}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
+                        ))}
+                      </>
+                    )}
 
-                  {/* Non-preview overlay for guidance */}
-                  {!previewMode && !bgImageUrl && (
-                    <div className="absolute inset-0 pointer-events-none">
-                      <div className="absolute inset-4 border-2 border-dashed border-foreground/5 rounded-xl" />
-                    </div>
-                  )}
+                    {/* Render fields */}
+                    {TEMPLATE_FIELDS.map(field => {
+                      const config = fieldConfigs[field.key];
+                      if (!config?.visible) return null;
+                      const isImg = field.isImage;
+                      const displayText = getFieldDisplayText(field);
+
+                      return (
+                        <div
+                          key={field.key}
+                          onClick={() => !previewMode && setSelectedField(field.key)}
+                          className={`absolute transition-all ${!previewMode ? "cursor-pointer" : ""} ${
+                            !previewMode && selectedField === field.key ? "ring-2 ring-primary ring-offset-1 rounded" : ""
+                          }`}
+                          style={{
+                            left: `${config.x}%`,
+                            top: `${config.y}%`,
+                            transform: "translate(-50%, -50%)",
+                            width: `${config.width}px`,
+                            maxWidth: "90%",
+                          }}
+                        >
+                          {isImg ? (
+                            <div className="flex items-center justify-center rounded-lg"
+                              style={{ width: config.width, height: config.height }}>
+                              {field.key === "logo" ? (
+                                <img src={logoMojaz} alt="شعار" className="max-w-full max-h-full object-contain" />
+                              ) : field.key === "qrCode" ? (
+                                <div className="w-full h-full border border-dashed rounded-lg flex items-center justify-center"
+                                  style={{ borderColor: "rgba(100,80,30,0.3)", backgroundColor: "rgba(255,255,255,0.3)" }}>
+                                  <QrCode className="w-8 h-8" style={{ color: "rgba(100,80,30,0.5)" }} />
+                                </div>
+                              ) : (
+                                <div className="w-full h-full border border-dashed rounded-lg flex flex-col items-center justify-center gap-1"
+                                  style={{ borderColor: "rgba(100,80,30,0.3)", backgroundColor: "rgba(255,255,255,0.2)" }}>
+                                  <field.icon className="w-5 h-5" style={{ color: "rgba(100,80,30,0.4)" }} />
+                                  <span className="text-[7px]" style={{ color: "rgba(100,80,30,0.4)" }}>{field.label}</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <p style={{
+                              fontSize: `${config.fontSize}px`,
+                              fontFamily: config.fontFamily,
+                              color: config.color,
+                              textAlign: config.textAlign as any,
+                              lineHeight: 1.8,
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                            }}>
+                              {displayText}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
               {/* Save Button */}
-              <div className="flex items-center justify-end gap-3 mt-4">
+              <div className="flex items-center justify-end gap-3 mt-4 shrink-0">
                 <Button variant="outline" onClick={() => setEditorOpen(false)}>إلغاء</Button>
                 <Button onClick={saveTemplate} disabled={saving} className="gap-2 bg-gold hover:bg-gold/90 text-primary-foreground rounded-xl px-6">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
