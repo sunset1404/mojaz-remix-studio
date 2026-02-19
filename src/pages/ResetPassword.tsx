@@ -16,19 +16,35 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    // Check URL hash for recovery token
     const hash = window.location.hash;
-    if (hash.includes("type=recovery")) {
+    const params = new URLSearchParams(window.location.search);
+    if (hash.includes("type=recovery") || params.get("type") === "recovery") {
       setIsRecovery(true);
+      setChecking(false);
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
+        setChecking(false);
+      } else if (event === "SIGNED_IN" && session) {
+        // User came via recovery link and is now signed in
+        setIsRecovery(true);
+        setChecking(false);
       }
     });
-    return () => subscription.unsubscribe();
+
+    // Give auth state change time to fire before showing error
+    const timer = setTimeout(() => setChecking(false), 3000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,10 +68,19 @@ const ResetPassword = () => {
     setLoading(false);
   };
 
-  if (!isRecovery) {
+  if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
-        <p className="text-muted-foreground">رابط غير صالح أو منتهي الصلاحية</p>
+        <span className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full inline-block" />
+      </div>
+    );
+  }
+
+  if (!isRecovery) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4" dir="rtl">
+        <p className="text-muted-foreground text-center px-6">رابط غير صالح أو منتهي الصلاحية.<br/>يرجى طلب رابط جديد.</p>
+        <a href="/forgot-password" className="text-primary font-semibold hover:underline">استعادة كلمة المرور</a>
       </div>
     );
   }
