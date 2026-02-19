@@ -97,7 +97,37 @@ const ReciterSignup = () => {
     return true;
   };
 
-  const nextStep = () => { if (validateStep()) setStep((s) => Math.min(s + 1, 3)); };
+  const nextStep = async () => {
+    if (!validateStep()) return;
+
+    // Check email uniqueness on step 0
+    if (step === 0) {
+      const { data: existingEmail } = await (supabase as any)
+        .from("student_profiles")
+        .select("id")
+        .eq("email", email.trim().toLowerCase())
+        .maybeSingle();
+      if (existingEmail) {
+        toast({ title: "البريد مسجل مسبقاً", description: "هذا البريد الإلكتروني مستخدم بالفعل. يرجى تسجيل الدخول أو استخدام بريد آخر", variant: "destructive" });
+        return;
+      }
+    }
+
+    // Check phone uniqueness on step 1
+    if (step === 1) {
+      const fullPhone = `${phoneCode}${phone}`;
+      const [{ data: existingPhone }, { data: existingPhoneReciter }] = await Promise.all([
+        (supabase as any).from("student_profiles").select("id").eq("phone", fullPhone).maybeSingle(),
+        (supabase as any).from("reciter_profiles").select("id").eq("phone", fullPhone).maybeSingle(),
+      ]);
+      if (existingPhone || existingPhoneReciter) {
+        toast({ title: "رقم الجوال مسجل مسبقاً", description: "هذا الرقم مستخدم في حساب آخر. يرجى استخدام رقم مختلف", variant: "destructive" });
+        return;
+      }
+    }
+
+    setStep((s) => Math.min(s + 1, 3));
+  };
   const prevStep = () => setStep((s) => Math.max(s - 1, 0));
 
   const handleSubmit = async () => {
