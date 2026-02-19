@@ -5,12 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   GraduationCap, Search, Phone, Mail, MessageCircle,
   Globe, UserCheck, TrendingUp, BookOpen,
   RefreshCw, ChevronDown, ChevronUp, Filter,
-  ArrowRight, Clock, CheckCircle, XCircle, ShieldCheck, Award
+  ArrowRight, Clock, CheckCircle, XCircle, ShieldCheck, Award, Plus
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,19 +49,37 @@ interface ReciterProfile {
   id_number: string;
   status: string;
   created_at: string;
-  certification_text: string | null;
 }
+
+interface ReciterCertification {
+  id: string;
+  reciter_id: string;
+  type: string;
+  riwaya: string | null;
+  certification_text: string;
+}
+
+const RIWAYAT = [
+  "حفص عن عاصم", "ورش عن نافع", "قالون عن نافع", "شعبة عن عاصم",
+  "الدوري عن أبي عمرو", "السوسي عن أبي عمرو", "ابن كثير", "ابن عامر",
+  "أبو جعفر", "يعقوب", "خلف العاشر",
+];
 
 const AdminReciters = () => {
   const [reciters, setReciters] = useState<ReciterProfile[]>([]);
+  const [certifications, setCertifications] = useState<ReciterCertification[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [genderFilter, setGenderFilter] = useState<string>("all");
   const [expandedReciter, setExpandedReciter] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [editingCertText, setEditingCertText] = useState<Record<string, string>>({});
-  const [savingCertText, setSavingCertText] = useState<string | null>(null);
+  // Dialog for managing certification texts
+  const [certDialogReciter, setCertDialogReciter] = useState<ReciterProfile | null>(null);
+  const [certDialogType, setCertDialogType] = useState<string>("ijaza");
+  const [certDialogRiwaya, setCertDialogRiwaya] = useState<string>("");
+  const [certDialogText, setCertDialogText] = useState("");
+  const [savingCert, setSavingCert] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -57,12 +89,13 @@ const AdminReciters = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("reciter_profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setReciters(data || []);
+      const [recRes, certRes] = await Promise.all([
+        supabase.from("reciter_profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("reciter_certifications").select("*"),
+      ]);
+      if (recRes.error) throw recRes.error;
+      setReciters(recRes.data || []);
+      setCertifications(certRes.data || []);
     } catch (error: any) {
       toast({ title: "خطأ في تحميل البيانات", description: error.message, variant: "destructive" });
     } finally {
@@ -90,21 +123,65 @@ const AdminReciters = () => {
     }
   };
 
-  const saveCertificationText = async (id: string) => {
+  const getReciterCerts = (reciterId: string) =>
+    certifications.filter(c => c.reciter_id === reciterId);
+
+  const openCertDialog = (reciter: ReciterProfile, type: string = "ijaza", riwaya: string = "", existingText: string = "") => {
+    setCertDialogReciter(reciter);
+    setCertDialogType(type);
+    setCertDialogRiwaya(riwaya);
+    setCertDialogText(existingText);
+  };
+
+  const saveCertification = async () => {
+    if (!certDialogReciter) return;
+    if (certDialogType === "ijaza" && !certDialogRiwaya) {
+      toast({ title: "يرجى اختيار الرواية", variant: "destructive" });
+      return;
+    }
+    setSavingCert(true);
     try {
-      setSavingCertText(id);
-      const text = editingCertText[id] ?? "";
-      const { error } = await supabase
-        .from("reciter_profiles")
-        .update({ certification_text: text })
-        .eq("id", id);
-      if (error) throw error;
-      setReciters(prev => prev.map(r => r.id === id ? { ...r, certification_text: text } : r));
-      toast({ title: "تم حفظ نص الإجازة بنجاح ✅" });
-    } catch (error: any) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      const existing = certifications.find(c =>
+        c.reciter_id === certDialogReciter.user_id &&
+        c.type === certDialogType &&
+        (certDialogType === "khatm" ? !c.riwaya : c.riwaya === certDialogRiwaya)
+      );
+      if (existing) {
+        const { error } = await supabase.from("reciter_certifications")
+          .update({ certification_text: certDialogText })
+          .eq("id", existing.id);
+        if (error) throw error;
+        setCertifications(prev => prev.map(c => c.id === existing.id ? { ...c, certification_text: certDialogText } : c));
+      } else {
+        const { data, error } = await supabase.from("reciter_certifications")
+          .insert({
+            reciter_id: certDialogReciter.user_id,
+            type: certDialogType,
+            riwaya: certDialogType === "khatm" ? null : certDialogRiwaya,
+            certification_text: certDialogText,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        setCertifications(prev => [...prev, data]);
+      }
+      toast({ title: "تم حفظ الصياغة بنجاح ✅" });
+      setCertDialogReciter(null);
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
     } finally {
-      setSavingCertText(null);
+      setSavingCert(false);
+    }
+  };
+
+  const deleteCertification = async (certId: string) => {
+    try {
+      const { error } = await supabase.from("reciter_certifications").delete().eq("id", certId);
+      if (error) throw error;
+      setCertifications(prev => prev.filter(c => c.id !== certId));
+      toast({ title: "تم حذف الصياغة" });
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
     }
   };
 
@@ -517,29 +594,62 @@ const AdminReciters = () => {
                                     </div>
                                   </div>
 
-                                  {/* Certification Text */}
+                                  {/* Certification Texts */}
                                   <div className="mt-4 pt-3 border-t border-border/20">
-                                    <h4 className="text-xs font-bold text-gold flex items-center gap-1 mb-2">
-                                      <Award className="w-3 h-3" /> نص الإجازة / الشهادة المعتمدة
-                                    </h4>
-                                    <Textarea
-                                      value={editingCertText[reciter.id] ?? reciter.certification_text ?? ""}
-                                      onChange={(e) => setEditingCertText(prev => ({ ...prev, [reciter.id]: e.target.value }))}
-                                      placeholder="أدخل نص الإجازة أو الشهادة المعتمدة لهذا المقرئ... (سيظهر تلقائياً عند إصدار إجازة أو شهادة)"
-                                      className="bg-card border-border/50 min-h-[80px] text-sm"
-                                    />
-                                    <div className="flex items-center justify-between mt-2">
-                                      <p className="text-[10px] text-muted-foreground">سيظهر هذا النص تلقائياً في صفحة إصدار الشهادات عند اختيار هذا المقرئ</p>
-                                      <Button
-                                        size="sm"
-                                        onClick={(e) => { e.stopPropagation(); saveCertificationText(reciter.id); }}
-                                        disabled={savingCertText === reciter.id}
-                                        className="gap-1.5 bg-gold hover:bg-gold/90 text-primary-foreground text-xs rounded-lg"
-                                      >
-                                        {savingCertText === reciter.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
-                                        حفظ النص
-                                      </Button>
+                                    <div className="flex items-center justify-between mb-3">
+                                      <h4 className="text-xs font-bold text-gold flex items-center gap-1">
+                                        <Award className="w-3 h-3" /> صيغ الإجازات والشهادات
+                                      </h4>
+                                      <div className="flex gap-1.5">
+                                        <Button size="sm" variant="outline"
+                                          onClick={(e) => { e.stopPropagation(); openCertDialog(reciter, "khatm"); }}
+                                          className="text-[10px] h-7 gap-1 rounded-lg border-primary/30 text-primary hover:bg-primary/10">
+                                          <Plus className="w-3 h-3" /> صيغة ختم
+                                        </Button>
+                                        <Button size="sm" variant="outline"
+                                          onClick={(e) => { e.stopPropagation(); openCertDialog(reciter, "ijaza"); }}
+                                          className="text-[10px] h-7 gap-1 rounded-lg border-gold/30 text-gold hover:bg-gold/10">
+                                          <Plus className="w-3 h-3" /> صيغة إجازة
+                                        </Button>
+                                      </div>
                                     </div>
+                                    {(() => {
+                                      const rCerts = getReciterCerts(reciter.user_id);
+                                      if (rCerts.length === 0) return (
+                                        <p className="text-[11px] text-muted-foreground text-center py-3 bg-accent/20 rounded-lg">
+                                          لم تُضف أي صياغات بعد. أضف صيغة ختم أو إجازة لتظهر تلقائياً عند إصدار الشهادات.
+                                        </p>
+                                      );
+                                      return (
+                                        <div className="space-y-2">
+                                          {rCerts.map(cert => (
+                                            <div key={cert.id} className="flex items-start gap-2 p-2.5 rounded-xl bg-accent/20 border border-border/20">
+                                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${cert.type === "ijaza" ? "bg-gold/15" : "bg-primary/10"}`}>
+                                                {cert.type === "ijaza" ? <GraduationCap className="w-3.5 h-3.5 text-gold" /> : <Award className="w-3.5 h-3.5 text-primary" />}
+                                              </div>
+                                              <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                  <Badge className={`text-[9px] border ${cert.type === "ijaza" ? "bg-gold/15 text-gold border-gold/30" : "bg-primary/10 text-primary border-primary/30"}`}>
+                                                    {cert.type === "ijaza" ? `إجازة - ${cert.riwaya}` : "شهادة ختم"}
+                                                  </Badge>
+                                                </div>
+                                                <p className="text-[11px] text-foreground mt-1 line-clamp-2">{cert.certification_text || "—"}</p>
+                                              </div>
+                                              <div className="flex items-center gap-1 shrink-0">
+                                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
+                                                  onClick={(e) => { e.stopPropagation(); openCertDialog(reciter, cert.type, cert.riwaya || "", cert.certification_text); }}>
+                                                  <CheckCircle className="w-3 h-3" />
+                                                </Button>
+                                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
+                                                  onClick={(e) => { e.stopPropagation(); deleteCertification(cert.id); }}>
+                                                  <XCircle className="w-3 h-3" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
 
                                   <div className="flex md:hidden items-center gap-2 mt-4 pt-3 border-t border-border/20">
@@ -566,6 +676,57 @@ const AdminReciters = () => {
           </Card>
         </motion.div>
       </div>
+
+      {/* Certification Text Dialog */}
+      <Dialog open={!!certDialogReciter} onOpenChange={() => setCertDialogReciter(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold flex items-center gap-2">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${certDialogType === "ijaza" ? "bg-gold/15" : "bg-primary/10"}`}>
+                {certDialogType === "ijaza" ? <GraduationCap className="w-4 h-4 text-gold" /> : <Award className="w-4 h-4 text-primary" />}
+              </div>
+              {certDialogType === "ijaza" ? "صياغة إجازة قرآنية" : "صياغة شهادة ختم"}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {certDialogReciter?.full_name} — {certDialogType === "ijaza" ? "أدخل صياغة الإجازة للرواية المحددة" : "أدخل صياغة شهادة ختم القرآن الكريم"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            {certDialogType === "ijaza" && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gold">الرواية</label>
+                <Select value={certDialogRiwaya} onValueChange={setCertDialogRiwaya}>
+                  <SelectTrigger className="bg-card border-border/50">
+                    <SelectValue placeholder="اختر الرواية" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RIWAYAT.map(r => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">نص الصياغة المعتمدة</label>
+              <Textarea
+                value={certDialogText}
+                onChange={e => setCertDialogText(e.target.value)}
+                placeholder="أدخل نص الإجازة أو الشهادة المعتمدة..."
+                className="bg-card border-border/50 min-h-[120px]"
+              />
+            </div>
+            <Button
+              onClick={saveCertification}
+              disabled={savingCert}
+              className="gap-2 bg-gold hover:bg-gold/90 text-primary-foreground rounded-xl"
+            >
+              {savingCert ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+              حفظ الصياغة
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
