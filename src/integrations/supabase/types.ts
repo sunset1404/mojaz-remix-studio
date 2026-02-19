@@ -314,9 +314,38 @@ export type Database = {
         }
         Relationships: []
       }
+      reciter_certifications: {
+        Row: {
+          certification_text: string
+          created_at: string
+          id: string
+          reciter_id: string
+          riwaya: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          certification_text?: string
+          created_at?: string
+          id?: string
+          reciter_id: string
+          riwaya?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          certification_text?: string
+          created_at?: string
+          id?: string
+          reciter_id?: string
+          riwaya?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reciter_profiles: {
         Row: {
-          certification_text: string | null
           city: string
           created_at: string
           full_name: string
@@ -337,7 +366,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          certification_text?: string | null
           city: string
           created_at?: string
           full_name: string
@@ -358,7 +386,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          certification_text?: string | null
           city?: string
           created_at?: string
           full_name?: string

@@ -72,7 +72,13 @@ interface StudentOption {
 interface ReciterOption {
   user_id: string;
   full_name: string;
-  certification_text: string | null;
+}
+
+interface ReciterCertText {
+  reciter_id: string;
+  type: string;
+  riwaya: string | null;
+  certification_text: string;
 }
 
 const CERT_TYPES = [
@@ -98,6 +104,7 @@ const AdminCertificates = () => {
   const [certificates, setCertificates] = useState<CertificateRow[]>([]);
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [reciters, setReciters] = useState<ReciterOption[]>([]);
+  const [reciterCerts, setReciterCerts] = useState<ReciterCertText[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -124,19 +131,30 @@ const AdminCertificates = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [certsRes, studentsRes, recitersRes] = await Promise.all([
+      const [certsRes, studentsRes, recitersRes, recCertsRes] = await Promise.all([
         supabase.from("certificates").select("*").order("created_at", { ascending: false }),
         supabase.from("student_profiles").select("id, user_id, full_name, phone, email, preferred_riwaya, assigned_reciter_id, ijazah_status, preferred_track"),
-        supabase.from("reciter_profiles").select("user_id, full_name, certification_text").eq("status", "approved"),
+        supabase.from("reciter_profiles").select("user_id, full_name").eq("status", "approved"),
+        supabase.from("reciter_certifications").select("reciter_id, type, riwaya, certification_text"),
       ]);
       setCertificates(certsRes.data || []);
       setStudents(studentsRes.data || []);
       setReciters(recitersRes.data || []);
+      setReciterCerts(recCertsRes.data || []);
     } catch (e: any) {
       toast({ title: "خطأ", description: e.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
+  };
+
+  // Find matching certification text for a reciter based on type and riwaya
+  const findCertText = (reciterId: string, type: string, riwaya: string) => {
+    const certType = type === "ijaza" ? "ijaza" : "khatm";
+    if (certType === "khatm") {
+      return reciterCerts.find(c => c.reciter_id === reciterId && c.type === "khatm")?.certification_text || "";
+    }
+    return reciterCerts.find(c => c.reciter_id === reciterId && c.type === "ijaza" && c.riwaya === riwaya)?.certification_text || "";
   };
 
   // When student is selected, auto-fill reciter, riwaya, phone, email, and certification text
@@ -149,8 +167,7 @@ const AdminCertificates = () => {
       setFormRiwaya(student.preferred_riwaya || "");
       if (student.assigned_reciter_id) {
         setSelectedReciterId(student.assigned_reciter_id);
-        const reciter = reciters.find(r => r.user_id === student.assigned_reciter_id);
-        setFormText(reciter?.certification_text || "");
+        setFormText(findCertText(student.assigned_reciter_id, formType, student.preferred_riwaya || ""));
       } else {
         setSelectedReciterId("");
         setFormText("");
@@ -161,8 +178,15 @@ const AdminCertificates = () => {
   // When reciter is manually changed, update certification text
   const handleReciterSelect = (reciterId: string) => {
     setSelectedReciterId(reciterId);
-    const reciter = reciters.find(r => r.user_id === reciterId);
-    setFormText(reciter?.certification_text || "");
+    setFormText(findCertText(reciterId, formType, formRiwaya));
+  };
+
+  // When riwaya changes, update certification text
+  const handleRiwayaSelect = (riwaya: string) => {
+    setFormRiwaya(riwaya);
+    if (selectedReciterId) {
+      setFormText(findCertText(selectedReciterId, formType, riwaya));
+    }
   };
 
   const getReciterName = (id: string) => reciters.find(r => r.user_id === id)?.full_name || "";
@@ -518,7 +542,7 @@ const AdminCertificates = () => {
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-muted-foreground">الإجازة المعتمدة (القراءة/الرواية)</label>
-                <Select value={formRiwaya} onValueChange={setFormRiwaya}>
+                <Select value={formRiwaya} onValueChange={handleRiwayaSelect}>
                   <SelectTrigger className="bg-card border-border/50">
                     <SelectValue placeholder="اختر الطالب أولاً" />
                   </SelectTrigger>
