@@ -16,36 +16,63 @@ export type Database = {
     Tables: {
       certificates: {
         Row: {
+          certificate_text: string | null
           created_at: string
           date: string | null
           id: string
+          issued_by: string | null
           issuer: string | null
+          notes: string | null
+          reciter_id: string | null
+          reciter_name: string | null
+          riwaya: string | null
           sheikh_name: string | null
           status: string
+          student_email: string | null
+          student_name: string | null
+          student_phone: string | null
           title: string
           type: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          certificate_text?: string | null
           created_at?: string
           date?: string | null
           id?: string
+          issued_by?: string | null
           issuer?: string | null
+          notes?: string | null
+          reciter_id?: string | null
+          reciter_name?: string | null
+          riwaya?: string | null
           sheikh_name?: string | null
           status?: string
+          student_email?: string | null
+          student_name?: string | null
+          student_phone?: string | null
           title: string
           type?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          certificate_text?: string | null
           created_at?: string
           date?: string | null
           id?: string
+          issued_by?: string | null
           issuer?: string | null
+          notes?: string | null
+          reciter_id?: string | null
+          reciter_name?: string | null
+          riwaya?: string | null
           sheikh_name?: string | null
           status?: string
+          student_email?: string | null
+          student_name?: string | null
+          student_phone?: string | null
           title?: string
           type?: string
           updated_at?: string
