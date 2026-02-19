@@ -130,6 +130,7 @@ export type Database = {
       }
       exams: {
         Row: {
+          capacity: number
           committee_member_1: string | null
           committee_member_1_name: string | null
           committee_member_2: string | null
@@ -149,6 +150,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          capacity?: number
           committee_member_1?: string | null
           committee_member_1_name?: string | null
           committee_member_2?: string | null
@@ -168,6 +170,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          capacity?: number
           committee_member_1?: string | null
           committee_member_1_name?: string | null
           committee_member_2?: string | null

@@ -1,0 +1,3 @@
+
+ALTER TABLE public.exams 
+ADD COLUMN IF NOT EXISTS capacity integer NOT NULL DEFAULT 10;
