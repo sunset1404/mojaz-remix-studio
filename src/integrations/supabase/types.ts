@@ -316,6 +316,7 @@ export type Database = {
       }
       reciter_profiles: {
         Row: {
+          certification_text: string | null
           city: string
           created_at: string
           full_name: string
@@ -336,6 +337,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          certification_text?: string | null
           city: string
           created_at?: string
           full_name: string
@@ -356,6 +358,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          certification_text?: string | null
           city?: string
           created_at?: string
           full_name?: string
