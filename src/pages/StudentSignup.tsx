@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ArrowLeft, Check, User, Lock, Mail, Eye, EyeOff, BookOpen, Clock } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, User, Lock, Mail, Eye, EyeOff, BookOpen, Clock, Calendar, Users, CheckCircle2 } from "lucide-react";
 import logoMojaz from "@/assets/logo-mojaz.webp";
 import CountrySelect from "@/components/CountrySelect";
 import PhoneCodeSelect from "@/components/PhoneCodeSelect";
 import { COUNTRY_CODES } from "@/data/countries";
+
+interface AdmissionExam {
+  id: string;
+  date: string;
+  time: string;
+  capacity: number;
+  committee_member_1_name: string | null;
+  committee_member_2_name: string | null;
+  committee_member_3_name: string | null;
+}
 
 const getPasswordStrength = (pwd: string): { level: number; label: string; color: string } => {
   if (!pwd) return { level: 0, label: "", color: "" };
@@ -62,8 +72,31 @@ const StudentSignup = () => {
   const [joinDate, setJoinDate] = useState("");
   const [hasPreviousCertifications, setHasPreviousCertifications] = useState<"yes" | "no" | "">("");
   const [previousCertifications, setPreviousCertifications] = useState("");
+  const [selectedExamId, setSelectedExamId] = useState("");
+  const [admissionExams, setAdmissionExams] = useState<AdmissionExam[]>([]);
+  const [loadingExams, setLoadingExams] = useState(false);
 
   const inputClass = "h-12 rounded-xl border-primary/20 bg-card focus:border-primary focus:bg-card transition-colors shadow-sm";
+
+  // Fetch admission exams when track changes to ijazah
+  useEffect(() => {
+    if (preferredTrack === "الحصول على إجازة قرآنية") {
+      setLoadingExams(true);
+      (supabase as any)
+        .from("exams")
+        .select("id, date, time, capacity, committee_member_1_name, committee_member_2_name, committee_member_3_name")
+        .eq("type", "admission")
+        .eq("status", "scheduled")
+        .order("date", { ascending: true })
+        .then(({ data }: { data: AdmissionExam[] | null }) => {
+          setAdmissionExams(data || []);
+          setLoadingExams(false);
+        });
+    } else {
+      setAdmissionExams([]);
+      setSelectedExamId("");
+    }
+  }, [preferredTrack]);
 
   const validateStep = () => {
     if (step === 0) {
@@ -107,7 +140,7 @@ const StudentSignup = () => {
 
     if (data.user) {
       await supabase.from("user_roles").insert({ user_id: data.user.id, role: "student" as const });
-      await supabase.from("student_profiles").insert({
+      await (supabase as any).from("student_profiles").insert({
         user_id: data.user.id,
         full_name: fullName,
         gender,
@@ -122,6 +155,7 @@ const StudentSignup = () => {
         preferred_riwaya: preferredRiwaya,
         preferred_track: preferredTrack,
         join_date: joinDate,
+        selected_exam_id: selectedExamId || null,
       });
     }
 
@@ -280,8 +314,100 @@ const StudentSignup = () => {
                   </select>
                 </div>
 
+                {/* Exam Selection */}
+                <div className="space-y-2">
+                  <Label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-primary" />
+                    8. اختر موعد اختبار القبول المناسب لك
+                    <span className="text-muted-foreground font-normal">(اختياري)</span>
+                  </Label>
+                  {loadingExams ? (
+                    <div className="flex items-center justify-center py-4">
+                      <span className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full inline-block" />
+                    </div>
+                  ) : admissionExams.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4 text-center">
+                      <Calendar className="w-7 h-7 text-primary/40 mx-auto mb-1.5" />
+                      <p className="text-xs text-muted-foreground">لا توجد مواعيد اختبار متاحة حالياً</p>
+                      <p className="text-[11px] text-muted-foreground/70 mt-0.5">سيتم إبلاغك بالموعد لاحقاً</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                      {/* No preference option */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedExamId("")}
+                        className={`w-full text-right p-3 rounded-xl border-2 transition-all ${
+                          selectedExamId === ""
+                            ? "border-primary/40 bg-primary/5"
+                            : "border-border/40 bg-card hover:border-primary/30"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">لم أحدد بعد — سيتم إبلاغي لاحقاً</span>
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                            selectedExamId === "" ? "border-primary" : "border-muted-foreground/30"
+                          }`}>
+                            {selectedExamId === "" && <div className="w-2 h-2 rounded-full bg-primary" />}
+                          </div>
+                        </div>
+                      </button>
+
+                      {admissionExams.map((exam) => {
+                        const isSelected = selectedExamId === exam.id;
+                        const committee = [exam.committee_member_1_name, exam.committee_member_2_name, exam.committee_member_3_name].filter(Boolean);
+                        return (
+                          <button
+                            key={exam.id}
+                            type="button"
+                            onClick={() => setSelectedExamId(exam.id)}
+                            className={`w-full text-right p-3 rounded-xl border-2 transition-all ${
+                              isSelected
+                                ? "border-primary bg-primary/8 shadow-sm"
+                                : "border-border/40 bg-card hover:border-primary/40 hover:bg-primary/3"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${isSelected ? "bg-primary" : "bg-primary/10"}`}>
+                                    <Calendar className={`w-3 h-3 ${isSelected ? "text-primary-foreground" : "text-primary"}`} />
+                                  </div>
+                                  <span className={`text-sm font-bold ${isSelected ? "text-primary" : "text-foreground"}`}>
+                                    {new Date(exam.date).toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3 pr-8">
+                                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Clock className="w-3 h-3" />
+                                    {exam.time}
+                                  </span>
+                                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Users className="w-3 h-3" />
+                                    {exam.capacity} مقعد
+                                  </span>
+                                </div>
+                                {committee.length > 0 && (
+                                  <p className="text-[11px] text-muted-foreground/70 pr-8 mt-0.5 truncate">
+                                    اللجنة: {committee.join(" · ")}
+                                  </p>
+                                )}
+                              </div>
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                                isSelected ? "border-primary bg-primary" : "border-muted-foreground/30"
+                              }`}>
+                                {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-1.5">
-                  <Label className="text-foreground text-xs font-semibold">8. هل لديك إجازات قرآنية سابقة؟ *</Label>
+                  <Label className="text-foreground text-xs font-semibold">9. هل لديك إجازات قرآنية سابقة؟</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       { value: "yes" as const, label: "نعم" },
@@ -320,7 +446,7 @@ const StudentSignup = () => {
                     exit={{ opacity: 0, height: 0 }}
                     className="space-y-1.5"
                   >
-                    <Label className="text-foreground text-xs font-semibold">9. اذكر الإجازات القرآنية السابقة *</Label>
+                    <Label className="text-foreground text-xs font-semibold">10. اذكر الإجازات القرآنية السابقة</Label>
                     <textarea
                       value={previousCertifications}
                       onChange={(e) => setPreviousCertifications(e.target.value)}

@@ -624,6 +624,7 @@ export type Database = {
           profession: string
           quran_certifications: string | null
           residence_country: string
+          selected_exam_id: string | null
           updated_at: string
           user_id: string
         }
@@ -645,6 +646,7 @@ export type Database = {
           profession: string
           quran_certifications?: string | null
           residence_country: string
+          selected_exam_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -666,6 +668,7 @@ export type Database = {
           profession?: string
           quran_certifications?: string | null
           residence_country?: string
+          selected_exam_id?: string | null
           updated_at?: string
           user_id?: string
         }
