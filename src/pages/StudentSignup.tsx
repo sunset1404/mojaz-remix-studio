@@ -149,28 +149,21 @@ const StudentSignup = () => {
   const nextStep = async () => {
     if (!validateStep()) return;
 
-    // Check email uniqueness on step 0
+    // Check email uniqueness on step 0 using SECURITY DEFINER function (bypasses RLS)
     if (step === 0) {
-      const { data: existingEmail } = await (supabase as any)
-        .from("student_profiles")
-        .select("id")
-        .eq("email", email.trim().toLowerCase())
-        .maybeSingle();
-      if (existingEmail) {
+      const { data: emailExists } = await (supabase as any).rpc("check_email_exists", { p_email: email.trim().toLowerCase() });
+      if (emailExists) {
         setEmailError("هذا البريد الإلكتروني مسجل مسبقاً، يرجى تسجيل الدخول أو استخدام بريد آخر");
         return;
       }
       setEmailError("");
     }
 
-    // Check phone uniqueness on step 1
+    // Check phone uniqueness on step 1 using SECURITY DEFINER function
     if (step === 1) {
       const fullPhone = `${phoneCode}${phone}`;
-      const [{ data: existingPhone }, { data: existingPhoneReciter }] = await Promise.all([
-        (supabase as any).from("student_profiles").select("id").eq("phone", fullPhone).maybeSingle(),
-        (supabase as any).from("reciter_profiles").select("id").eq("phone", fullPhone).maybeSingle(),
-      ]);
-      if (existingPhone || existingPhoneReciter) {
+      const { data: phoneExists } = await (supabase as any).rpc("check_phone_exists", { p_phone: fullPhone });
+      if (phoneExists) {
         setPhoneError("رقم الجوال مسجل مسبقاً في حساب آخر، يرجى استخدام رقم مختلف");
         return;
       }
@@ -180,6 +173,7 @@ const StudentSignup = () => {
     setStep((s) => Math.min(s + 1, 2));
   };
   const prevStep = () => setStep((s) => Math.max(s - 1, 0));
+
 
 
   const handleSubmit = async () => {
