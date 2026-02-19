@@ -1,6 +1,6 @@
 import { 
   Users, GraduationCap, UserCheck, Clock, Award, Gift, 
-  LayoutDashboard, Settings, LogOut, ChevronRight
+  LayoutDashboard, Settings, LogOut, ChevronRight, BookOpen
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -22,7 +22,8 @@ import { Separator } from "@/components/ui/separator";
 
 const mainMenuItems = [
   { title: "لوحة التحكم", icon: LayoutDashboard, id: "dashboard", path: "/" },
-  { title: "الطلاب", icon: Users, id: "students", path: "/admin/students" },
+  { title: "طلاب الإقراء", icon: Users, id: "students", path: "/admin/students" },
+  { title: "طلاب الإجازات", icon: Award, id: "ijazah-students", path: "/admin/ijazah-students" },
   { title: "المقرئين", icon: GraduationCap, id: "reciters", path: "/admin/reciters" },
   { title: "الشركاء", icon: UserCheck, id: "partners", path: "/admin/partners" },
   { title: "الجلسات", icon: Clock, id: "sessions", path: "/admin/sessions" },

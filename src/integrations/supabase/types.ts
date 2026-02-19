@@ -433,6 +433,7 @@ export type Database = {
       }
       student_profiles: {
         Row: {
+          assigned_reciter_id: string | null
           created_at: string
           education_level: string
           email: string
@@ -440,6 +441,7 @@ export type Database = {
           gender: string
           id: string
           id_number: string
+          ijazah_status: string | null
           join_date: string | null
           nationality: string
           phone: string
@@ -452,6 +454,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assigned_reciter_id?: string | null
           created_at?: string
           education_level: string
           email: string
@@ -459,6 +462,7 @@ export type Database = {
           gender: string
           id?: string
           id_number: string
+          ijazah_status?: string | null
           join_date?: string | null
           nationality: string
           phone: string
@@ -471,6 +475,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assigned_reciter_id?: string | null
           created_at?: string
           education_level?: string
           email?: string
@@ -478,6 +483,7 @@ export type Database = {
           gender?: string
           id?: string
           id_number?: string
+          ijazah_status?: string | null
           join_date?: string | null
           nationality?: string
           phone?: string
