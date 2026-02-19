@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      certificate_templates: {
+        Row: {
+          background_color: string | null
+          background_image_url: string | null
+          created_at: string
+          created_by: string | null
+          field_config: Json
+          height: number
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          type: string
+          updated_at: string
+          width: number
+        }
+        Insert: {
+          background_color?: string | null
+          background_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          field_config?: Json
+          height?: number
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          type?: string
+          updated_at?: string
+          width?: number
+        }
+        Update: {
+          background_color?: string | null
+          background_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          field_config?: Json
+          height?: number
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          type?: string
+          updated_at?: string
+          width?: number
+        }
+        Relationships: []
+      }
       certificates: {
         Row: {
           certificate_text: string | null

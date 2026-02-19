@@ -49,6 +49,7 @@ import AdminReciters from "./pages/AdminReciters";
 import AdminPartners from "./pages/AdminPartners";
 import AdminIjazahStudents from "./pages/AdminIjazahStudents";
 import AdminCertificates from "./pages/AdminCertificates";
+import AdminCertificateTemplates from "./pages/AdminCertificateTemplates";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +97,7 @@ const AppRoutes = () => (
     <Route path="/admin/reciters" element={<ProtectedRoute><AdminReciters /></ProtectedRoute>} />
     <Route path="/admin/partners" element={<ProtectedRoute><AdminPartners /></ProtectedRoute>} />
     <Route path="/admin/certificates" element={<ProtectedRoute><AdminCertificates /></ProtectedRoute>} />
+    <Route path="/admin/certificate-templates" element={<ProtectedRoute><AdminCertificateTemplates /></ProtectedRoute>} />
 
     {/* Student-only routes */}
     <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />

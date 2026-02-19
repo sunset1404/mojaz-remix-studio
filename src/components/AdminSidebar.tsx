@@ -1,6 +1,6 @@
 import { 
   Users, GraduationCap, UserCheck, Clock, Award, Gift, 
-  LayoutDashboard, Settings, LogOut, ChevronRight, BookOpen
+  LayoutDashboard, Settings, LogOut, ChevronRight, BookOpen, Palette
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -112,17 +112,35 @@ const AdminSidebar = () => {
           )}
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="الإعدادات"
-                  className="mx-2 rounded-xl text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
-                    <Settings className="w-4 h-4 text-gold" />
-                  </div>
-                  <span>الإعدادات</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {[
+                { title: "تصميم القوالب", icon: Palette, path: "/admin/certificate-templates" },
+              ].map((item) => {
+                const isActive = location.pathname.startsWith(item.path);
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      tooltip={item.title}
+                      onClick={() => navigate(item.path)}
+                      className={`mx-2 rounded-xl transition-all duration-200 ${
+                        isActive
+                          ? "bg-primary/10 text-primary font-semibold hover:bg-primary/15"
+                          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        isActive ? "bg-primary/15" : "bg-transparent"
+                      }`}>
+                        <item.icon className={`w-4 h-4 ${isActive ? "text-primary" : "text-gold"}`} />
+                      </div>
+                      <span className="truncate">{item.title}</span>
+                      {isActive && !isCollapsed && (
+                        <ChevronRight className="w-3 h-3 text-primary mr-auto" />
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
