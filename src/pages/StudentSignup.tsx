@@ -54,6 +54,8 @@ const StudentSignup = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   // Step 0: Account
   const [email, setEmail] = useState("");
@@ -155,9 +157,10 @@ const StudentSignup = () => {
         .eq("email", email.trim().toLowerCase())
         .maybeSingle();
       if (existingEmail) {
-        toast({ title: "البريد مسجل مسبقاً", description: "هذا البريد الإلكتروني مستخدم بالفعل. يرجى تسجيل الدخول أو استخدام بريد آخر", variant: "destructive" });
+        setEmailError("هذا البريد الإلكتروني مسجل مسبقاً، يرجى تسجيل الدخول أو استخدام بريد آخر");
         return;
       }
+      setEmailError("");
     }
 
     // Check phone uniqueness on step 1
@@ -168,14 +171,16 @@ const StudentSignup = () => {
         (supabase as any).from("reciter_profiles").select("id").eq("phone", fullPhone).maybeSingle(),
       ]);
       if (existingPhone || existingPhoneReciter) {
-        toast({ title: "رقم الجوال مسجل مسبقاً", description: "هذا الرقم مستخدم في حساب آخر. يرجى استخدام رقم مختلف", variant: "destructive" });
+        setPhoneError("رقم الجوال مسجل مسبقاً في حساب آخر، يرجى استخدام رقم مختلف");
         return;
       }
+      setPhoneError("");
     }
 
     setStep((s) => Math.min(s + 1, 2));
   };
   const prevStep = () => setStep((s) => Math.max(s - 1, 0));
+
 
   const handleSubmit = async () => {
     if (!validateStep()) return;
@@ -236,9 +241,14 @@ const StudentSignup = () => {
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Mail className="w-4 h-4 text-primary" />
                 </div>
-                <Input type="email" placeholder="example@email.com" value={email} onChange={(e) => setEmail(e.target.value)}
-                  className={`pr-14 text-left ${inputClass}`} dir="ltr" required />
+                <Input type="email" placeholder="example@email.com" value={email} onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
+                  className={`pr-14 text-left ${inputClass} ${emailError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
               </div>
+              {emailError && (
+                <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
+                  <span>⚠</span> {emailError}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label className="text-foreground text-sm font-semibold">كلمة المرور</Label>
@@ -319,10 +329,15 @@ const StudentSignup = () => {
             <div className="space-y-1.5">
               <Label className="text-foreground text-xs font-semibold">5. رقم الجوال *</Label>
               <div className="flex gap-1.5">
-                <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => setPhone(e.target.value.replace(/^0+/, ''))}
-                  className={`flex-1 ${inputClass}`} dir="ltr" required />
+                <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => { setPhone(e.target.value.replace(/^0+/, '')); setPhoneError(""); }}
+                  className={`flex-1 ${inputClass} ${phoneError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
                 <PhoneCodeSelect value={phoneCode} onChange={setPhoneCode} />
               </div>
+              {phoneError && (
+                <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
+                  <span>⚠</span> {phoneError}
+                </p>
+              )}
             </div>
           </div>
         );
