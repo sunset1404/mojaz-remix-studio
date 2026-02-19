@@ -360,6 +360,8 @@ export type Database = {
           profession: string
           qualifications: string
           quran_certifications: string
+          signature_url: string | null
+          stamp_url: string | null
           status: string
           teaching_experience: string
           updated_at: string
@@ -380,6 +382,8 @@ export type Database = {
           profession: string
           qualifications: string
           quran_certifications: string
+          signature_url?: string | null
+          stamp_url?: string | null
           status?: string
           teaching_experience: string
           updated_at?: string
@@ -400,6 +404,8 @@ export type Database = {
           profession?: string
           qualifications?: string
           quran_certifications?: string
+          signature_url?: string | null
+          stamp_url?: string | null
           status?: string
           teaching_experience?: string
           updated_at?: string
