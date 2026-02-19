@@ -128,6 +128,66 @@ export type Database = {
         }
         Relationships: []
       }
+      exams: {
+        Row: {
+          committee_member_1: string | null
+          committee_member_1_name: string | null
+          committee_member_2: string | null
+          committee_member_2_name: string | null
+          committee_member_3: string | null
+          committee_member_3_name: string | null
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          result: string | null
+          status: string
+          student_id: string | null
+          student_name: string | null
+          time: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          committee_member_1?: string | null
+          committee_member_1_name?: string | null
+          committee_member_2?: string | null
+          committee_member_2_name?: string | null
+          committee_member_3?: string | null
+          committee_member_3_name?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          notes?: string | null
+          result?: string | null
+          status?: string
+          student_id?: string | null
+          student_name?: string | null
+          time: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          committee_member_1?: string | null
+          committee_member_1_name?: string | null
+          committee_member_2?: string | null
+          committee_member_2_name?: string | null
+          committee_member_3?: string | null
+          committee_member_3_name?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          result?: string | null
+          status?: string
+          student_id?: string | null
+          student_name?: string | null
+          time?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gift_subscriptions: {
         Row: {
           amount: number
