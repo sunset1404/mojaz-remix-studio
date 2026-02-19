@@ -20,6 +20,7 @@ interface AdmissionExam {
   committee_member_1_name: string | null;
   committee_member_2_name: string | null;
   committee_member_3_name: string | null;
+  registered_count: number;
 }
 
 const getPasswordStrength = (pwd: string): { level: number; label: string; color: string } => {
@@ -82,16 +83,39 @@ const StudentSignup = () => {
   useEffect(() => {
     if (preferredTrack === "الحصول على إجازة قرآنية") {
       setLoadingExams(true);
-      (supabase as any)
-        .from("exams")
-        .select("id, date, time, capacity, committee_member_1_name, committee_member_2_name, committee_member_3_name")
-        .eq("type", "admission")
-        .eq("status", "scheduled")
-        .order("date", { ascending: true })
-        .then(({ data }: { data: AdmissionExam[] | null }) => {
-          setAdmissionExams(data || []);
-          setLoadingExams(false);
+      const fetchExams = async () => {
+        // Fetch exams
+        const { data: examsData } = await (supabase as any)
+          .from("exams")
+          .select("id, date, time, capacity, committee_member_1_name, committee_member_2_name, committee_member_3_name")
+          .eq("type", "admission")
+          .eq("status", "scheduled")
+          .order("date", { ascending: true });
+
+        if (!examsData) { setLoadingExams(false); return; }
+
+        // Fetch registered count per exam
+        const { data: countData } = await (supabase as any)
+          .from("student_profiles")
+          .select("selected_exam_id")
+          .in("selected_exam_id", examsData.map((e: AdmissionExam) => e.id));
+
+        const countMap: Record<string, number> = {};
+        (countData || []).forEach((row: { selected_exam_id: string }) => {
+          if (row.selected_exam_id) {
+            countMap[row.selected_exam_id] = (countMap[row.selected_exam_id] || 0) + 1;
+          }
         });
+
+        // Filter out full exams
+        const available = examsData
+          .map((exam: AdmissionExam) => ({ ...exam, registered_count: countMap[exam.id] || 0 }))
+          .filter((exam: AdmissionExam) => exam.registered_count < exam.capacity);
+
+        setAdmissionExams(available);
+        setLoadingExams(false);
+      };
+      fetchExams();
     } else {
       setAdmissionExams([]);
       setSelectedExamId("");
@@ -384,7 +408,7 @@ const StudentSignup = () => {
                                   </span>
                                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                     <Users className="w-3 h-3" />
-                                    {exam.capacity} مقعد
+                                    {exam.capacity - exam.registered_count} مقعد متبقٍ
                                   </span>
                                 </div>
                                 {committee.length > 0 && (
