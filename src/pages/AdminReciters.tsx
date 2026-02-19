@@ -24,7 +24,8 @@ import {
   GraduationCap, Search, Phone, Mail, MessageCircle,
   Globe, UserCheck, TrendingUp, BookOpen,
   RefreshCw, ChevronDown, ChevronUp, Filter,
-  ArrowRight, Clock, CheckCircle, XCircle, ShieldCheck, Award, Plus
+  ArrowRight, Clock, CheckCircle, XCircle, ShieldCheck, Award, Plus,
+  Upload, Stamp, PenTool, Loader2, Trash2, Image
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,6 +50,8 @@ interface ReciterProfile {
   id_number: string;
   status: string;
   created_at: string;
+  stamp_url: string | null;
+  signature_url: string | null;
 }
 
 interface ReciterCertification {
@@ -83,6 +86,51 @@ const AdminReciters = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [uploadingAsset, setUploadingAsset] = useState<string | null>(null);
+
+  const uploadReciterAsset = async (reciterId: string, reciterUserId: string, file: File, type: "stamp" | "signature") => {
+    const key = `${reciterId}-${type}`;
+    setUploadingAsset(key);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${reciterUserId}/${type}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("reciter-assets")
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage
+        .from("reciter-assets")
+        .getPublicUrl(path);
+      const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
+      const col = type === "stamp" ? "stamp_url" : "signature_url";
+      const { error: dbError } = await supabase
+        .from("reciter_profiles")
+        .update({ [col]: urlWithCacheBust })
+        .eq("id", reciterId);
+      if (dbError) throw dbError;
+      setReciters(prev => prev.map(r => r.id === reciterId ? { ...r, [col]: urlWithCacheBust } : r));
+      toast({ title: type === "stamp" ? "تم رفع الختم بنجاح ✅" : "تم رفع التوقيع بنجاح ✅" });
+    } catch (e: any) {
+      toast({ title: "خطأ في الرفع", description: e.message, variant: "destructive" });
+    } finally {
+      setUploadingAsset(null);
+    }
+  };
+
+  const removeReciterAsset = async (reciterId: string, type: "stamp" | "signature") => {
+    try {
+      const col = type === "stamp" ? "stamp_url" : "signature_url";
+      const { error } = await supabase
+        .from("reciter_profiles")
+        .update({ [col]: null })
+        .eq("id", reciterId);
+      if (error) throw error;
+      setReciters(prev => prev.map(r => r.id === reciterId ? { ...r, [col]: null } : r));
+      toast({ title: type === "stamp" ? "تم حذف الختم" : "تم حذف التوقيع" });
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
+    }
+  };
 
   useEffect(() => { fetchData(); }, []);
 
@@ -589,6 +637,103 @@ const AdminReciters = () => {
                                             <Clock className="w-3.5 h-3.5" />
                                             تعليق
                                           </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Stamp & Signature */}
+                                  <div className="mt-4 pt-3 border-t border-border/20">
+                                    <h4 className="text-xs font-bold text-primary flex items-center gap-1 mb-3">
+                                      <Image className="w-3 h-3" /> الختم والتوقيع
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      {/* Stamp */}
+                                      <div className="space-y-2">
+                                        <label className="text-[11px] font-semibold text-muted-foreground">ختم المقرئ</label>
+                                        {reciter.stamp_url ? (
+                                          <div className="relative group rounded-xl border border-border/30 bg-accent/10 p-2 flex items-center gap-3">
+                                            <img src={reciter.stamp_url} alt="ختم" className="w-16 h-16 object-contain rounded-lg bg-white" />
+                                            <div className="flex-1">
+                                              <p className="text-[10px] text-muted-foreground">تم رفع الختم</p>
+                                            </div>
+                                            <div className="flex gap-1">
+                                              <label className="cursor-pointer">
+                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                                  const f = e.target.files?.[0];
+                                                  if (f) uploadReciterAsset(reciter.id, reciter.user_id, f, "stamp");
+                                                }} />
+                                                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                                                  <Upload className="w-3 h-3 text-primary" />
+                                                </div>
+                                              </label>
+                                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
+                                                onClick={(e) => { e.stopPropagation(); removeReciterAsset(reciter.id, "stamp"); }}>
+                                                <Trash2 className="w-3 h-3" />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <label className="cursor-pointer block">
+                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                              const f = e.target.files?.[0];
+                                              if (f) uploadReciterAsset(reciter.id, reciter.user_id, f, "stamp");
+                                            }} />
+                                            <div className="rounded-xl border-2 border-dashed border-border/50 p-4 text-center hover:border-primary/50 hover:bg-primary/5 transition-all">
+                                              {uploadingAsset === `${reciter.id}-stamp` ? (
+                                                <Loader2 className="w-5 h-5 text-primary animate-spin mx-auto" />
+                                              ) : (
+                                                <>
+                                                  <Upload className="w-5 h-5 text-muted-foreground mx-auto mb-1" />
+                                                  <p className="text-[10px] text-muted-foreground">رفع صورة الختم</p>
+                                                </>
+                                              )}
+                                            </div>
+                                          </label>
+                                        )}
+                                      </div>
+                                      {/* Signature */}
+                                      <div className="space-y-2">
+                                        <label className="text-[11px] font-semibold text-muted-foreground">توقيع المقرئ</label>
+                                        {reciter.signature_url ? (
+                                          <div className="relative group rounded-xl border border-border/30 bg-accent/10 p-2 flex items-center gap-3">
+                                            <img src={reciter.signature_url} alt="توقيع" className="w-16 h-16 object-contain rounded-lg bg-white" />
+                                            <div className="flex-1">
+                                              <p className="text-[10px] text-muted-foreground">تم رفع التوقيع</p>
+                                            </div>
+                                            <div className="flex gap-1">
+                                              <label className="cursor-pointer">
+                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                                  const f = e.target.files?.[0];
+                                                  if (f) uploadReciterAsset(reciter.id, reciter.user_id, f, "signature");
+                                                }} />
+                                                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                                                  <Upload className="w-3 h-3 text-primary" />
+                                                </div>
+                                              </label>
+                                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
+                                                onClick={(e) => { e.stopPropagation(); removeReciterAsset(reciter.id, "signature"); }}>
+                                                <Trash2 className="w-3 h-3" />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <label className="cursor-pointer block">
+                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                              const f = e.target.files?.[0];
+                                              if (f) uploadReciterAsset(reciter.id, reciter.user_id, f, "signature");
+                                            }} />
+                                            <div className="rounded-xl border-2 border-dashed border-border/50 p-4 text-center hover:border-primary/50 hover:bg-primary/5 transition-all">
+                                              {uploadingAsset === `${reciter.id}-signature` ? (
+                                                <Loader2 className="w-5 h-5 text-primary animate-spin mx-auto" />
+                                              ) : (
+                                                <>
+                                                  <PenTool className="w-5 h-5 text-muted-foreground mx-auto mb-1" />
+                                                  <p className="text-[10px] text-muted-foreground">رفع صورة التوقيع</p>
+                                                </>
+                                              )}
+                                            </div>
+                                          </label>
                                         )}
                                       </div>
                                     </div>
