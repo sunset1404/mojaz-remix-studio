@@ -163,8 +163,10 @@ const StudentSignup = () => {
     }
 
     if (data.user) {
-      await supabase.from("user_roles").insert({ user_id: data.user.id, role: "student" as const });
-      await (supabase as any).from("student_profiles").insert({
+      const { error: roleError } = await supabase.from("user_roles").insert({ user_id: data.user.id, role: "student" as const });
+      if (roleError) console.error("Role insert error:", roleError);
+
+      const { error: profileError } = await (supabase as any).from("student_profiles").insert({
         user_id: data.user.id,
         full_name: fullName,
         gender,
@@ -181,6 +183,11 @@ const StudentSignup = () => {
         join_date: joinDate,
         selected_exam_id: selectedExamId || null,
       });
+      if (profileError) {
+        toast({ title: "خطأ في حفظ البيانات", description: profileError.message, variant: "destructive" });
+        setLoading(false);
+        return;
+      }
     }
 
     toast({ title: "تم إنشاء الحساب بنجاح" });
