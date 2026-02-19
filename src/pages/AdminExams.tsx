@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,15 +31,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ClipboardList, Plus, Pencil, Trash2, Calendar,
-  Clock, Users, CheckCircle2, XCircle, AlertCircle,
-  GraduationCap, Search, Loader2
+  Clock, Users, CheckCircle2, XCircle,
+  GraduationCap, Search, Loader2, Hash
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 
 type ExamType = "admission" | "eligibility";
 type ExamStatus = "scheduled" | "completed" | "cancelled";
-type ExamResult = "passed" | "failed" | null;
 
 interface Reciter {
   id: string;
@@ -50,10 +49,9 @@ interface Reciter {
 interface Exam {
   id: string;
   type: ExamType;
-  student_id: string | null;
-  student_name: string | null;
   date: string;
   time: string;
+  capacity: number;
   committee_member_1: string | null;
   committee_member_1_name: string | null;
   committee_member_2: string | null;
@@ -62,15 +60,14 @@ interface Exam {
   committee_member_3_name: string | null;
   notes: string | null;
   status: ExamStatus;
-  result: ExamResult;
   created_at: string;
 }
 
 const emptyForm = {
   type: "admission" as ExamType,
-  student_name: "",
   date: "",
   time: "",
+  capacity: 10,
   committee_member_1: "",
   committee_member_1_name: "",
   committee_member_2: "",
@@ -79,18 +76,12 @@ const emptyForm = {
   committee_member_3_name: "",
   notes: "",
   status: "scheduled" as ExamStatus,
-  result: null as ExamResult,
 };
 
 const statusConfig: Record<ExamStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }> = {
   scheduled: { label: "مجدول", variant: "secondary", icon: <Clock className="w-3 h-3" /> },
   completed: { label: "مكتمل", variant: "default", icon: <CheckCircle2 className="w-3 h-3" /> },
   cancelled: { label: "ملغي", variant: "destructive", icon: <XCircle className="w-3 h-3" /> },
-};
-
-const resultConfig: Record<string, { label: string; className: string }> = {
-  passed: { label: "ناجح", className: "text-green-600 bg-green-50 border-green-200" },
-  failed: { label: "راسب", className: "text-red-600 bg-red-50 border-red-200" },
 };
 
 export default function AdminExams() {
@@ -112,12 +103,11 @@ export default function AdminExams() {
 
   const fetchExams = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("exams" as any)
+    const { data, error } = await (supabase as any)
+      .from("exams")
       .select("*")
       .order("date", { ascending: true });
-
-    if (!error && data) setExams(data as unknown as Exam[]);
+    if (!error && data) setExams(data as Exam[]);
     setLoading(false);
   };
 
@@ -139,9 +129,9 @@ export default function AdminExams() {
     setEditingExam(exam);
     setForm({
       type: exam.type,
-      student_name: exam.student_name || "",
       date: exam.date,
       time: exam.time,
+      capacity: exam.capacity ?? 10,
       committee_member_1: exam.committee_member_1 || "",
       committee_member_1_name: exam.committee_member_1_name || "",
       committee_member_2: exam.committee_member_2 || "",
@@ -150,7 +140,6 @@ export default function AdminExams() {
       committee_member_3_name: exam.committee_member_3_name || "",
       notes: exam.notes || "",
       status: exam.status,
-      result: exam.result,
     });
     setDialogOpen(true);
   };
@@ -165,17 +154,21 @@ export default function AdminExams() {
   };
 
   const handleSave = async () => {
-    if (!form.student_name || !form.date || !form.time) {
-      toast({ title: "خطأ", description: "يرجى تعبئة اسم الطالب والتاريخ والوقت", variant: "destructive" });
+    if (!form.date || !form.time) {
+      toast({ title: "خطأ", description: "يرجى تحديد التاريخ والوقت", variant: "destructive" });
+      return;
+    }
+    if (form.capacity < 1 || form.capacity > 100) {
+      toast({ title: "خطأ", description: "السعة يجب أن تكون بين 1 و 100", variant: "destructive" });
       return;
     }
 
     setSaving(true);
     const payload = {
       type: form.type,
-      student_name: form.student_name,
       date: form.date,
       time: form.time,
+      capacity: form.capacity,
       committee_member_1: form.committee_member_1 || null,
       committee_member_1_name: form.committee_member_1_name || null,
       committee_member_2: form.committee_member_2 || null,
@@ -184,7 +177,6 @@ export default function AdminExams() {
       committee_member_3_name: form.committee_member_3_name || null,
       notes: form.notes || null,
       status: form.status,
-      result: form.result,
     };
 
     let error;
@@ -217,8 +209,8 @@ export default function AdminExams() {
 
   const filteredExams = exams.filter((e) => {
     const matchSearch = !search ||
-      e.student_name?.toLowerCase().includes(search.toLowerCase()) ||
       e.committee_member_1_name?.toLowerCase().includes(search.toLowerCase()) ||
+      e.committee_member_2_name?.toLowerCase().includes(search.toLowerCase()) ||
       e.date?.includes(search);
     const matchTab =
       activeTab === "all" ||
@@ -254,16 +246,11 @@ export default function AdminExams() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "اختبارات القبول", value: admissionCount, icon: GraduationCap, color: "text-blue-600", bg: "bg-blue-50" },
-            { label: "اختبارات الاستحقاق", value: eligibilityCount, icon: ClipboardList, color: "text-amber-600", bg: "bg-amber-50" },
-            { label: "مجدولة قادمة", value: scheduledCount, icon: Calendar, color: "text-green-600", bg: "bg-green-50" },
+            { label: "اختبارات القبول", value: admissionCount, icon: GraduationCap, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30" },
+            { label: "اختبارات الاستحقاق", value: eligibilityCount, icon: ClipboardList, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/30" },
+            { label: "مجدولة قادمة", value: scheduledCount, icon: Calendar, color: "text-green-600", bg: "bg-green-50 dark:bg-green-950/30" },
           ].map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-            >
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
               <Card className="border-border/50">
                 <CardContent className="p-4 flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
@@ -279,17 +266,15 @@ export default function AdminExams() {
           ))}
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="بحث باسم الطالب أو المقرئ أو التاريخ..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pr-9"
-            />
-          </div>
+        {/* Search */}
+        <div className="relative max-w-sm">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="بحث بالمقرئ أو التاريخ..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pr-9"
+          />
         </div>
 
         {/* Tabs + Table */}
@@ -297,18 +282,16 @@ export default function AdminExams() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <div className="border-b border-border/50 px-4">
               <TabsList className="h-auto bg-transparent gap-1 py-2">
-                <TabsTrigger value="all" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg">
-                  الكل ({exams.length})
-                </TabsTrigger>
-                <TabsTrigger value="admission" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg">
-                  القبول ({admissionCount})
-                </TabsTrigger>
-                <TabsTrigger value="eligibility" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg">
-                  الاستحقاق ({eligibilityCount})
-                </TabsTrigger>
-                <TabsTrigger value="scheduled" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg">
-                  المجدولة ({scheduledCount})
-                </TabsTrigger>
+                {[
+                  { value: "all", label: `الكل (${exams.length})` },
+                  { value: "admission", label: `القبول (${admissionCount})` },
+                  { value: "eligibility", label: `الاستحقاق (${eligibilityCount})` },
+                  { value: "scheduled", label: `المجدولة (${scheduledCount})` },
+                ].map((tab) => (
+                  <TabsTrigger key={tab.value} value={tab.value} className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg text-sm">
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </div>
 
@@ -328,19 +311,18 @@ export default function AdminExams() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/30">
-                        <TableHead className="text-right font-semibold">الطالب</TableHead>
                         <TableHead className="text-right font-semibold">النوع</TableHead>
                         <TableHead className="text-right font-semibold">التاريخ والوقت</TableHead>
+                        <TableHead className="text-right font-semibold">السعة</TableHead>
                         <TableHead className="text-right font-semibold">لجنة الاختبار</TableHead>
                         <TableHead className="text-right font-semibold">الحالة</TableHead>
-                        <TableHead className="text-right font-semibold">النتيجة</TableHead>
+                        <TableHead className="text-right font-semibold">ملاحظات</TableHead>
                         <TableHead className="text-right font-semibold">إجراءات</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredExams.map((exam) => (
                         <TableRow key={exam.id} className="hover:bg-muted/20">
-                          <TableCell className="font-medium">{exam.student_name || "—"}</TableCell>
                           <TableCell>
                             <Badge variant={exam.type === "admission" ? "secondary" : "outline"} className="text-xs">
                               {exam.type === "admission" ? "قبول" : "استحقاق"}
@@ -348,7 +330,7 @@ export default function AdminExams() {
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col gap-0.5">
-                              <span className="flex items-center gap-1 text-sm">
+                              <span className="flex items-center gap-1 text-sm font-medium">
                                 <Calendar className="w-3 h-3 text-muted-foreground" />
                                 {exam.date}
                               </span>
@@ -356,6 +338,15 @@ export default function AdminExams() {
                                 <Clock className="w-3 h-3" />
                                 {exam.time}
                               </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Hash className="w-3.5 h-3.5 text-primary" />
+                              </div>
+                              <span className="font-semibold text-foreground">{exam.capacity}</span>
+                              <span className="text-xs text-muted-foreground">طالب</span>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -376,23 +367,13 @@ export default function AdminExams() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge
-                              variant={statusConfig[exam.status].variant}
-                              className="gap-1 text-xs"
-                            >
+                            <Badge variant={statusConfig[exam.status].variant} className="gap-1 text-xs">
                               {statusConfig[exam.status].icon}
                               {statusConfig[exam.status].label}
                             </Badge>
                           </TableCell>
-                          <TableCell>
-                            {exam.result ? (
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border font-medium ${resultConfig[exam.result].className}`}>
-                                {exam.result === "passed" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                                {resultConfig[exam.result].label}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">—</span>
-                            )}
+                          <TableCell className="max-w-[160px]">
+                            <span className="text-sm text-muted-foreground truncate block">{exam.notes || "—"}</span>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
@@ -417,7 +398,7 @@ export default function AdminExams() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-primary" />
@@ -436,6 +417,7 @@ export default function AdminExams() {
                 ].map((opt) => (
                   <button
                     key={opt.value}
+                    type="button"
                     onClick={() => setForm((p) => ({ ...p, type: opt.value as ExamType }))}
                     className={`p-3 rounded-xl border-2 text-right transition-all ${
                       form.type === opt.value
@@ -450,19 +432,8 @@ export default function AdminExams() {
               </div>
             </div>
 
-            {/* Student */}
-            <div className="space-y-2">
-              <Label htmlFor="student_name">اسم الطالب</Label>
-              <Input
-                id="student_name"
-                placeholder="أدخل اسم الطالب"
-                value={form.student_name}
-                onChange={(e) => setForm((p) => ({ ...p, student_name: e.target.value }))}
-              />
-            </div>
-
-            {/* Date & Time */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Date, Time & Capacity */}
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="date">التاريخ</Label>
                 <Input
@@ -479,6 +450,17 @@ export default function AdminExams() {
                   type="time"
                   value={form.time}
                   onChange={(e) => setForm((p) => ({ ...p, time: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="capacity">السعة (طلاب)</Label>
+                <Input
+                  id="capacity"
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={form.capacity}
+                  onChange={(e) => setForm((p) => ({ ...p, capacity: parseInt(e.target.value) || 1 }))}
                 />
               </div>
             </div>
@@ -525,37 +507,19 @@ export default function AdminExams() {
               </div>
             </div>
 
-            {/* Status & Result */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>حالة الاختبار</Label>
-                <Select value={form.status} onValueChange={(v) => setForm((p) => ({ ...p, status: v as ExamStatus }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="scheduled">مجدول</SelectItem>
-                    <SelectItem value="completed">مكتمل</SelectItem>
-                    <SelectItem value="cancelled">ملغي</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>نتيجة الاختبار</Label>
-                <Select
-                  value={form.result || "none"}
-                  onValueChange={(v) => setForm((p) => ({ ...p, result: v === "none" ? null : v as ExamResult }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="لم يُحدد بعد" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">لم يُحدد بعد</SelectItem>
-                    <SelectItem value="passed">ناجح ✓</SelectItem>
-                    <SelectItem value="failed">راسب ✗</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Status */}
+            <div className="space-y-2">
+              <Label>حالة الاختبار</Label>
+              <Select value={form.status} onValueChange={(v) => setForm((p) => ({ ...p, status: v as ExamStatus }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="scheduled">مجدول</SelectItem>
+                  <SelectItem value="completed">مكتمل</SelectItem>
+                  <SelectItem value="cancelled">ملغي</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Notes */}
