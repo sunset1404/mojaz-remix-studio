@@ -53,6 +53,7 @@ import AdminCertificates from "./pages/AdminCertificates";
 import AdminCertificateTemplates from "./pages/AdminCertificateTemplates";
 import AdminExams from "./pages/AdminExams";
 import AdminNotifications from "./pages/AdminNotifications";
+import AdminAchievements from "./pages/AdminAchievements";
 
 const queryClient = new QueryClient();
 
@@ -103,6 +104,7 @@ const AppRoutes = () => (
     <Route path="/admin/certificate-templates" element={<ProtectedRoute><AdminCertificateTemplates /></ProtectedRoute>} />
     <Route path="/admin/exams" element={<ProtectedRoute><AdminExams /></ProtectedRoute>} />
     <Route path="/admin/notifications" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
+    <Route path="/admin/achievements" element={<ProtectedRoute><AdminAchievements /></ProtectedRoute>} />
 
     {/* Student-only routes */}
     <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />
