@@ -30,16 +30,16 @@ const PaymentModal = ({ isOpen, onClose, planName, price, period }: PaymentModal
             className="fixed inset-0 bg-black/60 z-[60]"
           />
 
-          {/* Sheet — constrained to mobile width, sits above BottomNav */}
+          {/* Sheet — same width constraint as BottomNav */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed left-1/2 -translate-x-1/2 w-full max-w-md z-[70] bg-background rounded-t-3xl shadow-2xl flex flex-col"
+            className="fixed inset-x-0 max-w-md mx-auto z-[70] bg-background rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
             style={{
               bottom: "68px",
-              maxHeight: "calc(100dvh - 68px - 40px)",
+              maxHeight: "calc(100dvh - 108px)",
             }}
           >
             {/* Fixed Header */}
