@@ -137,9 +137,10 @@ const AppRoutes = () => (
 );
 
 const AppLayout = () => {
-  const { role } = useAuth();
+  const { role, loading } = useAuth();
   const isNative = Capacitor.isNativePlatform();
-  const isAdmin = role === "admin" && !isNative;
+  // Wait for auth loading before checking role to prevent wrong layout flash
+  const isAdmin = !loading && role === "admin" && !isNative;
 
   if (isAdmin) {
     return (
