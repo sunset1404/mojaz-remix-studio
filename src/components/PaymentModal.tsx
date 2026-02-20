@@ -27,17 +27,20 @@ const PaymentModal = ({ isOpen, onClose, planName, price, period }: PaymentModal
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 z-50"
+            className="fixed inset-0 bg-black/60 z-[60]"
           />
 
-          {/* Sheet */}
+          {/* Sheet — sits above BottomNav (≈ 68px tall) */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl shadow-2xl flex flex-col"
-            style={{ maxHeight: "75dvh", paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
+            className="fixed left-0 right-0 z-[70] bg-background rounded-t-3xl shadow-2xl flex flex-col"
+            style={{
+              bottom: "68px",          /* ارتفاع الشريط السفلي تقريباً */
+              maxHeight: "calc(100dvh - 68px - 40px)",
+            }}
           >
             {/* Fixed Header */}
             <div className="flex-shrink-0 px-5 pt-4 pb-2">
