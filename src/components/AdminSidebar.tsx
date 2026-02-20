@@ -30,7 +30,6 @@ const mainMenuItems = [
   { title: "الشهادات", icon: Award, id: "certificates", path: "/admin/certificates" },
   { title: "الإهداءات", icon: Gift, id: "gifts", path: "/admin/gifts" },
   { title: "الاختبارات", icon: ClipboardList, id: "exams", path: "/admin/exams" },
-  { title: "الإنجازات", icon: Trophy, id: "achievements", path: "/admin/achievements" },
 ];
 
 const AdminSidebar = () => {
@@ -117,6 +116,7 @@ const AdminSidebar = () => {
               {[
                 { title: "تصميم القوالب", icon: Palette, path: "/admin/certificate-templates" },
                 { title: "إدارة الإشعارات", icon: Bell, path: "/admin/notifications" },
+                { title: "الإنجازات", icon: Trophy, path: "/admin/achievements" },
               ].map((item) => {
                 const isActive = location.pathname.startsWith(item.path);
                 return (
