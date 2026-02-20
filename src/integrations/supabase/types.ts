@@ -557,6 +557,42 @@ export type Database = {
         }
         Relationships: []
       }
+      reward_rules: {
+        Row: {
+          action_key: string
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          points: number
+          updated_at: string
+        }
+        Insert: {
+          action_key: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          points?: number
+          updated_at?: string
+        }
+        Update: {
+          action_key?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          points?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       session_records: {
         Row: {
           created_at: string
