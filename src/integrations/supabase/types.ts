@@ -565,6 +565,8 @@ export type Database = {
           id: string
           notes: string | null
           other_user_name: string
+          pages_reached: number | null
+          parts_reached: number | null
           rating: number | null
           status: string
           time: string
@@ -577,6 +579,8 @@ export type Database = {
           id?: string
           notes?: string | null
           other_user_name: string
+          pages_reached?: number | null
+          parts_reached?: number | null
           rating?: number | null
           status?: string
           time: string
@@ -589,6 +593,8 @@ export type Database = {
           id?: string
           notes?: string | null
           other_user_name?: string
+          pages_reached?: number | null
+          parts_reached?: number | null
           rating?: number | null
           status?: string
           time?: string
@@ -807,6 +813,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      parse_duration_minutes: {
+        Args: { duration_text: string }
+        Returns: number
+      }
+      recalculate_student_achievements: {
+        Args: { p_student_id: string }
+        Returns: undefined
       }
     }
     Enums: {

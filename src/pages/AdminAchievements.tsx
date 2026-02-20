@@ -8,8 +8,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Trophy, Search, Loader2, Save, Plus, RefreshCw,
-  BookOpen, Clock, Target, Star, Award,
+  Trophy, Search, Loader2, RefreshCw,
+  BookOpen, Clock, Target, Award, Zap,
+  CheckCircle2, Info,
 } from "lucide-react";
 
 type StudentRow = {
@@ -30,27 +31,15 @@ type AchievementRow = {
   commitment_rate: number;
   certificates_count: number;
   completions: number;
+  updated_at?: string;
 };
-
-type EditableField = keyof Omit<AchievementRow, "id" | "student_id">;
-
-const fields: { key: EditableField; label: string; suffix?: string }[] = [
-  { key: "sessions_count", label: "الجلسات" },
-  { key: "total_minutes", label: "الدقائق" },
-  { key: "parts_memorized", label: "الأجزاء" },
-  { key: "pages_memorized", label: "الصفحات" },
-  { key: "commitment_rate", label: "الالتزام%", suffix: "%" },
-  { key: "certificates_count", label: "الشهادات" },
-  { key: "completions", label: "الختمات" },
-];
 
 const AdminAchievements = () => {
   const { toast } = useToast();
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [saving, setSaving] = useState<Record<string, boolean>>({});
-  const [edits, setEdits] = useState<Record<string, Partial<AchievementRow>>>({});
+  const [recalculating, setRecalculating] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -86,98 +75,92 @@ const AdminAchievements = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const getValue = (student: StudentRow, field: EditableField): number => {
-    const editVal = edits[student.user_id]?.[field];
-    if (editVal !== undefined) return editVal as number;
-    return (student.achievement?.[field] as number) ?? 0;
-  };
-
-  const handleEdit = (userId: string, field: EditableField, value: string) => {
-    const num = parseFloat(value) || 0;
-    setEdits((prev) => ({
-      ...prev,
-      [userId]: { ...prev[userId], [field]: num },
-    }));
-  };
-
-  const handleSave = async (student: StudentRow) => {
-    const userId = student.user_id;
-    setSaving((prev) => ({ ...prev, [userId]: true }));
-
-    const currentEdits = edits[userId] || {};
-    const base: AchievementRow = {
-      student_id: userId,
-      sessions_count: student.achievement?.sessions_count ?? 0,
-      total_minutes: student.achievement?.total_minutes ?? 0,
-      parts_memorized: student.achievement?.parts_memorized ?? 0,
-      pages_memorized: student.achievement?.pages_memorized ?? 0,
-      commitment_rate: student.achievement?.commitment_rate ?? 0,
-      certificates_count: student.achievement?.certificates_count ?? 0,
-      completions: student.achievement?.completions ?? 0,
-    };
-    const payload = { ...base, ...currentEdits };
-
-    let error;
-    if (student.achievement?.id) {
-      // update
-      ({ error } = await supabase
-        .from("student_achievements")
-        .update(payload)
-        .eq("id", student.achievement.id));
-    } else {
-      // insert
-      ({ error } = await supabase
-        .from("student_achievements")
-        .insert(payload));
-    }
-
+  const handleRecalculate = async (userId: string) => {
+    setRecalculating(userId);
+    const { error } = await supabase.rpc("recalculate_student_achievements", { p_student_id: userId });
     if (error) {
-      toast({ title: "خطأ في الحفظ", description: error.message, variant: "destructive" });
+      toast({ title: "خطأ في إعادة الحساب", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "✅ تم الحفظ بنجاح" });
-      setEdits((prev) => { const n = { ...prev }; delete n[userId]; return n; });
+      toast({ title: "✅ تم إعادة الحساب بنجاح" });
       fetchData();
     }
-    setSaving((prev) => ({ ...prev, [userId]: false }));
+    setRecalculating(null);
   };
 
-  const hasEdits = (userId: string) =>
-    edits[userId] && Object.keys(edits[userId]).length > 0;
+  const handleRecalculateAll = async () => {
+    setLoading(true);
+    let errors = 0;
+    for (const student of students) {
+      const { error } = await supabase.rpc("recalculate_student_achievements", { p_student_id: student.user_id });
+      if (error) errors++;
+    }
+    if (errors > 0) {
+      toast({ title: `تم مع ${errors} أخطاء`, variant: "destructive" });
+    } else {
+      toast({ title: "✅ تم إعادة حساب جميع الطلاب" });
+    }
+    fetchData();
+  };
 
   const filtered = students.filter((s) =>
     s.full_name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Summary stats
   const totalStudents = students.length;
   const withRecords = students.filter((s) => s.achievement).length;
   const totalSessions = students.reduce((sum, s) => sum + (s.achievement?.sessions_count ?? 0), 0);
   const totalHours = Math.round(students.reduce((sum, s) => sum + (s.achievement?.total_minutes ?? 0), 0) / 60);
 
+  const formatLastUpdated = (dateStr?: string) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("ar-SA", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  };
+
   return (
     <div className="p-6 space-y-6" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Trophy className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">إدارة الإنجازات</h1>
-            <p className="text-sm text-muted-foreground">تعديل بيانات إنجازات الطلاب مباشرةً</p>
+            <h1 className="text-2xl font-bold text-foreground">إنجازات الطلاب</h1>
+            <p className="text-sm text-muted-foreground">تُحسب تلقائياً من الجلسات والشهادات</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchData} className="gap-2">
-          <RefreshCw className="w-4 h-4" />
-          تحديث
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="gap-2">
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            تحديث
+          </Button>
+          <Button size="sm" onClick={handleRecalculateAll} disabled={loading} className="gap-2">
+            <Zap className="w-4 h-4" />
+            إعادة حساب الكل
+          </Button>
+        </div>
+      </div>
+
+      {/* Info banner */}
+      <div className="flex items-start gap-3 bg-primary/5 border border-primary/20 rounded-xl p-4">
+        <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <div className="text-sm text-foreground/80 space-y-1">
+          <p className="font-semibold text-foreground">كيف تُحسب الإنجازات تلقائياً؟</p>
+          <ul className="space-y-0.5 text-muted-foreground text-xs list-disc list-inside">
+            <li>الجلسات والدقائق: تُجمع من كل جلسة مكتملة تلقائياً</li>
+            <li>الأجزاء والصفحات: تُحدَّث حين يُدخل المقرئ رقم الجزء/الصفحة بعد كل جلسة</li>
+            <li>الشهادات: تُحسب تلقائياً عند إصدار شهادة للطالب</li>
+            <li>نسبة الالتزام: جلسات الأسبوع الحالي ÷ الأيام المجدولة في الخطة الأسبوعية</li>
+          </ul>
+        </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "إجمالي الطلاب", value: totalStudents, icon: BookOpen, color: "text-blue-500" },
-          { label: "لديهم سجلات", value: withRecords, icon: Award, color: "text-green-500" },
+          { label: "لديهم سجلات", value: `${withRecords} / ${totalStudents}`, icon: CheckCircle2, color: "text-green-500" },
           { label: "إجمالي الجلسات", value: totalSessions, icon: Target, color: "text-primary" },
           { label: "إجمالي الساعات", value: totalHours, icon: Clock, color: "text-gold" },
         ].map((s) => (
@@ -210,81 +193,99 @@ const AdminAchievements = () => {
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
+        <div className="rounded-xl border border-border overflow-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="text-right font-bold">الطالب</TableHead>
-                {fields.map((f) => (
-                  <TableHead key={f.key} className="text-center font-bold text-xs">
-                    {f.label}
-                  </TableHead>
-                ))}
-                <TableHead className="text-center font-bold">حفظ</TableHead>
+                <TableHead className="text-center font-bold text-xs">الجلسات</TableHead>
+                <TableHead className="text-center font-bold text-xs">الدقائق</TableHead>
+                <TableHead className="text-center font-bold text-xs">الأجزاء</TableHead>
+                <TableHead className="text-center font-bold text-xs">الصفحات</TableHead>
+                <TableHead className="text-center font-bold text-xs">الالتزام%</TableHead>
+                <TableHead className="text-center font-bold text-xs">الشهادات</TableHead>
+                <TableHead className="text-center font-bold text-xs">الختمات</TableHead>
+                <TableHead className="text-center font-bold text-xs">آخر تحديث</TableHead>
+                <TableHead className="text-center font-bold text-xs">إعادة حساب</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={fields.length + 2} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     لا يوجد طلاب
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((student) => (
-                  <TableRow
-                    key={student.id}
-                    className={hasEdits(student.user_id) ? "bg-primary/5" : ""}
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <span className="text-xs font-bold text-primary">
-                            {student.full_name.charAt(0)}
-                          </span>
+                filtered.map((student) => {
+                  const ach = student.achievement;
+                  return (
+                    <TableRow key={student.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <span className="text-xs font-bold text-primary">
+                              {student.full_name.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm text-foreground">{student.full_name}</p>
+                            <p className="text-[10px] text-muted-foreground">{student.nationality}</p>
+                          </div>
+                          {!ach && (
+                            <Badge variant="secondary" className="text-[10px]">لا يوجد سجل</Badge>
+                          )}
                         </div>
-                        <div>
-                          <p className="font-medium text-sm text-foreground">{student.full_name}</p>
-                          <p className="text-[10px] text-muted-foreground">{student.nationality}</p>
-                        </div>
-                        {!student.achievement && (
-                          <Badge variant="secondary" className="text-[10px]">جديد</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    {fields.map((f) => (
-                      <TableCell key={f.key} className="p-1">
-                        <Input
-                          type="number"
-                          min={0}
-                          value={getValue(student, f.key)}
-                          onChange={(e) => handleEdit(student.user_id, f.key, e.target.value)}
-                          className="h-8 w-20 text-center text-sm mx-auto"
-                        />
                       </TableCell>
-                    ))}
-                    <TableCell className="text-center">
-                      <Button
-                        size="sm"
-                        variant={hasEdits(student.user_id) ? "default" : "outline"}
-                        onClick={() => handleSave(student)}
-                        disabled={saving[student.user_id]}
-                        className="h-8 px-3 gap-1"
-                      >
-                        {saving[student.user_id] ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : student.achievement ? (
-                          <Save className="w-3 h-3" />
-                        ) : (
-                          <Plus className="w-3 h-3" />
-                        )}
-                        <span className="text-xs">
-                          {student.achievement ? "حفظ" : "إنشاء"}
+                      <TableCell className="text-center">
+                        <span className="font-bold text-foreground">{ach?.sessions_count ?? 0}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-bold text-foreground">{ach?.total_minutes ?? 0}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-bold text-foreground">{ach?.parts_memorized ?? 0}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-bold text-foreground">{ach?.pages_memorized ?? 0}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className={`font-bold text-sm ${
+                          (ach?.commitment_rate ?? 0) >= 80 ? "text-green-600" :
+                          (ach?.commitment_rate ?? 0) >= 50 ? "text-yellow-600" : "text-destructive"
+                        }`}>
+                          {ach?.commitment_rate ?? 0}%
                         </span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-bold text-foreground">{ach?.certificates_count ?? 0}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-bold text-gold">{ach?.completions ?? 0}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="text-[10px] text-muted-foreground">
+                          {ach?.updated_at ? formatLastUpdated(ach.updated_at) : "—"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRecalculate(student.user_id)}
+                          disabled={recalculating === student.user_id}
+                          className="h-7 px-2 gap-1 text-primary hover:text-primary"
+                        >
+                          {recalculating === student.user_id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-3 h-3" />
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
