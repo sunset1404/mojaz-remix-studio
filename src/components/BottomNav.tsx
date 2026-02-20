@@ -62,7 +62,6 @@ const BottomNav = () => {
                   </motion.div> :
 
                 <motion.div
-                  layout
                   className={`flex items-center gap-1.5 rounded-xl px-2 py-2 transition-colors ${
                   active ? "bg-primary/10" : ""}`
                   }
