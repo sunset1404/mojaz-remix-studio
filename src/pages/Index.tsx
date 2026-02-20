@@ -41,7 +41,15 @@ const Index = () => {
   useEffect(() => {
     if (!user) return;
     supabase.from("student_profiles").select("full_name").eq("user_id", user.id).maybeSingle()
-      .then(({ data }) => { if (data) setUserName(data.full_name); });
+      .then(({ data }) => {
+        if (data?.full_name) {
+          setUserName(data.full_name);
+        } else {
+          // Fallback to profiles table if student_profiles not found
+          supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle()
+            .then(({ data: p }) => { if (p?.full_name) setUserName(p.full_name); });
+        }
+      });
   }, [user]);
 
   const nextSlide = useCallback(() => {

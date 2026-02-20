@@ -113,6 +113,26 @@ const EditProfile = () => {
             preferredTrack: data.preferred_track || "",
             preferredRiwaya: data.preferred_riwaya || "",
           });
+        } else {
+          // Fallback: student profile not created yet, use profiles table
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("full_name, phone, created_at")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (profileData) {
+            setForm({
+              name: profileData.full_name || "",
+              gender: "",
+              nationality: "",
+              phone: profileData.phone || "",
+              email,
+              educationLevel: "",
+              joinDate: new Date(profileData.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" }),
+              preferredTrack: "",
+              preferredRiwaya: "",
+            });
+          }
         }
       } else {
         const { data } = await supabase
