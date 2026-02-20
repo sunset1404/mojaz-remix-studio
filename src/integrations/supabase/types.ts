@@ -428,6 +428,42 @@ export type Database = {
         }
         Relationships: []
       }
+      popup_messages: {
+        Row: {
+          color_scheme: string
+          created_at: string
+          icon: string
+          id: string
+          is_active: boolean
+          message: string
+          title: string
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          color_scheme?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          message: string
+          title: string
+          trigger_event: string
+          updated_at?: string
+        }
+        Update: {
+          color_scheme?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          message?: string
+          title?: string
+          trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
