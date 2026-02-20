@@ -1,6 +1,6 @@
 import { 
   Users, GraduationCap, UserCheck, Clock, Award, Gift, 
-  LayoutDashboard, LogOut, ChevronRight, Palette, ClipboardList, Bell, Trophy, Star, MessageSquareText, MessageCircle, CreditCard
+  LayoutDashboard, LogOut, ChevronRight, Palette, ClipboardList, Bell, Trophy, Star, MessageSquareText, MessageCircle, CreditCard, Package
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -115,6 +115,7 @@ const AdminSidebar = () => {
             <SidebarMenu>
               {[
                 { title: "تصميم القوالب", icon: Palette, path: "/admin/certificate-templates" },
+                { title: "إدارة الباقات", icon: Package, path: "/admin/plans" },
                 { title: "إدارة الإشعارات", icon: Bell, path: "/admin/notifications" },
                 { title: "الإنجازات", icon: Trophy, path: "/admin/achievements" },
                 { title: "المكافآت والنقاط", icon: Star, path: "/admin/rewards" },

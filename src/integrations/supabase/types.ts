@@ -191,6 +191,60 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_plans: {
+        Row: {
+          created_at: string
+          discount: string | null
+          duration: string
+          duration_months: number
+          features: string[]
+          hours: string
+          icon: string
+          id: string
+          is_active: boolean
+          is_popular: boolean
+          name: string
+          original_price: number | null
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          discount?: string | null
+          duration?: string
+          duration_months?: number
+          features?: string[]
+          hours?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          name: string
+          original_price?: number | null
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          discount?: string | null
+          duration?: string
+          duration_months?: number
+          features?: string[]
+          hours?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          name?: string
+          original_price?: number | null
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gift_subscriptions: {
         Row: {
           amount: number
@@ -829,6 +883,60 @@ export type Database = {
           student_name?: string
           student_phone?: string | null
           subscription_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          features: string[]
+          has_billing: boolean
+          icon: string
+          id: string
+          is_active: boolean
+          is_popular: boolean
+          name: string
+          not_included: string[]
+          period: string
+          price_monthly: number
+          price_yearly: number | null
+          sort_order: number
+          subtitle: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          features?: string[]
+          has_billing?: boolean
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          name: string
+          not_included?: string[]
+          period?: string
+          price_monthly?: number
+          price_yearly?: number | null
+          sort_order?: number
+          subtitle?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          features?: string[]
+          has_billing?: boolean
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          name?: string
+          not_included?: string[]
+          period?: string
+          price_monthly?: number
+          price_yearly?: number | null
+          sort_order?: number
+          subtitle?: string | null
           updated_at?: string
         }
         Relationships: []

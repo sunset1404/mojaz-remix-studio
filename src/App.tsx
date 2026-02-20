@@ -59,6 +59,7 @@ import AdminPopupMessages from "./pages/AdminPopupMessages";
 import AdminWhatsApp from "./pages/AdminWhatsApp";
 import AdminSubscriptions from "./pages/AdminSubscriptions";
 import AdminGifts from "./pages/AdminGifts";
+import AdminPlans from "./pages/AdminPlans";
 import MyGifts from "./pages/MyGifts";
 
 const queryClient = new QueryClient();
@@ -116,6 +117,7 @@ const AppRoutes = () => (
     <Route path="/admin/whatsapp" element={<ProtectedRoute><AdminWhatsApp /></ProtectedRoute>} />
     <Route path="/admin/subscriptions" element={<ProtectedRoute><AdminSubscriptions /></ProtectedRoute>} />
     <Route path="/admin/gifts" element={<ProtectedRoute><AdminGifts /></ProtectedRoute>} />
+    <Route path="/admin/plans" element={<ProtectedRoute><AdminPlans /></ProtectedRoute>} />
 
     {/* Student-only routes */}
     <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />
