@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { Gift, Check, ChevronRight, Send, Sparkles, Crown, Star, Clock, BookOpen, Award, ShieldCheck } from "lucide-react";
+import { Gift, Check, Send, Sparkles, Crown, Star, Clock } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import PaymentModal from "@/components/PaymentModal";
 
 type GiftPlan = {
   id: string;
@@ -71,6 +72,7 @@ const GiftSubscription = () => {
   const [personalMessage, setPersonalMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [giftResult, setGiftResult] = useState<{ code: string; planName: string } | null>(null);
+  const [paymentModal, setPaymentModal] = useState(false);
 
   const generateGiftCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -288,7 +290,13 @@ const GiftSubscription = () => {
 
           <motion.button
             whileTap={{ scale: 0.97 }}
-            onClick={handleSubmit}
+            onClick={() => {
+              if (!selectedPlan || !recipientName.trim() || !recipientPhone.trim()) {
+                toast({ title: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
+                return;
+              }
+              setPaymentModal(true);
+            }}
             disabled={loading}
             className="w-full mt-5 py-3.5 rounded-xl bg-gradient-to-r from-gold to-[hsl(43,74%,45%)] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
           >
@@ -303,6 +311,19 @@ const GiftSubscription = () => {
           </motion.button>
         </motion.div>
       )}
+
+      {selectedPlan && (() => {
+        const plan = giftPlans.find((p) => p.id === selectedPlan);
+        return plan ? (
+          <PaymentModal
+            isOpen={paymentModal}
+            onClose={() => setPaymentModal(false)}
+            planName={plan.name}
+            price={plan.price}
+            onConfirm={handleSubmit}
+          />
+        ) : null;
+      })()}
     </div>
   );
 };

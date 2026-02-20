@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { Check, Crown, Sparkles, Zap, Gift, ChevronLeft, Clock, Plus, Minus } from "lucide-react";
+import { Check, Crown, Sparkles, Zap, Gift, ChevronLeft, Clock } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import PaymentModal from "@/components/PaymentModal";
 
 type Plan = {
   id: string;
@@ -85,6 +86,7 @@ const plans: Plan[] = [
 
 const Subscription = () => {
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
+  const [paymentModal, setPaymentModal] = useState<{ open: boolean; planName: string; price: number | string; period?: string }>({ open: false, planName: "", price: 0 });
 
   const getPrice = (plan: Plan) => {
     if (!plan.hasBilling) return plan.monthlyPrice;
@@ -214,6 +216,12 @@ const Subscription = () => {
 
             <motion.button
               whileTap={{ scale: 0.97 }}
+              onClick={() => plan.monthlyPrice !== "0" && setPaymentModal({
+                open: true,
+                planName: plan.name,
+                price: getPrice(plan) ?? "",
+                period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
+              })}
               className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
                 plan.popular
                   ? "bg-white text-gold-foreground hover:bg-white/90"
@@ -226,7 +234,7 @@ const Subscription = () => {
         ))}
       </div>
       {/* Extra Hours Section */}
-      <ExtraHoursSection />
+      <ExtraHoursSection onPay={(pkg) => setPaymentModal({ open: true, planName: `ساعات إضافية - ${pkg.label}`, price: pkg.price })} />
 
       {/* Gift Banner */}
       <div className="px-5 mt-4">
@@ -249,6 +257,14 @@ const Subscription = () => {
           </motion.div>
         </Link>
       </div>
+
+      <PaymentModal
+        isOpen={paymentModal.open}
+        onClose={() => setPaymentModal((p) => ({ ...p, open: false }))}
+        planName={paymentModal.planName}
+        price={paymentModal.price}
+        period={paymentModal.period}
+      />
     </div>
   );
 };
@@ -260,7 +276,7 @@ const hourPackages = [
   { hours: 10, price: 100, originalPrice: 150, label: "١٠ ساعات" },
 ];
 
-const ExtraHoursSection = () => {
+const ExtraHoursSection = ({ onPay }: { onPay: (pkg: { label: string; price: number }) => void }) => {
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
 
   return (
@@ -318,6 +334,7 @@ const ExtraHoursSection = () => {
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             whileTap={{ scale: 0.97 }}
+            onClick={() => onPay(hourPackages[selectedPackage])}
             className="w-full mt-3 py-3 rounded-xl text-sm font-bold gradient-primary text-primary-foreground"
           >
             شراء {hourPackages[selectedPackage].label} - {hourPackages[selectedPackage].price} ريال
