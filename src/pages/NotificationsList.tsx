@@ -1,15 +1,29 @@
-import { ChevronRight, Bell, CheckCheck } from "lucide-react";
+import { ChevronRight, Bell, CheckCheck, Calendar, BookOpen, CheckCircle2, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
-const mockNotifications = [
+type Notification = {
+  id: number;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  icon: React.ElementType;
+  iconBg: string;
+  iconColor: string;
+};
+
+const initialNotifications: Notification[] = [
   {
     id: 1,
     title: "جلسة قادمة",
     message: "لديك جلسة غداً الساعة 8:00 صباحاً مع الشيخ أحمد",
     time: "منذ ساعة",
     read: false,
-    icon: "📅",
+    icon: Calendar,
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
   },
   {
     id: 2,
@@ -17,7 +31,9 @@ const mockNotifications = [
     message: "حان وقت مراجعة الحفظ اليومي - سورة البقرة",
     time: "منذ 3 ساعات",
     read: false,
-    icon: "📖",
+    icon: BookOpen,
+    iconBg: "bg-gold/15",
+    iconColor: "text-gold",
   },
   {
     id: 3,
@@ -25,7 +41,9 @@ const mockNotifications = [
     message: "تم قبول طلب التسجيل في برنامج الإجازة",
     time: "أمس",
     read: true,
-    icon: "✅",
+    icon: CheckCircle2,
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
   },
   {
     id: 4,
@@ -33,72 +51,119 @@ const mockNotifications = [
     message: "أرسل لك المقرئ ملاحظات حول جلسة الأمس",
     time: "أمس",
     read: true,
-    icon: "💬",
+    icon: MessageCircle,
+    iconBg: "bg-gold/15",
+    iconColor: "text-gold",
   },
 ];
 
 const NotificationsList = () => {
   const navigate = useNavigate();
-  const unreadCount = mockNotifications.filter((n) => !n.read).length;
+  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markAsRead = (id: number) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-28" dir="rtl">
       {/* Header */}
-      <div className="bg-card border-b border-border px-5 pt-12 pb-4">
-        <div className="flex items-center justify-between">
+      <div
+        className="px-5 pt-14 pb-6"
+        style={{
+          background:
+            "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 60%, hsl(var(--primary) / 0.8) 100%)",
+        }}
+      >
+        <div className="flex items-center justify-between mb-1">
           <button
             onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-full bg-muted flex items-center justify-center"
+            className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center"
           >
-            <ChevronRight className="w-5 h-5 text-foreground" />
+            <ChevronRight className="w-5 h-5 text-white" />
           </button>
-          <h1 className="text-lg font-bold text-foreground font-cairo">الإشعارات</h1>
+
+          <div className="flex flex-col items-center">
+            <div className="flex items-center gap-2">
+              <Bell className="w-5 h-5 text-white/90" />
+              <h1 className="text-lg font-bold text-white font-cairo">الإشعارات</h1>
+            </div>
+            {unreadCount > 0 && (
+              <span className="text-xs text-white/70 mt-0.5">{unreadCount} غير مقروء</span>
+            )}
+          </div>
+
           {unreadCount > 0 ? (
-            <button className="text-xs text-primary font-semibold flex items-center gap-1">
-              <CheckCheck className="w-4 h-4" />
-              قراءة الكل
+            <button
+              onClick={markAllAsRead}
+              className="flex items-center gap-1 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1.5"
+            >
+              <CheckCheck className="w-3.5 h-3.5 text-white" />
+              <span className="text-xs text-white font-semibold">الكل</span>
             </button>
           ) : (
-            <div className="w-9" />
+            <div className="w-16" />
           )}
         </div>
       </div>
 
       {/* Notifications List */}
-      <div className="px-5 pt-4 space-y-3">
-        {mockNotifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Bell className="w-16 h-16 text-muted-foreground/30 mb-4" />
-            <p className="text-muted-foreground font-cairo">لا توجد إشعارات</p>
-          </div>
+      <div className="px-5 -mt-3 space-y-3">
+        {notifications.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-24 text-center"
+          >
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <Bell className="w-10 h-10 text-primary/40" />
+            </div>
+            <p className="text-foreground font-bold font-cairo mb-1">لا توجد إشعارات</p>
+            <p className="text-muted-foreground text-sm">ستظهر إشعاراتك هنا</p>
+          </motion.div>
         ) : (
-          mockNotifications.map((notif, i) => (
-            <motion.div
-              key={notif.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className={`flex items-start gap-3 p-4 rounded-2xl border ${
-                notif.read
-                  ? "bg-card border-border"
-                  : "bg-primary/5 border-primary/20"
-              }`}
-            >
-              <div className="text-2xl mt-0.5">{notif.icon}</div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <p className={`text-sm font-bold font-cairo ${notif.read ? "text-foreground" : "text-primary"}`}>
-                    {notif.title}
-                  </p>
-                  {!notif.read && (
-                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                  )}
+          notifications.map((notif, i) => {
+            const Icon = notif.icon;
+            return (
+              <motion.div
+                key={notif.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                onClick={() => markAsRead(notif.id)}
+                className={`glass-card rounded-2xl p-4 flex items-start gap-3 cursor-pointer active:scale-[0.98] transition-transform ${
+                  !notif.read ? "border border-primary/20" : "border border-border/50"
+                }`}
+              >
+                {/* Icon */}
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${notif.iconBg}`}>
+                  <Icon className={`w-5 h-5 ${notif.iconColor}`} />
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{notif.message}</p>
-                <p className="text-[11px] text-muted-foreground/60 mt-1">{notif.time}</p>
-              </div>
-            </motion.div>
-          ))
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className={`text-sm font-bold font-cairo leading-snug ${!notif.read ? "text-primary" : "text-foreground"}`}>
+                      {notif.title}
+                    </p>
+                    {!notif.read && (
+                      <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 mt-1" />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{notif.message}</p>
+                  <p className="text-[11px] text-muted-foreground/50 mt-1.5">{notif.time}</p>
+                </div>
+              </motion.div>
+            );
+          })
         )}
       </div>
     </div>
