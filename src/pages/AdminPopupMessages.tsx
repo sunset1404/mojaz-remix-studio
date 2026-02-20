@@ -301,9 +301,18 @@ const AdminPopupMessages = () => {
                 <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  {TRIGGER_EVENTS.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                <SelectContent className="max-h-72">
+                  {TRIGGER_EVENT_GROUPS.map((group) => (
+                    <div key={group.label}>
+                      <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide border-b border-border/50 mb-1 mt-2 first:mt-0">
+                        {group.label}
+                      </div>
+                      {group.events.map((t) => (
+                        <SelectItem key={t.value} value={t.value} className="pr-4">
+                          {t.label}
+                        </SelectItem>
+                      ))}
+                    </div>
                   ))}
                 </SelectContent>
               </Select>
