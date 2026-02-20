@@ -34,7 +34,7 @@ const PaymentModal = ({ isOpen, onClose, planName, price, period }: PaymentModal
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0, transition: { type: "spring", damping: 28, stiffness: 300 } }}
-            exit={{ y: "100%", transition: { duration: 0.15, ease: "easeIn" } }}
+            exit={{ y: "100%", opacity: 0, transition: { duration: 0, ease: "linear" } }}
             className="fixed inset-x-0 max-w-md mx-auto z-[70] bg-background rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
             style={{
               bottom: "68px",
