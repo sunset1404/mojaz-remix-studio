@@ -11,10 +11,10 @@ type PopupMessage = {
 
 const COLOR_GRADIENTS: Record<string, string> = {
   gold: "from-yellow-400 to-amber-500",
-  green: "from-emerald-400 to-green-600",
-  blue: "from-blue-400 to-indigo-600",
-  purple: "from-purple-400 to-violet-600",
-  teal: "from-teal-400 to-cyan-600",
+  teal: "from-teal-400 to-teal-600",
+  "teal-gold": "from-teal-500 to-amber-400",
+  green: "from-emerald-400 to-emerald-600",
+  warm: "from-amber-400 to-orange-500",
 };
 
 const getGradient = (scheme: string) =>
