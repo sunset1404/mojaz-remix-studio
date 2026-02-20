@@ -4,6 +4,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+
+type StudentStats = {
+  parts_memorized: number;
+  sessions_count: number;
+  certificates_count: number;
+  commitment_rate: number;
+};
 import reciter1 from "@/assets/reciters/reciter1.jpg";
 import reciter2 from "@/assets/reciters/reciter2.jpg";
 import reciter3 from "@/assets/reciters/reciter3.jpg";
@@ -23,11 +30,12 @@ const promoSlides = [
 { title: "تلاوات مميزة", desc: "استمع بأصوات عذبة", icon: Headphones, bg: "gradient-primary", iconBg: "bg-gold/20", iconColor: "text-gold" }];
 
 
-const quickStats = [
-{ label: "أجزاء محفوظة", value: "5", icon: BookOpen, color: "primary" },
-{ label: "نجوم مكتسبة", value: "128", icon: Star, color: "gold" },
-{ label: "أيام متتالية", value: "14", icon: Calendar, color: "primary" },
-{ label: "إنجازات", value: "8", icon: Trophy, color: "gold" }];
+const quickStatsConfig = [
+  { label: "أجزاء محفوظة", key: "parts_memorized" as keyof StudentStats, icon: BookOpen, color: "primary" },
+  { label: "نجوم مكتسبة", key: "sessions_count" as keyof StudentStats, icon: Star, color: "gold" },
+  { label: "التزام%", key: "commitment_rate" as keyof StudentStats, icon: Calendar, color: "primary" },
+  { label: "شهادات", key: "certificates_count" as keyof StudentStats, icon: Trophy, color: "gold" },
+];
 
 const features = [
 { title: "خطتي الأسبوعية", desc: "تابع تقدمك اليومي", icon: CalendarDays, color: "primary", path: "/weekly-plan" },
@@ -38,6 +46,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [userName, setUserName] = useState("");
+  const [studentStats, setStudentStats] = useState<StudentStats | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -46,11 +55,17 @@ const Index = () => {
         if (data?.full_name) {
           setUserName(data.full_name);
         } else {
-          // Fallback to profiles table if student_profiles not found
           supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle()
             .then(({ data: p }) => { if (p?.full_name) setUserName(p.full_name); });
         }
       });
+
+    // Fetch real achievements stats
+    supabase.from("student_achievements")
+      .select("parts_memorized, sessions_count, certificates_count, commitment_rate")
+      .eq("student_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (data) setStudentStats(data); });
   }, [user]);
 
   const nextSlide = useCallback(() => {
@@ -150,25 +165,25 @@ const Index = () => {
           transition={{ delay: 0.4 }}
           className="glass-card rounded-2xl p-4 grid grid-cols-4 gap-2">
 
-          {quickStats.map((stat, i) =>
-          <motion.div
-            key={stat.label}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5 + i * 0.1 }}
-            className="flex flex-col items-center text-center">
-
+          {quickStatsConfig.map((stat, i) => {
+            const value = studentStats ? studentStats[stat.key] : 0;
+            const displayValue = stat.key === "commitment_rate" ? `${Math.round(Number(value))}%` : String(value);
+            return (
+            <motion.div
+              key={stat.label}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5 + i * 0.1 }}
+              className="flex flex-col items-center text-center">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-1 ${
-            stat.color === "gold" ? "bg-gold/20" : "bg-primary/10"}`
-            }>
-                <stat.icon className={`w-5 h-5 ${
-              stat.color === "gold" ? "text-gold" : "text-primary"}`
-              } />
+                stat.color === "gold" ? "bg-gold/20" : "bg-primary/10"}`}>
+                <stat.icon className={`w-5 h-5 ${stat.color === "gold" ? "text-gold" : "text-primary"}`} />
               </div>
-              <span className="text-lg font-bold text-foreground">{stat.value}</span>
+              <span className="text-lg font-bold text-foreground">{displayValue}</span>
               <span className="text-[10px] text-muted-foreground leading-tight">{stat.label}</span>
             </motion.div>
-          )}
+            );
+          })}
         </motion.div>
       </div>
 
