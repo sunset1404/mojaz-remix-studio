@@ -1,41 +1,48 @@
 import { motion } from "framer-motion";
-import { Star, Phone, Video, Search, Heart, Mic } from "lucide-react";
-import { useState } from "react";
+import { Star, Phone, Video, Search, Heart, Mic, User } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import sheikh1 from "@/assets/reciters/sheikh1.jpg";
-import sheikh2 from "@/assets/reciters/sheikh2.jpg";
-import sheikh3 from "@/assets/reciters/sheikh3.jpg";
-import sheikh4 from "@/assets/reciters/sheikh4.jpg";
-import sheikh5 from "@/assets/reciters/sheikh5.jpg";
-import sheikh6 from "@/assets/reciters/sheikh6.jpg";
+import { supabase } from "@/integrations/supabase/client";
 
-const recitersData = [
-  { id: 1, name: "الشيخ أحمد العجمي", specialty: "حفص عن عاصم", rating: 4.9, students: 1250, available: true, avatar: sheikh1 },
-  { id: 2, name: "الشيخ محمد المنشاوي", specialty: "ورش عن نافع", rating: 4.8, students: 980, available: true, avatar: sheikh2 },
-  { id: 3, name: "الشيخ عبدالرحمن السديس", specialty: "حفص عن عاصم", rating: 5.0, students: 2100, available: false, avatar: sheikh3 },
-  { id: 4, name: "الشيخ ماهر المعيقلي", specialty: "قالون عن نافع", rating: 4.7, students: 850, available: true, avatar: sheikh4 },
-  { id: 5, name: "الشيخ سعد الغامدي", specialty: "حفص عن عاصم", rating: 4.9, students: 1600, available: true, avatar: sheikh5 },
-  { id: 6, name: "الشيخ فارس عبّاد", specialty: "شعبة عن عاصم", rating: 4.6, students: 720, available: false, avatar: sheikh6 },
-];
+type Reciter = {
+  id: string;
+  user_id: string;
+  full_name: string;
+  preferred_track: string;
+  stamp_url: string | null;
+};
 
 type FilterType = "all" | "available" | "favorites";
 
 const Reciters = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [reciters, setReciters] = useState<Reciter[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const toggleFavorite = (id: number) => {
+  useEffect(() => {
+    supabase
+      .from("reciter_profiles")
+      .select("id, user_id, full_name, preferred_track, stamp_url")
+      .eq("status", "approved")
+      .then(({ data }) => {
+        setReciters(data ?? []);
+        setLoading(false);
+      });
+  }, []);
+
+  const toggleFavorite = (id: string) => {
     setFavorites((prev) =>
       prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
     );
   };
 
-  const filtered = recitersData.filter((r) => {
-    const matchSearch = r.name.includes(search) || r.specialty.includes(search);
+  const filtered = reciters.filter((r) => {
+    const matchSearch = r.full_name.includes(search) || r.preferred_track.includes(search);
     const matchFilter =
       filter === "all" ||
-      (filter === "available" && r.available) ||
+      (filter === "available") || // all approved are "available"
       (filter === "favorites" && favorites.includes(r.id));
     return matchSearch && matchFilter;
   });
@@ -94,32 +101,47 @@ const Reciters = () => {
 
       {/* Reciters List */}
       <div className="px-5 mt-4 space-y-3">
-        {filtered.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground text-sm">
-            {filter === "favorites" ? "لم تقم بإضافة أي مقرئ للمفضلة بعد" : "لا توجد نتائج"}
+        {loading && (
+          <div className="space-y-3">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="glass-card rounded-2xl p-4 flex items-center gap-4 animate-pulse">
+                <div className="w-14 h-14 rounded-2xl bg-muted shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-muted rounded w-1/2" />
+                  <div className="h-3 bg-muted rounded w-1/3" />
+                </div>
+              </div>
+            ))}
           </div>
         )}
-        {filtered.map((reciter, i) => (
+
+        {!loading && filtered.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground text-sm">
+            {filter === "favorites" ? "لم تقم بإضافة أي مقرئ للمفضلة بعد" : "لا يوجد مقرئون معتمدون حالياً"}
+          </div>
+        )}
+
+        {!loading && filtered.map((reciter, i) => (
           <div
             key={reciter.id}
             className="glass-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:shadow-lg active:scale-[0.98] transition-all animate-fade-in"
             style={{ animationDelay: `${i * 40}ms`, animationFillMode: 'both' }}
           >
-            <div className="relative w-14 h-14 rounded-2xl overflow-hidden shrink-0">
-              <img src={reciter.avatar} alt={reciter.name} className="w-full h-full object-cover" />
-              <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${reciter.available ? "bg-green-500" : "bg-destructive"}`} />
+            <div className="relative w-14 h-14 rounded-2xl overflow-hidden shrink-0 bg-muted flex items-center justify-center">
+              {reciter.stamp_url ? (
+                <img src={reciter.stamp_url} alt={reciter.full_name} className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-7 h-7 text-muted-foreground" />
+              )}
+              <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card bg-green-500" />
             </div>
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-foreground truncate">{reciter.name}</h3>
-              </div>
-              <p className="text-xs text-muted-foreground">{reciter.specialty}</p>
-              <div className="flex items-center gap-3 mt-1">
-                <span className="flex items-center gap-1 text-xs text-gold">
-                  <Star className="w-3 h-3 fill-current" /> {reciter.rating}
-                </span>
-                <span className="text-xs text-muted-foreground">{reciter.students} طالب</span>
+              <h3 className="font-bold text-foreground truncate">{reciter.full_name}</h3>
+              <p className="text-xs text-muted-foreground">{reciter.preferred_track || "—"}</p>
+              <div className="flex items-center gap-1 mt-1">
+                <Star className="w-3 h-3 text-gold fill-current" />
+                <span className="text-xs text-gold font-semibold">معتمد</span>
               </div>
             </div>
 

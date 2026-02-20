@@ -11,18 +11,13 @@ type StudentStats = {
   certificates_count: number;
   commitment_rate: number;
 };
-import reciter1 from "@/assets/reciters/reciter1.jpg";
-import reciter2 from "@/assets/reciters/reciter2.jpg";
-import reciter3 from "@/assets/reciters/reciter3.jpg";
-import reciter4 from "@/assets/reciters/reciter4.jpg";
-import reciter5 from "@/assets/reciters/reciter5.jpg";
 
-const topReciters = [
-{ name: "أحمد العجمي", image: reciter1, rating: 4.9, online: true },
-{ name: "ماهر المعيقلي", image: reciter2, rating: 4.8, online: true },
-{ name: "عبدالرحمن السديس", image: reciter3, rating: 5.0, online: false },
-{ name: "سعد الغامدي", image: reciter4, rating: 4.9, online: true },
-{ name: "فارس عبّاد", image: reciter5, rating: 4.6, online: false }];
+type ReciterPreview = {
+  user_id: string;
+  full_name: string;
+  preferred_track: string;
+  avatar_url?: string | null;
+};
 
 const promoSlides = [
 { title: "القرآن الكريم", desc: "بمقرئين معتمدين", icon: BookOpen, bg: "gradient-primary", iconBg: "bg-gold/20", iconColor: "text-gold" },
@@ -48,6 +43,7 @@ const Index = () => {
   const [userName, setUserName] = useState("");
   const [studentStats, setStudentStats] = useState<StudentStats | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [topReciters, setTopReciters] = useState<ReciterPreview[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -74,6 +70,22 @@ const Index = () => {
       .eq("user_id", user.id)
       .eq("read", false)
       .then(({ count }) => { setUnreadCount(count ?? 0); });
+
+    // Fetch approved reciters from DB
+    supabase.from("reciter_profiles")
+      .select("user_id, full_name, preferred_track, stamp_url")
+      .eq("status", "approved")
+      .limit(6)
+      .then(({ data }) => {
+        if (data) {
+          setTopReciters(data.map((r) => ({
+            user_id: r.user_id,
+            full_name: r.full_name,
+            preferred_track: r.preferred_track,
+            avatar_url: r.stamp_url ?? null,
+          })));
+        }
+      });
   }, [user]);
 
   const nextSlide = useCallback(() => {
@@ -244,40 +256,39 @@ const Index = () => {
             </Link>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {topReciters.length === 0 && (
+              <p className="text-xs text-muted-foreground py-4 px-2">لا يوجد مقرئون متاحون حالياً</p>
+            )}
             {topReciters.map((reciter, i) =>
             <motion.div
-              key={reciter.name}
+              key={reciter.user_id}
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.7 + i * 0.08 }}
               whileTap={{ scale: 0.97 }}>
 
-                <div className="flex flex-col items-center gap-2.5 w-[130px] bg-card rounded-2xl p-4 border border-border/50 shadow-sm">
-
-                  <Link to="/reciters" className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-2.5 w-[110px] bg-card rounded-2xl p-3 border border-border/50 shadow-sm">
+                  <Link to="/reciters" className="flex flex-col items-center gap-2 w-full">
                     <div className="relative">
-                      <div className="w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md">
-                        <img
-                        src={reciter.image}
-                        alt={reciter.name}
-                        className="w-full h-full object-cover" />
+                      <div className="w-[64px] h-[64px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md bg-muted flex items-center justify-center">
+                        {reciter.avatar_url ? (
+                          <img src={reciter.avatar_url} alt={reciter.full_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-8 h-8 text-muted-foreground" />
+                        )}
                       </div>
-                      <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[2.5px] border-card ${reciter.online ? "bg-green-500" : "bg-destructive"}`} />
+                      <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-[2.5px] border-card bg-green-500" />
                     </div>
-                    <span className="text-xs font-semibold text-foreground text-center leading-tight line-clamp-1">
-                      {reciter.name}
+                    <span className="text-xs font-semibold text-foreground text-center leading-tight line-clamp-2">
+                      {reciter.full_name}
                     </span>
                   </Link>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 text-gold fill-current" />
-                    <span className="text-xs font-bold text-foreground">{reciter.rating}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
-                      <Video className="w-4.5 h-4.5 text-primary" />
+                  <div className="flex items-center gap-2 w-full justify-center">
+                    <button className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
+                      <Video className="w-4 h-4 text-primary" />
                     </button>
-                    <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
-                      <Phone className="w-4.5 h-4.5 text-primary" />
+                    <button className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
+                      <Phone className="w-4 h-4 text-primary" />
                     </button>
                   </div>
                 </div>
