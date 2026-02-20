@@ -72,11 +72,11 @@ const TRIGGER_EVENT_GROUPS = [
 const TRIGGER_EVENTS = TRIGGER_EVENT_GROUPS.flatMap((g) => g.events);
 
 const COLOR_SCHEMES = [
-  { value: "gold", label: "ذهبي", bg: "from-yellow-400 to-amber-500" },
-  { value: "green", label: "أخضر", bg: "from-emerald-400 to-green-600" },
-  { value: "blue", label: "أزرق", bg: "from-blue-400 to-indigo-600" },
-  { value: "purple", label: "بنفسجي", bg: "from-purple-400 to-violet-600" },
-  { value: "teal", label: "تركواز", bg: "from-teal-400 to-cyan-600" },
+  { value: "gold", label: "ذهبي", bg: "from-yellow-400 to-amber-500", dot: "bg-yellow-400" },
+  { value: "teal", label: "تركواز", bg: "from-teal-400 to-teal-600", dot: "bg-teal-400" },
+  { value: "teal-gold", label: "تركواز ذهبي", bg: "from-teal-500 to-amber-400", dot: "bg-teal-500" },
+  { value: "green", label: "أخضر", bg: "from-emerald-400 to-emerald-600", dot: "bg-emerald-400" },
+  { value: "warm", label: "دافئ", bg: "from-amber-400 to-orange-500", dot: "bg-amber-400" },
 ];
 
 const getColorGradient = (scheme: string) =>
@@ -362,12 +362,14 @@ const AdminPopupMessages = () => {
                     key={c.value}
                     onClick={() => setForm((f) => ({ ...f, color_scheme: c.value }))}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all text-sm ${
-                      form.color_scheme === c.value ? "border-primary" : "border-border"
+                      form.color_scheme === c.value
+                        ? "border-primary bg-primary/5 font-semibold"
+                        : "border-border hover:border-border/80"
                     }`}
                   >
-                    <span className={`w-4 h-4 rounded-full bg-gradient-to-br ${c.bg}`} />
+                    <span className={`w-4 h-4 rounded-full bg-gradient-to-br ${c.bg} shrink-0`} />
                     {c.label}
-                    {form.color_scheme === c.value && <Check className="w-3 h-3 text-primary" />}
+                    {form.color_scheme === c.value && <Check className="w-3 h-3 text-primary mr-auto" />}
                   </button>
                 ))}
               </div>
