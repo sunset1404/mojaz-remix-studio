@@ -85,8 +85,8 @@ const NotificationsList = () => {
       >
         <div className="flex items-center justify-between mb-1">
           <button
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center"
+            onClick={() => navigate("/")}
+            className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform"
           >
             <ChevronRight className="w-5 h-5 text-white" />
           </button>
