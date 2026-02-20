@@ -30,15 +30,15 @@ const PaymentModal = ({ isOpen, onClose, planName, price, period }: PaymentModal
             className="fixed inset-0 bg-black/60 z-[60]"
           />
 
-          {/* Sheet — sits above BottomNav (≈ 68px tall) */}
+          {/* Sheet — constrained to mobile width, sits above BottomNav */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed left-0 right-0 z-[70] bg-background rounded-t-3xl shadow-2xl flex flex-col"
+            className="fixed left-1/2 -translate-x-1/2 w-full max-w-md z-[70] bg-background rounded-t-3xl shadow-2xl flex flex-col"
             style={{
-              bottom: "68px",          /* ارتفاع الشريط السفلي تقريباً */
+              bottom: "68px",
               maxHeight: "calc(100dvh - 68px - 40px)",
             }}
           >
