@@ -1,6 +1,6 @@
 import { Home, Mic, Crown, Trophy, User, Users, Calendar, LayoutDashboard, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 
 const studentTabs = [
@@ -49,7 +49,7 @@ const BottomNav = () => {
               <Link
                 key={tab.path}
                 to={tab.path}
-                className="flex items-center justify-center relative py-2">
+                className="flex-1 flex items-center justify-center py-2">
 
                 {tab.main ?
                 <motion.div
@@ -57,32 +57,22 @@ const BottomNav = () => {
                   className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg gradient-primary ${
                   active ? "animate-pulse-glow" : ""}`
                   }>
-
                     <tab.icon className="w-6 h-6 text-primary-foreground" />
                   </motion.div> :
 
                 <motion.div
-                  className={`flex items-center gap-1.5 rounded-xl px-2 py-2 transition-colors ${
+                  className={`flex flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 transition-colors ${
                   active ? "bg-primary/10" : ""}`
                   }
                   whileTap={{ scale: 0.9 }}>
-
                     <tab.icon className={`w-6 h-6 shrink-0 transition-colors ${
                   active ? "text-primary" : "text-turquoise-dark"}`
                   } />
-                    <AnimatePresence mode="wait">
-                      {active &&
-                    <motion.span
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: "auto" }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="text-[11px] font-medium text-primary whitespace-nowrap overflow-hidden">
-
-                          {tab.label}
-                        </motion.span>
-                    }
-                    </AnimatePresence>
+                    <span className={`text-[9px] font-medium whitespace-nowrap transition-colors ${
+                      active ? "text-primary" : "text-transparent"
+                    }`}>
+                      {tab.label}
+                    </span>
                   </motion.div>
                 }
               </Link>);
