@@ -144,6 +144,8 @@
   body {
     @apply bg-background text-foreground font-cairo;
     direction: rtl;
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
   }
 }
 
@@ -172,4 +174,11 @@
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+body::-webkit-scrollbar {
+  width: 0px;
+}
+body {
+  scrollbar-width: none;
 }
