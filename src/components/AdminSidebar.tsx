@@ -1,6 +1,6 @@
 import { 
   Users, GraduationCap, UserCheck, Clock, Award, Gift, 
-  LayoutDashboard, Settings, LogOut, ChevronRight, BookOpen, Palette, ClipboardList, Bell, Trophy
+  LayoutDashboard, Settings, LogOut, ChevronRight, BookOpen, Palette, ClipboardList, Bell, Trophy, Star
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -117,6 +117,7 @@ const AdminSidebar = () => {
                 { title: "تصميم القوالب", icon: Palette, path: "/admin/certificate-templates" },
                 { title: "إدارة الإشعارات", icon: Bell, path: "/admin/notifications" },
                 { title: "الإنجازات", icon: Trophy, path: "/admin/achievements" },
+                { title: "المكافآت والنقاط", icon: Star, path: "/admin/rewards" },
               ].map((item) => {
                 const isActive = location.pathname.startsWith(item.path);
                 return (
