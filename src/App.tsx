@@ -127,7 +127,7 @@ const AppRoutes = () => (
     <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
     <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
     <Route path="/call-history" element={<ProtectedRoute><CallHistory /></ProtectedRoute>} />
-    <Route path="/notifications" element={<ProtectedRoute><NotificationsList /></ProtectedRoute>} />
+    <Route path="/notifications" element={<ProtectedRoute><><NotificationsList /><BottomNav /></></ProtectedRoute>} />
     <Route path="/notification-settings" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
     <Route path="/privacy-security" element={<ProtectedRoute><PrivacySecurity /></ProtectedRoute>} />
     <Route path="/contact-us" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
