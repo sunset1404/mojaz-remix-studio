@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones, Phone, Video, User, Gift } from "lucide-react";
+import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones, Phone, Video, User, Gift, CreditCard } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +17,15 @@ type ReciterPreview = {
   full_name: string;
   preferred_track: string;
   avatar_url?: string | null;
+};
+
+type ActiveSubscription = {
+  subscription_type: string;
+  amount: number;
+  duration_months: number;
+  start_date: string;
+  end_date: string;
+  status: string;
 };
 
 const promoSlides = [
@@ -44,6 +53,7 @@ const Index = () => {
   const [studentStats, setStudentStats] = useState<StudentStats | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [topReciters, setTopReciters] = useState<ReciterPreview[]>([]);
+  const [activeSubscription, setActiveSubscription] = useState<ActiveSubscription | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -86,6 +96,16 @@ const Index = () => {
           })));
         }
       });
+
+    // Fetch active subscription
+    supabase.from("student_subscriptions")
+      .select("subscription_type, amount, duration_months, start_date, end_date, status")
+      .eq("student_id", user.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => { if (data) setActiveSubscription(data); });
   }, [user]);
 
   const nextSlide = useCallback(() => {
@@ -306,28 +326,51 @@ const Index = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.9 }}
           whileTap={{ scale: 0.98 }}>
-
           <Link to="/subscription" className="block">
             <div className="relative rounded-2xl overflow-hidden gradient-primary p-5 shadow-xl">
-              {/* Decorative elements */}
               <div className="absolute top-0 left-0 w-28 h-28 rounded-full bg-white/5 -translate-x-8 -translate-y-8" />
               <div className="absolute bottom-0 right-0 w-20 h-20 rounded-full bg-white/5 translate-x-6 translate-y-6" />
-              
               <div className="relative z-10 flex items-center gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-gold text-lg">✦</span>
-                    <span className="text-primary-foreground text-xs font-bold bg-gold/20 px-3 py-1 rounded-full">الباقة الذهبية</span>
-                  </div>
-                  <h3 className="text-primary-foreground font-bold text-lg">45 دقيقة متبقية</h3>
-                  <p className="text-primary-foreground/70 text-xs mt-1">من أصل 120 دقيقة شهرياً</p>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="w-16 h-16 rounded-full bg-gold/20 border-[3px] border-gold/40 flex items-center justify-center shadow-lg">
-                    <span className="text-primary-foreground font-extrabold text-base">37%</span>
-                  </div>
-                  <span className="text-primary-foreground/80 text-[10px] font-medium">متبقي</span>
-                </div>
+                {activeSubscription ? (() => {
+                  const end = new Date(activeSubscription.end_date);
+                  const now = new Date();
+                  const start = new Date(activeSubscription.start_date);
+                  const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                  const daysLeft = Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+                  const pct = totalDays > 0 ? Math.round((daysLeft / totalDays) * 100) : 0;
+                  return (
+                    <>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-gold text-lg">✦</span>
+                          <span className="text-primary-foreground text-xs font-bold bg-gold/20 px-3 py-1 rounded-full">{activeSubscription.subscription_type}</span>
+                        </div>
+                        <h3 className="text-primary-foreground font-bold text-lg">{daysLeft} يوم متبقي</h3>
+                        <p className="text-primary-foreground/70 text-xs mt-1">ينتهي في {activeSubscription.end_date}</p>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="w-16 h-16 rounded-full bg-gold/20 border-[3px] border-gold/40 flex items-center justify-center shadow-lg">
+                          <span className="text-primary-foreground font-extrabold text-base">{pct}%</span>
+                        </div>
+                        <span className="text-primary-foreground/80 text-[10px] font-medium">متبقي</span>
+                      </div>
+                    </>
+                  );
+                })() : (
+                  <>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CreditCard className="w-4 h-4 text-gold" />
+                        <span className="text-primary-foreground text-xs font-bold bg-gold/20 px-3 py-1 rounded-full">لا يوجد اشتراك نشط</span>
+                      </div>
+                      <h3 className="text-primary-foreground font-bold text-lg">اشترك الآن</h3>
+                      <p className="text-primary-foreground/70 text-xs mt-1">استمتع بجلسات قرآنية مع مقرئين معتمدين</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-full bg-gold/20 border-2 border-gold/30 flex items-center justify-center">
+                      <ChevronLeft className="w-5 h-5 text-primary-foreground/70" />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </Link>
