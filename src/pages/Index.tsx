@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones, Phone, Video, User, Gift } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +35,7 @@ const features = [
 
 const Index = () => {
   const { user, avatarUrl } = useAuth();
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [userName, setUserName] = useState("");
 
@@ -81,7 +82,10 @@ const Index = () => {
               أهلاً {userName || "بك"} 👋
             </h1>
           </div>
-          <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative">
+          <button
+            onClick={() => navigate("/notifications")}
+            className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative"
+          >
             <Bell className="w-5 h-5 text-primary" />
             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-gold rounded-full border-2 border-background" />
           </button>
