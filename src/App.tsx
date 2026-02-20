@@ -19,6 +19,7 @@ import Certificates from "./pages/Certificates";
 import Payments from "./pages/Payments";
 import CallHistory from "./pages/CallHistory";
 import Notifications from "./pages/Notifications";
+import NotificationsList from "./pages/NotificationsList";
 import PrivacySecurity from "./pages/PrivacySecurity";
 import ContactUs from "./pages/ContactUs";
 import AboutApp from "./pages/AboutApp";
@@ -126,7 +127,8 @@ const AppRoutes = () => (
     <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
     <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
     <Route path="/call-history" element={<ProtectedRoute><CallHistory /></ProtectedRoute>} />
-    <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+    <Route path="/notifications" element={<ProtectedRoute><NotificationsList /></ProtectedRoute>} />
+    <Route path="/notification-settings" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
     <Route path="/privacy-security" element={<ProtectedRoute><PrivacySecurity /></ProtectedRoute>} />
     <Route path="/contact-us" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
     <Route path="/about" element={<ProtectedRoute><AboutApp /></ProtectedRoute>} />

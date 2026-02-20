@@ -21,7 +21,7 @@ const menuSections = [
     title: "إعدادات التطبيق",
     icon: Settings,
     items: [
-      { icon: Bell, label: "الإشعارات", desc: "تخصيص التنبيهات", path: "/notifications" },
+      { icon: Bell, label: "الإشعارات", desc: "تخصيص التنبيهات", path: "/notification-settings" },
       { icon: Moon, label: "المظهر", desc: "فاتح / داكن", isThemeToggle: true },
       { icon: Shield, label: "الخصوصية والأمان", desc: "كلمة المرور، الجلسات", path: "/privacy-security" },
     ],
