@@ -44,20 +44,6 @@ const reciterAchievements: Achievement[] = [
   { id: 10, title: "الملتزم", desc: "التزم بالخطة الأسبوعية لمدة شهر", icon: CalendarCheck, earned: false, progress: 2, total: 4, category: "performance" },
 ];
 
-const studentStats = [
-  { label: "ساعات الإقراء", value: "48", icon: BookOpen },
-  { label: "إنجازات مكتسبة", value: "4/8", icon: Trophy },
-  { label: "أعلى سلسلة", value: "14 يوم", icon: Flame },
-  { label: "تقييم عام", value: "4.8", icon: Star },
-];
-
-const reciterStats = [
-  { label: "ساعات الإقراء", value: "48", icon: BookOpen },
-  { label: "إنجازات مكتسبة", value: "4/8", icon: Trophy },
-  { label: "أعلى سلسلة", value: "14 يوم", icon: Flame },
-  { label: "تقييم عام", value: "4.8", icon: Star },
-];
-
 const weekDays = [
   { key: "السبت", label: "س" },
   { key: "الأحد", label: "ح" },
@@ -75,11 +61,29 @@ const Achievements = () => {
   const [completedDays, setCompletedDays] = useState<string[]>([]);
   const [missedDays, setMissedDays] = useState<string[]>([]);
   const [loadingPlan, setLoadingPlan] = useState(true);
+  const [achievementData, setAchievementData] = useState<{
+    sessions_count: number;
+    total_minutes: number;
+    parts_memorized: number;
+    pages_memorized: number;
+    commitment_rate: number;
+    certificates_count: number;
+    completions: number;
+  } | null>(null);
 
   useEffect(() => {
     const fetchPlan = async () => {
-      if (!user) { setLoadingPlan(false); return; }
-      const { data } = await supabase
+    if (!user) { setLoadingPlan(false); return; }
+
+    // Fetch achievements data
+    const { data: achData } = await supabase
+      .from("student_achievements")
+      .select("*")
+      .eq("student_id", user.id)
+      .maybeSingle();
+    if (achData) setAchievementData(achData);
+
+    const { data } = await supabase
         .from("weekly_plans")
         .select("days")
         .eq("user_id", user.id)
@@ -144,10 +148,28 @@ const Achievements = () => {
   }, [user]);
 
   const achievements = isReciter ? reciterAchievements : studentAchievements;
-  const stats = isReciter ? reciterStats : studentStats;
   const subtitle = isReciter
     ? "تابع مسيرتك وإنجازاتك في الإقراء"
     : "تابع مسيرتك وإنجازاتك القرآنية";
+
+  // Build real stats from DB data
+  const totalHours = achievementData ? Math.round(achievementData.total_minutes / 60) : 0;
+  const totalSessions = achievementData?.sessions_count ?? 0;
+  const earnedCount = achievements.filter((a) => a.earned).length;
+  const totalCount = achievements.length;
+
+  const stats = [
+    { label: "ساعات الإقراء", value: `${totalHours}`, icon: BookOpen },
+    { label: "إنجازات مكتسبة", value: `${earnedCount}/${totalCount}`, icon: Trophy },
+    { label: "الجلسات", value: `${totalSessions}`, icon: Flame },
+    { label: "معدل الالتزام", value: `${achievementData?.commitment_rate ?? 0}%`, icon: Star },
+  ];
+
+  // Level calculation based on total_minutes
+  const totalMinutes = achievementData?.total_minutes ?? 0;
+  const level = Math.floor(totalMinutes / 300) + 1;
+  const pointsInLevel = totalMinutes % 300;
+  const pointsToNext = 300 - pointsInLevel;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -260,19 +282,21 @@ const Achievements = () => {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Award className="w-5 h-5 text-gold" />
-              <span className="font-bold text-foreground">المستوى 4</span>
+              <span className="font-bold text-foreground">المستوى {level}</span>
             </div>
-            <span className="text-sm text-primary font-bold">680 / 1000 نقطة</span>
+            <span className="text-sm text-primary font-bold">{pointsInLevel} / 300 دقيقة</span>
           </div>
           <div className="h-3 bg-muted rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: "68%" }}
+              animate={{ width: `${Math.min((pointsInLevel / 300) * 100, 100)}%` }}
               transition={{ delay: 0.15, duration: 0.8 }}
               className="h-full gradient-gold rounded-full"
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-2">320 نقطة للوصول إلى المستوى 5 🌟</p>
+          <p className="text-xs text-muted-foreground mt-2">
+            {pointsToNext} دقيقة للوصول إلى المستوى {level + 1} 🌟
+          </p>
         </motion.div>
       </div>
 
