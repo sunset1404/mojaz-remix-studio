@@ -16,18 +16,18 @@ type Achievement = {
   category: "quran" | "performance";
 };
 
-// إنجازات الطالب
-const studentAchievements: Achievement[] = [
-  { id: 1, title: "الخطوة الأولى", desc: "أكمل أول جلسة إقراء", icon: BookOpen, earned: true, date: "15 يناير 2026", category: "quran" },
-  { id: 3, title: "حافظ الجزء", desc: "أتم حفظ جزء كامل", icon: BookOpenCheck, earned: true, date: "5 فبراير 2026", category: "quran" },
-  { id: 4, title: "نجم التجويد", desc: "احصل على تقييم ممتاز في التجويد", icon: Star, earned: true, date: "10 فبراير 2026", category: "quran" },
-  { id: 6, title: "حافظ 5 أجزاء", desc: "أتم حفظ 5 أجزاء", icon: Trophy, earned: false, progress: 3, total: 5, category: "quran" },
-  { id: 7, title: "المتقن", desc: "أتم مراجعة 10 سور بإتقان", icon: Target, earned: false, progress: 6, total: 10, category: "quran" },
-  { id: 8, title: "الختمة", desc: "أتم ختم القرآن كاملاً", icon: Crown, earned: false, progress: 5, total: 30, category: "quran" },
-  { id: 2, title: "قارئ منتظم", desc: "أكمل 7 أيام متتالية", icon: Flame, earned: true, date: "22 يناير 2026", category: "performance" },
-  { id: 5, title: "المثابر", desc: "أكمل 30 يوماً متتالياً", icon: Zap, earned: false, progress: 14, total: 30, category: "performance" },
-  { id: 9, title: "48 ساعة إقراء", desc: "أكمل 48 ساعة من جلسات الإقراء", icon: Clock, earned: false, progress: 32, total: 48, category: "performance" },
-  { id: 10, title: "الملتزم", desc: "التزم بالخطة الأسبوعية لمدة شهر", icon: CalendarCheck, earned: false, progress: 2, total: 4, category: "performance" },
+// إنجازات الطالب - static definitions, progress will be overridden by DB data
+const studentAchievementsBase = [
+  { id: 1, title: "الخطوة الأولى", desc: "أكمل أول جلسة إقراء", icon: BookOpen, earnedThreshold: 1, thresholdKey: "sessions_count" as const, category: "quran" as const },
+  { id: 3, title: "حافظ الجزء", desc: "أتم حفظ جزء كامل", icon: BookOpenCheck, earnedThreshold: 1, thresholdKey: "parts_memorized" as const, category: "quran" as const },
+  { id: 4, title: "نجم التجويد", desc: "احصل على تقييم ممتاز في التجويد", icon: Star, earnedThreshold: 1, thresholdKey: "certificates_count" as const, category: "quran" as const },
+  { id: 6, title: "حافظ 5 أجزاء", desc: "أتم حفظ 5 أجزاء", icon: Trophy, earnedThreshold: 5, thresholdKey: "parts_memorized" as const, total: 5, category: "quran" as const },
+  { id: 7, title: "المتقن", desc: "أتم مراجعة 10 سور بإتقان", icon: Target, earnedThreshold: 10, thresholdKey: "parts_memorized" as const, total: 10, category: "quran" as const },
+  { id: 8, title: "الختمة", desc: "أتم ختم القرآن كاملاً (30 جزء)", icon: Crown, earnedThreshold: 30, thresholdKey: "parts_memorized" as const, total: 30, category: "quran" as const },
+  { id: 2, title: "قارئ منتظم", desc: "أكمل 7 جلسات إقراء", icon: Flame, earnedThreshold: 7, thresholdKey: "sessions_count" as const, total: 7, category: "performance" as const },
+  { id: 5, title: "المثابر", desc: "أكمل 30 جلسة متراكمة", icon: Zap, earnedThreshold: 30, thresholdKey: "sessions_count" as const, total: 30, category: "performance" as const },
+  { id: 9, title: "48 ساعة إقراء", desc: "أكمل 2880 دقيقة من جلسات الإقراء", icon: Clock, earnedThreshold: 2880, thresholdKey: "total_minutes" as const, total: 2880, category: "performance" as const },
+  { id: 10, title: "الملتزم", desc: "التزم بالخطة الأسبوعية (معدل 80%+)", icon: CalendarCheck, earnedThreshold: 80, thresholdKey: "commitment_rate" as const, total: 100, category: "performance" as const },
 ];
 
 // إنجازات المقرئ
@@ -35,13 +35,13 @@ const reciterAchievements: Achievement[] = [
   { id: 1, title: "الخطوة الأولى", desc: "أكمل أول جلسة إقراء", icon: BookOpen, earned: true, date: "15 يناير 2026", category: "quran" },
   { id: 2, title: "معلم القرآن", desc: "أقرئ 10 طلاب مختلفين", icon: Users, earned: true, date: "28 يناير 2026", category: "quran" },
   { id: 3, title: "المجاز", desc: "أتمم إجازة طالب في الحفظ", icon: GraduationCap, earned: false, progress: 0, total: 1, category: "quran" },
-  { id: 4, title: "شيخ الإقراء", desc: "أكمل 100 جلسة إقراء", icon: Mic, earned: false, progress: 48, total: 100, category: "quran" },
-  { id: 5, title: "حلقة كاملة", desc: "أقرئ 5 طلاب في أسبوع واحد", icon: Crown, earned: true, date: "3 فبراير 2026", category: "quran" },
-  { id: 6, title: "المرشد المتميز", desc: "احصل على تقييم 4.5+ من 20 طالب", icon: Star, earned: false, progress: 15, total: 20, category: "quran" },
-  { id: 7, title: "مقرئ منتظم", desc: "أكمل 7 أيام متتالية من الإقراء", icon: Flame, earned: true, date: "22 يناير 2026", category: "performance" },
-  { id: 8, title: "المثابر", desc: "أكمل 30 يوماً متتالياً من الإقراء", icon: Zap, earned: false, progress: 14, total: 30, category: "performance" },
-  { id: 9, title: "100 ساعة إقراء", desc: "أكمل 100 ساعة من جلسات الإقراء", icon: Clock, earned: false, progress: 48, total: 100, category: "performance" },
-  { id: 10, title: "الملتزم", desc: "التزم بالخطة الأسبوعية لمدة شهر", icon: CalendarCheck, earned: false, progress: 2, total: 4, category: "performance" },
+  { id: 4, title: "شيخ الإقراء", desc: "أكمل 100 جلسة إقراء", icon: Mic, earned: false, progress: 0, total: 100, category: "quran" },
+  { id: 5, title: "حلقة كاملة", desc: "أقرئ 5 طلاب في أسبوع واحد", icon: Crown, earned: false, progress: 0, total: 5, category: "quran" },
+  { id: 6, title: "المرشد المتميز", desc: "احصل على تقييم 4.5+ من 20 طالب", icon: Star, earned: false, progress: 0, total: 20, category: "quran" },
+  { id: 7, title: "مقرئ منتظم", desc: "أكمل 7 أيام متتالية من الإقراء", icon: Flame, earned: false, progress: 0, total: 7, category: "performance" },
+  { id: 8, title: "المثابر", desc: "أكمل 30 يوماً متتالياً من الإقراء", icon: Zap, earned: false, progress: 0, total: 30, category: "performance" },
+  { id: 9, title: "100 ساعة إقراء", desc: "أكمل 100 ساعة من جلسات الإقراء", icon: Clock, earned: false, progress: 0, total: 100, category: "performance" },
+  { id: 10, title: "الملتزم", desc: "التزم بالخطة الأسبوعية لمدة شهر", icon: CalendarCheck, earned: false, progress: 0, total: 4, category: "performance" },
 ];
 
 const weekDays = [
@@ -146,6 +146,25 @@ const Achievements = () => {
     };
     fetchPlan();
   }, [user]);
+
+  // Build dynamic student achievements from real DB data
+  const studentAchievements: Achievement[] = studentAchievementsBase.map((a) => {
+    const rawValue = achievementData ? (achievementData as Record<string, number>)[a.thresholdKey] ?? 0 : 0;
+    const value = Number(rawValue);
+    const earned = value >= a.earnedThreshold;
+    const total = a.total ?? a.earnedThreshold;
+    return {
+      id: a.id,
+      title: a.title,
+      desc: a.desc,
+      icon: a.icon,
+      category: a.category,
+      earned,
+      progress: Math.min(value, total),
+      total,
+      date: earned ? "مكتسب" : undefined,
+    };
+  });
 
   const achievements = isReciter ? reciterAchievements : studentAchievements;
   const subtitle = isReciter
