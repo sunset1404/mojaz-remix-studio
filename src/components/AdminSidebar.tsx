@@ -1,6 +1,6 @@
 import { 
   Users, GraduationCap, UserCheck, Clock, Award, Gift, 
-  LayoutDashboard, Settings, LogOut, ChevronRight, BookOpen, Palette, ClipboardList
+  LayoutDashboard, Settings, LogOut, ChevronRight, BookOpen, Palette, ClipboardList, Bell
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -115,6 +115,7 @@ const AdminSidebar = () => {
             <SidebarMenu>
               {[
                 { title: "تصميم القوالب", icon: Palette, path: "/admin/certificate-templates" },
+                { title: "إدارة الإشعارات", icon: Bell, path: "/admin/notifications" },
               ].map((item) => {
                 const isActive = location.pathname.startsWith(item.path);
                 return (
