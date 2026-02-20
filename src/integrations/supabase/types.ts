@@ -785,6 +785,54 @@ export type Database = {
         }
         Relationships: []
       }
+      student_subscriptions: {
+        Row: {
+          amount: number
+          created_at: string
+          duration_months: number
+          end_date: string
+          id: string
+          notes: string | null
+          start_date: string
+          status: string
+          student_id: string
+          student_name: string
+          student_phone: string | null
+          subscription_type: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          duration_months?: number
+          end_date: string
+          id?: string
+          notes?: string | null
+          start_date?: string
+          status?: string
+          student_id: string
+          student_name?: string
+          student_phone?: string | null
+          subscription_type?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          duration_months?: number
+          end_date?: string
+          id?: string
+          notes?: string | null
+          start_date?: string
+          status?: string
+          student_id?: string
+          student_name?: string
+          student_phone?: string | null
+          subscription_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: string

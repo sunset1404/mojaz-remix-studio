@@ -57,6 +57,7 @@ import AdminAchievements from "./pages/AdminAchievements";
 import AdminRewards from "./pages/AdminRewards";
 import AdminPopupMessages from "./pages/AdminPopupMessages";
 import AdminWhatsApp from "./pages/AdminWhatsApp";
+import AdminSubscriptions from "./pages/AdminSubscriptions";
 
 const queryClient = new QueryClient();
 
@@ -111,6 +112,7 @@ const AppRoutes = () => (
     <Route path="/admin/rewards" element={<ProtectedRoute><AdminRewards /></ProtectedRoute>} />
     <Route path="/admin/popup-messages" element={<ProtectedRoute><AdminPopupMessages /></ProtectedRoute>} />
     <Route path="/admin/whatsapp" element={<ProtectedRoute><AdminWhatsApp /></ProtectedRoute>} />
+    <Route path="/admin/subscriptions" element={<ProtectedRoute><AdminSubscriptions /></ProtectedRoute>} />
 
     {/* Student-only routes */}
     <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />

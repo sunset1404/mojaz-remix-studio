@@ -1,6 +1,6 @@
 import { 
   Users, GraduationCap, UserCheck, Clock, Award, Gift, 
-  LayoutDashboard, LogOut, ChevronRight, Palette, ClipboardList, Bell, Trophy, Star, MessageSquareText, MessageCircle
+  LayoutDashboard, LogOut, ChevronRight, Palette, ClipboardList, Bell, Trophy, Star, MessageSquareText, MessageCircle, CreditCard
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -120,6 +120,7 @@ const AdminSidebar = () => {
                 { title: "المكافآت والنقاط", icon: Star, path: "/admin/rewards" },
                 { title: "الرسائل المنبثقة", icon: MessageSquareText, path: "/admin/popup-messages" },
                 { title: "رسائل واتساب", icon: MessageCircle, path: "/admin/whatsapp" },
+                { title: "الاشتراكات", icon: CreditCard, path: "/admin/subscriptions" },
               ].map((item) => {
                 const isActive = location.pathname.startsWith(item.path);
                 return (
