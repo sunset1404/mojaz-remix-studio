@@ -86,7 +86,7 @@ const plans: Plan[] = [
 
 const Subscription = () => {
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
-  const [paymentModal, setPaymentModal] = useState<{ open: boolean; planName: string; price: number | string; period?: string }>({ open: false, planName: "", price: 0 });
+  const [paymentModal, setPaymentModal] = useState<{ open: boolean; planName: string; price: number | string; period?: string; subscriptionType?: string; durationMonths?: number }>({ open: false, planName: "", price: 0 });
 
   const getPrice = (plan: Plan) => {
     if (!plan.hasBilling) return plan.monthlyPrice;
@@ -221,6 +221,8 @@ const Subscription = () => {
                 planName: plan.name,
                 price: getPrice(plan) ?? "",
                 period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
+                subscriptionType: plan.name,
+                durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1,
               })}
               className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
                 plan.popular
@@ -234,7 +236,7 @@ const Subscription = () => {
         ))}
       </div>
       {/* Extra Hours Section */}
-      <ExtraHoursSection onPay={(pkg) => setPaymentModal({ open: true, planName: `ساعات إضافية - ${pkg.label}`, price: pkg.price })} />
+      <ExtraHoursSection onPay={(pkg) => setPaymentModal({ open: true, planName: `ساعات إضافية - ${pkg.label}`, price: pkg.price, subscriptionType: "ساعات إضافية", durationMonths: 0 })} />
 
       {/* Gift Banner */}
       <div className="px-5 mt-4">
@@ -264,6 +266,8 @@ const Subscription = () => {
         planName={paymentModal.planName}
         price={paymentModal.price}
         period={paymentModal.period}
+        subscriptionType={paymentModal.subscriptionType}
+        durationMonths={paymentModal.durationMonths}
       />
     </div>
   );
