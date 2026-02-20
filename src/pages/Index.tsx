@@ -93,8 +93,8 @@ const Index = () => {
                 <User className="w-5 h-5 text-muted-foreground" />
               )}
             </div>
-            <h1 className="text-2xl font-bold text-foreground font-cairo">
-              أهلاً {userName || "بك"} 👋
+          <h1 className="text-2xl font-bold text-foreground font-cairo">
+              أهلاً {userName ? userName.split(" ").slice(0, 2).join(" ") : "بك"} 👋
             </h1>
           </div>
           <button
