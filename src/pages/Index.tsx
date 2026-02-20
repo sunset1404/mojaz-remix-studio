@@ -47,6 +47,7 @@ const Index = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [userName, setUserName] = useState("");
   const [studentStats, setStudentStats] = useState<StudentStats | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -66,6 +67,13 @@ const Index = () => {
       .eq("student_id", user.id)
       .maybeSingle()
       .then(({ data }) => { if (data) setStudentStats(data); });
+
+    // Fetch unread notifications count
+    supabase.from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false)
+      .then(({ count }) => { setUnreadCount(count ?? 0); });
   }, [user]);
 
   const nextSlide = useCallback(() => {
@@ -102,7 +110,9 @@ const Index = () => {
             className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative"
           >
             <Bell className="w-5 h-5 text-primary" />
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-gold rounded-full border-2 border-background" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-gold rounded-full border-2 border-background" />
+            )}
           </button>
         </motion.div>
       </div>
