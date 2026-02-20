@@ -31,16 +31,45 @@ type PopupMessage = {
 
 type FormData = Omit<PopupMessage, "id" | "created_at">;
 
-const TRIGGER_EVENTS = [
-  { value: "session_complete", label: "إتمام جلسة تلاوة", icon: BookOpen },
-  { value: "hatma_complete", label: "إتمام ختمة القرآن", icon: Sparkles },
-  { value: "juz_memorized", label: "حفظ جزء جديد", icon: Trophy },
-  { value: "weekly_plan_complete", label: "إتمام الخطة الأسبوعية", icon: Calendar },
-  { value: "ijaza_earned", label: "الحصول على إجازة", icon: Award },
-  { value: "certificate_earned", label: "الحصول على شهادة", icon: Award },
-  { value: "achievement_unlocked", label: "فتح إنجاز جديد", icon: Star },
-  { value: "special_offer", label: "عرض أو خصم خاص", icon: Gift },
+const TRIGGER_EVENT_GROUPS = [
+  {
+    label: "أحداث التلاوة والحفظ",
+    events: [
+      { value: "session_complete", label: "إتمام جلسة تلاوة" },
+      { value: "hatma_complete", label: "إتمام ختمة القرآن الكريم" },
+      { value: "juz_memorized", label: "حفظ جزء جديد" },
+      { value: "pages_memorized", label: "حفظ عدد من الصفحات" },
+    ],
+  },
+  {
+    label: "أحداث الإنجازات والشهادات",
+    events: [
+      { value: "ijaza_earned", label: "الحصول على إجازة" },
+      { value: "certificate_earned", label: "الحصول على شهادة" },
+      { value: "achievement_unlocked", label: "فتح إنجاز جديد" },
+      { value: "weekly_plan_complete", label: "إتمام الخطة الأسبوعية" },
+      { value: "streak_7_days", label: "7 أيام متتالية من الالتزام" },
+      { value: "streak_30_days", label: "30 يوماً متتالية من الالتزام" },
+    ],
+  },
+  {
+    label: "أحداث الاشتراك والتطبيق",
+    events: [
+      { value: "first_open", label: "فتح التطبيق أول مرة (ترحيبي)" },
+      { value: "subscription_expiry_3days", label: "قرب انتهاء الاشتراك (3 أيام)" },
+      { value: "subscription_expiry_1day", label: "قرب انتهاء الاشتراك (يوم واحد)" },
+      { value: "subscription_expired", label: "انتهاء الاشتراك" },
+      { value: "subscription_renewed", label: "تجديد الاشتراك بنجاح" },
+      { value: "special_offer", label: "عرض أو خصم خاص" },
+      { value: "reciter_assigned", label: "تعيين مقرئ جديد للطالب" },
+      { value: "exam_scheduled", label: "تحديد موعد اختبار" },
+      { value: "exam_result", label: "صدور نتيجة الاختبار" },
+    ],
+  },
 ];
+
+// Flat list for lookups
+const TRIGGER_EVENTS = TRIGGER_EVENT_GROUPS.flatMap((g) => g.events);
 
 const COLOR_SCHEMES = [
   { value: "gold", label: "ذهبي", bg: "from-yellow-400 to-amber-500" },
