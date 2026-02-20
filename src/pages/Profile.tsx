@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Sun, Shield, Camera, Award, CalendarDays, Image, X, Headphones, Info, FileText, CreditCard, PhoneCall, Star, Share2 } from "lucide-react";
+import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Sun, Shield, Camera, Award, CalendarDays, Image, X, Headphones, Info, FileText, CreditCard, PhoneCall, Star, Share2, Gift } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ const menuSections = [
       { icon: User, label: "البيانات الشخصية", desc: "الاسم، الجوال، البريد", path: "/profile/edit" },
       { icon: Award, label: "الإجازات والشهادات", desc: "إجازاتي وشهاداتي المعتمدة", path: "/certificates" },
       { icon: CalendarDays, label: "خطتي الأسبوعية", desc: "عرض وتعديل خطة الحفظ", path: "/weekly-plan" },
+      { icon: Gift, label: "إهداءاتي", desc: "الاشتراكات التي أهديتها للآخرين", path: "/my-gifts" },
       { icon: CreditCard, label: "المدفوعات والفواتير", desc: "بطاقات الائتمان، سجل الدفعات", path: "/payments" },
       { icon: PhoneCall, label: "سجل الجلسات", desc: "تاريخ جلسات الإقراء والتقييمات", path: "/call-history" },
     ],

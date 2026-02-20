@@ -58,6 +58,8 @@ import AdminRewards from "./pages/AdminRewards";
 import AdminPopupMessages from "./pages/AdminPopupMessages";
 import AdminWhatsApp from "./pages/AdminWhatsApp";
 import AdminSubscriptions from "./pages/AdminSubscriptions";
+import AdminGifts from "./pages/AdminGifts";
+import MyGifts from "./pages/MyGifts";
 
 const queryClient = new QueryClient();
 
@@ -113,6 +115,7 @@ const AppRoutes = () => (
     <Route path="/admin/popup-messages" element={<ProtectedRoute><AdminPopupMessages /></ProtectedRoute>} />
     <Route path="/admin/whatsapp" element={<ProtectedRoute><AdminWhatsApp /></ProtectedRoute>} />
     <Route path="/admin/subscriptions" element={<ProtectedRoute><AdminSubscriptions /></ProtectedRoute>} />
+    <Route path="/admin/gifts" element={<ProtectedRoute><AdminGifts /></ProtectedRoute>} />
 
     {/* Student-only routes */}
     <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />
@@ -146,6 +149,7 @@ const AppRoutes = () => (
     <Route path="/about" element={<ProtectedRoute><AboutApp /></ProtectedRoute>} />
     <Route path="/privacy-policy" element={<ProtectedRoute><PrivacyPolicy /></ProtectedRoute>} />
     <Route path="/share-app" element={<ProtectedRoute><ShareApp /></ProtectedRoute>} />
+    <Route path="/my-gifts" element={<ProtectedRoute><MyGifts /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
