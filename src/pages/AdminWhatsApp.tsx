@@ -149,7 +149,7 @@ const AdminWhatsApp = () => {
   // ── Auto Messages ──
   const fetchAutoMessages = async () => {
     setAutoLoading(true);
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("whatsapp_auto_messages")
       .select("*")
       .order("created_at", { ascending: false });
@@ -170,15 +170,16 @@ const AdminWhatsApp = () => {
     }
     setSavingAuto(true);
     try {
+      const db = supabase as any;
       if (editingId) {
-        const { error } = await supabase
+        const { error } = await db
           .from("whatsapp_auto_messages")
           .update({ ...autoForm })
           .eq("id", editingId);
         if (error) throw error;
         toast.success("تم تحديث الرسالة");
       } else {
-        const { error } = await supabase
+        const { error } = await db
           .from("whatsapp_auto_messages")
           .insert([autoForm]);
         if (error) throw error;
@@ -265,13 +266,15 @@ const AdminWhatsApp = () => {
     setSending(true);
     setSentResult(null);
     try {
-      // Insert into whatsapp_manual_logs for tracking
-      const { error } = await supabase.from("whatsapp_manual_logs").insert([{
+      const { data: { user } } = await supabase.auth.getUser();
+      // Insert into whatsapp_manual_logs for tracking (cast to any to bypass type mismatch until types regenerate)
+      const { error } = await (supabase as any).from("whatsapp_manual_logs").insert([{
         message: message.trim(),
         target_group: targetGroup,
-        filters: filters,
+        filters: filters as unknown as Record<string, unknown>,
         recipients_count: targetedUsers.length,
         phone_numbers: targetedUsers.map((u) => u.phone).filter(Boolean),
+        sent_by: user?.id,
       }]);
       if (error) throw error;
       setSentResult({ count: targetedUsers.length });

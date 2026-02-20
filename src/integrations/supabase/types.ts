@@ -872,6 +872,75 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_auto_messages: {
+        Row: {
+          color_scheme: string
+          created_at: string
+          icon: string
+          id: string
+          is_active: boolean
+          message: string
+          title: string
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          color_scheme?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          message: string
+          title: string
+          trigger_event: string
+          updated_at?: string
+        }
+        Update: {
+          color_scheme?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          message?: string
+          title?: string
+          trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      whatsapp_manual_logs: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          message: string
+          phone_numbers: string[]
+          recipients_count: number
+          sent_by: string | null
+          target_group: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          message: string
+          phone_numbers?: string[]
+          recipients_count?: number
+          sent_by?: string | null
+          target_group?: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          message?: string
+          phone_numbers?: string[]
+          recipients_count?: number
+          sent_by?: string | null
+          target_group?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
