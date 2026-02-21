@@ -1,4 +1,4 @@
-import { Home, Mic, Crown, Trophy, User, Users, Calendar, LayoutDashboard, Settings } from "lucide-react";
+import { Home, Mic, Crown, Trophy, User, Users, Calendar, LayoutDashboard, Settings, BarChart3 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,11 +12,11 @@ const studentTabs = [
 ];
 
 const reciterTabs = [
-  { path: "/profile", icon: User, label: "حسابي" },
-  { path: "/achievements", icon: Trophy, label: "إنجازاتي" },
-  { path: "/", icon: Home, label: "الرئيسية", main: true },
-  { path: "/my-students", icon: Users, label: "طلابي" },
   { path: "/sessions", icon: Calendar, label: "الجلسات" },
+  { path: "/my-students", icon: Users, label: "طلابي" },
+  { path: "/", icon: Home, label: "الرئيسية", main: true },
+  { path: "/student-performance", icon: BarChart3, label: "الأداء" },
+  { path: "/profile", icon: User, label: "حسابي" },
 ];
 
 const partnerTabs = [
