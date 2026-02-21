@@ -27,49 +27,88 @@ type PopupMessage = {
   color_scheme: string;
   is_active: boolean;
   created_at: string;
+  target_role: string;
 };
 
 type FormData = Omit<PopupMessage, "id" | "created_at">;
 
-const TRIGGER_EVENT_GROUPS = [
-  {
-    label: "أحداث التلاوة والحفظ",
-    events: [
-      { value: "session_complete", label: "إتمام جلسة تلاوة" },
-      { value: "hatma_complete", label: "إتمام ختمة القرآن الكريم" },
-      { value: "juz_memorized", label: "حفظ جزء جديد" },
-      { value: "pages_memorized", label: "حفظ عدد من الصفحات" },
-    ],
-  },
-  {
-    label: "أحداث الإنجازات والشهادات",
-    events: [
-      { value: "ijaza_earned", label: "الحصول على إجازة" },
-      { value: "certificate_earned", label: "الحصول على شهادة" },
-      { value: "achievement_unlocked", label: "فتح إنجاز جديد" },
-      { value: "weekly_plan_complete", label: "إتمام الخطة الأسبوعية" },
-      { value: "streak_7_days", label: "7 أيام متتالية من الالتزام" },
-      { value: "streak_30_days", label: "30 يوماً متتالية من الالتزام" },
-    ],
-  },
-  {
-    label: "أحداث الاشتراك والتطبيق",
-    events: [
-      { value: "first_open", label: "فتح التطبيق أول مرة (ترحيبي)" },
-      { value: "subscription_expiry_3days", label: "قرب انتهاء الاشتراك (3 أيام)" },
-      { value: "subscription_expiry_1day", label: "قرب انتهاء الاشتراك (يوم واحد)" },
-      { value: "subscription_expired", label: "انتهاء الاشتراك" },
-      { value: "subscription_renewed", label: "تجديد الاشتراك بنجاح" },
-      { value: "special_offer", label: "عرض أو خصم خاص" },
-      { value: "reciter_assigned", label: "تعيين مقرئ جديد للطالب" },
-      { value: "exam_scheduled", label: "تحديد موعد اختبار" },
-      { value: "exam_result", label: "صدور نتيجة الاختبار" },
-    ],
-  },
-];
+type TriggerGroup = { label: string; events: { value: string; label: string }[] };
+const TRIGGER_EVENT_GROUPS_BY_ROLE: Record<string, TriggerGroup[]> = {
+  student: [
+    {
+      label: "أحداث التلاوة والحفظ",
+      events: [
+        { value: "session_complete", label: "إتمام جلسة تلاوة" },
+        { value: "hatma_complete", label: "إتمام ختمة القرآن الكريم" },
+        { value: "juz_memorized", label: "حفظ جزء جديد" },
+        { value: "pages_memorized", label: "حفظ عدد من الصفحات" },
+      ],
+    },
+    {
+      label: "أحداث الإنجازات والشهادات",
+      events: [
+        { value: "ijaza_earned", label: "الحصول على إجازة" },
+        { value: "certificate_earned", label: "الحصول على شهادة" },
+        { value: "achievement_unlocked", label: "فتح إنجاز جديد" },
+        { value: "weekly_plan_complete", label: "إتمام الخطة الأسبوعية" },
+        { value: "streak_7_days", label: "7 أيام متتالية من الالتزام" },
+        { value: "streak_30_days", label: "30 يوماً متتالية من الالتزام" },
+      ],
+    },
+    {
+      label: "أحداث الاشتراك والتطبيق",
+      events: [
+        { value: "first_open", label: "فتح التطبيق أول مرة (ترحيبي)" },
+        { value: "subscription_expiry_3days", label: "قرب انتهاء الاشتراك (3 أيام)" },
+        { value: "subscription_expiry_1day", label: "قرب انتهاء الاشتراك (يوم واحد)" },
+        { value: "subscription_expired", label: "انتهاء الاشتراك" },
+        { value: "subscription_renewed", label: "تجديد الاشتراك بنجاح" },
+        { value: "special_offer", label: "عرض أو خصم خاص" },
+        { value: "reciter_assigned", label: "تعيين مقرئ جديد للطالب" },
+        { value: "exam_scheduled", label: "تحديد موعد اختبار" },
+        { value: "exam_result", label: "صدور نتيجة الاختبار" },
+      ],
+    },
+  ],
+  reciter: [
+    {
+      label: "أحداث المقرئ",
+      events: [
+        { value: "reciter_first_open", label: "فتح التطبيق أول مرة (ترحيبي)" },
+        { value: "reciter_student_assigned", label: "تعيين طالب جديد" },
+        { value: "reciter_session_complete", label: "إتمام جلسة تسميع" },
+        { value: "reciter_ijaza_granted", label: "منح إجازة لطالب" },
+        { value: "reciter_certificate_issued", label: "إصدار شهادة لطالب" },
+        { value: "reciter_weekly_plan_complete", label: "إتمام الخطة الأسبوعية" },
+        { value: "reciter_streak_7_days", label: "7 أيام متتالية من الالتزام" },
+        { value: "reciter_streak_30_days", label: "30 يوماً متتالية من الالتزام" },
+        { value: "reciter_profile_approved", label: "اعتماد الملف الشخصي" },
+      ],
+    },
+  ],
+  partner: [
+    {
+      label: "أحداث الشريك الداعم",
+      events: [
+        { value: "partner_first_open", label: "فتح التطبيق أول مرة (ترحيبي)" },
+        { value: "partner_student_assigned", label: "تسكين طالب جديد على دعمه" },
+        { value: "partner_balance_low", label: "انخفاض الرصيد المتبقي" },
+        { value: "partner_balance_depleted", label: "نفاد رصيد الدعم" },
+        { value: "partner_student_achievement", label: "إنجاز طالب مدعوم" },
+        { value: "partner_student_hatma", label: "طالب مدعوم أتم ختمة" },
+        { value: "partner_monthly_report", label: "تقرير شهري عن الطلاب" },
+      ],
+    },
+  ],
+};
 
-// Flat list for lookups
-const TRIGGER_EVENTS = TRIGGER_EVENT_GROUPS.flatMap((g) => g.events);
+const TRIGGER_EVENT_GROUPS_STUDENT = TRIGGER_EVENT_GROUPS_BY_ROLE.student;
+
+// Flat list for lookups across all roles
+const ALL_TRIGGER_EVENTS = Object.values(TRIGGER_EVENT_GROUPS_BY_ROLE).flat().flatMap((g) => g.events);
+
+const getTriggerLabel = (event: string) =>
+  ALL_TRIGGER_EVENTS.find((t) => t.value === event)?.label ?? event;
 
 const COLOR_SCHEMES = [
   { value: "gold", label: "ذهبي", bg: "from-yellow-400 to-amber-500", dot: "bg-yellow-400" },
@@ -82,8 +121,11 @@ const COLOR_SCHEMES = [
 const getColorGradient = (scheme: string) =>
   COLOR_SCHEMES.find((c) => c.value === scheme)?.bg ?? "from-yellow-400 to-amber-500";
 
-const getTriggerLabel = (event: string) =>
-  TRIGGER_EVENTS.find((t) => t.value === event)?.label ?? event;
+const ROLE_TABS = [
+  { value: "student", label: "الطلاب", icon: "📖" },
+  { value: "reciter", label: "المقرئون", icon: "🎓" },
+  { value: "partner", label: "الشركاء", icon: "💼" },
+];
 
 const EMPTY_FORM: FormData = {
   title: "",
@@ -92,6 +134,7 @@ const EMPTY_FORM: FormData = {
   icon: "🎉",
   color_scheme: "gold",
   is_active: true,
+  target_role: "student",
 };
 
 const AdminPopupMessages = () => {
@@ -100,6 +143,7 @@ const AdminPopupMessages = () => {
   const [editing, setEditing] = useState<PopupMessage | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [preview, setPreview] = useState<PopupMessage | null>(null);
+  const [activeTab, setActiveTab] = useState("student");
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["popup_messages"],
@@ -157,13 +201,14 @@ const AdminPopupMessages = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm(EMPTY_FORM);
+    const defaultEvent = TRIGGER_EVENT_GROUPS_BY_ROLE[activeTab]?.[0]?.events?.[0]?.value || "session_complete";
+    setForm({ ...EMPTY_FORM, target_role: activeTab, trigger_event: defaultEvent });
     setDialogOpen(true);
   };
 
   const openEdit = (msg: PopupMessage) => {
     setEditing(msg);
-    setForm({ title: msg.title, message: msg.message, trigger_event: msg.trigger_event, icon: msg.icon, color_scheme: msg.color_scheme, is_active: msg.is_active });
+    setForm({ title: msg.title, message: msg.message, trigger_event: msg.trigger_event, icon: msg.icon, color_scheme: msg.color_scheme, is_active: msg.is_active, target_role: msg.target_role || "student" });
     setDialogOpen(true);
   };
 
@@ -175,7 +220,8 @@ const AdminPopupMessages = () => {
     saveMutation.mutate(editing ? { ...form, id: editing.id } : form);
   };
 
-  const activeCount = messages.filter((m) => m.is_active).length;
+  const filteredMessages = messages.filter((m) => (m.target_role || "student") === activeTab);
+  const activeCount = filteredMessages.filter((m) => m.is_active).length;
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -200,12 +246,35 @@ const AdminPopupMessages = () => {
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Role Tabs */}
+        <div className="flex gap-2">
+          {ROLE_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                activeTab === tab.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:border-primary/30"
+              }`}
+            >
+              <span>{tab.icon}</span>
+              {tab.label}
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                activeTab === tab.value ? "bg-primary/20" : "bg-muted"
+              }`}>
+                {messages.filter((m) => (m.target_role || "student") === tab.value).length}
+              </span>
+            </button>
+          ))}
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "إجمالي الرسائل", value: messages.length, color: "text-foreground" },
+            { label: "إجمالي الرسائل", value: filteredMessages.length, color: "text-foreground" },
             { label: "نشطة", value: activeCount, color: "text-emerald-500" },
-            { label: "متوقفة", value: messages.length - activeCount, color: "text-muted-foreground" },
+            { label: "متوقفة", value: filteredMessages.length - activeCount, color: "text-muted-foreground" },
           ].map((s) => (
             <div key={s.label} className="bg-card rounded-2xl border border-border/50 p-4 text-center">
               <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -219,14 +288,14 @@ const AdminPopupMessages = () => {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
-        ) : messages.length === 0 ? (
+        ) : filteredMessages.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>لا توجد رسائل بعد</p>
+            <p>لا توجد رسائل لهذا الدور بعد</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {messages.map((msg) => (
+            {filteredMessages.map((msg) => (
               <div
                 key={msg.id}
                 className={`bg-card rounded-2xl border border-border/50 overflow-hidden transition-all ${!msg.is_active ? "opacity-60" : ""}`}
@@ -294,6 +363,28 @@ const AdminPopupMessages = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
+            {/* Target role */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">الحساب المستهدف</label>
+              <div className="flex gap-2">
+                {ROLE_TABS.map((tab) => (
+                  <button
+                    key={tab.value}
+                    onClick={() => {
+                      const defaultEvent = TRIGGER_EVENT_GROUPS_BY_ROLE[tab.value]?.[0]?.events?.[0]?.value || "session_complete";
+                      setForm((f) => ({ ...f, target_role: tab.value, trigger_event: defaultEvent }));
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
+                      form.target_role === tab.value ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <span>{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Trigger event */}
             <div className="space-y-2">
               <label className="text-sm font-medium">حدث الإطلاق</label>
@@ -302,7 +393,7 @@ const AdminPopupMessages = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
-                  {TRIGGER_EVENT_GROUPS.map((group) => (
+                  {(TRIGGER_EVENT_GROUPS_BY_ROLE[form.target_role] || TRIGGER_EVENT_GROUPS_BY_ROLE.student).map((group) => (
                     <div key={group.label}>
                       <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide border-b border-border/50 mb-1 mt-2 first:mt-0">
                         {group.label}

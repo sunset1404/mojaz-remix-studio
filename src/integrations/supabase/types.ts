@@ -490,6 +490,7 @@ export type Database = {
           id: string
           is_active: boolean
           message: string
+          target_role: string
           title: string
           trigger_event: string
           updated_at: string
@@ -501,6 +502,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           message: string
+          target_role?: string
           title: string
           trigger_event: string
           updated_at?: string
@@ -512,6 +514,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           message?: string
+          target_role?: string
           title?: string
           trigger_event?: string
           updated_at?: string

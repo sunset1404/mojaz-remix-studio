@@ -6,13 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
   Bell, Send, Users, GraduationCap, Globe, Filter,
-  CheckCircle2, ChevronDown, ChevronUp, X, BookOpen, Award, Loader2
+  CheckCircle2, ChevronDown, ChevronUp, X, BookOpen, Award, Loader2, Wallet
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 // ─── Types ───────────────────────────────────────────────────
-type TargetGroup = "all" | "students" | "reciters";
+type TargetGroup = "all" | "students" | "reciters" | "partners";
 type NotificationIcon = "bell" | "book" | "award" | "users";
 
 interface FilterState {
@@ -83,7 +83,7 @@ const AdminNotifications = () => {
 
   // Real stats
   const [statsLoading, setStatsLoading] = useState(true);
-  const [stats, setStats] = useState({ students: 0, reciters: 0, totalNotifications: 0, countries: 0 });
+  const [stats, setStats] = useState({ students: 0, reciters: 0, partners: 0, totalNotifications: 0, countries: 0 });
 
   const [filters, setFilters] = useState<FilterState>({
     studentType: "all",
@@ -104,9 +104,10 @@ const AdminNotifications = () => {
 
   const fetchStats = async () => {
     setStatsLoading(true);
-    const [studentsRes, recitersRes, notifsRes, countriesRes] = await Promise.all([
+    const [studentsRes, recitersRes, partnersRes, notifsRes, countriesRes] = await Promise.all([
       supabase.from("student_profiles").select("id", { count: "exact", head: true }),
       supabase.from("reciter_profiles").select("id", { count: "exact", head: true }),
+      supabase.from("partner_profiles").select("id", { count: "exact", head: true }),
       supabase.from("notifications").select("id", { count: "exact", head: true }),
       supabase.from("student_profiles").select("residence_country"),
     ]);
@@ -114,6 +115,7 @@ const AdminNotifications = () => {
     setStats({
       students: studentsRes.count || 0,
       reciters: recitersRes.count || 0,
+      partners: partnersRes.count || 0,
       totalNotifications: notifsRes.count || 0,
       countries: uniqueCountries.size,
     });
@@ -145,6 +147,11 @@ const AdminNotifications = () => {
       if (filters.reciterGender !== "all") query = query.eq("gender", filters.reciterGender === "male" ? "male" : "female");
       const { data } = await query;
       userIds = [...userIds, ...(data || []).map((r: any) => r.user_id)];
+    }
+
+    if (targetGroup === "all" || targetGroup === "partners") {
+      const { data } = await supabase.from("partner_profiles").select("user_id");
+      userIds = [...userIds, ...(data || []).map((p: any) => p.user_id)];
     }
 
     // De-duplicate
@@ -207,11 +214,12 @@ const AdminNotifications = () => {
     const parts = [];
     if (targetGroup === "students") parts.push("الطلاب");
     else if (targetGroup === "reciters") parts.push("المقرئون");
+    else if (targetGroup === "partners") parts.push("الشركاء");
     else parts.push("الجميع");
-    if (filters.studentType === "ijazah" && targetGroup !== "reciters") parts.push("إجازة");
-    if (filters.studentType === "quran" && targetGroup !== "reciters") parts.push("حفظ القرآن");
-    if (filters.gender !== "all" && targetGroup !== "reciters") parts.push(filters.gender === "male" ? "ذكور" : "إناث");
-    if (filters.reciterStatus !== "all" && targetGroup !== "students") {
+    if (filters.studentType === "ijazah" && targetGroup === "students") parts.push("إجازة");
+    if (filters.studentType === "quran" && targetGroup === "students") parts.push("حفظ القرآن");
+    if (filters.gender !== "all" && targetGroup === "students") parts.push(filters.gender === "male" ? "ذكور" : "إناث");
+    if (filters.reciterStatus !== "all" && targetGroup === "reciters") {
       const m: Record<string, string> = { approved: "معتمدين", pending: "قيد الانتظار", suspended: "موقوفين" };
       parts.push(m[filters.reciterStatus]);
     }
@@ -236,10 +244,11 @@ const AdminNotifications = () => {
       <div className="p-6 max-w-5xl mx-auto space-y-6">
 
         {/* Real Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <StatCard icon={Bell} label="إشعارات أُرسلت" value={stats.totalNotifications} color="bg-primary/10 text-primary" loading={statsLoading} />
           <StatCard icon={Users} label="إجمالي الطلاب" value={stats.students} color="bg-gold/15 text-gold" loading={statsLoading} />
           <StatCard icon={GraduationCap} label="المقرئون" value={stats.reciters} color="bg-primary/10 text-primary" loading={statsLoading} />
+          <StatCard icon={Wallet} label="الشركاء" value={stats.partners} color="bg-purple-500/10 text-purple-600" loading={statsLoading} />
           <StatCard icon={Globe} label="دول مختلفة" value={stats.countries} color="bg-blue-500/10 text-blue-600" loading={statsLoading} />
         </div>
 
@@ -323,9 +332,10 @@ const AdminNotifications = () => {
               <p className="text-sm font-bold text-foreground mb-3">🎯 الجمهور المستهدف</p>
               <div className="space-y-2">
                 {[
-                  { value: "all", label: "الجميع", icon: Users, sub: "طلاب + مقرئون" },
+                  { value: "all", label: "الجميع", icon: Users, sub: "طلاب + مقرئون + شركاء" },
                   { value: "students", label: "الطلاب فقط", icon: BookOpen, sub: "جميع الطلاب المسجلين" },
                   { value: "reciters", label: "المقرئون فقط", icon: GraduationCap, sub: "جميع المقرئين" },
+                  { value: "partners", label: "الشركاء فقط", icon: Wallet, sub: "جميع الشركاء الداعمين" },
                 ].map((g) => {
                   const GIcon = g.icon;
                   return (
@@ -351,7 +361,7 @@ const AdminNotifications = () => {
             </div>
 
             {/* Advanced Filters */}
-            {targetGroup !== "all" && (
+            {(targetGroup === "students" || targetGroup === "reciters") && (
               <div className="bg-card rounded-2xl border border-border p-5">
                 <button onClick={() => setShowFilters(!showFilters)} className="w-full flex items-center justify-between">
                   <div className="flex items-center gap-2">
