@@ -11,6 +11,7 @@ const PartnerHome = () => {
   const [profile, setProfile] = useState<any>(null);
   const [studentsCount, setStudentsCount] = useState(0);
   const [totalMinutes, setTotalMinutes] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -35,6 +36,13 @@ const PartnerHome = () => {
         .eq("partner_id", user.id);
       const total = logs?.reduce((s, l) => s + Number(l.minutes_used), 0) || 0;
       setTotalMinutes(total);
+
+      const { count: unread } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+      setUnreadCount(unread || 0);
     };
     fetchData();
   }, [user]);
@@ -62,9 +70,14 @@ const PartnerHome = () => {
               أهلاً {profile?.full_name || "أيها الشريك"} 👋
             </h1>
           </div>
-          <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative">
+          <Link to="/notifications" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative">
             <Bell className="w-5 h-5 text-primary" />
-          </button>
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-destructive flex items-center justify-center">
+                <span className="text-[9px] text-destructive-foreground font-bold">{unreadCount > 9 ? "9+" : unreadCount}</span>
+              </span>
+            )}
+          </Link>
         </motion.div>
         <p className="text-sm text-muted-foreground mt-1">شريك داعم · {profile?.organization_name || ""}</p>
       </div>
