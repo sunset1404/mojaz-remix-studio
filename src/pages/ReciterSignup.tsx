@@ -35,8 +35,40 @@ const STEPS = [
 ];
 
 const DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
-const TIMES = ["الفجر", "الصباح", "الظهر", "العصر", "المغرب", "العشاء"];
 const TRACKS = ["حفظ القرآن الكريم", "التلاوة والتجويد", "الإجازة بالسند", "المراجعة والتثبيت"];
+
+const generateHalfHourSlots = (): string[] => {
+  const result: string[] = [];
+  for (let h = 5; h < 24; h++) {
+    const hh = String(h).padStart(2, "0");
+    const nextHour = String((h + 1) % 24).padStart(2, "0");
+    result.push(`${hh}:00 - ${hh}:30`);
+    result.push(`${hh}:30 - ${nextHour}:00`);
+  }
+  for (let h = 0; h < 5; h++) {
+    const hh = String(h).padStart(2, "0");
+    const nextHour = String((h + 1) % 24).padStart(2, "0");
+    result.push(`${hh}:00 - ${hh}:30`);
+    result.push(`${hh}:30 - ${nextHour}:00`);
+  }
+  return result;
+};
+
+const halfHourSlots = generateHalfHourSlots();
+
+const TIME_PERIODS = [
+  { label: "الفجر والصباح (5:00 - 12:00)", start: 5, end: 12 },
+  { label: "الظهر والعصر (12:00 - 17:00)", start: 12, end: 17 },
+  { label: "المغرب والعشاء (17:00 - 22:00)", start: 17, end: 22 },
+  { label: "الليل (22:00 - 5:00)", start: 22, end: 29 },
+];
+
+const getSlotsForPeriod = (period: typeof TIME_PERIODS[0]) =>
+  halfHourSlots.filter(slot => {
+    const hourNum = parseInt(slot.split(":")[0]);
+    if (period.start < 24 && period.end <= 24) return hourNum >= period.start && hourNum < period.end;
+    return hourNum >= 22 || hourNum < 5;
+  });
 
 const ReciterSignup = () => {
   const navigate = useNavigate();
@@ -326,16 +358,41 @@ const ReciterSignup = () => {
                 ))}
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-foreground text-xs font-semibold">أوقات الإقراء المفضلة</Label>
-              <div className="flex flex-wrap gap-2">
-                {TIMES.map((time) => (
-                  <button key={time} type="button" onClick={() => toggleItem(preferredTimes, time, setPreferredTimes)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                      preferredTimes.includes(time) ? "border-primary bg-primary/15 text-primary" : "border-border/60 bg-card text-foreground/60 hover:border-primary/30"
-                    }`}>{time}</button>
-                ))}
-              </div>
+              {TIME_PERIODS.map(period => {
+                const periodSlots = getSlotsForPeriod(period);
+                const allSelected = periodSlots.every(s => preferredTimes.includes(s));
+                return (
+                  <div key={period.label}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-bold text-foreground">{period.label}</span>
+                      <button type="button"
+                        onClick={() => {
+                          if (allSelected) {
+                            setPreferredTimes(prev => prev.filter(t => !periodSlots.includes(t)));
+                          } else {
+                            setPreferredTimes(prev => [...new Set([...prev, ...periodSlots])]);
+                          }
+                        }}
+                        className="text-[10px] text-primary font-semibold"
+                      >
+                        {allSelected ? "إلغاء الكل" : "تحديد الكل"}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {periodSlots.map(time => (
+                        <button key={time} type="button"
+                          onClick={() => toggleItem(preferredTimes, time, setPreferredTimes)}
+                          className={`rounded-lg py-2 px-1 text-center transition-all border text-[11px] font-medium ${
+                            preferredTimes.includes(time) ? "border-primary bg-primary/10 text-primary font-bold" : "border-border/60 bg-card text-foreground/60 hover:border-primary/30"
+                          }`} dir="ltr"
+                        >{time}</button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <div className="space-y-2">
               <Label className="text-foreground text-xs font-semibold">مسار الإقراء المفضل</Label>
