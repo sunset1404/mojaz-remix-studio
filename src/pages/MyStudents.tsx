@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Star, Phone, Video, Search, Heart, Users, BookOpen, User } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +10,7 @@ type FilterType = "all" | "favorites";
 
 const MyStudents = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -122,6 +124,7 @@ const MyStudents = () => {
           filtered.map((student, i) => (
             <div
               key={student.user_id}
+              onClick={() => navigate(`/my-students/${student.user_id}`)}
               className="glass-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:shadow-lg active:scale-[0.98] transition-all animate-fade-in"
               style={{ animationDelay: `${i * 40}ms`, animationFillMode: 'both' }}
             >
