@@ -265,10 +265,10 @@ const ReciterSignup = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-foreground text-xs font-semibold">رقم الجوال</Label>
-                <div className="flex gap-1.5">
-                  <PhoneCodeSelect value={phoneCode} onChange={setPhoneCode} />
+                <div className="flex gap-1.5" dir="ltr">
                   <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => { setPhone(e.target.value.replace(/^0+/, '')); setPhoneError(""); }}
-                    className={`flex-1 ${inputClass} ${phoneError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
+                    className={`flex-1 min-w-0 ${inputClass} ${phoneError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
+                  <PhoneCodeSelect value={phoneCode} onChange={setPhoneCode} />
                 </div>
                 {phoneError && (
                   <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
