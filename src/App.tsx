@@ -61,6 +61,7 @@ import AdminSubscriptions from "./pages/AdminSubscriptions";
 import AdminGifts from "./pages/AdminGifts";
 import AdminPlans from "./pages/AdminPlans";
 import MyGifts from "./pages/MyGifts";
+import ReciterStudentPerformance from "./pages/ReciterStudentPerformance";
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,7 @@ const AppRoutes = () => (
     {/* Reciter-only routes */}
     <Route path="/my-students" element={<ProtectedRoute allowedRole="reciter"><><MyStudents /><BottomNav /></></ProtectedRoute>} />
     <Route path="/sessions" element={<ProtectedRoute allowedRole="reciter"><><Sessions /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/student-performance" element={<ProtectedRoute allowedRole="reciter"><><ReciterStudentPerformance /><BottomNav /></></ProtectedRoute>} />
 
     {/* Partner-only routes */}
     <Route path="/partner-dashboard" element={<ProtectedRoute allowedRole="partner"><><PartnerDashboard /><BottomNav /></></ProtectedRoute>} />
