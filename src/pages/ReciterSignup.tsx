@@ -9,8 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Check, User, Phone, MapPin, BookOpen, Clock, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import logoMojaz from "@/assets/logo-mojaz.webp";
 import CountrySelect from "@/components/CountrySelect";
-import PhoneCodeSelect from "@/components/PhoneCodeSelect";
-import { COUNTRY_CODES } from "@/data/countries";
+import CitySelect from "@/components/CitySelect";
 
 const getPasswordStrength = (pwd: string): { level: number; label: string; color: string } => {
   if (!pwd) return { level: 0, label: "", color: "" };
@@ -36,6 +35,17 @@ const STEPS = [
 
 const DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
 const TRACKS = ["حفظ القرآن الكريم", "التلاوة والتجويد", "الإجازة بالسند", "المراجعة والتثبيت"];
+
+const SAUDI_CITIES = [
+  "الرياض", "جدة", "مكة المكرمة", "المدينة المنورة", "الدمام", "الطائف", "تبوك",
+  "بريدة", "خميس مشيط", "حائل", "الهفوف", "الجبيل", "نجران", "ينبع", "أبها",
+  "عرعر", "سكاكا", "جازان", "القطيف", "الخرج", "الباحة", "الظهران", "القنفذة",
+  "بيشة", "الزلفي", "رابغ", "شقراء", "الدوادمي", "المجمعة", "عنيزة", "الرس",
+  "وادي الدواسر", "صبيا", "القريات", "الليث", "أملج", "تربة", "ضباء", "العلا",
+  "رفحاء", "طريف", "شرورة", "الأفلاج", "حوطة بني تميم", "المذنب", "البكيرية",
+  "الخبر", "الأحساء", "حفر الباطن", "الطائف", "محايل عسير", "بلجرشي", "النماص",
+  "تنومة", "سراة عبيدة", "المندق", "العقيق", "رجال ألمع", "ظهران الجنوب"
+].sort((a, b) => a.localeCompare(b, "ar"));
 
 const generateHalfHourSlots = (): string[] => {
   const result: string[] = [];
@@ -89,7 +99,7 @@ const ReciterSignup = () => {
   const [nationality, setNationality] = useState("");
   const [idNumber, setIdNumber] = useState("");
   const [phone, setPhone] = useState("");
-  const [phoneCode, setPhoneCode] = useState("+966");
+  const phoneCode = "+966";
   const [city, setCity] = useState("");
 
   // Step 2: Professional
@@ -287,7 +297,7 @@ const ReciterSignup = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-foreground text-xs font-semibold">الجنسية</Label>
-                <CountrySelect value={nationality} onChange={(v) => { setNationality(v); if (COUNTRY_CODES[v]) setPhoneCode(COUNTRY_CODES[v]); }} />
+                <CountrySelect value={nationality} onChange={(v) => setNationality(v)} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-foreground text-xs font-semibold">رقم الهوية</Label>
@@ -299,7 +309,9 @@ const ReciterSignup = () => {
               <div className="flex gap-1.5" dir="ltr">
                 <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => { setPhone(e.target.value.replace(/^0+/, '')); setPhoneError(""); }}
                   className={`flex-1 min-w-0 ${inputClass} ${phoneError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
-                <PhoneCodeSelect value={phoneCode} onChange={setPhoneCode} />
+                <div className="h-12 w-24 rounded-xl border border-primary/20 bg-card px-2 flex items-center justify-center text-xs font-semibold text-foreground shadow-sm" dir="ltr">
+                  <span className="text-sm mr-1">🇸🇦</span> +966
+                </div>
               </div>
               {phoneError && (
                 <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
@@ -307,11 +319,9 @@ const ReciterSignup = () => {
                 </p>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">مدينة الإقامة</Label>
-                <Input placeholder="المدينة" value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} required />
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-xs font-semibold">مدينة الإقامة</Label>
+              <CitySelect value={city} onChange={setCity} cities={SAUDI_CITIES} />
             </div>
           </div>
         );
