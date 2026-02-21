@@ -34,7 +34,10 @@ const ReciterHome = () => {
   useEffect(() => {
     if (!user) return;
     supabase.from("reciter_profiles").select("full_name").eq("user_id", user.id).maybeSingle()
-      .then(({ data }) => { if (data) setUserName(data.full_name); });
+      .then(({ data }) => { if (data) {
+        const parts = data.full_name.trim().split(/\s+/);
+        setUserName(parts.slice(0, 2).join(" "));
+      }});
 
     // Fetch assigned students for ijazah reciters
     if (reciterType === "ijazah") {
