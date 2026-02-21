@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Users, Bell, Award, Headphones, Phone, Video, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,9 +27,11 @@ const quickStats = [
 
 const ReciterHome = () => {
   const { user, avatarUrl, reciterType } = useAuth();
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [userName, setUserName] = useState("");
   const [assignedStudents, setAssignedStudents] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -49,6 +51,13 @@ const ReciterHome = () => {
           if (data) setAssignedStudents(data);
         });
     }
+    // Fetch unread notifications count
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false)
+      .then(({ count }) => { setUnreadCount(count || 0); });
   }, [user, reciterType]);
 
   const nextSlide = useCallback(() => {
@@ -81,9 +90,14 @@ const ReciterHome = () => {
               أهلاً {userName || "أيها المقرئ"} 👋
             </h1>
           </div>
-          <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative">
+          <button
+            onClick={() => navigate("/notifications")}
+            className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative"
+          >
             <Bell className="w-5 h-5 text-primary" />
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-gold rounded-full border-2 border-background" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-gold rounded-full border-2 border-background" />
+            )}
           </button>
         </motion.div>
       </div>
