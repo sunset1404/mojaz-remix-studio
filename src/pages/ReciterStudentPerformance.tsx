@@ -342,7 +342,7 @@ const ReciterStudentPerformance = () => {
 
                     {/* Commitment Bar */}
                     <div className="px-4 pb-4">
-                      <div className="bg-muted/30 rounded-xl p-3">
+                      <div className="bg-primary/5 rounded-xl p-3">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs font-medium text-foreground">نسبة الالتزام</span>
                           <span className={`text-xs font-bold ${getCommitmentColor(student.commitment_rate)}`}>
