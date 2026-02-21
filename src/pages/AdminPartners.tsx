@@ -86,6 +86,7 @@ const AdminPartners = () => {
   const [allStudents, setAllStudents] = useState<{ user_id: string; full_name: string; phone: string; preferred_track: string }[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
   const [studentSearch, setStudentSearch] = useState("");
+  const [trackFilter, setTrackFilter] = useState<"all" | "ijazah" | "general">("all");
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [assigning, setAssigning] = useState(false);
 
@@ -248,6 +249,7 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
     setAssignDialog({ open: true, partnerId, partnerName });
     setSelectedStudentIds(new Set());
     setStudentSearch("");
+    setTrackFilter("all");
     setLoadingStudents(true);
     try {
       const { data } = await supabase
@@ -261,21 +263,22 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
     }
   };
 
-  const alreadyAssignedIds = useMemo(() => {
-    if (!assignDialog.partnerId) return new Set<string>();
+  // All students assigned to ANY partner (globally)
+  const globallyAssignedIds = useMemo(() => {
     return new Set(
       partnerStudents
-        .filter(s => s.partner_id === assignDialog.partnerId && s.status === "active")
+        .filter(s => s.status === "active")
         .map(s => s.student_id)
     );
-  }, [assignDialog.partnerId, partnerStudents]);
+  }, [partnerStudents]);
 
   const filteredStudents = useMemo(() => {
-    if (!studentSearch) return allStudents;
-    return allStudents.filter(s =>
-      s.full_name.includes(studentSearch) || s.phone.includes(studentSearch)
-    );
-  }, [allStudents, studentSearch]);
+    let list = allStudents.filter(s => !globallyAssignedIds.has(s.user_id));
+    if (trackFilter === "ijazah") list = list.filter(s => s.preferred_track === "إجازة");
+    else if (trackFilter === "general") list = list.filter(s => s.preferred_track !== "إجازة");
+    if (studentSearch) list = list.filter(s => s.full_name.includes(studentSearch) || s.phone.includes(studentSearch));
+    return list;
+  }, [allStudents, studentSearch, trackFilter, globallyAssignedIds]);
 
   const toggleStudent = (id: string) => {
     setSelectedStudentIds(prev => {
@@ -287,7 +290,7 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
   };
 
   const selectAllFiltered = () => {
-    const available = filteredStudents.filter(s => !alreadyAssignedIds.has(s.user_id));
+    const available = filteredStudents;
     setSelectedStudentIds(prev => {
       const next = new Set(prev);
       const allSelected = available.every(s => next.has(s.user_id));
@@ -776,6 +779,28 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
             />
           </div>
 
+          {/* Track Filter Tabs */}
+          <div className="flex items-center gap-2">
+            {[
+              { key: "all" as const, label: "الكل" },
+              { key: "general" as const, label: "طلاب الإقراء" },
+              { key: "ijazah" as const, label: "طلاب الإجازات" },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setTrackFilter(tab.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  trackFilter === tab.key
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-accent/30 text-muted-foreground hover:bg-accent/50"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           {/* Select all + count */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <button
@@ -785,7 +810,7 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
             >
               تحديد / إلغاء تحديد الكل
             </button>
-            <span>{selectedStudentIds.size} طالب محدد</span>
+            <span>{selectedStudentIds.size} طالب محدد من أصل {filteredStudents.length}</span>
           </div>
 
           {/* Students List */}
@@ -798,20 +823,18 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
               <div className="text-center py-8 text-muted-foreground text-sm">لا يوجد طلاب</div>
             ) : (
               filteredStudents.map(student => {
-                const isAssigned = alreadyAssignedIds.has(student.user_id);
                 const isSelected = selectedStudentIds.has(student.user_id);
                 return (
                   <div
                     key={student.user_id}
                     className={`flex items-center gap-3 p-3 transition-colors cursor-pointer ${
-                      isAssigned ? "opacity-50 bg-muted/30 cursor-not-allowed" : isSelected ? "bg-primary/5" : "hover:bg-accent/30"
+                      isSelected ? "bg-primary/5" : "hover:bg-accent/30"
                     }`}
-                    onClick={() => !isAssigned && toggleStudent(student.user_id)}
+                    onClick={() => toggleStudent(student.user_id)}
                   >
                     <Checkbox
-                      checked={isAssigned || isSelected}
-                      disabled={isAssigned}
-                      onCheckedChange={() => !isAssigned && toggleStudent(student.user_id)}
+                      checked={isSelected}
+                      onCheckedChange={() => toggleStudent(student.user_id)}
                       className="shrink-0"
                     />
                     <div className="flex-1 min-w-0">
@@ -821,7 +844,6 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                     <Badge variant="outline" className="text-[10px] shrink-0">
                       {student.preferred_track === "إجازة" ? "إجازة" : "إقراء"}
                     </Badge>
-                    {isAssigned && <span className="text-[10px] text-muted-foreground">مُسكّن</span>}
                   </div>
                 );
               })
