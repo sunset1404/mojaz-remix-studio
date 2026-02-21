@@ -262,20 +262,20 @@ const ReciterSignup = () => {
                 <Input placeholder="رقم الهوية" value={idNumber} onChange={(e) => setIdNumber(e.target.value)} className={inputClass} dir="ltr" required />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">رقم الجوال</Label>
-                <div className="flex gap-1.5" dir="ltr">
-                  <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => { setPhone(e.target.value.replace(/^0+/, '')); setPhoneError(""); }}
-                    className={`flex-1 min-w-0 ${inputClass} ${phoneError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
-                  <PhoneCodeSelect value={phoneCode} onChange={setPhoneCode} />
-                </div>
-                {phoneError && (
-                  <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
-                    <span>⚠</span> {phoneError}
-                  </p>
-                )}
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-xs font-semibold">رقم الجوال</Label>
+              <div className="flex gap-1.5" dir="ltr">
+                <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => { setPhone(e.target.value.replace(/^0+/, '')); setPhoneError(""); }}
+                  className={`flex-1 min-w-0 ${inputClass} ${phoneError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
+                <PhoneCodeSelect value={phoneCode} onChange={setPhoneCode} />
               </div>
+              {phoneError && (
+                <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
+                  <span>⚠</span> {phoneError}
+                </p>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-foreground text-xs font-semibold">مدينة الإقامة</Label>
                 <Input placeholder="المدينة" value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} required />
