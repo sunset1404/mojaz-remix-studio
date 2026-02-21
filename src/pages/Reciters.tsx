@@ -3,6 +3,7 @@ import { Star, Phone, Video, Search, Heart, Mic, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Reciter = {
   id: string;
@@ -15,6 +16,7 @@ type Reciter = {
 type FilterType = "all" | "available" | "favorites";
 
 const Reciters = () => {
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -22,15 +24,33 @@ const Reciters = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from("reciter_profiles")
-      .select("id, user_id, full_name, preferred_track, stamp_url")
-      .eq("status", "approved")
-      .then(({ data }) => {
-        setReciters(data ?? []);
-        setLoading(false);
-      });
-  }, []);
+    const fetchReciters = async () => {
+      // Get student gender first
+      let studentGender: string | null = null;
+      if (user) {
+        const { data: profile } = await supabase
+          .from("student_profiles")
+          .select("gender")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        studentGender = profile?.gender ?? null;
+      }
+
+      let query = supabase
+        .from("reciter_profiles")
+        .select("id, user_id, full_name, preferred_track, stamp_url")
+        .eq("status", "approved");
+      
+      if (studentGender) {
+        query = query.eq("gender", studentGender);
+      }
+
+      const { data } = await query;
+      setReciters(data ?? []);
+      setLoading(false);
+    };
+    fetchReciters();
+  }, [user]);
 
   const toggleFavorite = (id: string) => {
     setFavorites((prev) =>

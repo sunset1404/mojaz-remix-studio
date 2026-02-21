@@ -94,7 +94,7 @@ const AdminIjazahStudents = () => {
         supabase.from("student_profiles").select("*")
           .eq("preferred_track", "الحصول على إجازة قرآنية")
           .order("created_at", { ascending: false }),
-        supabase.from("reciter_profiles").select("user_id, full_name, preferred_track")
+        supabase.from("reciter_profiles").select("user_id, full_name, preferred_track, gender")
           .eq("status", "approved"),
         supabase.from("student_achievements").select("*"),
       ]);
@@ -412,7 +412,7 @@ const AdminIjazahStudents = () => {
                                           <SelectValue placeholder="اختر المقرئ" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          {reciters.map(r => (
+                                          {reciters.filter(r => (r as any).gender === student.gender).map(r => (
                                             <SelectItem key={r.user_id} value={r.user_id} className="text-xs">
                                               {r.full_name}
                                             </SelectItem>
