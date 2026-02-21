@@ -277,9 +277,9 @@ const ReciterStudentPerformance = () => {
 
                     {/* Stats Grid */}
                     <div className="p-4 grid grid-cols-2 gap-3">
-                      <div className="bg-muted/50 rounded-xl p-3 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                          <Flame className="w-4 h-4 text-blue-500" />
+                      <div className="bg-primary/5 rounded-xl p-3 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                          <Flame className="w-4 h-4 text-primary" />
                         </div>
                         <div>
                           <div className="text-base font-bold text-foreground">{student.sessions_count}</div>
@@ -287,9 +287,9 @@ const ReciterStudentPerformance = () => {
                         </div>
                       </div>
 
-                      <div className="bg-muted/50 rounded-xl p-3 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                          <Clock className="w-4 h-4 text-emerald-500" />
+                      <div className="bg-gold/5 rounded-xl p-3 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+                          <Clock className="w-4 h-4 text-gold" />
                         </div>
                         <div>
                           <div className="text-base font-bold text-foreground">{Math.round(student.total_minutes)}</div>
@@ -297,9 +297,9 @@ const ReciterStudentPerformance = () => {
                         </div>
                       </div>
 
-                      <div className="bg-muted/50 rounded-xl p-3 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
-                          <BookOpen className="w-4 h-4 text-amber-500" />
+                      <div className="bg-gold/5 rounded-xl p-3 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+                          <BookOpen className="w-4 h-4 text-gold" />
                         </div>
                         <div>
                           <div className="text-base font-bold text-foreground">{student.pages_memorized}</div>
@@ -307,7 +307,7 @@ const ReciterStudentPerformance = () => {
                         </div>
                       </div>
 
-                      <div className="bg-muted/50 rounded-xl p-3 flex items-center gap-3">
+                      <div className="bg-primary/5 rounded-xl p-3 flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                           <Target className="w-4 h-4 text-primary" />
                         </div>
@@ -319,9 +319,9 @@ const ReciterStudentPerformance = () => {
                         </div>
                       </div>
 
-                      <div className="bg-muted/50 rounded-xl p-3 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
-                          <Award className="w-4 h-4 text-purple-500" />
+                      <div className="bg-primary/5 rounded-xl p-3 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                          <Award className="w-4 h-4 text-primary" />
                         </div>
                         <div>
                           <div className="text-base font-bold text-foreground">{student.certificates_count}</div>
@@ -329,7 +329,7 @@ const ReciterStudentPerformance = () => {
                         </div>
                       </div>
 
-                      <div className="bg-muted/50 rounded-xl p-3 flex items-center gap-3">
+                      <div className="bg-gold/5 rounded-xl p-3 flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
                           <Star className="w-4 h-4 text-gold" />
                         </div>
