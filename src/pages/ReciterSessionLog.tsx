@@ -52,9 +52,17 @@ const ReciterSessionLog = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24" dir="rtl">
-      <div className="px-6 pt-10 pb-4">
-        <h1 className="text-2xl font-bold text-foreground font-cairo">سجل الجلسات</h1>
-        <p className="text-sm text-muted-foreground mt-1">جميع جلساتك مع الطلاب</p>
+      {/* Header */}
+      <div className="gradient-primary px-6 pt-12 pb-8 rounded-b-[2.5rem]">
+        <motion.h1
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="text-2xl font-bold text-primary-foreground mb-1 flex items-center justify-center gap-2"
+        >
+          <Calendar className="w-6 h-6" />
+          سجل الجلسات
+        </motion.h1>
+        <p className="text-sm text-primary-foreground/80 text-center">جميع جلساتك مع الطلاب</p>
       </div>
 
       {/* Stats */}
