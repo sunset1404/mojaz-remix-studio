@@ -32,7 +32,7 @@ const quickStats = [
 ];
 
 const ReciterHome = () => {
-  const { user, avatarUrl } = useAuth();
+  const { user, avatarUrl, reciterType } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [userName, setUserName] = useState("");
 
@@ -184,64 +184,100 @@ const ReciterHome = () => {
         </motion.div>
       </div>
 
-      {/* Students Section */}
-      <div className="px-5 mt-6">
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.65 }}
-          className="glass-card rounded-2xl p-4"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Users className="w-4 h-4 text-primary" />
-              </div>
-              <h2 className="font-bold text-foreground text-base">طلابي</h2>
-            </div>
-            <Link to="/my-students" className="flex items-center gap-1 text-xs text-primary font-semibold">
-              المزيد <ChevronLeft className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {topStudents.map((student, i) => (
-              <motion.div
-                key={student.name}
-                initial={{ scale: 0.85, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.7 + i * 0.08 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <div className="flex flex-col items-center gap-2.5 w-[130px] bg-card rounded-2xl p-4 border border-border/50 shadow-sm">
-                  <Link to="/my-students" className="flex flex-col items-center gap-2">
-                    <div className="relative">
-                      <div className="w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md">
-                        <img src={student.image} alt={student.name} className="w-full h-full object-cover" />
-                      </div>
-                      <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[2.5px] border-card ${student.online ? "bg-green-500" : "bg-destructive"}`} />
-                    </div>
-                    <span className="text-xs font-semibold text-foreground text-center leading-tight line-clamp-1">
-                      {student.name}
-                    </span>
-                  </Link>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 text-gold fill-current" />
-                    <span className="text-xs font-bold text-foreground">المستوى {student.level}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
-                      <Video className="w-4.5 h-4.5 text-primary" />
-                    </button>
-                    <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
-                      <Phone className="w-4.5 h-4.5 text-primary" />
-                    </button>
-                  </div>
+      {/* Students Section (Ijazah) or Recent Sessions (General) */}
+      {reciterType === "ijazah" ? (
+        <div className="px-5 mt-6">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.65 }}
+            className="glass-card rounded-2xl p-4"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-primary" />
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
+                <h2 className="font-bold text-foreground text-base">طلابي</h2>
+              </div>
+              <Link to="/my-students" className="flex items-center gap-1 text-xs text-primary font-semibold">
+                المزيد <ChevronLeft className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {topStudents.map((student, i) => (
+                <motion.div
+                  key={student.name}
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.7 + i * 0.08 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <div className="flex flex-col items-center gap-2.5 w-[130px] bg-card rounded-2xl p-4 border border-border/50 shadow-sm">
+                    <Link to="/my-students" className="flex flex-col items-center gap-2">
+                      <div className="relative">
+                        <div className="w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md">
+                          <img src={student.image} alt={student.name} className="w-full h-full object-cover" />
+                        </div>
+                        <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[2.5px] border-card ${student.online ? "bg-green-500" : "bg-destructive"}`} />
+                      </div>
+                      <span className="text-xs font-semibold text-foreground text-center leading-tight line-clamp-1">
+                        {student.name}
+                      </span>
+                    </Link>
+                    <div className="flex items-center gap-1">
+                      <Star className="w-3.5 h-3.5 text-gold fill-current" />
+                      <span className="text-xs font-bold text-foreground">المستوى {student.level}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
+                        <Video className="w-4.5 h-4.5 text-primary" />
+                      </button>
+                      <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
+                        <Phone className="w-4.5 h-4.5 text-primary" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      ) : (
+        <div className="px-5 mt-6">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.65 }}
+            className="space-y-3"
+          >
+            <Link to="/reciter-session-log" className="block">
+              <div className="glass-card rounded-2xl p-4 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Calendar className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-foreground text-sm">سجل الجلسات</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">جميع جلساتك مع الطلاب</p>
+                </div>
+                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </Link>
+            <Link to="/reciter-my-stats" className="block">
+              <div className="glass-card rounded-2xl p-4 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
+                  <Trophy className="w-6 h-6 text-gold" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-foreground text-sm">إحصائياتي</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">ملخص أدائك في الإقراء</p>
+                </div>
+                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </Link>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

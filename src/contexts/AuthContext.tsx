@@ -4,11 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
+type ReciterType = "ijazah" | "general" | null;
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   role: AppRole | null;
+  reciterType: ReciterType;
   avatarUrl: string | null;
   loading: boolean;
   signOut: () => Promise<void>;
@@ -19,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   role: null,
+  reciterType: null,
   avatarUrl: null,
   loading: true,
   signOut: async () => {},
@@ -31,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [reciterType, setReciterType] = useState<ReciterType>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +45,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .eq("user_id", userId)
       .maybeSingle()
       .then(({ data }) => {
-        setRole(data?.role ?? null);
+        const r = data?.role ?? null;
+        setRole(r);
+        if (r === "reciter") {
+          fetchReciterType(userId);
+        } else {
+          setReciterType(null);
+        }
+      });
+  };
+
+  const fetchReciterType = (userId: string) => {
+    supabase
+      .from("reciter_profiles")
+      .select("reciter_type")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        setReciterType((data as any)?.reciter_type ?? null);
       });
   };
 
@@ -84,6 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchAvatar(session.user.id);
       } else {
         setRole(null);
+        setReciterType(null);
         setAvatarUrl(null);
       }
       setLoading(false);
@@ -97,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, role, avatarUrl, loading, signOut, refreshAvatar }}>
+    <AuthContext.Provider value={{ session, user, role, reciterType, avatarUrl, loading, signOut, refreshAvatar }}>
       {children}
     </AuthContext.Provider>
   );

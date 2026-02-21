@@ -1,4 +1,4 @@
-import { Home, Mic, Crown, Trophy, User, Users, Calendar, LayoutDashboard, Settings, BarChart3 } from "lucide-react";
+import { Home, Mic, Crown, Trophy, User, Users, Calendar, LayoutDashboard, Settings, BarChart3, ClipboardList } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,11 +11,19 @@ const studentTabs = [
   { path: "/subscription", icon: Crown, label: "الاشتراك" },
 ];
 
-const reciterTabs = [
+const reciterIjazahTabs = [
   { path: "/sessions", icon: Calendar, label: "الجلسات" },
   { path: "/my-students", icon: Users, label: "طلابي" },
   { path: "/", icon: Home, label: "الرئيسية", main: true },
   { path: "/student-performance", icon: BarChart3, label: "الأداء" },
+  { path: "/profile", icon: User, label: "حسابي" },
+];
+
+const reciterGeneralTabs = [
+  { path: "/sessions", icon: Calendar, label: "الجلسات" },
+  { path: "/reciter-session-log", icon: ClipboardList, label: "سجل الجلسات" },
+  { path: "/", icon: Home, label: "الرئيسية", main: true },
+  { path: "/reciter-my-stats", icon: BarChart3, label: "إحصائياتي" },
   { path: "/profile", icon: User, label: "حسابي" },
 ];
 
@@ -36,7 +44,8 @@ const adminTabs = [
 
 const BottomNav = () => {
   const location = useLocation();
-  const { role } = useAuth();
+  const { role, reciterType } = useAuth();
+  const reciterTabs = reciterType === "ijazah" ? reciterIjazahTabs : reciterGeneralTabs;
   const tabs = role === "admin" ? adminTabs : role === "partner" ? partnerTabs : role === "reciter" ? reciterTabs : studentTabs;
 
   return (
