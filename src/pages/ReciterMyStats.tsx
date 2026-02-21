@@ -96,7 +96,7 @@ const ReciterMyStats = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="px-5 mb-5">
+      <div className="px-5 mt-5 mb-5">
         <div className="grid grid-cols-2 gap-3">
           {statCards.map((stat, i) => (
             <motion.div

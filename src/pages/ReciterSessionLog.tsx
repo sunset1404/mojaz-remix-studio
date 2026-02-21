@@ -66,7 +66,7 @@ const ReciterSessionLog = () => {
       </div>
 
       {/* Stats */}
-      <div className="px-5 mb-4">
+      <div className="px-5 mt-5 mb-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="glass-card rounded-2xl p-4 text-center">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
