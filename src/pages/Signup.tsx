@@ -13,7 +13,7 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{ background: "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 40%, hsl(var(--gold) / 0.35) 85%, hsl(var(--gold) / 0.5) 100%)" }}
+      style={{ background: "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 40%, hsl(var(--gold) / 0.18) 85%, hsl(var(--gold) / 0.28) 100%)" }}
     >
       {/* Decorative */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
