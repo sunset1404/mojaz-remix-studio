@@ -20,8 +20,9 @@ import {
   TrendingUp, DollarSign, Users, Building2,
   RefreshCw, ChevronDown, ChevronUp,
   ArrowRight, Plus, Copy, Check, Eye, EyeOff,
-  Wallet, Clock
+  Wallet, Clock, UserPlus, X, Loader2
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -79,6 +80,14 @@ const AdminPartners = () => {
   } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Assign students dialog
+  const [assignDialog, setAssignDialog] = useState<{ open: boolean; partnerId: string; partnerName: string }>({ open: false, partnerId: "", partnerName: "" });
+  const [allStudents, setAllStudents] = useState<{ user_id: string; full_name: string; phone: string; preferred_track: string }[]>([]);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+  const [studentSearch, setStudentSearch] = useState("");
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -233,6 +242,83 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
     setCreatedCredentials(null);
     setShowPassword(false);
     setCopied(false);
+  };
+
+  const openAssignDialog = async (partnerId: string, partnerName: string) => {
+    setAssignDialog({ open: true, partnerId, partnerName });
+    setSelectedStudentIds(new Set());
+    setStudentSearch("");
+    setLoadingStudents(true);
+    try {
+      const { data } = await supabase
+        .from("student_profiles")
+        .select("user_id, full_name, phone, preferred_track");
+      setAllStudents(data || []);
+    } catch {
+      toast({ title: "خطأ في تحميل الطلاب", variant: "destructive" });
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  const alreadyAssignedIds = useMemo(() => {
+    if (!assignDialog.partnerId) return new Set<string>();
+    return new Set(
+      partnerStudents
+        .filter(s => s.partner_id === assignDialog.partnerId && s.status === "active")
+        .map(s => s.student_id)
+    );
+  }, [assignDialog.partnerId, partnerStudents]);
+
+  const filteredStudents = useMemo(() => {
+    if (!studentSearch) return allStudents;
+    return allStudents.filter(s =>
+      s.full_name.includes(studentSearch) || s.phone.includes(studentSearch)
+    );
+  }, [allStudents, studentSearch]);
+
+  const toggleStudent = (id: string) => {
+    setSelectedStudentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllFiltered = () => {
+    const available = filteredStudents.filter(s => !alreadyAssignedIds.has(s.user_id));
+    setSelectedStudentIds(prev => {
+      const next = new Set(prev);
+      const allSelected = available.every(s => next.has(s.user_id));
+      if (allSelected) {
+        available.forEach(s => next.delete(s.user_id));
+      } else {
+        available.forEach(s => next.add(s.user_id));
+      }
+      return next;
+    });
+  };
+
+  const assignStudents = async () => {
+    if (selectedStudentIds.size === 0) return;
+    setAssigning(true);
+    try {
+      const rows = Array.from(selectedStudentIds).map(studentId => ({
+        partner_id: assignDialog.partnerId,
+        student_id: studentId,
+        status: "active",
+      }));
+      const { error } = await supabase.from("partner_students").insert(rows);
+      if (error) throw error;
+      toast({ title: "تم تسكين الطلاب بنجاح", description: `تم إضافة ${rows.length} طالب على الشريك` });
+      setAssignDialog({ open: false, partnerId: "", partnerName: "" });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "خطأ في تسكين الطلاب", description: error.message, variant: "destructive" });
+    } finally {
+      setAssigning(false);
+    }
   };
 
   const statCards = [
@@ -632,6 +718,18 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                                     </div>
                                   </div>
 
+                                  {/* Assign Students Button */}
+                                  <div className="mt-4 pt-3 border-t border-border/20">
+                                    <Button
+                                      size="sm"
+                                      className="gap-2"
+                                      onClick={(e) => { e.stopPropagation(); openAssignDialog(partner.user_id, partner.full_name); }}
+                                    >
+                                      <UserPlus className="w-4 h-4" />
+                                      إضافة طلاب على هذا الداعم
+                                    </Button>
+                                  </div>
+
                                   {/* Mobile Contact */}
                                   {partner.phone && (
                                     <div className="flex md:hidden items-center gap-2 mt-4 pt-3 border-t border-border/20">
@@ -659,6 +757,88 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
           </Card>
         </motion.div>
       </div>
+
+      {/* Assign Students Dialog */}
+      <Dialog open={assignDialog.open} onOpenChange={(open) => { if (!open) setAssignDialog({ open: false, partnerId: "", partnerName: "" }); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] flex flex-col" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-right">إضافة طلاب على: {assignDialog.partnerName}</DialogTitle>
+          </DialogHeader>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="بحث بالاسم أو رقم الجوال..."
+              value={studentSearch}
+              onChange={(e) => setStudentSearch(e.target.value)}
+              className="pr-9"
+            />
+          </div>
+
+          {/* Select all + count */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <button
+              type="button"
+              className="text-primary hover:underline font-medium"
+              onClick={selectAllFiltered}
+            >
+              تحديد / إلغاء تحديد الكل
+            </button>
+            <span>{selectedStudentIds.size} طالب محدد</span>
+          </div>
+
+          {/* Students List */}
+          <div className="flex-1 overflow-y-auto border border-border/30 rounded-xl divide-y divide-border/20 min-h-0 max-h-[45vh]">
+            {loadingStudents ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : filteredStudents.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">لا يوجد طلاب</div>
+            ) : (
+              filteredStudents.map(student => {
+                const isAssigned = alreadyAssignedIds.has(student.user_id);
+                const isSelected = selectedStudentIds.has(student.user_id);
+                return (
+                  <div
+                    key={student.user_id}
+                    className={`flex items-center gap-3 p-3 transition-colors cursor-pointer ${
+                      isAssigned ? "opacity-50 bg-muted/30 cursor-not-allowed" : isSelected ? "bg-primary/5" : "hover:bg-accent/30"
+                    }`}
+                    onClick={() => !isAssigned && toggleStudent(student.user_id)}
+                  >
+                    <Checkbox
+                      checked={isAssigned || isSelected}
+                      disabled={isAssigned}
+                      onCheckedChange={() => !isAssigned && toggleStudent(student.user_id)}
+                      className="shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{student.full_name}</p>
+                      <p className="text-xs text-muted-foreground" dir="ltr">{student.phone}</p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] shrink-0">
+                      {student.preferred_track === "إجازة" ? "إجازة" : "إقراء"}
+                    </Badge>
+                    {isAssigned && <span className="text-[10px] text-muted-foreground">مُسكّن</span>}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 pt-2">
+            <DialogClose asChild>
+              <Button variant="outline">إلغاء</Button>
+            </DialogClose>
+            <Button onClick={assignStudents} disabled={assigning || selectedStudentIds.size === 0} className="gap-2">
+              {assigning ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+              تسكين {selectedStudentIds.size} طالب
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
