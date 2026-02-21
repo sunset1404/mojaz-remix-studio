@@ -20,6 +20,35 @@ const timeSlots = [
   "بعد الفجر", "الصباح", "بعد الظهر", "بعد العصر", "بعد المغرب", "بعد العشاء",
 ];
 
+// Generate 30-minute interval slots for reciters (24 hours)
+const generateHalfHourSlots = (): string[] => {
+  const slots: string[] = [];
+  for (let h = 5; h < 29; h++) {
+    const hour = h % 24;
+    const hStr = String(hour).padStart(2, "0");
+    slots.push(`${hStr}:00 - ${hStr}:30`);
+    slots.push(`${hStr}:30 - ${String((hour + (30 >= 30 ? 1 : 0)) % 24).padStart(2, "0")}:00`);
+  }
+  // Deduplicate and trim to 24h starting from 05:00
+  const result: string[] = [];
+  for (let h = 5; h < 24; h++) {
+    const hh = String(h).padStart(2, "0");
+    const nextHalf = String(h).padStart(2, "0");
+    const nextHour = String((h + 1) % 24).padStart(2, "0");
+    result.push(`${hh}:00 - ${hh}:30`);
+    result.push(`${hh}:30 - ${nextHour}:00`);
+  }
+  for (let h = 0; h < 5; h++) {
+    const hh = String(h).padStart(2, "0");
+    const nextHour = String((h + 1) % 24).padStart(2, "0");
+    result.push(`${hh}:00 - ${hh}:30`);
+    result.push(`${hh}:30 - ${nextHour}:00`);
+  }
+  return result;
+};
+
+const reciterTimeSlots = generateHalfHourSlots();
+
 // أهداف الطالب
 const studentGoalTypes = [
   { key: "hifz", label: "حفظ", icon: BookOpen, desc: "حفظ آيات جديدة" },
@@ -139,7 +168,8 @@ const WeeklyPlan = () => {
     setSelectedScope(plan.scope);
     setSelectedDays(plan.days);
     setSelectedTimes(plan.times);
-    setCustomTime(plan.times.some(t => !timeSlots.includes(t)) ? plan.times.find(t => !timeSlots.includes(t)) || "" : "");
+    const allKnownSlots = [...timeSlots, ...reciterTimeSlots];
+    setCustomTime(plan.times.some(t => !allKnownSlots.includes(t)) ? plan.times.find(t => !allKnownSlots.includes(t)) || "" : "");
     setCurrentStep(0);
     setShowWizard(true);
   };
@@ -626,141 +656,193 @@ const WeeklyPlan = () => {
                     <p className="text-sm text-muted-foreground mb-4">
                       {isReciter ? "اختر أوقات الإقراء المفضلة (يمكنك اختيار عدة أوقات)" : "اختر الوقت المفضل"}
                     </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {timeSlots.map(time => {
-                        const selected = selectedTimes.includes(time);
-                        return (
+
+                    {isReciter ? (
+                      <div className="space-y-3">
+                        {/* Period groups */}
+                        {[
+                          { label: "الفجر والصباح (5:00 - 12:00)", start: 5, end: 12 },
+                          { label: "الظهر والعصر (12:00 - 17:00)", start: 12, end: 17 },
+                          { label: "المغرب والعشاء (17:00 - 22:00)", start: 17, end: 22 },
+                          { label: "الليل (22:00 - 5:00)", start: 22, end: 29 },
+                        ].map(period => {
+                          const periodSlots = reciterTimeSlots.filter(slot => {
+                            const hourNum = parseInt(slot.split(":")[0]);
+                            if (period.start < 24 && period.end <= 24) {
+                              return hourNum >= period.start && hourNum < period.end;
+                            }
+                            // Night wraps: 22-5
+                            return hourNum >= 22 || hourNum < 5;
+                          });
+                          const allSelected = periodSlots.every(s => selectedTimes.includes(s));
+                          return (
+                            <div key={period.label}>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-bold text-foreground">{period.label}</span>
+                                <button
+                                  onClick={() => {
+                                    if (allSelected) {
+                                      setSelectedTimes(prev => prev.filter(t => !periodSlots.includes(t)));
+                                    } else {
+                                      setSelectedTimes(prev => [...new Set([...prev, ...periodSlots])]);
+                                    }
+                                  }}
+                                  className="text-[10px] text-primary font-semibold"
+                                >
+                                  {allSelected ? "إلغاء الكل" : "تحديد الكل"}
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-3 gap-1.5">
+                                {periodSlots.map(time => {
+                                  const selected = selectedTimes.includes(time);
+                                  return (
+                                    <button
+                                      key={time}
+                                      onClick={() => {
+                                        setSelectedTimes(prev =>
+                                          prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time]
+                                        );
+                                      }}
+                                      className={`rounded-lg py-2 px-1 text-center transition-all border ${
+                                        selected
+                                          ? "border-primary bg-primary/10 text-primary font-bold"
+                                          : "border-border bg-card text-foreground hover:border-primary/30"
+                                      }`}
+                                    >
+                                      <span className="text-[11px] font-medium" dir="ltr">{time}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-2 gap-2">
+                          {timeSlots.map(time => {
+                            const selected = selectedTimes.includes(time);
+                            return (
+                              <button
+                                key={time}
+                                onClick={() => {
+                                  setSelectedTimes([time]);
+                                  setCustomTime("");
+                                }}
+                                className={`rounded-xl p-3.5 flex items-center justify-between transition-all border-2 ${
+                                  selected
+                                    ? "border-primary bg-primary/5"
+                                    : "border-border bg-card hover:border-primary/30"
+                                }`}
+                              >
+                                <span className="font-semibold text-foreground text-sm">{time}</span>
+                                {selected && (
+                                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                    <Check className="w-3 h-3 text-primary-foreground" />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {/* Custom time picker */}
+                        <div className="mt-3">
                           <button
-                            key={time}
                             onClick={() => {
-                              if (isReciter) {
-                                setSelectedTimes(prev =>
-                                  prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time]
-                                );
-                              } else {
-                                setSelectedTimes([time]);
-                                setCustomTime("");
+                              setShowCustomPicker(!showCustomPicker);
+                              if (!showCustomPicker) {
+                                const built = `${customHour}:${customMinute} ${customPeriod}`;
+                                setCustomTime(built);
+                                setSelectedTimes([built]);
                               }
                             }}
-                            className={`rounded-xl p-3.5 flex items-center justify-between transition-all border-2 ${
-                              selected
+                            className={`w-full rounded-xl p-3.5 flex items-center gap-3 transition-all border-2 ${
+                              selectedTimes.some(t => !timeSlots.includes(t))
                                 ? "border-primary bg-primary/5"
                                 : "border-border bg-card hover:border-primary/30"
                             }`}
                           >
-                            <span className="font-semibold text-foreground text-sm">{time}</span>
-                            {selected && (
-                              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+                            <span className={`flex-1 text-sm font-semibold text-right ${
+                              selectedTimes.some(t => !timeSlots.includes(t)) ? "text-foreground" : "text-muted-foreground"
+                            }`}>
+                              {selectedTimes.find(t => !timeSlots.includes(t)) || "وقت مخصص"}
+                            </span>
+                            {selectedTimes.some(t => !timeSlots.includes(t)) && (
+                              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
                                 <Check className="w-3 h-3 text-primary-foreground" />
                               </div>
                             )}
                           </button>
-                        );
-                      })}
-                    </div>
-                    {/* Custom time picker */}
-                    <div className="mt-3">
-                      <button
-                        onClick={() => {
-                          setShowCustomPicker(!showCustomPicker);
-                          if (!showCustomPicker) {
-                            const built = `${customHour}:${customMinute} ${customPeriod}`;
-                            setCustomTime(built);
-                            if (isReciter) {
-                              setSelectedTimes(prev => prev.includes(built) ? prev : [...prev, built]);
-                            } else {
-                              setSelectedTimes([built]);
-                            }
-                          }
-                        }}
-                        className={`w-full rounded-xl p-3.5 flex items-center gap-3 transition-all border-2 ${
-                          selectedTimes.some(t => !timeSlots.includes(t))
-                            ? "border-primary bg-primary/5"
-                            : "border-border bg-card hover:border-primary/30"
-                        }`}
-                      >
-                        <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span className={`flex-1 text-sm font-semibold text-right ${
-                          selectedTimes.some(t => !timeSlots.includes(t)) ? "text-foreground" : "text-muted-foreground"
-                        }`}>
-                          {selectedTimes.find(t => !timeSlots.includes(t)) || "وقت مخصص"}
-                        </span>
-                        {selectedTimes.some(t => !timeSlots.includes(t)) && (
-                          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
-                            <Check className="w-3 h-3 text-primary-foreground" />
-                          </div>
-                        )}
-                      </button>
-                      <AnimatePresence>
-                        {showCustomPicker && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="flex items-center justify-center gap-3 mt-3 p-4 rounded-xl border-2 border-primary/20 bg-card" dir="ltr">
-                              {/* Period */}
-                              <select
-                                value={customPeriod}
-                                onChange={(e) => {
-                                  setCustomPeriod(e.target.value);
-                                  const built = `${customHour}:${customMinute} ${e.target.value}`;
-                                  setCustomTime(built);
-                                  // Remove old custom time and add new
-                                  setSelectedTimes(prev => {
-                                    const withoutCustom = prev.filter(t => timeSlots.includes(t));
-                                    return [...withoutCustom, built];
-                                  });
-                                }}
-                                className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center"
+                          <AnimatePresence>
+                            {showCustomPicker && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden"
                               >
-                                <option value="صباحاً">صباحاً</option>
-                                <option value="مساءً">مساءً</option>
-                              </select>
-                              <span className="text-lg font-bold text-muted-foreground">:</span>
-                              {/* Minutes */}
-                              <select
-                                value={customMinute}
-                                onChange={(e) => {
-                                  setCustomMinute(e.target.value);
-                                  const built = `${customHour}:${e.target.value} ${customPeriod}`;
-                                  setCustomTime(built);
-                                  setSelectedTimes(prev => {
-                                    const withoutCustom = prev.filter(t => timeSlots.includes(t));
-                                    return [...withoutCustom, built];
-                                  });
-                                }}
-                                className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center w-16"
-                              >
-                                {Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0")).map(m => (
-                                  <option key={m} value={m}>{m}</option>
-                                ))}
-                              </select>
-                              <span className="text-lg font-bold text-muted-foreground">:</span>
-                              {/* Hours */}
-                              <select
-                                value={customHour}
-                                onChange={(e) => {
-                                  setCustomHour(e.target.value);
-                                  const built = `${e.target.value}:${customMinute} ${customPeriod}`;
-                                  setCustomTime(built);
-                                  setSelectedTimes(prev => {
-                                    const withoutCustom = prev.filter(t => timeSlots.includes(t));
-                                    return [...withoutCustom, built];
-                                  });
-                                }}
-                                className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center w-16"
-                              >
-                                {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(h => (
-                                  <option key={h} value={h}>{h}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                                <div className="flex items-center justify-center gap-3 mt-3 p-4 rounded-xl border-2 border-primary/20 bg-card" dir="ltr">
+                                  <select
+                                    value={customPeriod}
+                                    onChange={(e) => {
+                                      setCustomPeriod(e.target.value);
+                                      const built = `${customHour}:${customMinute} ${e.target.value}`;
+                                      setCustomTime(built);
+                                      setSelectedTimes(prev => {
+                                        const withoutCustom = prev.filter(t => timeSlots.includes(t));
+                                        return [...withoutCustom, built];
+                                      });
+                                    }}
+                                    className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center"
+                                  >
+                                    <option value="صباحاً">صباحاً</option>
+                                    <option value="مساءً">مساءً</option>
+                                  </select>
+                                  <span className="text-lg font-bold text-muted-foreground">:</span>
+                                  <select
+                                    value={customMinute}
+                                    onChange={(e) => {
+                                      setCustomMinute(e.target.value);
+                                      const built = `${customHour}:${e.target.value} ${customPeriod}`;
+                                      setCustomTime(built);
+                                      setSelectedTimes(prev => {
+                                        const withoutCustom = prev.filter(t => timeSlots.includes(t));
+                                        return [...withoutCustom, built];
+                                      });
+                                    }}
+                                    className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center w-16"
+                                  >
+                                    {Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0")).map(m => (
+                                      <option key={m} value={m}>{m}</option>
+                                    ))}
+                                  </select>
+                                  <span className="text-lg font-bold text-muted-foreground">:</span>
+                                  <select
+                                    value={customHour}
+                                    onChange={(e) => {
+                                      setCustomHour(e.target.value);
+                                      const built = `${e.target.value}:${customMinute} ${customPeriod}`;
+                                      setCustomTime(built);
+                                      setSelectedTimes(prev => {
+                                        const withoutCustom = prev.filter(t => timeSlots.includes(t));
+                                        return [...withoutCustom, built];
+                                      });
+                                    }}
+                                    className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center w-16"
+                                  >
+                                    {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(h => (
+                                      <option key={h} value={h}>{h}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
