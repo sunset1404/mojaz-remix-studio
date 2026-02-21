@@ -160,7 +160,8 @@ const ReciterSignup = () => {
         preferred_days: preferredDays,
         preferred_times: preferredTimes,
         preferred_track: preferredTrack.join("، "),
-      });
+        reciter_type: preferredTrack.includes("الإجازة بالسند") ? "ijazah" : "general",
+      } as any);
     }
 
     toast({ title: "تم إنشاء الحساب بنجاح" });
