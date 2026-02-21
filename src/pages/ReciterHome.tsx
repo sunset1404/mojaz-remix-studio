@@ -10,13 +10,7 @@ import reciter3 from "@/assets/reciters/reciter3.jpg";
 import reciter4 from "@/assets/reciters/reciter4.jpg";
 import reciter5 from "@/assets/reciters/reciter5.jpg";
 
-const topStudents = [
-  { name: "عبدالله محمد", image: reciter1, level: 4, online: true },
-  { name: "أحمد خالد", image: reciter2, level: 3, online: true },
-  { name: "محمد سعيد", image: reciter3, level: 6, online: false },
-  { name: "يوسف عمر", image: reciter4, level: 2, online: true },
-  { name: "سلطان فهد", image: reciter5, level: 5, online: false },
-];
+// Students will be fetched from DB for ijazah reciters
 
 const promoSlides = [
   { title: "إدارة الطلاب", desc: "تابع تقدم طلابك بسهولة", icon: Users, bg: "gradient-primary", iconBg: "bg-gold/20", iconColor: "text-gold" },
@@ -35,12 +29,24 @@ const ReciterHome = () => {
   const { user, avatarUrl, reciterType } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [userName, setUserName] = useState("");
+  const [assignedStudents, setAssignedStudents] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
     supabase.from("reciter_profiles").select("full_name").eq("user_id", user.id).maybeSingle()
       .then(({ data }) => { if (data) setUserName(data.full_name); });
-  }, [user]);
+
+    // Fetch assigned students for ijazah reciters
+    if (reciterType === "ijazah") {
+      supabase
+        .from("student_profiles")
+        .select("user_id, full_name, gender, preferred_track, preferred_riwaya")
+        .eq("assigned_reciter_id", user.id)
+        .then(({ data }) => {
+          if (data) setAssignedStudents(data);
+        });
+    }
+  }, [user, reciterType]);
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % promoSlides.length);
@@ -204,10 +210,15 @@ const ReciterHome = () => {
                 المزيد <ChevronLeft className="w-3.5 h-3.5" />
               </Link>
             </div>
+            {assignedStudents.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground text-sm">
+                لا يوجد طلاب مسكّنين عليك حالياً
+              </div>
+            ) : (
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {topStudents.map((student, i) => (
+              {assignedStudents.map((student, i) => (
                 <motion.div
-                  key={student.name}
+                  key={student.user_id}
                   initial={{ scale: 0.85, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.7 + i * 0.08 }}
@@ -216,18 +227,17 @@ const ReciterHome = () => {
                   <div className="flex flex-col items-center gap-2.5 w-[130px] bg-card rounded-2xl p-4 border border-border/50 shadow-sm">
                     <Link to="/my-students" className="flex flex-col items-center gap-2">
                       <div className="relative">
-                        <div className="w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md">
-                          <img src={student.image} alt={student.name} className="w-full h-full object-cover" />
+                        <div className="w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md bg-muted flex items-center justify-center">
+                          <User className="w-8 h-8 text-muted-foreground" />
                         </div>
-                        <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[2.5px] border-card ${student.online ? "bg-green-500" : "bg-destructive"}`} />
                       </div>
                       <span className="text-xs font-semibold text-foreground text-center leading-tight line-clamp-1">
-                        {student.name}
+                        {student.full_name}
                       </span>
                     </Link>
                     <div className="flex items-center gap-1">
                       <Star className="w-3.5 h-3.5 text-gold fill-current" />
-                      <span className="text-xs font-bold text-foreground">المستوى {student.level}</span>
+                      <span className="text-[10px] font-bold text-foreground">{student.preferred_riwaya || student.preferred_track}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
@@ -241,6 +251,7 @@ const ReciterHome = () => {
                 </motion.div>
               ))}
             </div>
+            )}
           </motion.div>
         </div>
       ) : (
