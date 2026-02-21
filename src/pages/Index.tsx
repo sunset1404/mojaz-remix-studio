@@ -57,7 +57,8 @@ const Index = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("student_profiles").select("full_name").eq("user_id", user.id).maybeSingle()
+    // Fetch student profile (name + gender for filtering)
+    supabase.from("student_profiles").select("full_name, gender").eq("user_id", user.id).maybeSingle()
       .then(({ data }) => {
         if (data?.full_name) {
           setUserName(data.full_name);
@@ -65,36 +66,27 @@ const Index = () => {
           supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle()
             .then(({ data: p }) => { if (p?.full_name) setUserName(p.full_name); });
         }
-      });
 
-    // Fetch real achievements stats
-    supabase.from("student_achievements")
-      .select("parts_memorized, sessions_count, certificates_count, commitment_rate")
-      .eq("student_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => { if (data) setStudentStats(data); });
-
-    // Fetch unread notifications count
-    supabase.from("notifications")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("read", false)
-      .then(({ count }) => { setUnreadCount(count ?? 0); });
-
-    // Fetch approved reciters from DB
-    supabase.from("reciter_profiles")
-      .select("user_id, full_name, preferred_track, stamp_url")
-      .eq("status", "approved")
-      .limit(6)
-      .then(({ data }) => {
-        if (data) {
-          setTopReciters(data.map((r) => ({
-            user_id: r.user_id,
-            full_name: r.full_name,
-            preferred_track: r.preferred_track,
-            avatar_url: r.stamp_url ?? null,
-          })));
+        // Fetch approved reciters filtered by same gender
+        let reciterQuery = supabase.from("reciter_profiles")
+          .select("user_id, full_name, preferred_track, stamp_url")
+          .eq("status", "approved")
+          .limit(6);
+        
+        if (data?.gender) {
+          reciterQuery = reciterQuery.eq("gender", data.gender);
         }
+
+        reciterQuery.then(({ data: recitersData }) => {
+          if (recitersData) {
+            setTopReciters(recitersData.map((r) => ({
+              user_id: r.user_id,
+              full_name: r.full_name,
+              preferred_track: r.preferred_track,
+              avatar_url: r.stamp_url ?? null,
+            })));
+          }
+        });
       });
 
     // Fetch active subscription
