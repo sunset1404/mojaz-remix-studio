@@ -64,6 +64,7 @@ import MyGifts from "./pages/MyGifts";
 import ReciterStudentPerformance from "./pages/ReciterStudentPerformance";
 import ReciterSessionLog from "./pages/ReciterSessionLog";
 import ReciterMyStats from "./pages/ReciterMyStats";
+import StudentDetail from "./pages/StudentDetail";
 
 const queryClient = new QueryClient();
 
@@ -132,6 +133,7 @@ const AppRoutes = () => (
 
     {/* Reciter-only routes */}
     <Route path="/my-students" element={<ProtectedRoute allowedRole="reciter"><><MyStudents /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/my-students/:studentId" element={<ProtectedRoute allowedRole="reciter"><><StudentDetail /><BottomNav /></></ProtectedRoute>} />
     <Route path="/sessions" element={<ProtectedRoute allowedRole="reciter"><><Sessions /><BottomNav /></></ProtectedRoute>} />
     <Route path="/student-performance" element={<ProtectedRoute allowedRole="reciter"><><ReciterStudentPerformance /><BottomNav /></></ProtectedRoute>} />
     <Route path="/reciter-session-log" element={<ProtectedRoute allowedRole="reciter"><><ReciterSessionLog /><BottomNav /></></ProtectedRoute>} />
