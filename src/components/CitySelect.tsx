@@ -43,7 +43,7 @@ const CitySelect = ({ value, onChange, cities, placeholder = "اختر المد�
       </button>
 
       {open && (
-        <div className="absolute z-50 top-full mt-1 w-full bg-card border border-primary/20 rounded-xl shadow-lg overflow-hidden">
+        <div className="absolute z-50 top-full mt-1 w-full bg-card border border-primary/20 rounded-xl shadow-lg overflow-hidden" style={{ backgroundColor: 'hsl(var(--card))' }}>
           <div className="p-2 border-b border-border/50">
             <div className="relative">
               <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
