@@ -30,7 +30,7 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{ background: "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 40%, hsl(var(--gold) / 0.18) 85%, hsl(var(--gold) / 0.28) 100%)" }}
+      style={{ background: "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 45%, hsl(var(--turquoise-dark) / 0.6) 70%, hsl(var(--gold) / 0.12) 90%, hsl(var(--gold) / 0.18) 100%)" }}
     >
       <div className="relative z-10 flex flex-col items-center pt-14 pb-8">
         <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
