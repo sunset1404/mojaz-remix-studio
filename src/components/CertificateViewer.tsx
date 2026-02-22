@@ -20,10 +20,11 @@ interface CertificateViewerProps {
   };
   reciterSignatureUrl?: string | null;
   reciterStampUrl?: string | null;
+  renderWidth?: number;
 }
 
 const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
-  ({ cert, reciterSignatureUrl, reciterStampUrl }, ref) => {
+  ({ cert, reciterSignatureUrl, reciterStampUrl, renderWidth = 920 }, ref) => {
     const isIjaza = cert.type === "ijaza";
     const verificationUrl = `${window.location.origin}/verify/${cert.id}`;
 
@@ -42,7 +43,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
             ref={ref}
             className="relative overflow-hidden origin-top-right"
             style={{
-              width: "920px",
+              width: `${renderWidth}px`,
               minHeight: "auto",
               background: "linear-gradient(145deg, #fefefe, #f8fafa)",
               boxShadow: "0 25px 60px -15px rgba(13,115,119,0.15), 0 10px 30px -10px rgba(0,0,0,0.1)",

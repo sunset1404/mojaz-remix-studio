@@ -108,8 +108,9 @@ const Certificates = () => {
       const { jsPDF } = await import("jspdf");
 
       // Use a hidden iframe to completely isolate html2canvas from the main page
+      const downloadWidth = 1400; // Wider for landscape PDF
       const iframe = document.createElement("iframe");
-      iframe.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:960px;height:2000px;visibility:hidden;pointer-events:none;border:none;";
+      iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:2000px;visibility:hidden;pointer-events:none;border:none;`;
       document.body.appendChild(iframe);
 
       await new Promise<void>((resolve) => {
@@ -136,7 +137,7 @@ const Certificates = () => {
 
       // Create render target inside iframe
       const certEl = iframeDoc.createElement("div");
-      certEl.style.width = "920px";
+      certEl.style.width = `${downloadWidth}px`;
       iframeDoc.body.appendChild(certEl);
 
       const root = createRoot(certEl);
@@ -145,6 +146,7 @@ const Certificates = () => {
           cert={cert}
           reciterSignatureUrl={cert.reciter_signature_url}
           reciterStampUrl={cert.reciter_stamp_url}
+          renderWidth={downloadWidth}
         />
       );
 
@@ -156,12 +158,12 @@ const Certificates = () => {
       iframe.style.height = `${contentHeight + 50}px`;
 
       const canvas = await (html2canvas as any)(certEl, {
-        scale: 3,
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         logging: false,
         backgroundColor: "#ffffff",
-        windowWidth: 920,
+        windowWidth: downloadWidth,
         height: contentHeight,
         window: iframe.contentWindow!,
       });
