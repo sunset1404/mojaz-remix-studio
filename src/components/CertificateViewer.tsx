@@ -25,185 +25,219 @@ const CertificateViewer = ({ cert, reciterSignatureUrl, reciterStampUrl }: Certi
   const isIjaza = cert.type === "ijaza";
   const verificationUrl = `${window.location.origin}/verify/${cert.id}`;
 
+  // Theme colors - teal & gold
+  const primaryColor = "#0d7377";
+  const primaryDark = "#0a5c5f";
+  const goldColor = "#b8860b";
+  const goldLight = "#d4a844";
+  const accentColor = isIjaza ? goldColor : primaryColor;
+  const accentDark = isIjaza ? "#8B6914" : primaryDark;
+  const accentLight = isIjaza ? goldLight : "#14a3a8";
+
   return (
     <div className="w-full overflow-x-auto py-4" dir="rtl">
-      {/* Certificate - Landscape */}
       <div
-        className="relative mx-auto bg-[#fefcf3] shadow-2xl"
+        className="relative mx-auto overflow-hidden"
         style={{
-          width: "900px",
-          minHeight: "620px",
-          aspectRatio: "900 / 620",
+          width: "920px",
+          minHeight: "640px",
+          background: "linear-gradient(145deg, #fefefe, #f8fafa)",
+          boxShadow: "0 25px 60px -15px rgba(13,115,119,0.15), 0 10px 30px -10px rgba(0,0,0,0.1)",
         }}
       >
-        {/* Outer decorative border */}
-        <div className="absolute inset-0 border-[6px] border-double" style={{ borderColor: isIjaza ? "#b8860b" : "#0d7377" }} />
-        <div className="absolute inset-[10px] border-[2px]" style={{ borderColor: isIjaza ? "#d4a84420" : "#0d737720" }} />
-        <div className="absolute inset-[14px] border-[1px] border-dashed" style={{ borderColor: isIjaza ? "#d4a84440" : "#0d737740" }} />
+        {/* Top accent bar */}
+        <div className="h-3 w-full" style={{ background: `linear-gradient(90deg, ${primaryColor}, ${goldColor}, ${primaryColor})` }} />
 
-        {/* Corner decorations */}
+        {/* Left decorative stripe */}
+        <div className="absolute top-0 right-0 w-2 h-full" style={{ background: `linear-gradient(180deg, ${primaryColor}, ${goldColor})` }} />
+
+        {/* Corner geometric ornaments */}
         {[
-          "top-[18px] right-[18px]",
-          "top-[18px] left-[18px] -scale-x-100",
-          "bottom-[18px] right-[18px] -scale-y-100",
-          "bottom-[18px] left-[18px] -scale-x-100 -scale-y-100",
-        ].map((pos, i) => (
-          <div key={i} className={`absolute ${pos} w-12 h-12`}>
-            <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5 5 L5 20 Q5 5 20 5 Z" fill={isIjaza ? "#b8860b" : "#0d7377"} opacity="0.4" />
-              <path d="M5 5 L5 30 Q5 5 30 5" stroke={isIjaza ? "#b8860b" : "#0d7377"} strokeWidth="1" fill="none" opacity="0.3" />
+          { pos: "top-6 left-6", rotate: "" },
+          { pos: "top-6 right-6", rotate: "scale-x-[-1]" },
+          { pos: "bottom-6 left-6", rotate: "scale-y-[-1]" },
+          { pos: "bottom-6 right-6", rotate: "scale-[-1]" },
+        ].map((c, i) => (
+          <div key={i} className={`absolute ${c.pos} ${c.rotate}`}>
+            <svg width="50" height="50" viewBox="0 0 50 50" fill="none">
+              <path d="M0 0 L0 22 Q0 0 22 0 Z" fill={primaryColor} opacity="0.12" />
+              <path d="M0 0 L0 35 Q0 0 35 0" stroke={goldColor} strokeWidth="1.5" fill="none" opacity="0.3" />
+              <path d="M0 0 L0 15 Q0 0 15 0" stroke={primaryColor} strokeWidth="1" fill="none" opacity="0.2" />
+              <circle cx="3" cy="3" r="2" fill={goldColor} opacity="0.35" />
             </svg>
           </div>
         ))}
 
-        {/* Watermark pattern */}
-        <div className="absolute inset-0 opacity-[0.02]"
+        {/* Subtle watermark pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.015]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 20 L50 20 L38 30 L42 45 L30 36 L18 45 L22 30 L10 20 L25 20 Z' fill='%23${isIjaza ? 'b8860b' : '0d7377'}' opacity='0.3'/%3E%3C/svg%3E")`,
-            backgroundSize: "80px 80px",
+            backgroundImage: `radial-gradient(circle, ${primaryColor} 1px, transparent 1px)`,
+            backgroundSize: "30px 30px",
           }}
         />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-between h-full px-16 py-10">
-          {/* Header: Logo + Bismillah */}
-          <div className="flex flex-col items-center gap-2 w-full">
-            <div className="flex items-center justify-between w-full mb-1">
-              <img src={logoMojaz} alt="مجاز" className="h-12 w-12 rounded-xl object-cover" />
-              <div className="text-center flex-1">
-                <p className="text-sm font-bold" style={{ color: isIjaza ? "#b8860b" : "#0d7377", fontFamily: "serif" }}>
-                  بسم الله الرحمن الرحيم
-                </p>
+        <div className="relative z-10 flex flex-col items-center px-16 py-10 h-full">
+          {/* Header - Logo */}
+          <div className="flex items-center justify-center w-full mb-5">
+            <div className="flex items-center gap-3">
+              <img src={logoMojaz} alt="مجاز" className="h-14 w-14 rounded-2xl object-cover shadow-md" />
+              <div className="text-right">
+                <p className="text-sm font-bold" style={{ color: primaryDark }}>منصة مجاز</p>
+                <p className="text-[10px]" style={{ color: primaryColor }}>لإقراء القرآن الكريم</p>
               </div>
-              <div className="h-12 w-12" /> {/* Spacer */}
-            </div>
-
-            {/* Title */}
-            <div className="text-center mt-1">
-              <h1
-                className="text-3xl font-black tracking-wide"
-                style={{
-                  color: isIjaza ? "#8B6914" : "#0a5c5f",
-                  textShadow: "0 1px 2px rgba(0,0,0,0.08)",
-                }}
-              >
-                {cert.title}
-              </h1>
-              <div
-                className="mx-auto mt-2 w-48 h-[2px] rounded-full"
-                style={{
-                  background: isIjaza
-                    ? "linear-gradient(90deg, transparent, #b8860b, transparent)"
-                    : "linear-gradient(90deg, transparent, #0d7377, transparent)",
-                }}
-              />
             </div>
           </div>
 
+          {/* Decorative divider */}
+          <div className="flex items-center gap-3 w-64 mb-4">
+            <div className="flex-1 h-[1px]" style={{ background: `linear-gradient(90deg, transparent, ${goldColor})` }} />
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 0 L10 6 L16 8 L10 10 L8 16 L6 10 L0 8 L6 6 Z" fill={goldColor} opacity="0.5" />
+            </svg>
+            <div className="flex-1 h-[1px]" style={{ background: `linear-gradient(90deg, ${goldColor}, transparent)` }} />
+          </div>
+
+          {/* Title */}
+          <h1
+            className="text-3xl font-black mb-1 tracking-wide text-center"
+            style={{
+              color: accentDark,
+              textShadow: "0 2px 4px rgba(0,0,0,0.06)",
+            }}
+          >
+            {cert.title}
+          </h1>
+
+          {/* Underline */}
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-16 h-[2px] rounded-full" style={{ background: `linear-gradient(90deg, transparent, ${accentColor})` }} />
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: goldColor, opacity: 0.5 }} />
+            <div className="w-16 h-[2px] rounded-full" style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
+          </div>
+
           {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-x-12 gap-y-3 mt-5 w-full max-w-[680px]">
+          <div className="grid grid-cols-2 gap-x-16 gap-y-4 w-full max-w-[620px] mb-5">
             {[
               { label: "الطالب/ة", value: cert.student_name },
               { label: "المقرئ/ة", value: cert.reciter_name || cert.sheikh_name },
               { label: "الرواية", value: cert.riwaya },
               { label: "التاريخ", value: cert.date },
-            ].filter(item => item.value).map((item) => (
-              <div key={item.label} className="flex items-baseline gap-2">
-                <span className="text-xs font-bold" style={{ color: isIjaza ? "#b8860b" : "#0d7377" }}>
-                  {item.label}:
-                </span>
-                <span className="text-sm font-semibold text-gray-800">{item.value}</span>
-              </div>
-            ))}
+            ]
+              .filter((item) => item.value)
+              .map((item) => (
+                <div key={item.label} className="flex items-baseline gap-2">
+                  <span className="text-xs font-bold" style={{ color: primaryColor }}>
+                    {item.label}:
+                  </span>
+                  <span className="text-sm font-semibold" style={{ color: "#333" }}>
+                    {item.value}
+                  </span>
+                </div>
+              ))}
           </div>
 
           {/* Certificate Text */}
           {cert.certificate_text && (
             <div
-              className="mt-4 px-6 py-4 rounded-xl text-center max-w-[700px] w-full"
+              className="w-full max-w-[720px] rounded-2xl px-8 py-5 mb-6"
               style={{
-                background: isIjaza
-                  ? "linear-gradient(135deg, #fdf8e8, #fef9ed)"
-                  : "linear-gradient(135deg, #f0fafb, #f5fcfc)",
-                border: `1px solid ${isIjaza ? "#d4a84430" : "#0d737720"}`,
+                background: `linear-gradient(135deg, rgba(13,115,119,0.04), rgba(184,134,11,0.04))`,
+                border: `1px solid rgba(13,115,119,0.1)`,
               }}
             >
-              <p className="text-sm leading-[2] text-gray-700 font-medium" style={{ fontFamily: "serif" }}>
+              <p
+                className="text-sm leading-[2.1] text-center font-medium"
+                style={{ color: "#444", fontFamily: "serif" }}
+              >
                 {cert.certificate_text}
               </p>
             </div>
           )}
 
-          {/* Footer: Signature, Stamp, QR */}
-          <div className="flex items-end justify-between w-full mt-6 pt-4 border-t" style={{ borderColor: isIjaza ? "#d4a84430" : "#0d737720" }}>
-            {/* QR Code */}
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="p-2 bg-white rounded-lg border" style={{ borderColor: isIjaza ? "#d4a84440" : "#0d737740" }}>
-                <QRCodeSVG
-                  value={verificationUrl}
-                  size={72}
-                  level="M"
-                  fgColor={isIjaza ? "#8B6914" : "#0a5c5f"}
-                  bgColor="transparent"
-                />
-              </div>
-              <p className="text-[8px] text-gray-400">للتحقق من صحة الشهادة</p>
-            </div>
-
-            {/* Issuer */}
-            <div className="text-center flex-1 px-6">
-              <p className="text-xs text-gray-500 mb-1">صادرة من</p>
-              <p className="text-sm font-bold" style={{ color: isIjaza ? "#8B6914" : "#0a5c5f" }}>
-                منصة مجاز لإقراء القرآن الكريم
-              </p>
-              <div
-                className="mx-auto mt-1.5 w-24 h-[1px]"
-                style={{
-                  background: isIjaza
-                    ? "linear-gradient(90deg, transparent, #b8860b, transparent)"
-                    : "linear-gradient(90deg, transparent, #0d7377, transparent)",
-                }}
-              />
-            </div>
-
-            {/* Stamp + Signature */}
-            <div className="flex flex-col items-center gap-2">
-              <div className="flex items-center gap-3">
-                {reciterSignatureUrl && (
-                  <div className="flex flex-col items-center">
-                    <img
-                      src={reciterSignatureUrl}
-                      alt="توقيع المقرئ"
-                      className="h-14 w-auto object-contain opacity-80"
-                    />
-                    <p className="text-[8px] text-gray-400 mt-0.5">التوقيع</p>
-                  </div>
-                )}
-                {reciterStampUrl && (
-                  <div className="flex flex-col items-center">
-                    <img
-                      src={reciterStampUrl}
-                      alt="ختم المقرئ"
-                      className="h-16 w-16 object-contain opacity-70"
-                    />
-                    <p className="text-[8px] text-gray-400 mt-0.5">الختم</p>
-                  </div>
-                )}
-              </div>
+          {/* Footer */}
+          <div className="flex items-end justify-between w-full mt-auto pt-5">
+            {/* Stamp + Signature (right side in RTL) */}
+            <div className="flex items-end gap-4">
+              {reciterSignatureUrl && (
+                <div className="flex flex-col items-center">
+                  <img
+                    src={reciterSignatureUrl}
+                    alt="توقيع المقرئ"
+                    className="h-14 w-auto object-contain"
+                    style={{ opacity: 0.8 }}
+                  />
+                  <p className="text-[9px] mt-1" style={{ color: primaryColor }}>التوقيع</p>
+                </div>
+              )}
+              {reciterStampUrl && (
+                <div className="flex flex-col items-center">
+                  <img
+                    src={reciterStampUrl}
+                    alt="ختم المقرئ"
+                    className="h-16 w-16 object-contain"
+                    style={{ opacity: 0.75 }}
+                  />
+                  <p className="text-[9px] mt-1" style={{ color: primaryColor }}>الختم</p>
+                </div>
+              )}
               {!reciterSignatureUrl && !reciterStampUrl && (
                 <div className="flex flex-col items-center">
-                  <div className="w-20 h-12 border-b-2 border-dashed" style={{ borderColor: isIjaza ? "#d4a84460" : "#0d737740" }} />
-                  <p className="text-[9px] text-gray-400 mt-1">التوقيع والختم</p>
+                  <div
+                    className="w-24 h-14 border-b-2 border-dashed"
+                    style={{ borderColor: `${primaryColor}40` }}
+                  />
+                  <p className="text-[9px] mt-1.5" style={{ color: `${primaryColor}80` }}>
+                    التوقيع والختم
+                  </p>
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Certificate ID */}
-          <p className="text-[8px] text-gray-300 mt-2 tracking-widest">
-            رقم الشهادة: {cert.id.slice(0, 8).toUpperCase()}
-          </p>
+            {/* Center - Issuer */}
+            <div className="text-center flex-1 px-4">
+              <div
+                className="inline-block px-5 py-2 rounded-xl"
+                style={{ background: `linear-gradient(135deg, rgba(13,115,119,0.06), rgba(184,134,11,0.06))` }}
+              >
+                <p className="text-[10px] mb-0.5" style={{ color: "#999" }}>صادرة من</p>
+                <p className="text-sm font-bold" style={{ color: primaryDark }}>
+                  منصة مجاز لإقراء القرآن الكريم
+                </p>
+              </div>
+              <p className="text-[8px] mt-2 tracking-[0.2em]" style={{ color: "#bbb" }}>
+                رقم الشهادة: {cert.id.slice(0, 8).toUpperCase()}
+              </p>
+            </div>
+
+            {/* QR Code (left side in RTL) */}
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className="p-2.5 rounded-xl"
+                style={{
+                  background: "white",
+                  border: `1.5px solid ${primaryColor}25`,
+                  boxShadow: `0 4px 12px ${primaryColor}10`,
+                }}
+              >
+                <QRCodeSVG
+                  value={verificationUrl}
+                  size={76}
+                  level="M"
+                  fgColor={primaryDark}
+                  bgColor="transparent"
+                />
+              </div>
+              <p className="text-[8px]" style={{ color: primaryColor }}>
+                للتحقق من صحة الشهادة
+              </p>
+            </div>
+          </div>
         </div>
+
+        {/* Bottom accent bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-2" style={{ background: `linear-gradient(90deg, ${primaryColor}, ${goldColor}, ${primaryColor})` }} />
       </div>
     </div>
   );
