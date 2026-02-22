@@ -65,7 +65,7 @@ const AdminSidebar = () => {
         <SidebarGroup>
           {!isCollapsed && (
             <SidebarGroupLabel className="text-xs text-muted-foreground px-4 mb-1">
-              القائمة الرئيسية
+              الإقراء
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
