@@ -109,7 +109,7 @@ const Certificates = () => {
 
       // Use a hidden iframe to completely isolate html2canvas from the main page
       const iframe = document.createElement("iframe");
-      iframe.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:960px;height:800px;visibility:hidden;pointer-events:none;border:none;";
+      iframe.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:960px;height:2000px;visibility:hidden;pointer-events:none;border:none;";
       document.body.appendChild(iframe);
 
       await new Promise<void>((resolve) => {
@@ -118,19 +118,26 @@ const Certificates = () => {
       });
 
       const iframeDoc = iframe.contentDocument!;
-      
+
+      // Add Google Fonts directly to iframe
+      const fontLink = iframeDoc.createElement("link");
+      fontLink.rel = "stylesheet";
+      fontLink.href = "https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;500;600;700;800&display=swap";
+      iframeDoc.head.appendChild(fontLink);
+
       // Copy all stylesheets into the iframe
       const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
       styles.forEach((s) => {
         iframeDoc.head.appendChild(s.cloneNode(true));
       });
 
+      // Set base font on iframe body
+      iframeDoc.body.style.cssText = "margin:0;padding:0;font-family:'Cairo','Amiri',sans-serif;direction:rtl;";
+
       // Create render target inside iframe
       const certEl = iframeDoc.createElement("div");
       certEl.style.width = "920px";
       iframeDoc.body.appendChild(certEl);
-      iframeDoc.body.style.margin = "0";
-      iframeDoc.body.style.padding = "0";
 
       const root = createRoot(certEl);
       root.render(
@@ -141,16 +148,21 @@ const Certificates = () => {
         />
       );
 
-      // Wait for render + images to load
-      await new Promise(r => setTimeout(r, 1500));
+      // Wait for render + fonts + images to load
+      await new Promise(r => setTimeout(r, 2000));
+
+      // Resize iframe to fit content
+      const contentHeight = certEl.scrollHeight || certEl.offsetHeight;
+      iframe.style.height = `${contentHeight + 50}px`;
 
       const canvas = await (html2canvas as any)(certEl, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         allowTaint: true,
         logging: false,
         backgroundColor: "#ffffff",
         windowWidth: 920,
+        height: contentHeight,
         window: iframe.contentWindow!,
       });
 
@@ -158,14 +170,42 @@ const Certificates = () => {
       root.unmount();
       document.body.removeChild(iframe);
 
-      const pdf = new jsPDF("l", "mm", "a4");
-      const pdfWidth = 297;
-      const pdfHeight = 210;
+      // Generate PDF - use landscape for wider certs, portrait for taller ones
+      const ratio = canvas.width / canvas.height;
+      const isLandscape = ratio > 1;
+      const pdf = new jsPDF(isLandscape ? "l" : "p", "mm", "a4");
+      const pdfWidth = isLandscape ? 297 : 210;
+      const pdfHeight = isLandscape ? 210 : 297;
       const imgWidth = pdfWidth - 10;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const yOffset = Math.max(0, (pdfHeight - imgHeight) / 2);
 
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 5, yOffset, imgWidth, imgHeight);
+      // If content fits on one page
+      if (imgHeight <= pdfHeight - 10) {
+        const yOffset = Math.max(0, (pdfHeight - imgHeight) / 2);
+        pdf.addImage(canvas.toDataURL("image/png"), "PNG", 5, yOffset, imgWidth, imgHeight);
+      } else {
+        // Multi-page: slice the canvas
+        const pageContentHeight = pdfHeight - 10;
+        const scaleFactor = canvas.width / imgWidth;
+        const sliceHeight = pageContentHeight * scaleFactor;
+        let srcY = 0;
+        let page = 0;
+
+        while (srcY < canvas.height) {
+          if (page > 0) pdf.addPage();
+          const currentSlice = Math.min(sliceHeight, canvas.height - srcY);
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = currentSlice;
+          const ctx = sliceCanvas.getContext("2d")!;
+          ctx.drawImage(canvas, 0, srcY, canvas.width, currentSlice, 0, 0, canvas.width, currentSlice);
+          const sliceImgHeight = (currentSlice * imgWidth) / canvas.width;
+          pdf.addImage(sliceCanvas.toDataURL("image/png"), "PNG", 5, 5, imgWidth, sliceImgHeight);
+          srcY += currentSlice;
+          page++;
+        }
+      }
+
       pdf.save(`${cert.title}.pdf`);
       toast.success("تم تحميل الشهادة بنجاح");
     } catch (e) {
