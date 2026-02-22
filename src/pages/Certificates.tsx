@@ -130,6 +130,8 @@ const Certificates = () => {
       const canvas = await html2canvas(certEl, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
+        foreignObjectRendering: true,
         logging: false,
         backgroundColor: "#ffffff",
         windowWidth: 920,
