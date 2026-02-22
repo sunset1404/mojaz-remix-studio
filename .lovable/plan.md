@@ -1,24 +1,42 @@
 
-# Fix: Certificate Preview Overflowing on Mobile
 
-## Problem
-The `CertificateScaled` component has a bug: the container div with `w-full overflow-hidden` expands to 920px because its child is 920px wide. When `useEffect` reads `containerRef.current.offsetWidth`, it gets 920, so `scale` calculates to 1 (no scaling). The certificate renders at full size and overflows the dialog.
+## المشكلة
 
-## Solution
-Two changes in `src/pages/Certificates.tsx`:
+مكتبة `html2canvas` تسبب اختفاء محتوى الصفحة مرتين:
+1. عند بدء التقاط الشهادة (تتداخل مع عناصر الصفحة الرئيسية)
+2. عند الانتهاء وتنظيف العناصر المؤقتة
 
-### 1. Fix the CertificateScaled component (lines 35-53)
-- Add `max-w-full` to the container so it respects the dialog width instead of expanding to 920px
-- Change `transformOrigin` from `"top right"` to `"top center"` so scaling is visually centered
-- These two changes ensure the container measures the actual available width and the certificate scales down to fit
+حتى مع خيار `foreignObjectRendering: true`، المكتبة تستنسخ المستند بالكامل مما يسبب إعادة رسم الصفحة.
 
-### 2. No other files need changes
+## الحل
 
-## Technical Detail
-```text
-Before:
-  Container (w-full) -> expands to 920px -> scale = 920/920 = 1 -> no scaling
+استخدام **iframe معزول تماماً** لتوليد صورة الشهادة بدلاً من إضافة عناصر في الصفحة الرئيسية. هذا يعزل عملية التحويل عن الصفحة تماماً فلا يتأثر أي محتوى مرئي.
 
-After:
-  Container (w-full max-w-full) -> constrained to dialog width (~370px) -> scale = 370/920 = 0.4 -> scales down
-```
+## التفاصيل التقنية
+
+### تعديل `handleDownload` في `src/pages/Certificates.tsx`:
+
+1. إنشاء iframe مخفي (`visibility: hidden`, `position: fixed`, خارج الشاشة)
+2. كتابة HTML الشهادة مباشرة داخل الـ iframe باستخدام `srcdoc` أو `document.write`
+3. استدعاء `html2canvas` على محتوى الـ iframe (معزول تماماً عن الصفحة)
+4. توليد PDF من الصورة الملتقطة
+5. إزالة الـ iframe بعد الانتهاء
+
+بهذه الطريقة لن تتأثر الصفحة الرئيسية إطلاقاً لأن كل العمليات تحدث داخل iframe منفصل.
+
+### البديل الأبسط (مفضل):
+بدلاً من `html2canvas`، استخدام تقنية **SVG foreignObject** يدوياً لتحويل HTML إلى صورة بدون أي تأثير على DOM الصفحة:
+
+1. تحويل HTML الشهادة إلى سلسلة نصية
+2. وضعها داخل SVG foreignObject
+3. رسم SVG على Canvas
+4. تصدير Canvas كصورة PNG
+5. إنشاء PDF
+
+هذا النهج لا يلمس DOM الصفحة أبداً.
+
+### الخطوات:
+- تعديل ملف `src/pages/Certificates.tsx` فقط
+- استبدال منطق `handleDownload` بالكامل
+- لا حاجة لتثبيت مكتبات إضافية
+
