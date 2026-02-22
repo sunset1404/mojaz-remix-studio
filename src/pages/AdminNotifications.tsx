@@ -76,6 +76,7 @@ const TRIGGER_EVENT_GROUPS_BY_ROLE: Record<string, TriggerGroup[]> = {
       label: "أحداث التلاوة والحفظ",
       events: [
         { value: "session_complete", label: "إتمام جلسة تلاوة" },
+        { value: "session_reminder", label: "تذكير بموعد الجلسة" },
         { value: "hatma_complete", label: "إتمام ختمة القرآن الكريم" },
         { value: "juz_memorized", label: "حفظ جزء جديد" },
         { value: "pages_memorized", label: "حفظ عدد من الصفحات" },
@@ -114,6 +115,8 @@ const TRIGGER_EVENT_GROUPS_BY_ROLE: Record<string, TriggerGroup[]> = {
         { value: "reciter_first_open", label: "فتح التطبيق أول مرة (ترحيبي)" },
         { value: "reciter_student_assigned", label: "تعيين طالب جديد" },
         { value: "reciter_session_complete", label: "إتمام جلسة تسميع" },
+        { value: "session_reminder", label: "تذكير بجلسة الإقراء" },
+        { value: "session_rated", label: "تقييم جديد من طالب" },
         { value: "reciter_ijaza_granted", label: "منح إجازة لطالب" },
         { value: "reciter_certificate_issued", label: "إصدار شهادة لطالب" },
         { value: "reciter_weekly_plan_complete", label: "إتمام الخطة الأسبوعية" },
