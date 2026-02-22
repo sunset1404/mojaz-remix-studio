@@ -62,6 +62,7 @@ import AdminWhatsApp from "./pages/AdminWhatsApp";
 import AdminSubscriptions from "./pages/AdminSubscriptions";
 import AdminGifts from "./pages/AdminGifts";
 import AdminPlans from "./pages/AdminPlans";
+import AdminUsers from "./pages/AdminUsers";
 import MyGifts from "./pages/MyGifts";
 import ReciterStudentPerformance from "./pages/ReciterStudentPerformance";
 import ReciterSessionLog from "./pages/ReciterSessionLog";
@@ -125,6 +126,7 @@ const AppRoutes = () => (
     <Route path="/admin/subscriptions" element={<ProtectedRoute><AdminSubscriptions /></ProtectedRoute>} />
     <Route path="/admin/gifts" element={<ProtectedRoute><AdminGifts /></ProtectedRoute>} />
     <Route path="/admin/plans" element={<ProtectedRoute><AdminPlans /></ProtectedRoute>} />
+    <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
 
     {/* Student-only routes */}
     <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />
