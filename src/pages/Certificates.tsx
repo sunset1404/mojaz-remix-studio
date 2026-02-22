@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import CertificateViewer from "@/components/CertificateViewer";
 
@@ -32,20 +32,6 @@ type ReciterAssets = {
   stamp_url: string | null;
 };
 
-const handleDownload = (title: string) => {
-  toast.success(`جاري تحميل "${title}" كملف PDF`);
-};
-
-const handleShare = async (title: string) => {
-  const shareData = { title, text: `شهادة: ${title}`, url: window.location.href };
-  if (navigator.share) {
-    try { await navigator.share(shareData); } catch { /* cancelled */ }
-  } else {
-    await navigator.clipboard.writeText(window.location.href);
-    toast.success("تم نسخ رابط الشهادة إلى الحافظة");
-  }
-};
-
 const Certificates = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -54,6 +40,8 @@ const Certificates = () => {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [reciterAssets, setReciterAssets] = useState<ReciterAssets[]>([]);
   const [viewCert, setViewCert] = useState<Certificate | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const certRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -80,6 +68,64 @@ const Certificates = () => {
 
   const getReciterAsset = (reciterId: string | null) => reciterAssets.find(r => r.user_id === reciterId);
 
+  const handleDownload = useCallback(async (cert: Certificate) => {
+    setDownloading(true);
+    // Open the preview first so the element renders
+    setViewCert(cert);
+    
+    // Wait for render
+    await new Promise(r => setTimeout(r, 600));
+
+    try {
+      const { default: html2canvas } = await import("html2canvas");
+      const { jsPDF } = await import("jspdf");
+      
+      const el = certRef.current;
+      if (!el) {
+        toast.error("تعذر إنشاء ملف PDF");
+        setDownloading(false);
+        return;
+      }
+
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+
+      const pdf = new jsPDF("l", "mm", "a4"); // landscape
+      const pdfWidth = 297;
+      const pdfHeight = 210;
+      const imgWidth = pdfWidth - 10;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const yOffset = Math.max(0, (pdfHeight - imgHeight) / 2);
+
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 5, yOffset, imgWidth, imgHeight);
+      pdf.save(`${cert.title}.pdf`);
+      toast.success("تم تحميل الشهادة بنجاح");
+    } catch (e) {
+      console.error(e);
+      toast.error("حدث خطأ أثناء التحميل");
+    } finally {
+      setDownloading(false);
+    }
+  }, []);
+
+  const handleShare = useCallback(async (cert: Certificate) => {
+    const shareData = {
+      title: cert.title,
+      text: `شهادة: ${cert.title}`,
+      url: `${window.location.origin}/verify/${cert.id}`,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(shareData.url);
+      toast.success("تم نسخ رابط الشهادة إلى الحافظة");
+    }
+  }, []);
+
   const CertCard = ({ cert, i, delay }: { cert: Certificate; i: number; delay: number }) => (
     <motion.div key={cert.id} initial={{ x: 30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: delay + i * 0.08 }} className="glass-card rounded-2xl p-4">
       <div className="flex items-start justify-between gap-2">
@@ -97,10 +143,14 @@ const Certificates = () => {
           <button onClick={() => setViewCert(cert)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-accent text-foreground text-xs font-semibold hover:bg-accent/80 transition-colors">
             <Eye className="w-3.5 h-3.5" /> معاينة
           </button>
-          <button onClick={() => handleDownload(cert.title)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors">
-            <Download className="w-3.5 h-3.5" /> تحميل PDF
+          <button
+            onClick={() => handleDownload(cert)}
+            disabled={downloading}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors disabled:opacity-50"
+          >
+            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} تحميل PDF
           </button>
-          <button onClick={() => handleShare(cert.title)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gold/10 text-gold text-xs font-semibold hover:bg-gold/15 transition-colors">
+          <button onClick={() => handleShare(cert)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gold/10 text-gold text-xs font-semibold hover:bg-gold/15 transition-colors">
             <Share2 className="w-3.5 h-3.5" /> مشاركة
           </button>
         </div>
@@ -173,19 +223,42 @@ const Certificates = () => {
         </>
       )}
 
-      {/* View Certificate Dialog */}
+      {/* View Certificate Dialog - Mobile optimized */}
       <Dialog open={!!viewCert} onOpenChange={() => setViewCert(null)}>
-        <DialogContent className="sm:max-w-[960px] max-h-[95vh] overflow-y-auto p-4">
+        <DialogContent className="max-w-[95vw] sm:max-w-[960px] max-h-[90vh] overflow-auto p-3 sm:p-4">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">معاينة الشهادة</DialogTitle>
-            <DialogDescription>معاينة الشهادة بالتصميم الرسمي</DialogDescription>
+            <DialogTitle className="text-base font-bold">معاينة الشهادة</DialogTitle>
+            <DialogDescription className="text-xs">معاينة الشهادة بالتصميم الرسمي</DialogDescription>
           </DialogHeader>
           {viewCert && (
-            <CertificateViewer
-              cert={viewCert}
-              reciterSignatureUrl={getReciterAsset(viewCert.reciter_id)?.signature_url}
-              reciterStampUrl={getReciterAsset(viewCert.reciter_id)?.stamp_url}
-            />
+            <div className="overflow-x-auto -mx-3 px-3" style={{ WebkitOverflowScrolling: "touch" }}>
+              <div style={{ minWidth: "920px" }}>
+                <CertificateViewer
+                  ref={certRef}
+                  cert={viewCert}
+                  reciterSignatureUrl={getReciterAsset(viewCert.reciter_id)?.signature_url}
+                  reciterStampUrl={getReciterAsset(viewCert.reciter_id)?.stamp_url}
+                />
+              </div>
+            </div>
+          )}
+          {/* Action buttons inside dialog for mobile */}
+          {viewCert && (
+            <div className="flex gap-2 mt-2 pt-2 border-t border-border/50">
+              <button
+                onClick={() => handleDownload(viewCert)}
+                disabled={downloading}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors disabled:opacity-50"
+              >
+                {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} تحميل PDF
+              </button>
+              <button
+                onClick={() => handleShare(viewCert)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gold/10 text-gold text-xs font-semibold hover:bg-gold/15 transition-colors"
+              >
+                <Share2 className="w-3.5 h-3.5" /> مشاركة
+              </button>
+            </div>
           )}
         </DialogContent>
       </Dialog>
