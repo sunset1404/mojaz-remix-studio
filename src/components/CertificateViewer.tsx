@@ -82,9 +82,9 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
             />
 
             {/* Content */}
-            <div className="relative z-10 flex flex-col items-center px-16 py-10 h-full">
+            <div className="relative z-10 flex flex-col items-center px-8 py-6 h-full">
               {/* Header - Logo */}
-              <div className="flex items-center justify-center w-full mb-5">
+              <div className="flex items-center justify-center w-full mb-3">
                 <div className="flex items-center gap-3">
                   <img src={logoMojaz} alt="مجاز" className="h-14 w-14 rounded-2xl object-cover shadow-md" />
                   <div className="text-right">
@@ -95,7 +95,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
               </div>
 
               {/* Decorative divider */}
-              <div className="flex items-center gap-3 w-64 mb-4">
+              <div className="flex items-center gap-3 w-64 mb-2">
                 <div className="flex-1 h-[1px]" style={{ background: `linear-gradient(90deg, transparent, ${goldColor})` }} />
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M8 0 L10 6 L16 8 L10 10 L8 16 L6 10 L0 8 L6 6 Z" fill={goldColor} opacity="0.5" />
@@ -112,14 +112,14 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
               </h1>
 
               {/* Underline */}
-              <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center gap-2 mb-4">
                 <div className="w-16 h-[2px] rounded-full" style={{ background: `linear-gradient(90deg, transparent, ${accentColor})` }} />
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: goldColor, opacity: 0.5 }} />
                 <div className="w-16 h-[2px] rounded-full" style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
               </div>
 
               {/* Details Grid */}
-              <div className="grid grid-cols-2 gap-x-16 gap-y-4 w-full max-w-[620px] mb-5">
+              <div className="grid grid-cols-2 gap-x-16 gap-y-3 w-full mb-4">
                 {[
                   { label: "الطالب/ة", value: cert.student_name },
                   { label: "المقرئ/ة", value: cert.reciter_name || cert.sheikh_name },
@@ -138,13 +138,13 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
               {/* Certificate Text */}
               {cert.certificate_text && (
                 <div
-                  className="w-full max-w-[720px] rounded-2xl px-8 py-5 mb-6"
+                  className="w-full rounded-2xl px-4 py-4 mb-4"
                   style={{
                     background: `linear-gradient(135deg, rgba(13,115,119,0.04), rgba(184,134,11,0.04))`,
                     border: `1px solid rgba(13,115,119,0.1)`,
                   }}
                 >
-                  <p className="text-sm leading-[2.1] text-center font-medium" style={{ color: "#444", fontFamily: "serif" }}>
+                  <p className="text-base leading-[2.2] text-justify font-medium" style={{ color: "#444", fontFamily: "'Amiri', serif" }}>
                     {cert.certificate_text}
                   </p>
                 </div>
