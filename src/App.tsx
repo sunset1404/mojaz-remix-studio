@@ -53,6 +53,7 @@ import AdminIjazahStudents from "./pages/AdminIjazahStudents";
 import AdminCertificates from "./pages/AdminCertificates";
 import AdminCertificateTemplates from "./pages/AdminCertificateTemplates";
 import AdminExams from "./pages/AdminExams";
+import AdminSessions from "./pages/AdminSessions";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminAchievements from "./pages/AdminAchievements";
 import AdminRewards from "./pages/AdminRewards";
@@ -115,6 +116,7 @@ const AppRoutes = () => (
     <Route path="/admin/certificates" element={<ProtectedRoute><AdminCertificates /></ProtectedRoute>} />
     <Route path="/admin/certificate-templates" element={<ProtectedRoute><AdminCertificateTemplates /></ProtectedRoute>} />
     <Route path="/admin/exams" element={<ProtectedRoute><AdminExams /></ProtectedRoute>} />
+    <Route path="/admin/sessions" element={<ProtectedRoute><AdminSessions /></ProtectedRoute>} />
     <Route path="/admin/notifications" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
     <Route path="/admin/achievements" element={<ProtectedRoute><AdminAchievements /></ProtectedRoute>} />
     <Route path="/admin/rewards" element={<ProtectedRoute><AdminRewards /></ProtectedRoute>} />
