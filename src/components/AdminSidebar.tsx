@@ -27,7 +27,7 @@ const mainMenuItems = [
   { title: "المقرئين", icon: GraduationCap, id: "reciters", path: "/admin/reciters" },
   { title: "الشركاء", icon: UserCheck, id: "partners", path: "/admin/partners" },
   { title: "الجلسات", icon: Clock, id: "sessions", path: "/admin/sessions" },
-  { title: "الشهادات", icon: Award, id: "certificates", path: "/admin/certificates" },
+  { title: "الشهادات والإجازات", icon: Award, id: "certificates", path: "/admin/certificates" },
   { title: "الإنجازات", icon: Trophy, id: "achievements", path: "/admin/achievements" },
   { title: "الاختبارات", icon: ClipboardList, id: "exams", path: "/admin/exams" },
 ];
