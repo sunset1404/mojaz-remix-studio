@@ -37,6 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import CertificateViewer from "@/components/CertificateViewer";
 
 interface CertificateRow {
   id: string;
@@ -54,6 +55,7 @@ interface CertificateRow {
   certificate_text: string | null;
   student_phone: string | null;
   student_email: string | null;
+  reciter_id: string | null;
   created_at: string;
 }
 
@@ -72,6 +74,8 @@ interface StudentOption {
 interface ReciterOption {
   user_id: string;
   full_name: string;
+  signature_url: string | null;
+  stamp_url: string | null;
 }
 
 interface ReciterCertText {
@@ -134,7 +138,7 @@ const AdminCertificates = () => {
       const [certsRes, studentsRes, recitersRes, recCertsRes] = await Promise.all([
         supabase.from("certificates").select("*").order("created_at", { ascending: false }),
         supabase.from("student_profiles").select("id, user_id, full_name, phone, email, preferred_riwaya, assigned_reciter_id, ijazah_status, preferred_track"),
-        supabase.from("reciter_profiles").select("user_id, full_name").eq("status", "approved"),
+        supabase.from("reciter_profiles").select("user_id, full_name, signature_url, stamp_url").eq("status", "approved"),
         supabase.from("reciter_certifications").select("reciter_id, type, riwaya, certification_text"),
       ]);
       setCertificates(certsRes.data || []);
@@ -597,49 +601,22 @@ const AdminCertificates = () => {
 
       {/* View Certificate Dialog */}
       <Dialog open={!!viewCert} onOpenChange={() => setViewCert(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-[960px] max-h-[95vh] overflow-y-auto p-4">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold flex items-center gap-2">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${viewCert?.type === "ijaza" ? "bg-gold/15" : "bg-primary/10"}`}>
                 {viewCert?.type === "ijaza" ? <GraduationCap className="w-4 h-4 text-gold" /> : <Award className="w-4 h-4 text-primary" />}
               </div>
-              {viewCert?.title}
+              معاينة الشهادة
             </DialogTitle>
-            <DialogDescription>تفاصيل الشهادة</DialogDescription>
+            <DialogDescription>معاينة الشهادة بالتصميم الرسمي</DialogDescription>
           </DialogHeader>
           {viewCert && (
-            <div className="space-y-4 mt-2">
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: "الطالب", value: viewCert.student_name || "—" },
-                  { label: "المقرئ", value: viewCert.reciter_name || viewCert.sheikh_name || "—" },
-                  { label: "الرواية", value: viewCert.riwaya || "—" },
-                  { label: "التاريخ", value: viewCert.date || "—" },
-                  { label: "الهاتف", value: viewCert.student_phone || "—" },
-                  { label: "البريد", value: viewCert.student_email || "—" },
-                ].map(item => (
-                  <div key={item.label} className="bg-accent/30 rounded-xl p-3">
-                    <p className="text-[10px] text-muted-foreground font-semibold">{item.label}</p>
-                    <p className="text-sm font-semibold text-foreground mt-0.5">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-              {viewCert.certificate_text && (
-                <div className="bg-accent/30 rounded-xl p-4">
-                  <p className="text-[10px] text-muted-foreground font-semibold mb-1">الصياغة المعتمدة</p>
-                  <p className="text-sm text-foreground leading-relaxed">{viewCert.certificate_text}</p>
-                </div>
-              )}
-              {viewCert.notes && (
-                <div className="bg-accent/30 rounded-xl p-4">
-                  <p className="text-[10px] text-muted-foreground font-semibold mb-1">ملاحظات</p>
-                  <p className="text-sm text-foreground">{viewCert.notes}</p>
-                </div>
-              )}
-              <Badge className={`text-xs border ${viewCert.type === "ijaza" ? "bg-gold/15 text-gold border-gold/30" : "bg-primary/10 text-primary border-primary/30"}`}>
-                {viewCert.type === "ijaza" ? "إجازة قرآنية" : "شهادة ختم"} · {viewCert.status}
-              </Badge>
-            </div>
+            <CertificateViewer
+              cert={viewCert}
+              reciterSignatureUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.signature_url : null}
+              reciterStampUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.stamp_url : null}
+            />
           )}
         </DialogContent>
       </Dialog>
