@@ -107,13 +107,30 @@ const Certificates = () => {
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
 
-      // Create a detached container, render CertificateViewer into it
-      const container = document.createElement("div");
-      container.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:920px;pointer-events:none;";
-      document.body.appendChild(container);
+      // Use a hidden iframe to completely isolate html2canvas from the main page
+      const iframe = document.createElement("iframe");
+      iframe.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:960px;height:800px;visibility:hidden;pointer-events:none;border:none;";
+      document.body.appendChild(iframe);
 
-      const certEl = document.createElement("div");
-      container.appendChild(certEl);
+      await new Promise<void>((resolve) => {
+        iframe.onload = () => resolve();
+        iframe.src = "about:blank";
+      });
+
+      const iframeDoc = iframe.contentDocument!;
+      
+      // Copy all stylesheets into the iframe
+      const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
+      styles.forEach((s) => {
+        iframeDoc.head.appendChild(s.cloneNode(true));
+      });
+
+      // Create render target inside iframe
+      const certEl = iframeDoc.createElement("div");
+      certEl.style.width = "920px";
+      iframeDoc.body.appendChild(certEl);
+      iframeDoc.body.style.margin = "0";
+      iframeDoc.body.style.padding = "0";
 
       const root = createRoot(certEl);
       root.render(
@@ -125,21 +142,21 @@ const Certificates = () => {
       );
 
       // Wait for render + images to load
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1500));
 
-      const canvas = await html2canvas(certEl, {
+      const canvas = await (html2canvas as any)(certEl, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
-        foreignObjectRendering: true,
         logging: false,
         backgroundColor: "#ffffff",
         windowWidth: 920,
+        window: iframe.contentWindow!,
       });
 
-      // Cleanup detached DOM
+      // Cleanup iframe
       root.unmount();
-      document.body.removeChild(container);
+      document.body.removeChild(iframe);
 
       const pdf = new jsPDF("l", "mm", "a4");
       const pdfWidth = 297;
