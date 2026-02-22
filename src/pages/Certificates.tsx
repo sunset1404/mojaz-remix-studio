@@ -77,7 +77,7 @@ const Certificates = () => {
   const [ijazat, setIjazat] = useState<Certificate[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [viewCert, setViewCert] = useState<Certificate | null>(null);
-  const [downloading, setDownloading] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const certRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -101,7 +101,7 @@ const Certificates = () => {
 
 
   const handleDownload = useCallback(async (cert: Certificate) => {
-    setDownloading(true);
+    setDownloadingId(cert.id);
 
     try {
       const { default: html2canvas } = await import("html2canvas");
@@ -153,7 +153,7 @@ const Certificates = () => {
       console.error(e);
       toast.error("حدث خطأ أثناء التحميل");
     } finally {
-      setDownloading(false);
+      setDownloadingId(null);
     }
   }, []);
 
@@ -190,10 +190,10 @@ const Certificates = () => {
           </button>
           <button
             onClick={() => handleDownload(cert)}
-            disabled={downloading}
+            disabled={downloadingId === cert.id}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors disabled:opacity-50"
           >
-            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} تحميل PDF
+            {downloadingId === cert.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} تحميل PDF
           </button>
           <button onClick={() => handleShare(cert)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gold/10 text-gold text-xs font-semibold hover:bg-gold/15 transition-colors">
             <Share2 className="w-3.5 h-3.5" /> مشاركة
