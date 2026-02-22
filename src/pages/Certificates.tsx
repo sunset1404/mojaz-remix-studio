@@ -278,7 +278,7 @@ const Certificates = () => {
 
       {/* Hidden offscreen certificate for PDF download */}
       {downloadCert && (
-        <div style={{ position: "fixed", left: "-9999px", top: 0, zIndex: -1 }}>
+        <div style={{ position: "absolute", width: 0, height: 0, overflow: "hidden", opacity: 0, pointerEvents: "none" }}>
           <div style={{ width: "920px" }}>
             <CertificateViewer
               ref={downloadCertRef}
