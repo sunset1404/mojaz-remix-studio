@@ -253,6 +253,20 @@ const AdminCertificates = () => {
         issued_by: user?.id || null,
       } as any);
       if (error) throw error;
+
+      // Send notification to the student
+      const notifTitle = formType === "ijaza" ? "🎓 إجازة مباركة!" : "📜 شهادة جديدة!";
+      const notifBody = formType === "ijaza"
+        ? `مبروك! حصلت على إجازة في ${formRiwaya || "القرآن الكريم"}، نسأل الله أن ينفع بك.`
+        : `مبروك! حصلت على شهادة ختم القرآن الكريم، استمر في التميز!`;
+      await supabase.from("notifications").insert({
+        user_id: selectedStudentId,
+        title: notifTitle,
+        body: notifBody,
+        type: "certificate",
+        sent_by: user?.id || null,
+      });
+
       toast({ title: `تم إصدار ${formType === "ijaza" ? "الإجازة" : "الشهادة"} بنجاح ✅` });
       setIsDialogOpen(false);
       resetForm();
