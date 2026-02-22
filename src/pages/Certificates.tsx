@@ -30,7 +30,7 @@ const CertificateScaled = forwardRef<HTMLDivElement, {
   }, []);
 
   // Calculate the visible height based on scale
-  const certHeight = 900; // taller cert height for better visibility
+  const certHeight = 1100;
 
   return (
     <div ref={containerRef} className="w-full max-w-full overflow-hidden" style={{ direction: "ltr" }}>
