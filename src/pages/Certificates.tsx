@@ -77,7 +77,9 @@ const Certificates = () => {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [viewCert, setViewCert] = useState<Certificate | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [downloadCert, setDownloadCert] = useState<Certificate | null>(null);
   const certRef = useRef<HTMLDivElement>(null);
+  const downloadCertRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -101,20 +103,21 @@ const Certificates = () => {
 
   const handleDownload = useCallback(async (cert: Certificate) => {
     setDownloading(true);
-    // Open the preview first so the element renders
-    setViewCert(cert);
+    // Render certificate offscreen (hidden) for capture
+    setDownloadCert(cert);
     
-    // Wait for render
-    await new Promise(r => setTimeout(r, 600));
+    // Wait for offscreen render
+    await new Promise(r => setTimeout(r, 800));
 
     try {
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
       
-      const el = certRef.current;
+      const el = downloadCertRef.current;
       if (!el) {
         toast.error("تعذر إنشاء ملف PDF");
         setDownloading(false);
+        setDownloadCert(null);
         return;
       }
 
@@ -125,7 +128,7 @@ const Certificates = () => {
         backgroundColor: "#ffffff",
       });
 
-      const pdf = new jsPDF("l", "mm", "a4"); // landscape
+      const pdf = new jsPDF("l", "mm", "a4");
       const pdfWidth = 297;
       const pdfHeight = 210;
       const imgWidth = pdfWidth - 10;
@@ -140,6 +143,7 @@ const Certificates = () => {
       toast.error("حدث خطأ أثناء التحميل");
     } finally {
       setDownloading(false);
+      setDownloadCert(null);
     }
   }, []);
 
@@ -271,6 +275,20 @@ const Certificates = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Hidden offscreen certificate for PDF download */}
+      {downloadCert && (
+        <div style={{ position: "fixed", left: "-9999px", top: 0, zIndex: -1 }}>
+          <div style={{ width: "920px" }}>
+            <CertificateViewer
+              ref={downloadCertRef}
+              cert={downloadCert}
+              reciterSignatureUrl={downloadCert.reciter_signature_url}
+              reciterStampUrl={downloadCert.reciter_stamp_url}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
