@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
-import { ChevronRight, GraduationCap, Award, Download, Share2, Loader2 } from "lucide-react";
+import { ChevronRight, GraduationCap, Award, Download, Share2, Loader2, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import CertificateViewer from "@/components/CertificateViewer";
 
 type Certificate = {
   id: string;
@@ -14,6 +16,20 @@ type Certificate = {
   issuer: string | null;
   date: string | null;
   status: string;
+  student_name: string | null;
+  reciter_name: string | null;
+  reciter_id: string | null;
+  riwaya: string | null;
+  certificate_text: string | null;
+  student_phone: string | null;
+  student_email: string | null;
+  notes: string | null;
+};
+
+type ReciterAssets = {
+  user_id: string;
+  signature_url: string | null;
+  stamp_url: string | null;
 };
 
 const handleDownload = (title: string) => {
@@ -36,25 +52,61 @@ const Certificates = () => {
   const [loading, setLoading] = useState(true);
   const [ijazat, setIjazat] = useState<Certificate[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [reciterAssets, setReciterAssets] = useState<ReciterAssets[]>([]);
+  const [viewCert, setViewCert] = useState<Certificate | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    const fetch = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("certificates")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+      const [certsRes, recitersRes] = await Promise.all([
+        supabase
+          .from("certificates")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false }),
+        supabase.from("reciter_profiles").select("user_id, signature_url, stamp_url"),
+      ]);
 
-      if (data) {
-        setIjazat(data.filter(c => c.type === "ijaza"));
-        setCertificates(data.filter(c => c.type === "certificate"));
+      if (certsRes.data) {
+        setIjazat(certsRes.data.filter(c => c.type === "ijaza"));
+        setCertificates(certsRes.data.filter(c => c.type === "certificate"));
       }
+      setReciterAssets(recitersRes.data || []);
       setLoading(false);
     };
-    fetch();
+    fetchData();
   }, [user]);
+
+  const getReciterAsset = (reciterId: string | null) => reciterAssets.find(r => r.user_id === reciterId);
+
+  const CertCard = ({ cert, i, delay }: { cert: Certificate; i: number; delay: number }) => (
+    <motion.div key={cert.id} initial={{ x: 30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: delay + i * 0.08 }} className="glass-card rounded-2xl p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-foreground text-sm">{cert.title}</h3>
+          {cert.sheikh_name && <p className="text-xs text-muted-foreground mt-1">على يد {cert.sheikh_name}</p>}
+          {cert.date && <p className="text-[10px] text-muted-foreground mt-0.5">{cert.date}</p>}
+        </div>
+        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 ${cert.status === "معتمدة" ? "bg-primary/10 text-primary" : "bg-gold/15 text-gold"}`}>
+          {cert.status}
+        </span>
+      </div>
+      {cert.status === "معتمدة" && (
+        <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
+          <button onClick={() => setViewCert(cert)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-accent text-foreground text-xs font-semibold hover:bg-accent/80 transition-colors">
+            <Eye className="w-3.5 h-3.5" /> معاينة
+          </button>
+          <button onClick={() => handleDownload(cert.title)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors">
+            <Download className="w-3.5 h-3.5" /> تحميل PDF
+          </button>
+          <button onClick={() => handleShare(cert.title)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gold/10 text-gold text-xs font-semibold hover:bg-gold/15 transition-colors">
+            <Share2 className="w-3.5 h-3.5" /> مشاركة
+          </button>
+        </div>
+      )}
+    </motion.div>
+  );
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -92,30 +144,7 @@ const Certificates = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {ijazat.map((ij, i) => (
-                    <motion.div key={ij.id} initial={{ x: 30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 + i * 0.08 }} className="glass-card rounded-2xl p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-foreground text-sm">{ij.title}</h3>
-                          {ij.sheikh_name && <p className="text-xs text-muted-foreground mt-1">على يد {ij.sheikh_name}</p>}
-                          {ij.date && <p className="text-[10px] text-muted-foreground mt-0.5">{ij.date}</p>}
-                        </div>
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 ${ij.status === "معتمدة" ? "bg-primary/10 text-primary" : "bg-gold/15 text-gold"}`}>
-                          {ij.status}
-                        </span>
-                      </div>
-                      {ij.status === "معتمدة" && (
-                        <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
-                          <button onClick={() => handleDownload(ij.title)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors">
-                            <Download className="w-3.5 h-3.5" /> تحميل PDF
-                          </button>
-                          <button onClick={() => handleShare(ij.title)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gold/10 text-gold text-xs font-semibold hover:bg-gold/15 transition-colors">
-                            <Share2 className="w-3.5 h-3.5" /> مشاركة
-                          </button>
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
+                  {ijazat.map((ij, i) => <CertCard key={ij.id} cert={ij} i={i} delay={0.3} />)}
                 </div>
               )}
             </motion.div>
@@ -136,27 +165,30 @@ const Certificates = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {certificates.map((cert, i) => (
-                    <motion.div key={cert.id} initial={{ x: 30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.55 + i * 0.08 }} className="glass-card rounded-2xl p-4">
-                      <h3 className="font-bold text-foreground text-sm">{cert.title}</h3>
-                      {cert.issuer && <p className="text-xs text-muted-foreground mt-1">{cert.issuer}</p>}
-                      {cert.date && <p className="text-[10px] text-muted-foreground mt-0.5">{cert.date}</p>}
-                      <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
-                        <button onClick={() => handleDownload(cert.title)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors">
-                          <Download className="w-3.5 h-3.5" /> تحميل PDF
-                        </button>
-                        <button onClick={() => handleShare(cert.title)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gold/10 text-gold text-xs font-semibold hover:bg-gold/15 transition-colors">
-                          <Share2 className="w-3.5 h-3.5" /> مشاركة
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
+                  {certificates.map((cert, i) => <CertCard key={cert.id} cert={cert} i={i} delay={0.55} />)}
                 </div>
               )}
             </motion.div>
           </div>
         </>
       )}
+
+      {/* View Certificate Dialog */}
+      <Dialog open={!!viewCert} onOpenChange={() => setViewCert(null)}>
+        <DialogContent className="sm:max-w-[960px] max-h-[95vh] overflow-y-auto p-4">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">معاينة الشهادة</DialogTitle>
+            <DialogDescription>معاينة الشهادة بالتصميم الرسمي</DialogDescription>
+          </DialogHeader>
+          {viewCert && (
+            <CertificateViewer
+              cert={viewCert}
+              reciterSignatureUrl={getReciterAsset(viewCert.reciter_id)?.signature_url}
+              reciterStampUrl={getReciterAsset(viewCert.reciter_id)?.stamp_url}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
