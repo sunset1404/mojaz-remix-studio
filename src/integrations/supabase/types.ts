@@ -73,6 +73,8 @@ export type Database = {
           notes: string | null
           reciter_id: string | null
           reciter_name: string | null
+          reciter_signature_url: string | null
+          reciter_stamp_url: string | null
           riwaya: string | null
           sheikh_name: string | null
           status: string
@@ -94,6 +96,8 @@ export type Database = {
           notes?: string | null
           reciter_id?: string | null
           reciter_name?: string | null
+          reciter_signature_url?: string | null
+          reciter_stamp_url?: string | null
           riwaya?: string | null
           sheikh_name?: string | null
           status?: string
@@ -115,6 +119,8 @@ export type Database = {
           notes?: string | null
           reciter_id?: string | null
           reciter_name?: string | null
+          reciter_signature_url?: string | null
+          reciter_stamp_url?: string | null
           riwaya?: string | null
           sheikh_name?: string | null
           status?: string
