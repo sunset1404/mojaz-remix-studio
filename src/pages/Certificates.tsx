@@ -170,41 +170,28 @@ const Certificates = () => {
       root.unmount();
       document.body.removeChild(iframe);
 
-      // Generate PDF - use landscape for wider certs, portrait for taller ones
-      const ratio = canvas.width / canvas.height;
-      const isLandscape = ratio > 1;
-      const pdf = new jsPDF(isLandscape ? "l" : "p", "mm", "a4");
-      const pdfWidth = isLandscape ? 297 : 210;
-      const pdfHeight = isLandscape ? 210 : 297;
-      const imgWidth = pdfWidth - 10;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // Always landscape A4, fit everything on one page
+      const pdf = new jsPDF("l", "mm", "a4");
+      const pdfWidth = 297;
+      const pdfHeight = 210;
+      const margin = 5;
+      const availW = pdfWidth - margin * 2;
+      const availH = pdfHeight - margin * 2;
+      const imgRatio = canvas.width / canvas.height;
+      const pageRatio = availW / availH;
 
-      // If content fits on one page
-      if (imgHeight <= pdfHeight - 10) {
-        const yOffset = Math.max(0, (pdfHeight - imgHeight) / 2);
-        pdf.addImage(canvas.toDataURL("image/png"), "PNG", 5, yOffset, imgWidth, imgHeight);
+      let finalW: number, finalH: number;
+      if (imgRatio > pageRatio) {
+        finalW = availW;
+        finalH = availW / imgRatio;
       } else {
-        // Multi-page: slice the canvas
-        const pageContentHeight = pdfHeight - 10;
-        const scaleFactor = canvas.width / imgWidth;
-        const sliceHeight = pageContentHeight * scaleFactor;
-        let srcY = 0;
-        let page = 0;
-
-        while (srcY < canvas.height) {
-          if (page > 0) pdf.addPage();
-          const currentSlice = Math.min(sliceHeight, canvas.height - srcY);
-          const sliceCanvas = document.createElement("canvas");
-          sliceCanvas.width = canvas.width;
-          sliceCanvas.height = currentSlice;
-          const ctx = sliceCanvas.getContext("2d")!;
-          ctx.drawImage(canvas, 0, srcY, canvas.width, currentSlice, 0, 0, canvas.width, currentSlice);
-          const sliceImgHeight = (currentSlice * imgWidth) / canvas.width;
-          pdf.addImage(sliceCanvas.toDataURL("image/png"), "PNG", 5, 5, imgWidth, sliceImgHeight);
-          srcY += currentSlice;
-          page++;
-        }
+        finalH = availH;
+        finalW = availH * imgRatio;
       }
+      const xOffset = margin + (availW - finalW) / 2;
+      const yOffset = margin + (availH - finalH) / 2;
+
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", xOffset, yOffset, finalW, finalH);
 
       pdf.save(`${cert.title}.pdf`);
       toast.success("تم تحميل الشهادة بنجاح");
