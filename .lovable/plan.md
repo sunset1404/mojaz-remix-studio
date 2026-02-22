@@ -1,90 +1,24 @@
 
-# خطة تكييف واجهة المقرئ حسب نوعه (إجازات / عام)
+# Fix: Certificate Preview Overflowing on Mobile
 
-## الفكرة
-تمييز المقرئ تلقائيا بناء على حقل `reciter_type` في ملفه الشخصي:
-- **مقرئ إجازات**: يرى "طلابي" و"أداء الطلاب" (الوضع الحالي)
-- **مقرئ عام**: يرى "سجل الجلسات" و"إحصائياتي" بدلا منهما
+## Problem
+The `CertificateScaled` component has a bug: the container div with `w-full overflow-hidden` expands to 920px because its child is 920px wide. When `useEffect` reads `containerRef.current.offsetWidth`, it gets 920, so `scale` calculates to 1 (no scaling). The certificate renders at full size and overflows the dialog.
 
----
+## Solution
+Two changes in `src/pages/Certificates.tsx`:
 
-## التغييرات المطلوبة
+### 1. Fix the CertificateScaled component (lines 35-53)
+- Add `max-w-full` to the container so it respects the dialog width instead of expanding to 920px
+- Change `transformOrigin` from `"top right"` to `"top center"` so scaling is visually centered
+- These two changes ensure the container measures the actual available width and the certificate scales down to fit
 
-### 1. إضافة حقل `reciter_type` لقاعدة البيانات
-إضافة عمود جديد لجدول `reciter_profiles` لتصنيف نوع المقرئ:
-- `ijazah` = مقرئ إجازات (طلاب مرتبطون)
-- `general` = مقرئ عام (حفظ وتثبيت وتصحيح)
-- القيمة الافتراضية: `general`
+### 2. No other files need changes
 
-### 2. تحديث AuthContext
-جلب `reciter_type` من `reciter_profiles` عند تسجيل دخول المقرئ وتخزينه في السياق ليكون متاحا في جميع المكونات.
-
-### 3. تكييف الشريط السفلي (BottomNav)
-- مقرئ إجازات: الجلسات | طلابي | الرئيسية | الأداء | حسابي (كما هو الآن)
-- مقرئ عام: الجلسات | سجل الجلسات | الرئيسية | إحصائياتي | حسابي
-
-### 4. إنشاء صفحة "سجل الجلسات" (ReciterSessionLog)
-صفحة تعرض للمقرئ العام جميع الطلاب الذين تعامل معهم من جدول `session_records`:
-- قائمة بأسماء الطلاب مع تاريخ ووقت ومدة كل جلسة
-- تصفية حسب الحالة (مكتملة / ملغاة)
-- بحث بالاسم
-- إحصائيات سريعة (عدد الجلسات، الساعات)
-
-### 5. إنشاء صفحة "إحصائياتي" (ReciterMyStats)
-لوحة بيانات شخصية للمقرئ العام تركز على أدائه هو:
-- إجمالي ساعات الإقراء
-- عدد الجلسات المكتملة
-- عدد الطلاب الفريدين الذين أقرأهم
-- متوسط التقييم من الطلاب
-- رسم بياني للنشاط الأسبوعي
-
-### 6. تكييف الصفحة الرئيسية للمقرئ (ReciterHome)
-- مقرئ الإجازات: يبقى قسم "طلابي" كما هو
-- مقرئ العام: يظهر بدلا منه "آخر الجلسات" مع إحصائيات شخصية
-
-### 7. تحديث التوجيه (App.tsx)
-إضافة المسارات الجديدة:
-- `/reciter-session-log` - سجل الجلسات (مقرئ عام)
-- `/reciter-my-stats` - إحصائياتي (مقرئ عام)
-
----
-
-## التفاصيل التقنية
-
-### هيكل قاعدة البيانات
-```sql
-ALTER TABLE public.reciter_profiles
-ADD COLUMN reciter_type text NOT NULL DEFAULT 'general'
-CHECK (reciter_type IN ('ijazah', 'general'));
-```
-
-### تدفق البيانات
+## Technical Detail
 ```text
-AuthContext
-  |-- يجلب reciter_type من reciter_profiles
-  |-- يخزنه في السياق
-  |
-  +-- BottomNav
-  |     |-- يقرأ reciter_type
-  |     +-- يعرض التبويبات المناسبة
-  |
-  +-- ReciterHome
-  |     +-- يعرض محتوى مختلف حسب النوع
-  |
-  +-- صفحات خاصة بكل نوع
-        |-- إجازات: MyStudents + ReciterStudentPerformance
-        +-- عام: ReciterSessionLog + ReciterMyStats
+Before:
+  Container (w-full) -> expands to 920px -> scale = 920/920 = 1 -> no scaling
+
+After:
+  Container (w-full max-w-full) -> constrained to dialog width (~370px) -> scale = 370/920 = 0.4 -> scales down
 ```
-
-### مكونات BottomNav المعدلة
-```text
-مقرئ إجازات:
-[الجلسات] [طلابي] [الرئيسية] [الأداء] [حسابي]
-
-مقرئ عام:
-[الجلسات] [سجل الجلسات] [الرئيسية] [إحصائياتي] [حسابي]
-```
-
-### الصفحات الجديدة
-1. **ReciterSessionLog**: تستعلم من `session_records` حيث `user_id = المقرئ الحالي`، وتعرض بطاقات بأسماء الطلاب والتقييمات والمدد
-2. **ReciterMyStats**: تجمع إحصائيات من `session_records` (مجموع الساعات، عدد الطلاب الفريدين، متوسط التقييم) مع رسم بياني أسبوعي باستخدام recharts
