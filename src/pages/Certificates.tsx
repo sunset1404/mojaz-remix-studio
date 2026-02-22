@@ -108,7 +108,7 @@ const Certificates = () => {
       const { jsPDF } = await import("jspdf");
 
       // Use a hidden iframe to completely isolate html2canvas from the main page
-      const downloadWidth = 1400; // Wider for landscape PDF
+      const downloadWidth = 2400; // Very wide for landscape PDF to fill page
       const iframe = document.createElement("iframe");
       iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:2000px;visibility:hidden;pointer-events:none;border:none;`;
       document.body.appendChild(iframe);
