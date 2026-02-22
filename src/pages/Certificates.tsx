@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useRef, useCallback, forwardRef } from "react";
+import { createRoot } from "react-dom/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import CertificateViewer from "@/components/CertificateViewer";
 
@@ -77,9 +78,7 @@ const Certificates = () => {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [viewCert, setViewCert] = useState<Certificate | null>(null);
   const [downloading, setDownloading] = useState(false);
-  const [downloadCert, setDownloadCert] = useState<Certificate | null>(null);
   const certRef = useRef<HTMLDivElement>(null);
-  const downloadCertRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -103,30 +102,42 @@ const Certificates = () => {
 
   const handleDownload = useCallback(async (cert: Certificate) => {
     setDownloading(true);
-    // Render certificate offscreen (hidden) for capture
-    setDownloadCert(cert);
-    
-    // Wait for offscreen render
-    await new Promise(r => setTimeout(r, 800));
 
     try {
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
-      
-      const el = downloadCertRef.current;
-      if (!el) {
-        toast.error("تعذر إنشاء ملف PDF");
-        setDownloading(false);
-        setDownloadCert(null);
-        return;
-      }
 
-      const canvas = await html2canvas(el, {
+      // Create a detached container, render CertificateViewer into it
+      const container = document.createElement("div");
+      container.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:920px;pointer-events:none;";
+      document.body.appendChild(container);
+
+      const certEl = document.createElement("div");
+      container.appendChild(certEl);
+
+      const root = createRoot(certEl);
+      root.render(
+        <CertificateViewer
+          cert={cert}
+          reciterSignatureUrl={cert.reciter_signature_url}
+          reciterStampUrl={cert.reciter_stamp_url}
+        />
+      );
+
+      // Wait for render + images to load
+      await new Promise(r => setTimeout(r, 1000));
+
+      const canvas = await html2canvas(certEl, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
+        windowWidth: 920,
       });
+
+      // Cleanup detached DOM
+      root.unmount();
+      document.body.removeChild(container);
 
       const pdf = new jsPDF("l", "mm", "a4");
       const pdfWidth = 297;
@@ -143,7 +154,6 @@ const Certificates = () => {
       toast.error("حدث خطأ أثناء التحميل");
     } finally {
       setDownloading(false);
-      setDownloadCert(null);
     }
   }, []);
 
@@ -276,19 +286,6 @@ const Certificates = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Hidden offscreen certificate for PDF download */}
-      {downloadCert && (
-        <div style={{ position: "absolute", width: 0, height: 0, overflow: "hidden", opacity: 0, pointerEvents: "none" }}>
-          <div style={{ width: "920px" }}>
-            <CertificateViewer
-              ref={downloadCertRef}
-              cert={downloadCert}
-              reciterSignatureUrl={downloadCert.reciter_signature_url}
-              reciterStampUrl={downloadCert.reciter_stamp_url}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
