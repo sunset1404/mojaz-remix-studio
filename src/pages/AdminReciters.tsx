@@ -561,7 +561,7 @@ const AdminReciters = () => {
                                 transition={{ duration: 0.2 }}
                                 className="overflow-hidden"
                               >
-                                <div className="px-4 pb-4 border-t border-border/20 pt-3">
+                                <div className="px-4 pb-4 border-t border-border/20 pt-3" dir="rtl">
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {/* Personal Info */}
                                     <div className="space-y-2">
@@ -569,11 +569,11 @@ const AdminReciters = () => {
                                         <GraduationCap className="w-3 h-3" /> البيانات الشخصية
                                       </h4>
                                       <div className="space-y-1.5 text-xs">
-                                        <div className="flex justify-between"><span className="text-muted-foreground">الجوال:</span><span className="font-medium text-foreground" dir="ltr">{reciter.phone}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">الجنسية:</span><span className="font-medium text-foreground">{reciter.nationality}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">المدينة:</span><span className="font-medium text-foreground">{reciter.city}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">المهنة:</span><span className="font-medium text-foreground">{reciter.profession}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">رقم الهوية:</span><span className="font-medium text-foreground">{reciter.id_number}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">الجوال:</span><span className="font-medium text-foreground" dir="ltr">{reciter.phone}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">الجنسية:</span><span className="font-medium text-foreground">{reciter.nationality}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">المدينة:</span><span className="font-medium text-foreground">{reciter.city}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">المهنة:</span><span className="font-medium text-foreground">{reciter.profession}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">رقم الهوية:</span><span className="font-medium text-foreground">{reciter.id_number}</span></div>
                                       </div>
                                     </div>
 
@@ -583,10 +583,10 @@ const AdminReciters = () => {
                                         <BookOpen className="w-3 h-3" /> المؤهلات والخبرات
                                       </h4>
                                       <div className="space-y-1.5 text-xs">
-                                        <div className="flex justify-between"><span className="text-muted-foreground">المؤهل:</span><span className="font-medium text-foreground">{reciter.qualifications}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">الخبرة:</span><span className="font-medium text-foreground">{reciter.teaching_experience}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">الإجازات:</span><span className="font-medium text-foreground">{reciter.quran_certifications}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">المسار:</span><span className="font-medium text-foreground">{reciter.preferred_track || "غير محدد"}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">المؤهل:</span><span className="font-medium text-foreground">{reciter.qualifications}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">الخبرة:</span><span className="font-medium text-foreground">{reciter.teaching_experience}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">الإجازات:</span><span className="font-medium text-foreground">{reciter.quran_certifications}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">المسار:</span><span className="font-medium text-foreground">{reciter.preferred_track || "غير محدد"}</span></div>
                                       </div>
                                     </div>
 
@@ -596,9 +596,9 @@ const AdminReciters = () => {
                                         <Clock className="w-3 h-3" /> التفضيلات والإجراءات
                                       </h4>
                                       <div className="space-y-1.5 text-xs">
-                                        <div><span className="text-muted-foreground">الأيام:</span> <span className="font-medium text-foreground">{reciter.preferred_days?.join("، ") || "غير محدد"}</span></div>
-                                        <div><span className="text-muted-foreground">الأوقات:</span> <span className="font-medium text-foreground">{reciter.preferred_times?.join("، ") || "غير محدد"}</span></div>
-                                        <div><span className="text-muted-foreground">التسجيل:</span> <span className="font-medium text-foreground">{new Date(reciter.created_at).toLocaleDateString("ar-SA")}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">الأيام:</span> <span className="font-medium text-foreground">{reciter.preferred_days?.join("، ") || "غير محدد"}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">الأوقات:</span> <span className="font-medium text-foreground">{reciter.preferred_times?.join("، ") || "غير محدد"}</span></div>
+                                        <div className="flex gap-2"><span className="text-muted-foreground shrink-0">التسجيل:</span> <span className="font-medium text-foreground">{new Date(reciter.created_at).toLocaleDateString("ar-SA")}</span></div>
                                       </div>
 
                                       {/* Approval Actions */}
