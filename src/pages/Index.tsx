@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import PopupMessageCard from "@/components/PopupMessageCard";
 
 type StudentStats = {
   parts_memorized: number;
@@ -54,7 +55,7 @@ const Index = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [topReciters, setTopReciters] = useState<ReciterPreview[]>([]);
   const [activeSubscription, setActiveSubscription] = useState<ActiveSubscription | null>(null);
-
+  const [popupMessage, setPopupMessage] = useState<{ id: string; title: string; message: string; icon: string; color_scheme: string } | null>(null);
   useEffect(() => {
     if (!user) return;
     // Fetch student profile (name + gender for filtering)
@@ -100,6 +101,65 @@ const Index = () => {
       .then(({ data }) => { if (data) setActiveSubscription(data); });
   }, [user]);
 
+  // Popup messages: check for relevant trigger events and show popup
+  useEffect(() => {
+    if (!user) return;
+    const SHOWN_KEY = `popup_shown_${user.id}`;
+    const shownMap: Record<string, number> = JSON.parse(localStorage.getItem(SHOWN_KEY) || "{}");
+
+    const checkPopups = async () => {
+      // Fetch all active popup messages for students
+      const { data: popups } = await supabase
+        .from("popup_messages" as any)
+        .select("*")
+        .eq("target_role", "student")
+        .eq("is_active", true);
+      if (!popups || popups.length === 0) return;
+
+      // Check for recent certificates (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const { data: recentCerts } = await supabase
+        .from("certificates")
+        .select("id, type, created_at")
+        .eq("user_id", user.id)
+        .gte("created_at", sevenDaysAgo.toISOString())
+        .order("created_at", { ascending: false });
+
+      const triggeredEvents: string[] = [];
+
+      if (recentCerts && recentCerts.length > 0) {
+        const hasIjaza = recentCerts.some((c: any) => c.type === "ijaza");
+        const hasCert = recentCerts.some((c: any) => c.type === "certificate");
+        if (hasIjaza) triggeredEvents.push("ijaza_earned");
+        if (hasCert) triggeredEvents.push("certificate_earned");
+      }
+
+      // Find first matching popup not shown recently (within 24h)
+      const now = Date.now();
+      for (const event of triggeredEvents) {
+        const lastShown = shownMap[event] || 0;
+        if (now - lastShown < 24 * 60 * 60 * 1000) continue; // skip if shown in last 24h
+
+        const matching = (popups as any[]).find((p: any) => p.trigger_event === event);
+        if (matching) {
+          setPopupMessage({
+            id: matching.id,
+            title: matching.title,
+            message: matching.message,
+            icon: matching.icon,
+            color_scheme: matching.color_scheme,
+          });
+          shownMap[event] = now;
+          localStorage.setItem(SHOWN_KEY, JSON.stringify(shownMap));
+          break;
+        }
+      }
+    };
+
+    checkPopups();
+  }, [user]);
+
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % promoSlides.length);
   }, []);
@@ -108,6 +168,7 @@ const Index = () => {
     const timer = setInterval(nextSlide, 4000);
     return () => clearInterval(timer);
   }, [nextSlide]);
+
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -395,6 +456,7 @@ const Index = () => {
         </motion.div>
       </div>
 
+      <PopupMessageCard message={popupMessage} onClose={() => setPopupMessage(null)} />
     </div>);
 
 };
