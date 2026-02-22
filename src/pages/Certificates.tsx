@@ -189,15 +189,32 @@ const Certificates = () => {
   }, []);
 
   const handleShare = useCallback(async (cert: Certificate) => {
+    const url = `${window.location.origin}/verify/${cert.id}`;
     const shareData = {
       title: cert.title,
       text: `شهادة: ${cert.title}`,
-      url: `${window.location.origin}/verify/${cert.id}`,
+      url,
     };
-    if (navigator.share) {
-      try { await navigator.share(shareData); } catch { /* cancelled */ }
-    } else {
-      await navigator.clipboard.writeText(shareData.url);
+    try {
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch {
+      // share cancelled or failed, fall through to clipboard
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("تم نسخ رابط الشهادة إلى الحافظة");
+    } catch {
+      // clipboard API blocked, use fallback
+      const textArea = document.createElement("textarea");
+      textArea.value = url;
+      textArea.style.cssText = "position:fixed;left:-9999px;";
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
       toast.success("تم نسخ رابط الشهادة إلى الحافظة");
     }
   }, []);
