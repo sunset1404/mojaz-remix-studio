@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      auto_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          icon: string
+          id: string
+          is_active: boolean
+          notification_type: string
+          target_role: string
+          title: string
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          notification_type?: string
+          target_role?: string
+          title: string
+          trigger_event: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          notification_type?: string
+          target_role?: string
+          title?: string
+          trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       certificate_templates: {
         Row: {
           background_color: string | null
