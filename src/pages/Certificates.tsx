@@ -108,9 +108,11 @@ const Certificates = () => {
       const { jsPDF } = await import("jspdf");
 
       // Use a hidden iframe to completely isolate html2canvas from the main page
-      const downloadWidth = 2400; // Very wide for landscape PDF to fill page
+      // Render at exact A4 landscape ratio: 297:210 ≈ 1.414
+      const downloadWidth = 1414;
+      const downloadHeight = 1000;
       const iframe = document.createElement("iframe");
-      iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:2000px;visibility:hidden;pointer-events:none;border:none;`;
+      iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:${downloadHeight + 40}px;visibility:hidden;pointer-events:none;border:none;`;
       document.body.appendChild(iframe);
 
       await new Promise<void>((resolve) => {
@@ -135,9 +137,11 @@ const Certificates = () => {
       // Set base font on iframe body
       iframeDoc.body.style.cssText = "margin:0;padding:0;font-family:'Cairo','Amiri',sans-serif;direction:rtl;";
 
-      // Create render target inside iframe
+      // Create render target inside iframe - fixed landscape dimensions
       const certEl = iframeDoc.createElement("div");
       certEl.style.width = `${downloadWidth}px`;
+      certEl.style.height = `${downloadHeight}px`;
+      certEl.style.overflow = "hidden";
       iframeDoc.body.appendChild(certEl);
 
       const root = createRoot(certEl);
@@ -147,15 +151,12 @@ const Certificates = () => {
           reciterSignatureUrl={cert.reciter_signature_url}
           reciterStampUrl={cert.reciter_stamp_url}
           renderWidth={downloadWidth}
+          renderHeight={downloadHeight}
         />
       );
 
       // Wait for render + fonts + images to load
       await new Promise(r => setTimeout(r, 2000));
-
-      // Resize iframe to fit content
-      const contentHeight = certEl.scrollHeight || certEl.offsetHeight;
-      iframe.style.height = `${contentHeight + 50}px`;
 
       const canvas = await (html2canvas as any)(certEl, {
         scale: 2,
@@ -164,7 +165,8 @@ const Certificates = () => {
         logging: false,
         backgroundColor: "#ffffff",
         windowWidth: downloadWidth,
-        height: contentHeight,
+        width: downloadWidth,
+        height: downloadHeight,
         window: iframe.contentWindow!,
       });
 
@@ -172,28 +174,9 @@ const Certificates = () => {
       root.unmount();
       document.body.removeChild(iframe);
 
-      // Always landscape A4, fit everything on one page
+      // Landscape A4 - fill entire page edge to edge, zero margins
       const pdf = new jsPDF("l", "mm", "a4");
-      const pdfWidth = 297;
-      const pdfHeight = 210;
-      const margin = 5;
-      const availW = pdfWidth - margin * 2;
-      const availH = pdfHeight - margin * 2;
-      const imgRatio = canvas.width / canvas.height;
-      const pageRatio = availW / availH;
-
-      let finalW: number, finalH: number;
-      if (imgRatio > pageRatio) {
-        finalW = availW;
-        finalH = availW / imgRatio;
-      } else {
-        finalH = availH;
-        finalW = availH * imgRatio;
-      }
-      const xOffset = margin + (availW - finalW) / 2;
-      const yOffset = margin + (availH - finalH) / 2;
-
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", xOffset, yOffset, finalW, finalH);
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, 297, 210);
 
       pdf.save(`${cert.title}.pdf`);
       toast.success("تم تحميل الشهادة بنجاح");
