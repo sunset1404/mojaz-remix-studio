@@ -213,7 +213,7 @@ const AdminNotifications = () => {
 
   // Real stats
   const [statsLoading, setStatsLoading] = useState(true);
-  const [stats, setStats] = useState({ students: 0, reciters: 0, partners: 0, totalNotifications: 0, countries: 0 });
+  const [stats, setStats] = useState({ students: 0, reciters: 0, partners: 0, totalNotifications: 0, readNotifications: 0, countries: 0 });
 
   const [filters, setFilters] = useState<FilterState>({
     studentType: "all", countries: [], ijazahStatus: "all", gender: "all",
@@ -312,18 +312,19 @@ const AdminNotifications = () => {
 
   const fetchStats = async () => {
     setStatsLoading(true);
-    const [studentsRes, recitersRes, partnersRes, notifsRes, countriesRes] = await Promise.all([
+    const [studentsRes, recitersRes, partnersRes, notifsRes, readNotifsRes, countriesRes] = await Promise.all([
       supabase.from("student_profiles").select("id", { count: "exact", head: true }),
       supabase.from("reciter_profiles").select("id", { count: "exact", head: true }),
       supabase.from("partner_profiles").select("id", { count: "exact", head: true }),
       supabase.from("notifications").select("id", { count: "exact", head: true }),
+      supabase.from("notifications").select("id", { count: "exact", head: true }).eq("read", true),
       supabase.from("student_profiles").select("residence_country"),
     ]);
     const uniqueCountries = new Set((countriesRes.data || []).map((s: any) => s.residence_country).filter(Boolean));
     setStats({
       students: studentsRes.count || 0, reciters: recitersRes.count || 0,
       partners: partnersRes.count || 0, totalNotifications: notifsRes.count || 0,
-      countries: uniqueCountries.size,
+      readNotifications: readNotifsRes.count || 0, countries: uniqueCountries.size,
     });
     setStatsLoading(false);
   };
@@ -468,11 +469,13 @@ const AdminNotifications = () => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-5 gap-4">
             {[
               { label: "إجمالي الإشعارات التلقائية", value: filteredAutoNotifications.length, color: "text-foreground" },
               { label: "نشطة", value: activeAutoCount, color: "text-emerald-500" },
               { label: "متوقفة", value: filteredAutoNotifications.length - activeAutoCount, color: "text-muted-foreground" },
+              { label: "إشعارات أُرسلت", value: statsLoading ? "..." : stats.totalNotifications, color: "text-primary" },
+              { label: "تم قراءتها", value: statsLoading ? "..." : stats.readNotifications, color: "text-gold" },
             ].map((s) => (
               <div key={s.label} className="bg-card rounded-2xl border border-border/50 p-4 text-center">
                 <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>

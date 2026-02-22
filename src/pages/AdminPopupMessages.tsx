@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -144,6 +144,23 @@ const AdminPopupMessages = () => {
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [preview, setPreview] = useState<PopupMessage | null>(null);
   const [activeTab, setActiveTab] = useState("student");
+  const [sentCount, setSentCount] = useState(0);
+  const [readCount, setReadCount] = useState(0);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMessageStats = async () => {
+      setStatsLoading(true);
+      const [totalRes, readRes] = await Promise.all([
+        supabase.from("notifications").select("id", { count: "exact", head: true }),
+        supabase.from("notifications").select("id", { count: "exact", head: true }).eq("read", true),
+      ]);
+      setSentCount(totalRes.count || 0);
+      setReadCount(readRes.count || 0);
+      setStatsLoading(false);
+    };
+    fetchMessageStats();
+  }, []);
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["popup_messages"],
@@ -270,11 +287,13 @@ const AdminPopupMessages = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-5 gap-4">
           {[
             { label: "إجمالي الرسائل", value: filteredMessages.length, color: "text-foreground" },
             { label: "نشطة", value: activeCount, color: "text-emerald-500" },
             { label: "متوقفة", value: filteredMessages.length - activeCount, color: "text-muted-foreground" },
+            { label: "إشعارات أُرسلت", value: statsLoading ? "..." : sentCount, color: "text-primary" },
+            { label: "تم قراءتها", value: statsLoading ? "..." : readCount, color: "text-gold" },
           ].map((s) => (
             <div key={s.label} className="bg-card rounded-2xl border border-border/50 p-4 text-center">
               <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
