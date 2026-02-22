@@ -28,7 +28,7 @@ const mainMenuItems = [
   { title: "الشركاء", icon: UserCheck, id: "partners", path: "/admin/partners" },
   { title: "الجلسات", icon: Clock, id: "sessions", path: "/admin/sessions" },
   { title: "الشهادات", icon: Award, id: "certificates", path: "/admin/certificates" },
-  { title: "الإهداءات", icon: Gift, id: "gifts", path: "/admin/gifts" },
+  { title: "الإنجازات", icon: Trophy, id: "achievements", path: "/admin/achievements" },
   { title: "الاختبارات", icon: ClipboardList, id: "exams", path: "/admin/exams" },
 ];
 
@@ -117,7 +117,7 @@ const AdminSidebar = () => {
                 { title: "تصميم الشهادات", icon: Palette, path: "/admin/certificate-templates" },
                 { title: "إدارة الباقات", icon: Package, path: "/admin/plans" },
                 { title: "إدارة الإشعارات", icon: Bell, path: "/admin/notifications" },
-                { title: "الإنجازات", icon: Trophy, path: "/admin/achievements" },
+                { title: "الإهداءات", icon: Gift, path: "/admin/gifts" },
                 { title: "المكافآت والنقاط", icon: Star, path: "/admin/rewards" },
                 { title: "الرسائل المنبثقة", icon: MessageSquareText, path: "/admin/popup-messages" },
                 { title: "رسائل واتساب", icon: MessageCircle, path: "/admin/whatsapp" },
