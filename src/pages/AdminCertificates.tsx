@@ -229,6 +229,9 @@ const AdminCertificates = () => {
         ? `إجازة في ${formRiwaya || "القرآن الكريم"}`
         : `شهادة ختم القرآن الكريم`;
 
+      // Get reciter signature/stamp to embed in the certificate
+      const reciterData = selectedReciterId ? reciters.find(r => r.user_id === selectedReciterId) : null;
+
       const { error } = await supabase.from("certificates").insert({
         user_id: selectedStudentId,
         title,
@@ -241,12 +244,14 @@ const AdminCertificates = () => {
         student_name: studentName,
         reciter_name: reciterName,
         reciter_id: selectedReciterId || null,
+        reciter_signature_url: reciterData?.signature_url || null,
+        reciter_stamp_url: reciterData?.stamp_url || null,
         student_phone: formPhone || null,
         student_email: formEmail || null,
         issuer: "منصة مجاز",
         date: new Date().toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" }),
         issued_by: user?.id || null,
-      });
+      } as any);
       if (error) throw error;
       toast({ title: `تم إصدار ${formType === "ijaza" ? "الإجازة" : "الشهادة"} بنجاح ✅` });
       setIsDialogOpen(false);

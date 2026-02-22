@@ -24,12 +24,8 @@ type Certificate = {
   student_phone: string | null;
   student_email: string | null;
   notes: string | null;
-};
-
-type ReciterAssets = {
-  user_id: string;
-  signature_url: string | null;
-  stamp_url: string | null;
+  reciter_signature_url: string | null;
+  reciter_stamp_url: string | null;
 };
 
 const Certificates = () => {
@@ -38,7 +34,6 @@ const Certificates = () => {
   const [loading, setLoading] = useState(true);
   const [ijazat, setIjazat] = useState<Certificate[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [reciterAssets, setReciterAssets] = useState<ReciterAssets[]>([]);
   const [viewCert, setViewCert] = useState<Certificate | null>(null);
   const [downloading, setDownloading] = useState(false);
   const certRef = useRef<HTMLDivElement>(null);
@@ -47,26 +42,21 @@ const Certificates = () => {
     if (!user) return;
     const fetchData = async () => {
       setLoading(true);
-      const [certsRes, recitersRes] = await Promise.all([
-        supabase
-          .from("certificates")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false }),
-        supabase.from("reciter_profiles").select("user_id, signature_url, stamp_url"),
-      ]);
+      const { data } = await supabase
+        .from("certificates")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-      if (certsRes.data) {
-        setIjazat(certsRes.data.filter(c => c.type === "ijaza"));
-        setCertificates(certsRes.data.filter(c => c.type === "certificate"));
+      if (data) {
+        setIjazat(data.filter(c => c.type === "ijaza"));
+        setCertificates(data.filter(c => c.type === "certificate"));
       }
-      setReciterAssets(recitersRes.data || []);
       setLoading(false);
     };
     fetchData();
   }, [user]);
 
-  const getReciterAsset = (reciterId: string | null) => reciterAssets.find(r => r.user_id === reciterId);
 
   const handleDownload = useCallback(async (cert: Certificate) => {
     setDownloading(true);
@@ -236,8 +226,8 @@ const Certificates = () => {
                 <CertificateViewer
                   ref={certRef}
                   cert={viewCert}
-                  reciterSignatureUrl={getReciterAsset(viewCert.reciter_id)?.signature_url}
-                  reciterStampUrl={getReciterAsset(viewCert.reciter_id)?.stamp_url}
+                  reciterSignatureUrl={(viewCert as any).reciter_signature_url}
+                  reciterStampUrl={(viewCert as any).reciter_stamp_url}
                 />
               </div>
             </div>
