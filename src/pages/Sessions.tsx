@@ -1,6 +1,11 @@
 import { motion } from "framer-motion";
 import { Calendar, Clock, User, Video, Phone, ChevronLeft, Star, BookOpen, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { CallLinkModal } from "@/components/video-call/CallLinkModal";
 import reciter1 from "@/assets/reciters/reciter1.jpg";
 import reciter2 from "@/assets/reciters/reciter2.jpg";
 import reciter3 from "@/assets/reciters/reciter3.jpg";
@@ -49,11 +54,59 @@ const tabs: { key: FilterType; label: string }[] = [
 const Sessions = () => {
   const [filter, setFilter] = useState<FilterType>("all");
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [callModalOpen, setCallModalOpen] = useState(false);
+  const [callLink, setCallLink] = useState("");
+  const [callRoomId, setCallRoomId] = useState("");
+  const [callStudentName, setCallStudentName] = useState("");
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const filtered = sessionsData.filter((s) => filter === "all" || s.status === filter);
 
   const todayCount = sessionsData.filter((s) => s.date === "اليوم" && s.status === "upcoming").length;
   const completedCount = sessionsData.filter((s) => s.status === "completed").length;
+
+  const handleStartSession = async (studentName: string) => {
+    if (!user) return;
+
+    try {
+      const roomId = crypto.randomUUID();
+      const accessToken = crypto.randomUUID();
+
+      const { error } = await (supabase as any)
+        .from("video_call_sessions")
+        .insert({
+          room_id: roomId,
+          caller_id: user.id,
+          access_token: accessToken,
+          student_name: studentName,
+          status: "waiting",
+          reciter_joined_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      const baseUrl = window.location.origin;
+      const link = `${baseUrl}/call/join/${accessToken}`;
+
+      setCallRoomId(roomId);
+      setCallLink(link);
+      setCallStudentName(studentName);
+      setCallModalOpen(true);
+    } catch (err) {
+      console.error("Error creating call session:", err);
+      toast({
+        title: "خطأ",
+        description: "فشل في إنشاء جلسة المكالمة",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStartCall = () => {
+    navigate(`/call/${callRoomId}`);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -96,11 +149,10 @@ const Sessions = () => {
           <button
             key={tab.key}
             onClick={() => setFilter(tab.key)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
-              filter === tab.key
-                ? "gradient-primary text-primary-foreground shadow-md"
-                : "bg-muted text-muted-foreground"
-            }`}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${filter === tab.key
+              ? "gradient-primary text-primary-foreground shadow-md"
+              : "bg-muted text-muted-foreground"
+              }`}
           >
             {tab.label}
           </button>
@@ -114,7 +166,6 @@ const Sessions = () => {
         )}
         {filtered.map((session, i) => {
           const config = statusConfig[session.status];
-          const StatusIcon = config.icon;
           const isExpanded = expandedId === session.id;
 
           return (
@@ -191,7 +242,10 @@ const Sessions = () => {
 
                   {session.status === "upcoming" && (
                     <div className="flex gap-2 pt-1">
-                      <button className="flex-1 h-10 rounded-xl gradient-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => handleStartSession(session.studentName)}
+                        className="flex-1 h-10 rounded-xl gradient-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2"
+                      >
                         <Video className="w-4 h-4" /> بدء الجلسة
                       </button>
                       <button className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -205,6 +259,15 @@ const Sessions = () => {
           );
         })}
       </div>
+
+      {/* Call Link Modal */}
+      <CallLinkModal
+        isOpen={callModalOpen}
+        onClose={() => setCallModalOpen(false)}
+        callLink={callLink}
+        calleeName={callStudentName}
+        onStartCall={handleStartCall}
+      />
     </div>
   );
 };

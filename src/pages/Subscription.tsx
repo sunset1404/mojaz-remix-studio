@@ -86,7 +86,7 @@ const plans: Plan[] = [
 
 const Subscription = () => {
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
-  const [paymentModal, setPaymentModal] = useState<{ open: boolean; planName: string; price: number | string; period?: string; subscriptionType?: string; durationMonths?: number }>({ open: false, planName: "", price: 0 });
+  const [paymentModal, setPaymentModal] = useState<{ open: boolean; planName: string; price: number | string; period?: string; subscriptionType?: string; durationMonths?: number; sourceType?: "subscription" | "gift" | "extra_hours"; metadata?: Record<string, any> }>({ open: false, planName: "", price: 0 });
 
   const getPrice = (plan: Plan) => {
     if (!plan.hasBilling) return plan.monthlyPrice;
@@ -128,11 +128,10 @@ const Subscription = () => {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: i * 0.15 }}
-            className={`rounded-2xl p-5 relative overflow-hidden ${
-              plan.popular
-                ? "bg-gradient-to-br from-gold to-[hsl(43,74%,45%)] text-white shadow-xl"
-                : "glass-card"
-            }`}
+            className={`rounded-2xl p-5 relative overflow-hidden ${plan.popular
+              ? "bg-gradient-to-br from-gold to-[hsl(43,74%,45%)] text-white shadow-xl"
+              : "glass-card"
+              }`}
           >
             {plan.popular && (
               <div className="absolute top-3 left-3 bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
@@ -142,9 +141,8 @@ const Subscription = () => {
 
             <div className="flex items-start gap-3 mb-4">
               <div
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                  plan.popular ? "bg-white/20" : "bg-gold/10"
-                }`}
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center ${plan.popular ? "bg-white/20" : "bg-gold/10"
+                  }`}
               >
                 <plan.icon className={`w-6 h-6 ${plan.popular ? "text-white" : "text-gold"}`} />
               </div>
@@ -167,16 +165,14 @@ const Subscription = () => {
                 <span className={`text-xs font-semibold ${(billingCycle[plan.id] || "monthly") === "monthly" ? (plan.popular ? "" : "text-foreground") : "text-muted-foreground"}`}>شهري</span>
                 <button
                   onClick={() => toggleBilling(plan.id)}
-                  className={`w-12 h-6 rounded-full relative transition-all ${
-                    (billingCycle[plan.id] || "monthly") === "yearly"
-                      ? plan.popular ? "bg-primary-foreground/30" : "bg-primary"
-                      : "bg-muted"
-                  }`}
+                  className={`w-12 h-6 rounded-full relative transition-all ${(billingCycle[plan.id] || "monthly") === "yearly"
+                    ? plan.popular ? "bg-primary-foreground/30" : "bg-primary"
+                    : "bg-muted"
+                    }`}
                 >
                   <div
-                    className={`w-5 h-5 rounded-full bg-primary-foreground absolute top-0.5 transition-all ${
-                      (billingCycle[plan.id] || "monthly") === "yearly" ? "left-0.5" : "right-0.5"
-                    }`}
+                    className={`w-5 h-5 rounded-full bg-primary-foreground absolute top-0.5 transition-all ${(billingCycle[plan.id] || "monthly") === "yearly" ? "left-0.5" : "right-0.5"
+                      }`}
                   />
                 </button>
                 <span className={`text-xs font-semibold ${(billingCycle[plan.id] || "monthly") === "yearly" ? (plan.popular ? "" : "text-foreground") : "text-muted-foreground"}`}>سنوي</span>
@@ -193,9 +189,8 @@ const Subscription = () => {
               {plan.features.map((feature) => (
                 <div key={feature} className="flex items-center gap-2">
                   <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      plan.popular ? "bg-primary/20" : "bg-gold/10"
-                    }`}
+                    className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.popular ? "bg-primary/20" : "bg-gold/10"
+                      }`}
                   >
                     <Check className={`w-3 h-3 ${plan.popular ? "text-primary" : "text-gold"}`} />
                   </div>
@@ -224,11 +219,10 @@ const Subscription = () => {
                 subscriptionType: plan.name,
                 durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1,
               })}
-              className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
-                plan.popular
-                  ? "bg-white text-gold-foreground hover:bg-white/90"
-                  : "gradient-primary text-primary-foreground hover:opacity-90"
-              }`}
+              className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${plan.popular
+                ? "bg-white text-gold-foreground hover:bg-white/90"
+                : "gradient-primary text-primary-foreground hover:opacity-90"
+                }`}
             >
               {plan.monthlyPrice === "0" ? "ابدأ مجاناً" : "اشترك الآن"}
             </motion.button>
@@ -236,7 +230,7 @@ const Subscription = () => {
         ))}
       </div>
       {/* Extra Hours Section */}
-      <ExtraHoursSection onPay={(pkg) => setPaymentModal({ open: true, planName: `ساعات إضافية - ${pkg.label}`, price: pkg.price, subscriptionType: "ساعات إضافية", durationMonths: 0 })} />
+      <ExtraHoursSection onPay={(pkg) => setPaymentModal({ open: true, planName: `ساعات إضافية - ${pkg.label}`, price: pkg.price, subscriptionType: "ساعات إضافية", durationMonths: 0, sourceType: "extra_hours", metadata: { hours: pkg.hours, package_label: pkg.label } })} />
 
       {/* Gift Banner */}
       <div className="px-5 mt-4">
@@ -268,6 +262,8 @@ const Subscription = () => {
         period={paymentModal.period}
         subscriptionType={paymentModal.subscriptionType}
         durationMonths={paymentModal.durationMonths}
+        sourceType={paymentModal.sourceType || "subscription"}
+        metadata={paymentModal.metadata}
       />
     </div>
   );
@@ -280,7 +276,7 @@ const hourPackages = [
   { hours: 10, price: 100, originalPrice: 150, label: "١٠ ساعات" },
 ];
 
-const ExtraHoursSection = ({ onPay }: { onPay: (pkg: { label: string; price: number }) => void }) => {
+const ExtraHoursSection = ({ onPay }: { onPay: (pkg: { label: string; price: number; hours: number }) => void }) => {
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
 
   return (
@@ -305,15 +301,13 @@ const ExtraHoursSection = ({ onPay }: { onPay: (pkg: { label: string; price: num
               transition={{ delay: 0.5 + i * 0.08 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => setSelectedPackage(selectedPackage === i ? null : i)}
-              className={`rounded-2xl p-4 text-center transition-all border-2 ${
-                selectedPackage === i
-                  ? "border-primary bg-primary/5 shadow-md"
-                  : "border-border/50 glass-card"
-              }`}
+              className={`rounded-2xl p-4 text-center transition-all border-2 ${selectedPackage === i
+                ? "border-primary bg-primary/5 shadow-md"
+                : "border-border/50 glass-card"
+                }`}
             >
-              <div className={`w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center ${
-                selectedPackage === i ? "bg-primary/15" : "bg-muted"
-              }`}>
+              <div className={`w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center ${selectedPackage === i ? "bg-primary/15" : "bg-muted"
+                }`}>
                 <Clock className={`w-5 h-5 ${selectedPackage === i ? "text-primary" : "text-muted-foreground"}`} />
               </div>
               <p className="font-bold text-foreground text-sm">{pkg.label}</p>

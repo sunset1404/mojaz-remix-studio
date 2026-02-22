@@ -183,15 +183,13 @@ const GiftSubscription = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: i * 0.12 }}
             onClick={() => setSelectedPlan(plan.id)}
-            className={`rounded-2xl p-5 relative overflow-hidden cursor-pointer transition-all border-2 ${
-              selectedPlan === plan.id
+            className={`rounded-2xl p-5 relative overflow-hidden cursor-pointer transition-all border-2 ${selectedPlan === plan.id
                 ? "border-gold shadow-xl"
                 : "border-transparent"
-            } ${
-              plan.popular
+              } ${plan.popular
                 ? "bg-gradient-to-br from-gold to-[hsl(43,74%,45%)] text-white shadow-lg"
                 : "glass-card"
-            }`}
+              }`}
           >
             {plan.popular && (
               <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full">
@@ -320,7 +318,14 @@ const GiftSubscription = () => {
             onClose={() => setPaymentModal(false)}
             planName={plan.name}
             price={plan.price}
-            onConfirm={handleSubmit}
+            sourceType="gift"
+            durationMonths={plan.durationMonths}
+            metadata={{
+              recipient_name: recipientName,
+              recipient_phone: recipientPhone,
+              personal_message: personalMessage,
+              plan_id: plan.id,
+            }}
           />
         ) : null;
       })()}

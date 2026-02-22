@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { CallLinkModal } from "@/components/video-call/CallLinkModal";
 import {
   ArrowRight, User, BookOpen, Clock, Trophy, Award,
   Star, Calendar, Phone, Video, MapPin, GraduationCap,
@@ -17,6 +19,10 @@ const StudentDetail = () => {
   const [achievements, setAchievements] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [callModalOpen, setCallModalOpen] = useState(false);
+  const [callLink, setCallLink] = useState("");
+  const [callRoomId, setCallRoomId] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user || !studentId) return;
@@ -120,12 +126,10 @@ const StudentDetail = () => {
               transition={{ delay: 0.3 + i * 0.08 }}
               className="flex flex-col items-center text-center"
             >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-1 ${
-                stat.color === "gold" ? "bg-gold/20" : "bg-primary/10"
-              }`}>
-                <stat.icon className={`w-5 h-5 ${
-                  stat.color === "gold" ? "text-gold" : "text-primary"
-                }`} />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-1 ${stat.color === "gold" ? "bg-gold/20" : "bg-primary/10"
+                }`}>
+                <stat.icon className={`w-5 h-5 ${stat.color === "gold" ? "text-gold" : "text-primary"
+                  }`} />
               </div>
               <span className="text-lg font-bold text-foreground">{stat.value}</span>
               <span className="text-[10px] text-muted-foreground leading-tight">{stat.label}</span>
@@ -253,12 +257,50 @@ const StudentDetail = () => {
             <Phone className="w-5 h-5" />
             اتصال
           </button>
-          <button className="flex-1 bg-primary/10 text-primary py-3 rounded-xl font-semibold flex items-center justify-center gap-2">
+          <button
+            onClick={async () => {
+              if (!user) return;
+              try {
+                const roomId = crypto.randomUUID();
+                const accessToken = crypto.randomUUID();
+                await (supabase as any)
+                  .from("video_call_sessions")
+                  .insert({
+                    room_id: roomId,
+                    caller_id: user.id,
+                    access_token: accessToken,
+                    student_name: student?.full_name || "",
+                    status: "waiting",
+                    reciter_joined_at: new Date().toISOString(),
+                  });
+                const baseUrl = window.location.origin;
+                setCallLink(`${baseUrl}/call/join/${accessToken}`);
+                setCallRoomId(roomId);
+                setCallModalOpen(true);
+              } catch {
+                toast({
+                  title: "خطأ",
+                  description: "فشل في إنشاء جلسة المكالمة",
+                  variant: "destructive",
+                });
+              }
+            }}
+            className="flex-1 bg-primary/10 text-primary py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+          >
             <Video className="w-5 h-5" />
             مكالمة فيديو
           </button>
         </motion.div>
       </div>
+
+      {/* Call Link Modal */}
+      <CallLinkModal
+        isOpen={callModalOpen}
+        onClose={() => setCallModalOpen(false)}
+        callLink={callLink}
+        calleeName={student?.full_name || ""}
+        onStartCall={() => navigate(`/call/${callRoomId}`)}
+      />
     </div>
   );
 };

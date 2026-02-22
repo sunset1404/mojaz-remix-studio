@@ -68,6 +68,9 @@ import ReciterStudentPerformance from "./pages/ReciterStudentPerformance";
 import ReciterSessionLog from "./pages/ReciterSessionLog";
 import ReciterMyStats from "./pages/ReciterMyStats";
 import StudentDetail from "./pages/StudentDetail";
+import PaymentCallback from "./pages/PaymentCallback";
+import VideoCallPage from "./pages/VideoCallPage";
+import PublicVideoCall from "./pages/PublicVideoCall";
 
 const queryClient = new QueryClient();
 
@@ -156,7 +159,10 @@ const AppRoutes = () => (
     <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
     <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
     <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+    <Route path="/payment/callback" element={<ProtectedRoute><PaymentCallback /></ProtectedRoute>} />
     <Route path="/call-history" element={<ProtectedRoute><CallHistory /></ProtectedRoute>} />
+    <Route path="/call/:roomId" element={<ProtectedRoute><VideoCallPage /></ProtectedRoute>} />
+    <Route path="/call/join/:token" element={<PublicVideoCall />} />
     <Route path="/notifications" element={<ProtectedRoute><><NotificationsList /><BottomNav /></></ProtectedRoute>} />
     <Route path="/notification-settings" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
     <Route path="/privacy-security" element={<ProtectedRoute><PrivacySecurity /></ProtectedRoute>} />
