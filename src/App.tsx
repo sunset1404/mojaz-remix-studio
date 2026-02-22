@@ -168,7 +168,6 @@ const AppRoutes = () => (
 const AppLayout = () => {
   const { role, loading } = useAuth();
   const isNative = Capacitor.isNativePlatform();
-  // Wait for auth loading before checking role to prevent wrong layout flash
   const isAdmin = !loading && role === "admin" && !isNative;
 
   if (isAdmin) {
@@ -185,9 +184,11 @@ const AppLayout = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto relative min-h-screen bg-background shadow-2xl">
-      <AppRoutes />
-    </div>
+    <SidebarProvider>
+      <div className="max-w-md mx-auto relative min-h-screen bg-background shadow-2xl">
+        <AppRoutes />
+      </div>
+    </SidebarProvider>
   );
 };
 
