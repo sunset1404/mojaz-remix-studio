@@ -221,8 +221,15 @@ const Certificates = () => {
             <DialogDescription className="text-xs">معاينة الشهادة بالتصميم الرسمي</DialogDescription>
           </DialogHeader>
           {viewCert && (
-            <div className="overflow-x-auto -mx-3 px-3" style={{ WebkitOverflowScrolling: "touch" }}>
-              <div style={{ minWidth: "920px" }}>
+            <div className="overflow-hidden -mx-3 px-3">
+              <div
+                className="origin-top-right"
+                style={{
+                  transform: `scale(${Math.min(1, (window.innerWidth - 48) / 920)})`,
+                  width: "920px",
+                  height: `${640 * Math.min(1, (window.innerWidth - 48) / 920)}px`,
+                }}
+              >
                 <CertificateViewer
                   ref={certRef}
                   cert={viewCert}
