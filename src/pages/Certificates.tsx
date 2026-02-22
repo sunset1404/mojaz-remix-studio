@@ -33,11 +33,11 @@ const CertificateScaled = forwardRef<HTMLDivElement, {
   const certHeight = 700; // approximate cert height
 
   return (
-    <div ref={containerRef} className="w-full overflow-hidden">
+    <div ref={containerRef} className="w-full max-w-full overflow-hidden">
       <div
         style={{
           transform: `scale(${scale})`,
-          transformOrigin: "top right",
+          transformOrigin: "top center",
           width: "920px",
           height: `${certHeight}px`,
           marginBottom: `${-certHeight * (1 - scale)}px`,
