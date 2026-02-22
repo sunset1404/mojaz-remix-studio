@@ -114,7 +114,7 @@ const AdminSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {[
-                { title: "تصميم القوالب", icon: Palette, path: "/admin/certificate-templates" },
+                { title: "تصميم الشهادات", icon: Palette, path: "/admin/certificate-templates" },
                 { title: "إدارة الباقات", icon: Package, path: "/admin/plans" },
                 { title: "إدارة الإشعارات", icon: Bell, path: "/admin/notifications" },
                 { title: "الإنجازات", icon: Trophy, path: "/admin/achievements" },
