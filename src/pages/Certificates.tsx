@@ -269,24 +269,6 @@ const Certificates = () => {
               reciterStampUrl={(viewCert as any).reciter_stamp_url}
             />
           )}
-          {/* Action buttons inside dialog for mobile */}
-          {viewCert && (
-            <div className="flex gap-2 mt-2 pt-2 border-t border-border/50">
-              <button
-                onClick={() => handleDownload(viewCert)}
-                disabled={downloading}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors disabled:opacity-50"
-              >
-                {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} تحميل PDF
-              </button>
-              <button
-                onClick={() => handleShare(viewCert)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gold/10 text-gold text-xs font-semibold hover:bg-gold/15 transition-colors"
-              >
-                <Share2 className="w-3.5 h-3.5" /> مشاركة
-              </button>
-            </div>
-          )}
         </DialogContent>
       </Dialog>
     </div>
