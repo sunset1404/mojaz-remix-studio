@@ -16,6 +16,7 @@ const CertificateScaled = forwardRef<HTMLDivElement, {
 }>(({ cert, reciterSignatureUrl, reciterStampUrl }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  const [innerHeight, setInnerHeight] = useState(800);
 
   useEffect(() => {
     const updateScale = () => {
@@ -29,8 +30,17 @@ const CertificateScaled = forwardRef<HTMLDivElement, {
     return () => window.removeEventListener("resize", updateScale);
   }, []);
 
-  // Calculate the visible height based on scale
-  const certHeight = 1100;
+  // Measure actual certificate height after render
+  useEffect(() => {
+    const measure = () => {
+      if (ref && typeof ref === 'object' && ref.current) {
+        const h = ref.current.scrollHeight || ref.current.offsetHeight;
+        if (h > 0) setInnerHeight(h);
+      }
+    };
+    const timer = setTimeout(measure, 100);
+    return () => clearTimeout(timer);
+  });
 
   return (
     <div ref={containerRef} className="w-full max-w-full overflow-hidden" style={{ direction: "ltr" }}>
@@ -39,8 +49,7 @@ const CertificateScaled = forwardRef<HTMLDivElement, {
           transform: `scale(${scale})`,
           transformOrigin: "top left",
           width: "920px",
-          height: `${certHeight}px`,
-          marginBottom: `${-certHeight * (1 - scale)}px`,
+          marginBottom: `${-innerHeight * (1 - scale)}px`,
           marginRight: `${-920 * (1 - scale)}px`,
         }}
       >
