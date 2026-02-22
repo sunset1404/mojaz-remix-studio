@@ -15,8 +15,7 @@ const CertificateScaled = forwardRef<HTMLDivElement, {
   reciterStampUrl?: string | null;
 }>(({ cert, reciterSignatureUrl, reciterStampUrl }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-  const [innerHeight, setInnerHeight] = useState(800);
+  const [scale, setScale] = useState(0.4);
 
   useEffect(() => {
     const updateScale = () => {
@@ -30,27 +29,12 @@ const CertificateScaled = forwardRef<HTMLDivElement, {
     return () => window.removeEventListener("resize", updateScale);
   }, []);
 
-  // Measure actual certificate height after render
-  useEffect(() => {
-    const measure = () => {
-      if (ref && typeof ref === 'object' && ref.current) {
-        const h = ref.current.scrollHeight || ref.current.offsetHeight;
-        if (h > 0) setInnerHeight(h);
-      }
-    };
-    const timer = setTimeout(measure, 100);
-    return () => clearTimeout(timer);
-  });
-
   return (
-    <div ref={containerRef} className="w-full max-w-full overflow-hidden" style={{ direction: "ltr" }}>
+    <div ref={containerRef} className="w-full max-w-full" style={{ direction: "ltr" }}>
       <div
         style={{
-          transform: `scale(${scale})`,
-          transformOrigin: "top left",
+          zoom: scale,
           width: "920px",
-          marginBottom: `${-innerHeight * (1 - scale)}px`,
-          marginRight: `${-920 * (1 - scale)}px`,
         }}
       >
         <CertificateViewer
