@@ -4,9 +4,56 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, forwardRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import CertificateViewer from "@/components/CertificateViewer";
+
+// Wrapper that scales the 920px certificate to fit within its container
+const CertificateScaled = forwardRef<HTMLDivElement, {
+  cert: any;
+  reciterSignatureUrl?: string | null;
+  reciterStampUrl?: string | null;
+}>(({ cert, reciterSignatureUrl, reciterStampUrl }, ref) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        setScale(Math.min(1, containerWidth / 920));
+      }
+    };
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, []);
+
+  // Calculate the visible height based on scale
+  const certHeight = 700; // approximate cert height
+
+  return (
+    <div ref={containerRef} className="w-full overflow-hidden">
+      <div
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: "top right",
+          width: "920px",
+          height: `${certHeight}px`,
+          marginBottom: `${-certHeight * (1 - scale)}px`,
+        }}
+      >
+        <CertificateViewer
+          ref={ref}
+          cert={cert}
+          reciterSignatureUrl={reciterSignatureUrl}
+          reciterStampUrl={reciterStampUrl}
+        />
+      </div>
+    </div>
+  );
+});
+CertificateScaled.displayName = "CertificateScaled";
 
 type Certificate = {
   id: string;
@@ -215,29 +262,18 @@ const Certificates = () => {
 
       {/* View Certificate Dialog - Mobile optimized */}
       <Dialog open={!!viewCert} onOpenChange={() => setViewCert(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-[960px] max-h-[90vh] overflow-auto p-3 sm:p-4">
+        <DialogContent className="w-[calc(100vw-16px)] max-w-[960px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-2 sm:p-4">
           <DialogHeader>
             <DialogTitle className="text-base font-bold">معاينة الشهادة</DialogTitle>
             <DialogDescription className="text-xs">معاينة الشهادة بالتصميم الرسمي</DialogDescription>
           </DialogHeader>
           {viewCert && (
-            <div className="overflow-hidden -mx-3 px-3">
-              <div
-                className="origin-top-right"
-                style={{
-                  transform: `scale(${Math.min(1, (window.innerWidth - 48) / 920)})`,
-                  width: "920px",
-                  height: `${640 * Math.min(1, (window.innerWidth - 48) / 920)}px`,
-                }}
-              >
-                <CertificateViewer
-                  ref={certRef}
-                  cert={viewCert}
-                  reciterSignatureUrl={(viewCert as any).reciter_signature_url}
-                  reciterStampUrl={(viewCert as any).reciter_stamp_url}
-                />
-              </div>
-            </div>
+            <CertificateScaled
+              ref={certRef}
+              cert={viewCert}
+              reciterSignatureUrl={(viewCert as any).reciter_signature_url}
+              reciterStampUrl={(viewCert as any).reciter_stamp_url}
+            />
           )}
           {/* Action buttons inside dialog for mobile */}
           {viewCert && (
