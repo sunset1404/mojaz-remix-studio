@@ -562,6 +562,35 @@ const AdminCertificates = () => {
             {/* Certificate Text */}
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-primary">الصياغة المعتمدة (للمعاينة)</label>
+              {selectedReciterId && !formText && (
+                <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-700">
+                  <p className="font-semibold mb-1">⚠️ لا توجد صياغة معتمدة لهذه الرواية</p>
+                  <p className="text-xs">المقرئ/ة لا يمتلك صياغة إجازة لرواية "{formRiwaya || "غير محددة"}". </p>
+                  {(() => {
+                    const available = reciterCerts.filter(c => c.reciter_id === selectedReciterId && c.type === (formType === "ijaza" ? "ijaza" : "khatm"));
+                    if (available.length > 0) {
+                      return (
+                        <div className="mt-2">
+                          <p className="text-xs font-semibold mb-1">الروايات المتوفرة للمقرئ/ة:</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {available.map(a => (
+                              <button
+                                key={a.riwaya || "khatm"}
+                                type="button"
+                                onClick={() => { if (a.riwaya) handleRiwayaSelect(a.riwaya); }}
+                                className="px-2.5 py-1 rounded-lg bg-amber-200/60 hover:bg-amber-300/60 text-xs font-medium transition-colors dark:bg-amber-800/40 dark:hover:bg-amber-700/40"
+                              >
+                                {a.riwaya || "ختم القرآن"}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return <p className="text-xs mt-1">يرجى إضافة صيغة الإجازة في إعدادات المقرئ/ة أولاً، أو أدخل النص يدوياً أدناه.</p>;
+                  })()}
+                </div>
+              )}
               <Textarea
                 value={formText}
                 onChange={e => setFormText(e.target.value)}
