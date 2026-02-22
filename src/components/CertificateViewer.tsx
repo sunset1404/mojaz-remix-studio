@@ -43,7 +43,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
             className="relative overflow-hidden origin-top-right"
             style={{
               width: "920px",
-              minHeight: "640px",
+              minHeight: "auto",
               background: "linear-gradient(145deg, #fefefe, #f8fafa)",
               boxShadow: "0 25px 60px -15px rgba(13,115,119,0.15), 0 10px 30px -10px rgba(0,0,0,0.1)",
             }}
