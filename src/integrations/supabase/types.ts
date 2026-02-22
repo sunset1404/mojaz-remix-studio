@@ -554,6 +554,45 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_invoice_metadata: {
+        Row: {
+          amount_sar: number
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          moyassar_payment_id: string | null
+          processed: boolean | null
+          source_type: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_sar: number
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          moyassar_payment_id?: string | null
+          processed?: boolean | null
+          source_type: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_sar?: number
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          moyassar_payment_id?: string | null
+          processed?: boolean | null
+          source_type?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       popup_messages: {
         Row: {
           color_scheme: string
@@ -1064,6 +1103,63 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      video_call_sessions: {
+        Row: {
+          access_token: string | null
+          callee_id: string | null
+          caller_id: string | null
+          created_at: string | null
+          ended_at: string | null
+          id: string
+          link_used: boolean | null
+          notes: string | null
+          rating: number | null
+          reciter_joined_at: string | null
+          room_id: string
+          started_at: string | null
+          status: string
+          student_joined_at: string | null
+          student_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          callee_id?: string | null
+          caller_id?: string | null
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          link_used?: boolean | null
+          notes?: string | null
+          rating?: number | null
+          reciter_joined_at?: string | null
+          room_id: string
+          started_at?: string | null
+          status?: string
+          student_joined_at?: string | null
+          student_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          callee_id?: string | null
+          caller_id?: string | null
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          link_used?: boolean | null
+          notes?: string | null
+          rating?: number | null
+          reciter_joined_at?: string | null
+          room_id?: string
+          started_at?: string | null
+          status?: string
+          student_joined_at?: string | null
+          student_name?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
