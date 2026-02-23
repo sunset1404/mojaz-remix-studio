@@ -7,7 +7,14 @@ let audioCtx: AudioContext | null = null;
 
 function getCtx(): AudioContext {
   if (!audioCtx) audioCtx = new AudioContext();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
+}
+
+/** Must be called from a user gesture to unlock audio */
+export function unlockAudio() {
+  const ctx = getCtx();
+  if (ctx.state === 'suspended') ctx.resume();
 }
 
 /** Soft shimmer - plays when logo appears */

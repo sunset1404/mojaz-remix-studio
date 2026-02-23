@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import logoMojaz from "@/assets/logo-mojaz-new.png";
-import { playLogoReveal, playTextReveal, playTransitionChime } from "@/lib/intro-sounds";
+import { playLogoReveal, playTextReveal, playTransitionChime, unlockAudio } from "@/lib/intro-sounds";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,16 +17,23 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [started, setStarted] = useState(false);
 
   // 0 = logo appears, 1 = text appears, 2 = move up + show form
   const [step, setStep] = useState(0);
 
+  const handleStart = () => {
+    unlockAudio();
+    setStarted(true);
+  };
+
   useEffect(() => {
+    if (!started) return;
     const t0 = setTimeout(() => playLogoReveal(), 300);
     const t1 = setTimeout(() => { setStep(1); playTextReveal(); }, 900);
     const t2 = setTimeout(() => { setStep(2); playTransitionChime(); }, 2800);
     return () => { clearTimeout(t0); clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+  }, [started]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +54,37 @@ const Login = () => {
   };
 
   const settled = step >= 2;
+
+  if (!started) {
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden cursor-pointer select-none"
+        style={{
+          background:
+            "linear-gradient(170deg, hsl(174 42% 28%) 0%, hsl(174 42% 35%) 30%, hsl(174 38% 40%) 55%, hsl(174 35% 38%) 80%, hsl(174 30% 32%) 100%)",
+        }}
+        onClick={handleStart}
+      >
+        <motion.div
+          className="flex flex-col items-center gap-6"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="rounded-3xl overflow-hidden shadow-lg border-2 border-primary-foreground/30 p-1 bg-card/90 backdrop-blur-sm w-28 h-28">
+            <img src={logoMojaz} alt="مجاز" className="w-full h-full object-contain rounded-2xl" />
+          </div>
+          <motion.p
+            className="text-primary-foreground/70 text-lg font-cairo"
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            اضغط للبدء
+          </motion.p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div
