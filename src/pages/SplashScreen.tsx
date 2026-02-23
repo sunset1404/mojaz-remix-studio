@@ -23,7 +23,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
           key="splash"
           exit={{ opacity: 0, scale: 1.1 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
+          className="absolute inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
           style={{
             background: "linear-gradient(170deg, hsl(174 42% 28%) 0%, hsl(174 42% 35%) 30%, hsl(174 38% 40%) 55%, hsl(174 35% 38%) 80%, hsl(174 30% 32%) 100%)",
           }}
