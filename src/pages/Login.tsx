@@ -37,7 +37,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{ background: "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 40%, hsl(var(--turquoise-dark) / 0.8) 65%, hsl(43 55% 35% / 0.6) 85%, hsl(43 55% 30% / 0.75) 100%)" }}
+      style={{ background: "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 40%, hsl(var(--turquoise-dark) / 0.8) 65%, hsl(43 55% 45% / 0.5) 85%, hsl(43 55% 40% / 0.6) 100%)" }}
     >
       {/* Full-page decorative elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
