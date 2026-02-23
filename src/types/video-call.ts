@@ -20,8 +20,8 @@ export interface VideoCallSession {
 
 // WebRTC Signaling Types
 export interface WebRTCSignal {
-    type: 'offer' | 'answer' | 'ice-candidate';
-    data: RTCSessionDescriptionInit | RTCIceCandidateInit;
+    type: 'offer' | 'answer' | 'ice-candidate' | 'ready';
+    data?: RTCSessionDescriptionInit | RTCIceCandidateInit | null;
     from: 'caller' | 'callee';
 }
 

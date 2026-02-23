@@ -21,6 +21,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
         toggleVideo,
         endCall,
         initialize,
+        dbStatus,
     } = useVideoCall({ roomId, role, autoStart: true });
 
     const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -39,13 +40,6 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
             remoteVideoRef.current.srcObject = remoteStream;
         }
     }, [remoteStream]);
-
-    // Auto-start call for the caller
-    useEffect(() => {
-        if (autoStartCall && localStream && role === 'caller') {
-            startCall();
-        }
-    }, [autoStartCall, localStream, role, startCall]);
 
     const handleEndCall = () => {
         endCall();
@@ -161,8 +155,8 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
                 <button
                     onClick={toggleMute}
                     className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${callState.isMuted
-                            ? 'bg-red-500/90 text-white'
-                            : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
+                        ? 'bg-red-500/90 text-white'
+                        : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
                         }`}
                 >
                     {callState.isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
@@ -180,8 +174,8 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
                 <button
                     onClick={toggleVideo}
                     className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${!callState.isVideoEnabled
-                            ? 'bg-red-500/90 text-white'
-                            : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
+                        ? 'bg-red-500/90 text-white'
+                        : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
                         }`}
                 >
                     {callState.isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}

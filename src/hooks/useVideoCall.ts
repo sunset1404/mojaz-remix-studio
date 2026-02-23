@@ -44,13 +44,27 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
         try {
             switch (signal.type) {
+                case 'ready':
+                    if (role === 'caller') {
+                        console.log('Received ready signal from callee. Sending offer...');
+                        const offer = await webrtcManager.current.createOffer();
+                        await signalingService.current?.sendSignal({ type: 'offer', data: offer });
+                        toast({
+                            title: 'جاري إنهاء الاتصال',
+                            description: 'تم ربط الطرفين، جاري الاتصال...',
+                        });
+                    }
+                    break;
+
                 case 'offer':
+                    console.log('Received offer. Creating answer...');
                     await webrtcManager.current.setRemoteDescription(signal.data as RTCSessionDescriptionInit);
                     const answer = await webrtcManager.current.createAnswer();
                     await signalingService.current?.sendSignal({ type: 'answer', data: answer });
                     break;
 
                 case 'answer':
+                    console.log('Received answer. Setting remote description...');
                     await webrtcManager.current.setRemoteDescription(signal.data as RTCSessionDescriptionInit);
                     break;
 
@@ -163,6 +177,11 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             // Initialize signaling
             signalingService.current = new SignalingService(roomId, role, handleSignal);
             await signalingService.current.connect();
+
+            if (role === 'callee') {
+                console.log('We are the callee. Sending ready signal to trigger caller offer...');
+                await signalingService.current.sendSignal({ type: 'ready' });
+            }
 
             // Initialize DB Realtime Listener for true cross-device status sync
             dbChannel.current = supabase.channel(`session:${roomId}`);
