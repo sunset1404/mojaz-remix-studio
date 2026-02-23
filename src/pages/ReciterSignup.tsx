@@ -11,7 +11,7 @@ import logoMojaz from "@/assets/logo-mojaz.webp";
 import CountrySelect from "@/components/CountrySelect";
 import CitySelect from "@/components/CitySelect";
 
-const getPasswordStrength = (pwd: string): { level: number; label: string; color: string } => {
+const getPasswordStrength = (pwd: string): {level: number;label: string;color: string;} => {
   if (!pwd) return { level: 0, label: "", color: "" };
   let score = 0;
   if (pwd.length >= 6) score++;
@@ -27,25 +27,25 @@ const getPasswordStrength = (pwd: string): { level: number; label: string; color
 };
 
 const STEPS = [
-  { title: "الحساب", icon: Lock },
-  { title: "البيانات الشخصية", icon: User },
-  { title: "المؤهلات", icon: BookOpen },
-  { title: "تفضيلات الإقراء", icon: Clock },
-];
+{ title: "الحساب", icon: Lock },
+{ title: "البيانات الشخصية", icon: User },
+{ title: "المؤهلات", icon: BookOpen },
+{ title: "تفضيلات الإقراء", icon: Clock }];
+
 
 const DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
 const TRACKS = ["حفظ القرآن الكريم", "التلاوة والتجويد", "الإجازة بالسند", "المراجعة والتثبيت"];
 
 const SAUDI_CITIES = [
-  "الرياض", "جدة", "مكة المكرمة", "المدينة المنورة", "الدمام", "الطائف", "تبوك",
-  "بريدة", "خميس مشيط", "حائل", "الهفوف", "الجبيل", "نجران", "ينبع", "أبها",
-  "عرعر", "سكاكا", "جازان", "القطيف", "الخرج", "الباحة", "الظهران", "القنفذة",
-  "بيشة", "الزلفي", "رابغ", "شقراء", "الدوادمي", "المجمعة", "عنيزة", "الرس",
-  "وادي الدواسر", "صبيا", "القريات", "الليث", "أملج", "تربة", "ضباء", "العلا",
-  "رفحاء", "طريف", "شرورة", "الأفلاج", "حوطة بني تميم", "المذنب", "البكيرية",
-  "الخبر", "الأحساء", "حفر الباطن", "محايل عسير", "بلجرشي", "النماص",
-  "تنومة", "سراة عبيدة", "المندق", "العقيق", "رجال ألمع", "ظهران الجنوب"
-].sort((a, b) => a.localeCompare(b, "ar"));
+"الرياض", "جدة", "مكة المكرمة", "المدينة المنورة", "الدمام", "الطائف", "تبوك",
+"بريدة", "خميس مشيط", "حائل", "الهفوف", "الجبيل", "نجران", "ينبع", "أبها",
+"عرعر", "سكاكا", "جازان", "القطيف", "الخرج", "الباحة", "الظهران", "القنفذة",
+"بيشة", "الزلفي", "رابغ", "شقراء", "الدوادمي", "المجمعة", "عنيزة", "الرس",
+"وادي الدواسر", "صبيا", "القريات", "الليث", "أملج", "تربة", "ضباء", "العلا",
+"رفحاء", "طريف", "شرورة", "الأفلاج", "حوطة بني تميم", "المذنب", "البكيرية",
+"الخبر", "الأحساء", "حفر الباطن", "محايل عسير", "بلجرشي", "النماص",
+"تنومة", "سراة عبيدة", "المندق", "العقيق", "رجال ألمع", "ظهران الجنوب"].
+sort((a, b) => a.localeCompare(b, "ar"));
 
 const generateHalfHourSlots = (): string[] => {
   const result: string[] = [];
@@ -67,18 +67,18 @@ const generateHalfHourSlots = (): string[] => {
 const halfHourSlots = generateHalfHourSlots();
 
 const TIME_PERIODS = [
-  { label: "الفجر والصباح (5:00 - 12:00)", start: 5, end: 12 },
-  { label: "الظهر والعصر (12:00 - 17:00)", start: 12, end: 17 },
-  { label: "المغرب والعشاء (17:00 - 22:00)", start: 17, end: 22 },
-  { label: "الليل (22:00 - 5:00)", start: 22, end: 29 },
-];
+{ label: "الفجر والصباح (5:00 - 12:00)", start: 5, end: 12 },
+{ label: "الظهر والعصر (12:00 - 17:00)", start: 12, end: 17 },
+{ label: "المغرب والعشاء (17:00 - 22:00)", start: 17, end: 22 },
+{ label: "الليل (22:00 - 5:00)", start: 22, end: 29 }];
+
 
 const getSlotsForPeriod = (period: typeof TIME_PERIODS[0]) =>
-  halfHourSlots.filter(slot => {
-    const hourNum = parseInt(slot.split(":")[0]);
-    if (period.start < 24 && period.end <= 24) return hourNum >= period.start && hourNum < period.end;
-    return hourNum >= 22 || hourNum < 5;
-  });
+halfHourSlots.filter((slot) => {
+  const hourNum = parseInt(slot.split(":")[0]);
+  if (period.start < 24 && period.end <= 24) return hourNum >= period.start && hourNum < period.end;
+  return hourNum >= 22 || hourNum < 5;
+});
 
 const ReciterSignup = () => {
   const navigate = useNavigate();
@@ -119,23 +119,23 @@ const ReciterSignup = () => {
 
   const validateStep = () => {
     if (step === 0) {
-      if (!email || !password || !confirmPassword) { toast({ title: "مطلوب", description: "أدخل البريد وكلمة المرور وتأكيدها", variant: "destructive" }); return false; }
-      if (password.length < 6) { toast({ title: "كلمة المرور قصيرة", description: "يجب أن تكون 6 أحرف على الأقل", variant: "destructive" }); return false; }
-      if (password !== confirmPassword) { toast({ title: "عدم تطابق", description: "كلمة المرور وتأكيدها غير متطابقتين", variant: "destructive" }); return false; }
+      if (!email || !password || !confirmPassword) {toast({ title: "مطلوب", description: "أدخل البريد وكلمة المرور وتأكيدها", variant: "destructive" });return false;}
+      if (password.length < 6) {toast({ title: "كلمة المرور قصيرة", description: "يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });return false;}
+      if (password !== confirmPassword) {toast({ title: "عدم تطابق", description: "كلمة المرور وتأكيدها غير متطابقتين", variant: "destructive" });return false;}
     }
     if (step === 1) {
       if (!fullName || !gender || !nationality || !idNumber || !phone || !city) {
-        toast({ title: "مطلوب", description: "يرجى ملء جميع الحقول", variant: "destructive" }); return false;
+        toast({ title: "مطلوب", description: "يرجى ملء جميع الحقول", variant: "destructive" });return false;
       }
     }
     if (step === 2) {
       if (!profession || !qualifications || !quranCertifications || !teachingExperience) {
-        toast({ title: "مطلوب", description: "يرجى ملء جميع الحقول", variant: "destructive" }); return false;
+        toast({ title: "مطلوب", description: "يرجى ملء جميع الحقول", variant: "destructive" });return false;
       }
     }
     if (step === 3) {
       if (preferredDays.length === 0 || preferredTimes.length === 0 || preferredTrack.length === 0) {
-        toast({ title: "مطلوب", description: "يرجى اختيار التفضيلات", variant: "destructive" }); return false;
+        toast({ title: "مطلوب", description: "يرجى اختيار التفضيلات", variant: "destructive" });return false;
       }
     }
     return true;
@@ -176,7 +176,7 @@ const ReciterSignup = () => {
 
     const { data, error } = await supabase.auth.signUp({
       email, password,
-      options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
+      options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin }
     });
 
     if (error) {
@@ -202,7 +202,7 @@ const ReciterSignup = () => {
         preferred_days: preferredDays,
         preferred_times: preferredTimes,
         preferred_track: preferredTrack.join("، "),
-        reciter_type: preferredTrack.includes("الإجازة بالسند") ? "ijazah" : "general",
+        reciter_type: preferredTrack.includes("الإجازة بالسند") ? "ijazah" : "general"
       } as any);
     }
 
@@ -224,14 +224,14 @@ const ReciterSignup = () => {
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Mail className="w-4 h-4 text-primary" />
                 </div>
-                <Input type="email" placeholder="example@email.com" value={email} onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
-                  className={`pr-14 text-left ${inputClass} ${emailError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
+                <Input type="email" placeholder="example@email.com" value={email} onChange={(e) => {setEmail(e.target.value);setEmailError("");}}
+                className={`pr-14 text-left ${inputClass} ${emailError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
               </div>
-              {emailError && (
-                <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
+              {emailError &&
+              <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
                   <span>⚠</span> {emailError}
                 </p>
-              )}
+              }
             </div>
             <div className="space-y-2">
               <Label className="text-foreground text-sm font-semibold">كلمة المرور</Label>
@@ -240,10 +240,10 @@ const ReciterSignup = () => {
                   <Lock className="w-4 h-4 text-gold" />
                 </div>
                 <Input type={showPassword ? "text" : "password"} placeholder="6 أحرف على الأقل"
-                  value={password} onChange={(e) => setPassword(e.target.value)}
-                  className={`pr-14 pl-12 text-left ${inputClass}`} dir="ltr" required />
+                value={password} onChange={(e) => setPassword(e.target.value)}
+                className={`pr-14 pl-12 text-left ${inputClass}`} dir="ltr" required />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors">
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
                 </button>
               </div>
@@ -252,15 +252,15 @@ const ReciterSignup = () => {
                 return (
                   <div className="mt-2 space-y-1">
                     <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= strength.level ? strength.color : "bg-muted/30"}`} />
-                      ))}
+                      {[1, 2, 3, 4, 5].map((i) =>
+                      <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= strength.level ? strength.color : "bg-muted/30"}`} />
+                      )}
                     </div>
                     <p className={`text-[11px] font-semibold text-right ${strength.level <= 1 ? "text-destructive" : strength.level <= 2 ? "text-orange-400" : strength.level <= 3 ? "text-yellow-500" : "text-emerald-500"}`}>
                       {strength.label}
                     </p>
-                  </div>
-                );
+                  </div>);
+
               })()}
             </div>
             <div className="space-y-2">
@@ -270,12 +270,12 @@ const ReciterSignup = () => {
                   <Lock className="w-4 h-4 text-gold" />
                 </div>
                 <Input type={showPassword ? "text" : "password"} placeholder="أعد إدخال كلمة المرور"
-                  value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`pr-14 text-left ${inputClass}`} dir="ltr" required />
+                value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+                className={`pr-14 text-left ${inputClass}`} dir="ltr" required />
               </div>
             </div>
-          </div>
-        );
+          </div>);
+
       case 1:
         return (
           <div className="space-y-3">
@@ -287,7 +287,7 @@ const ReciterSignup = () => {
               <div className="space-y-1.5">
                 <Label className="text-foreground text-xs font-semibold">الجنس</Label>
                 <select value={gender} onChange={(e) => setGender(e.target.value)}
-                  className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
+                className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
                   <option value="" disabled>الجنس</option>
                   <option value="male">ذكر</option>
                   <option value="female">أنثى</option>
@@ -307,24 +307,24 @@ const ReciterSignup = () => {
             <div className="space-y-1.5">
               <Label className="text-foreground text-xs font-semibold">رقم الجوال</Label>
               <div className="flex gap-1.5" dir="ltr">
-                <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => { setPhone(e.target.value.replace(/^0+/, '')); setPhoneError(""); }}
-                  className={`flex-1 min-w-0 ${inputClass} ${phoneError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
+                <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => {setPhone(e.target.value.replace(/^0+/, ''));setPhoneError("");}}
+                className={`flex-1 min-w-0 ${inputClass} ${phoneError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
                 <div className="h-12 w-24 rounded-xl border border-primary/20 bg-card px-2 flex items-center justify-center text-xs font-semibold text-foreground shadow-sm" dir="ltr">
                   <span className="text-sm mr-1">🇸🇦</span> +966
                 </div>
               </div>
-              {phoneError && (
-                <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
+              {phoneError &&
+              <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
                   <span>⚠</span> {phoneError}
                 </p>
-              )}
+              }
             </div>
             <div className="space-y-1.5">
               <Label className="text-foreground text-xs font-semibold">مدينة الإقامة</Label>
               <CitySelect value={city} onChange={setCity} cities={SAUDI_CITIES} />
             </div>
-          </div>
-        );
+          </div>);
+
       case 2:
         return (
           <div className="space-y-3">
@@ -341,95 +341,95 @@ const ReciterSignup = () => {
             <div className="space-y-1.5">
               <Label className="text-foreground text-xs font-semibold">الإجازات القرآنية</Label>
               <textarea placeholder="اذكر الإجازات القرآنية الحاصل عليها" value={quranCertifications}
-                onChange={(e) => setQuranCertifications(e.target.value)}
-                className={`w-full min-h-[80px] px-3 py-2 rounded-xl border border-primary/20 bg-card focus:border-primary focus:bg-card transition-colors shadow-sm resize-none text-sm`}
-                required />
+              onChange={(e) => setQuranCertifications(e.target.value)}
+              className={`w-full min-h-[80px] px-3 py-2 rounded-xl border border-primary/20 bg-card focus:border-primary focus:bg-card transition-colors shadow-sm resize-none text-sm`}
+              required />
             </div>
             <div className="space-y-1.5">
               <Label className="text-foreground text-xs font-semibold">أبرز المحطات التعليمية والخبرات</Label>
               <textarea placeholder="اذكر خبراتك في التعليم والإقراء" value={teachingExperience}
-                onChange={(e) => setTeachingExperience(e.target.value)}
-                className={`w-full min-h-[80px] px-3 py-2 rounded-xl border border-primary/20 bg-card focus:border-primary focus:bg-card transition-colors shadow-sm resize-none text-sm`}
-                required />
+              onChange={(e) => setTeachingExperience(e.target.value)}
+              className={`w-full min-h-[80px] px-3 py-2 rounded-xl border border-primary/20 bg-card focus:border-primary focus:bg-card transition-colors shadow-sm resize-none text-sm`}
+              required />
             </div>
-          </div>
-        );
+          </div>);
+
       case 3:
         return (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label className="text-foreground text-xs font-semibold">أيام الأسبوع المفضلة للإقراء</Label>
               <div className="flex flex-wrap gap-2">
-                {DAYS.map((day) => (
-                  <button key={day} type="button" onClick={() => toggleItem(preferredDays, day, setPreferredDays)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                      preferredDays.includes(day) ? "border-primary bg-primary/15 text-primary" : "border-border/60 bg-card text-foreground/60 hover:border-primary/30"
-                    }`}>{day}</button>
-                ))}
+                {DAYS.map((day) =>
+                <button key={day} type="button" onClick={() => toggleItem(preferredDays, day, setPreferredDays)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                preferredDays.includes(day) ? "border-primary bg-primary/15 text-primary" : "border-border/60 bg-card text-foreground/60 hover:border-primary/30"}`
+                }>{day}</button>
+                )}
               </div>
             </div>
             <div className="space-y-3">
               <Label className="text-foreground text-xs font-semibold">أوقات الإقراء المفضلة</Label>
-              {TIME_PERIODS.map(period => {
+              {TIME_PERIODS.map((period) => {
                 const periodSlots = getSlotsForPeriod(period);
-                const allSelected = periodSlots.every(s => preferredTimes.includes(s));
+                const allSelected = periodSlots.every((s) => preferredTimes.includes(s));
                 return (
                   <div key={period.label}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[11px] font-bold text-foreground">{period.label}</span>
                       <button type="button"
-                        onClick={() => {
-                          if (allSelected) {
-                            setPreferredTimes(prev => prev.filter(t => !periodSlots.includes(t)));
-                          } else {
-                            setPreferredTimes(prev => [...new Set([...prev, ...periodSlots])]);
-                          }
-                        }}
-                        className="text-[10px] text-primary font-semibold"
-                      >
+                      onClick={() => {
+                        if (allSelected) {
+                          setPreferredTimes((prev) => prev.filter((t) => !periodSlots.includes(t)));
+                        } else {
+                          setPreferredTimes((prev) => [...new Set([...prev, ...periodSlots])]);
+                        }
+                      }}
+                      className="text-[10px] text-primary font-semibold">
+
                         {allSelected ? "إلغاء الكل" : "تحديد الكل"}
                       </button>
                     </div>
                     <div className="grid grid-cols-3 gap-1.5">
-                      {periodSlots.map(time => (
-                        <button key={time} type="button"
-                          onClick={() => toggleItem(preferredTimes, time, setPreferredTimes)}
-                          className={`rounded-lg py-2 px-1 text-center transition-all border text-[11px] font-medium ${
-                            preferredTimes.includes(time) ? "border-primary bg-primary/10 text-primary font-bold" : "border-border/60 bg-card text-foreground/60 hover:border-primary/30"
-                          }`} dir="ltr"
-                        >{time}</button>
-                      ))}
+                      {periodSlots.map((time) =>
+                      <button key={time} type="button"
+                      onClick={() => toggleItem(preferredTimes, time, setPreferredTimes)}
+                      className={`rounded-lg py-2 px-1 text-center transition-all border text-[11px] font-medium ${
+                      preferredTimes.includes(time) ? "border-primary bg-primary/10 text-primary font-bold" : "border-border/60 bg-card text-foreground/60 hover:border-primary/30"}`
+                      } dir="ltr">
+                        {time}</button>
+                      )}
                     </div>
-                  </div>
-                );
+                  </div>);
+
               })}
             </div>
             <div className="space-y-2">
               <Label className="text-foreground text-xs font-semibold">مسار الإقراء المفضل</Label>
               <div className="grid grid-cols-2 gap-2">
-                {TRACKS.map((track) => (
-                  <button key={track} type="button" onClick={() => toggleItem(preferredTrack, track, setPreferredTrack)}
-                    className={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all text-center ${
-                      preferredTrack.includes(track) ? "border-primary bg-primary/15 text-primary" : "border-border/60 bg-card text-foreground/60 hover:border-primary/30"
-                    }`}>{track}</button>
-                ))}
+                {TRACKS.map((track) =>
+                <button key={track} type="button" onClick={() => toggleItem(preferredTrack, track, setPreferredTrack)}
+                className={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all text-center ${
+                preferredTrack.includes(track) ? "border-primary bg-primary/15 text-primary" : "border-border/60 bg-card text-foreground/60 hover:border-primary/30"}`
+                }>{track}</button>
+                )}
               </div>
             </div>
-          </div>
-        );
+          </div>);
+
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{ background: "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 45%, hsl(var(--turquoise-dark) / 0.6) 70%, hsl(var(--gold) / 0.12) 90%, hsl(var(--gold) / 0.18) 100%)" }}
-    >
+    style={{ background: "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 45%, hsl(var(--turquoise-dark) / 0.6) 70%, hsl(var(--gold) / 0.12) 90%, hsl(var(--gold) / 0.18) 100%)" }}>
+
       {/* Decorative */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 0.1 }} transition={{ duration: 1.2 }}
-          className="absolute top-12 right-6 w-40 h-40 rounded-full border-2 border-primary-foreground/20" />
+        className="absolute top-12 right-6 w-40 h-40 rounded-full border-2 border-primary-foreground/20" />
         <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 0.08 }} transition={{ duration: 1.2, delay: 0.2 }}
-          className="absolute -top-12 -left-12 w-56 h-56 rounded-full border-2 border-primary-foreground/15" />
+        className="absolute -top-12 -left-12 w-56 h-56 rounded-full border-2 border-primary-foreground/15" />
         <div className="absolute top-16 right-24 w-3 h-3 rounded-full bg-gold/40" />
         <div className="absolute bottom-20 right-4 w-28 h-28 rounded-full bg-gold/15 blur-xl" />
       </div>
@@ -437,47 +437,47 @@ const ReciterSignup = () => {
       {/* Header */}
       <div className="relative z-10 flex flex-col items-center pt-8 pb-4">
         <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.6, type: "spring", stiffness: 150 }} className="mb-2">
+        transition={{ delay: 0.1, duration: 0.6, type: "spring", stiffness: 150 }} className="mb-2">
           <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-primary-foreground/30 p-0.5 bg-card/90 backdrop-blur-sm">
             <img src={logoMojaz} alt="مجاز" className="w-full h-full object-contain rounded-xl" />
           </div>
         </motion.div>
         <motion.h1 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
-          className="text-xl font-bold text-primary-foreground font-cairo">تسجيل حساب مقرئ</motion.h1>
+        className="text-xl font-bold text-primary-foreground font-cairo">تسجيل حساب مقرئ</motion.h1>
       </div>
 
       {/* Progress bar */}
       <div className="relative z-10 px-6 mb-4">
         <div className="flex items-center justify-between max-w-sm mx-auto">
-          {STEPS.map((s, i) => (
-            <div key={i} className="flex flex-col items-center relative z-10">
+          {STEPS.map((s, i) =>
+          <div key={i} className="flex flex-col items-center relative z-10">
               <motion.div
-                initial={{ scale: 0.8 }}
-                animate={{ scale: step >= i ? 1 : 0.8 }}
-                className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                  step > i ? "bg-primary-foreground text-primary" : step === i ? "bg-primary-foreground text-primary ring-2 ring-gold/50" : "bg-primary-foreground/30 text-primary-foreground/60"
-                }`}
-              >
-                {step > i ? <Check className="w-4 h-4" /> : <s.icon className="w-4 h-4" />}
+              initial={{ scale: 0.8 }}
+              animate={{ scale: step >= i ? 1 : 0.8 }}
+              className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+              step > i ? "bg-primary-foreground text-primary" : step === i ? "bg-primary-foreground text-primary ring-2 ring-gold/50" : "bg-primary-foreground/30 text-primary-foreground/60"}`
+              }>
+
+                {step > i ? <Check className="w-4 h-4 text-[#cca33e]" /> : <s.icon className="w-4 h-4" />}
               </motion.div>
               <span className={`text-[10px] mt-1 font-semibold ${step >= i ? "text-primary-foreground" : "text-primary-foreground/50"}`}>{s.title}</span>
             </div>
-          ))}
+          )}
         </div>
         {/* Progress line */}
         <div className="absolute top-[18px] left-[15%] right-[15%] h-0.5 bg-primary-foreground/20 -z-0" />
         <motion.div
           className="absolute top-[18px] right-[15%] h-0.5 bg-primary-foreground"
           initial={{ width: "0%" }}
-          animate={{ width: `${(step / 3) * 70}%` }}
-          transition={{ duration: 0.4 }}
-        />
+          animate={{ width: `${step / 3 * 70}%` }}
+          transition={{ duration: 0.4 }} />
+
       </div>
 
       {/* Form card */}
       <div className="flex-1 flex flex-col items-center px-6 relative z-10 pb-6">
         <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
-          className="w-full max-w-sm">
+        className="w-full max-w-sm">
           <div className="bg-card/90 backdrop-blur-xl rounded-3xl p-5 shadow-sm border border-primary-foreground/10">
             <AnimatePresence mode="wait">
               <motion.div
@@ -485,52 +485,52 @@ const ReciterSignup = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
-              >
+                transition={{ duration: 0.25 }}>
+
                 {renderStep()}
               </motion.div>
             </AnimatePresence>
 
             {/* Navigation */}
             <div className="flex gap-3 mt-5">
-              {step > 0 && (
-                <Button type="button" variant="outline" onClick={prevStep}
-                  className="flex-1 h-12 rounded-2xl border-border/60 font-semibold">
+              {step > 0 &&
+              <Button type="button" variant="outline" onClick={prevStep}
+              className="flex-1 h-12 rounded-2xl border-border/60 font-semibold">
                   <ArrowRight className="w-4 h-4 ml-1" />
                   السابق
                 </Button>
-              )}
-              {step < 3 ? (
-                <Button type="button" onClick={nextStep}
-                  className="flex-1 gradient-primary text-primary-foreground h-12 rounded-2xl font-bold shadow-md">
+              }
+              {step < 3 ?
+              <Button type="button" onClick={nextStep}
+              className="flex-1 gradient-primary text-primary-foreground h-12 rounded-2xl font-bold shadow-md">
                   التالي
                   <ArrowLeft className="w-4 h-4 mr-1" />
-                </Button>
-              ) : (
-                <Button type="button" onClick={handleSubmit} disabled={loading}
-                  className="flex-1 gradient-primary text-primary-foreground h-12 rounded-2xl font-bold shadow-md">
-                  {loading ? (
-                    <span className="animate-spin w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full inline-block" />
-                  ) : (
-                    <>
+                </Button> :
+
+              <Button type="button" onClick={handleSubmit} disabled={loading}
+              className="flex-1 gradient-primary text-primary-foreground h-12 rounded-2xl font-bold shadow-md">
+                  {loading ?
+                <span className="animate-spin w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full inline-block" /> :
+
+                <>
                       <Check className="w-5 h-5 ml-1" />
                       إنشاء الحساب
                     </>
-                  )}
+                }
                 </Button>
-              )}
+              }
             </div>
           </div>
 
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-            className="text-center mt-5 text-card font-semibold drop-shadow-sm">
+          className="text-center mt-5 text-card font-semibold drop-shadow-sm">
             لديك حساب بالفعل؟{" "}
             <button onClick={() => navigate("/login")} className="text-primary-foreground font-bold hover:underline">تسجيل الدخول</button>
           </motion.p>
         </motion.div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default ReciterSignup;
