@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
-import logoMojaz from "@/assets/logo-mojaz.webp";
+import logoMojaz from "@/assets/logo-mojaz-new.png";
 
 const Login = () => {
   const navigate = useNavigate();
