@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { Capacitor } from '@capacitor/core';
+
 
 const PRESENCE_CHANNEL = 'reciter-presence';
 
@@ -58,11 +58,14 @@ export function useReciterPresence() {
         // --- Capacitor native lifecycle (if available) ---
         let removeNativeListener: (() => void) | null = null;
 
-        if (Capacitor.isNativePlatform()) {
-            // Dynamic import to avoid errors if @capacitor/app isn't installed
-            // @ts-ignore — @capacitor/app may not be installed
-            import('@capacitor/app').then(({ App }: any) => {
-                App.addListener('appStateChange', async ({ isActive }) => {
+        const setupNativeListener = async () => {
+            try {
+                const { Capacitor } = await import('@capacitor/core');
+                if (!Capacitor.isNativePlatform()) return;
+
+                // @ts-ignore - @capacitor/app may not be installed in web builds
+                const { App } = await import(/* @vite-ignore */ '@capacitor/app');
+                App.addListener('appStateChange', async ({ isActive }: { isActive: boolean }) => {
                     if (!channelRef.current) return;
 
                     if (isActive) {
@@ -70,21 +73,20 @@ export function useReciterPresence() {
                             user_id: user.id,
                             online_at: new Date().toISOString(),
                         });
-                        console.log('[Presence] Native app active – tracked');
                     } else {
                         await channelRef.current.untrack();
-                        console.log('[Presence] Native app inactive – untracked');
                     }
                 });
 
                 removeNativeListener = () => {
                     App.removeAllListeners();
                 };
-            }).catch(() => {
-                // @capacitor/app not installed — web-only mode, visibilitychange is enough
-                console.log('[Presence] @capacitor/app not available, using visibilitychange only');
-            });
-        }
+            } catch {
+                // Capacitor not available — web-only mode
+            }
+        };
+
+        setupNativeListener();
 
         // Cleanup
         return () => {
