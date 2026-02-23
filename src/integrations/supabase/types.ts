@@ -1109,54 +1109,54 @@ export type Database = {
       video_call_sessions: {
         Row: {
           access_token: string | null
-          callee_id: string | null
-          caller_id: string | null
           created_at: string | null
           ended_at: string | null
           id: string
           link_used: boolean | null
           notes: string | null
           rating: number | null
+          reciter_id: string
           reciter_joined_at: string | null
           room_id: string
           started_at: string | null
-          status: string
+          status: string | null
+          student_id: string
           student_joined_at: string | null
           student_name: string | null
           updated_at: string | null
         }
         Insert: {
           access_token?: string | null
-          callee_id?: string | null
-          caller_id?: string | null
           created_at?: string | null
           ended_at?: string | null
           id?: string
           link_used?: boolean | null
           notes?: string | null
           rating?: number | null
+          reciter_id: string
           reciter_joined_at?: string | null
-          room_id: string
+          room_id?: string
           started_at?: string | null
-          status?: string
+          status?: string | null
+          student_id: string
           student_joined_at?: string | null
           student_name?: string | null
           updated_at?: string | null
         }
         Update: {
           access_token?: string | null
-          callee_id?: string | null
-          caller_id?: string | null
           created_at?: string | null
           ended_at?: string | null
           id?: string
           link_used?: boolean | null
           notes?: string | null
           rating?: number | null
+          reciter_id?: string
           reciter_joined_at?: string | null
           room_id?: string
           started_at?: string | null
-          status?: string
+          status?: string | null
+          student_id?: string
           student_joined_at?: string | null
           student_name?: string | null
           updated_at?: string | null
