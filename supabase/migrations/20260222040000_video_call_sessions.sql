@@ -1,37 +1,47 @@
--- Mojaz App 2: Add caller_id and callee_id to existing video_call_sessions table
--- These allow sessions to reference auth.users directly (vs reciters/registration_requests FKs)
+-- Mojaz App 2: video_call_sessions table matching Flutter schema
+-- Note: reciter_id and student_id reference auth.users to match Mojaz App 2's structure
+-- where reciters/students are unified under auth.users, while keeping column names matching Flutter.
 
--- Make reciter_id and student_id nullable for Mojaz App 2 sessions
-ALTER TABLE public.video_call_sessions ALTER COLUMN reciter_id DROP NOT NULL;
-ALTER TABLE public.video_call_sessions ALTER COLUMN student_id DROP NOT NULL;
+CREATE TABLE IF NOT EXISTS public.video_call_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    room_id TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(16), 'hex'),
+    reciter_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    student_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    status TEXT CHECK (status IN ('waiting', 'active', 'ended', 'failed')) DEFAULT 'waiting',
+    reciter_joined_at TIMESTAMPTZ,
+    student_joined_at TIMESTAMPTZ,
+    started_at TIMESTAMPTZ,
+    ended_at TIMESTAMPTZ,
+    access_token TEXT,
+    student_name TEXT,
+    link_used BOOLEAN DEFAULT false,
+    rating INTEGER,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
 
--- Add new columns for direct auth.users references  
-ALTER TABLE public.video_call_sessions
-  ADD COLUMN IF NOT EXISTS caller_id UUID,
-  ADD COLUMN IF NOT EXISTS callee_id UUID;
+-- RLS Policies
+ALTER TABLE public.video_call_sessions ENABLE ROW LEVEL SECURITY;
 
--- RLS: Allow caller (auth.uid) to manage their sessions
-CREATE POLICY "Caller can view own call sessions"
+CREATE POLICY "Users can view own call sessions via reciter_id"
 ON public.video_call_sessions FOR SELECT
-USING (auth.uid() = caller_id);
+USING (auth.uid() = reciter_id);
 
-CREATE POLICY "Caller can create call sessions"
-ON public.video_call_sessions FOR INSERT
-WITH CHECK (auth.uid() = caller_id);
-
-CREATE POLICY "Caller can update own call sessions"
-ON public.video_call_sessions FOR UPDATE
-USING (auth.uid() = caller_id);
-
--- RLS: Allow callee (auth.uid) to view/update
-CREATE POLICY "Callee can view own call sessions"
+CREATE POLICY "Users can view own call sessions via student_id"
 ON public.video_call_sessions FOR SELECT
-USING (auth.uid() = callee_id);
+USING (auth.uid() = student_id);
 
-CREATE POLICY "Callee can update own call sessions"
+CREATE POLICY "Reciters can create and update sessions"
+ON public.video_call_sessions FOR ALL
+USING (auth.uid() = reciter_id)
+WITH CHECK (auth.uid() = reciter_id);
+
+CREATE POLICY "Students can update sessions"
 ON public.video_call_sessions FOR UPDATE
-USING (auth.uid() = callee_id);
+USING (auth.uid() = student_id);
 
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_vcs_caller_id ON public.video_call_sessions(caller_id);
-CREATE INDEX IF NOT EXISTS idx_vcs_callee_id ON public.video_call_sessions(callee_id);
+CREATE INDEX IF NOT EXISTS idx_vcs_reciter_id ON public.video_call_sessions(reciter_id);
+CREATE INDEX IF NOT EXISTS idx_vcs_student_id ON public.video_call_sessions(student_id);
+CREATE INDEX IF NOT EXISTS idx_vcs_status ON public.video_call_sessions(status);

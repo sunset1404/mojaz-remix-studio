@@ -78,7 +78,7 @@ const Sessions = () => {
         .from("video_call_sessions")
         .insert({
           room_id: roomId,
-          caller_id: user.id,
+          reciter_id: user.id,
           access_token: accessToken,
           student_name: studentName,
           status: "waiting",

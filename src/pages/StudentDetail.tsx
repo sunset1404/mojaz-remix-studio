@@ -267,7 +267,8 @@ const StudentDetail = () => {
                   .from("video_call_sessions")
                   .insert({
                     room_id: roomId,
-                    caller_id: user.id,
+                    reciter_id: user.id,
+                    student_id: student?.user_id || null,
                     access_token: accessToken,
                     student_name: student?.full_name || "",
                     status: "waiting",

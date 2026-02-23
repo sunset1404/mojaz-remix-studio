@@ -176,7 +176,7 @@ const PublicVideoCall = () => {
     return (
         <VideoCall
             roomId={session!.room_id}
-            role="callee"
+            role="caller"
             onEndCall={handleEndCall}
         />
     );

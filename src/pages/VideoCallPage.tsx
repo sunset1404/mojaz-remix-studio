@@ -40,20 +40,23 @@ const VideoCallPage = () => {
                 }
 
                 // Determine role
-                if (session.caller_id === user.id) {
+                if (session.student_id === user.id) {
                     setCallRole("caller");
-                    setOtherUserName(session.student_name || "");
+                    setOtherUserName("المقرئ");
                 } else {
                     setCallRole("callee");
-                    // Update callee_id and join time
-                    await (supabase as any)
-                        .from("video_call_sessions")
-                        .update({
-                            callee_id: user.id,
-                            student_joined_at: new Date().toISOString(),
-                            status: "active",
-                        })
-                        .eq("room_id", roomId);
+                    setOtherUserName(session.student_name || "الطالب");
+
+                    // Update reciter join time
+                    if (!session.reciter_joined_at) {
+                        await (supabase as any)
+                            .from("video_call_sessions")
+                            .update({
+                                reciter_joined_at: new Date().toISOString(),
+                                status: "active",
+                            })
+                            .eq("room_id", roomId);
+                    }
                 }
 
                 setPageState("in-call");

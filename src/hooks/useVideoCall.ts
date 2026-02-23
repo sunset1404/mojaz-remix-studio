@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WebRTCManager } from '@/lib/webrtc/WebRTCManager';
 import { SignalingService } from '@/lib/webrtc/SignalingService';
-import { CallState, WebRTCSignal } from '@/types/video-call';
+import { CallState, WebRTCSignal, VideoCallSession } from '@/types/video-call';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface UseVideoCallOptions {
     roomId: string;
@@ -26,9 +28,11 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         isVideoEnabled: true,
         error: null,
     });
+    const [dbStatus, setDbStatus] = useState<VideoCallSession['status']>('waiting');
 
     const webrtcManager = useRef<WebRTCManager | null>(null);
     const signalingService = useRef<SignalingService | null>(null);
+    const dbChannel = useRef<RealtimeChannel | null>(null);
     const { toast } = useToast();
 
     // Handle incoming WebRTC signals
@@ -137,6 +141,31 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             signalingService.current = new SignalingService(roomId, role, handleSignal);
             await signalingService.current.connect();
 
+            // Initialize DB Realtime Listener for true cross-device status sync
+            dbChannel.current = supabase.channel(`session:${roomId}`);
+            dbChannel.current.on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'video_call_sessions',
+                    filter: `room_id=eq.${roomId}`
+                },
+                (payload) => {
+                    const newStatus = payload.new.status as VideoCallSession['status'];
+                    console.log('DB Session status updated via Realtime:', newStatus);
+                    setDbStatus(newStatus);
+
+                    if (newStatus === 'ended') {
+                        toast({
+                            title: 'انتهت المكالمة',
+                            description: 'تم إنهاء المكالمة من قبل الطرف الآخر',
+                        });
+                        endCall();
+                    }
+                }
+            ).subscribe();
+
             setCallState(prev => ({ ...prev, isConnecting: false }));
 
             toast({
@@ -224,6 +253,19 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             error: null,
         });
 
+        if (dbChannel.current) {
+            await supabase.removeChannel(dbChannel.current);
+            dbChannel.current = null;
+        }
+
+        // Only update DB status if we are actually connected/in-call
+        if (webrtcManager.current) {
+            await supabase
+                .from('video_call_sessions')
+                .update({ status: 'ended', ended_at: new Date().toISOString() })
+                .eq('room_id', roomId);
+        }
+
         webrtcManager.current = null;
         signalingService.current = null;
     }, []);
@@ -248,5 +290,6 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         toggleVideo,
         endCall,
         initialize,
+        dbStatus,
     };
 }

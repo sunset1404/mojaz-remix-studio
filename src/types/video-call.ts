@@ -2,11 +2,11 @@
 export interface VideoCallSession {
     id: string;
     room_id: string;
-    caller_id: string;
-    callee_id: string | null;
+    reciter_id: string;
+    student_id: string;
     status: 'waiting' | 'active' | 'ended' | 'failed';
-    caller_joined_at: string | null;  // stored as reciter_joined_at in DB
-    callee_joined_at: string | null;  // stored as student_joined_at in DB
+    reciter_joined_at: string | null;
+    student_joined_at: string | null;
     started_at: string | null;
     ended_at: string | null;
     access_token: string | null;

@@ -71,6 +71,7 @@ import StudentDetail from "./pages/StudentDetail";
 import PaymentCallback from "./pages/PaymentCallback";
 import VideoCallPage from "./pages/VideoCallPage";
 import PublicVideoCall from "./pages/PublicVideoCall";
+import { IncomingCallListener } from "./components/video-call/IncomingCallListener";
 
 const queryClient = new QueryClient();
 
@@ -210,6 +211,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ScrollToTop />
+          <IncomingCallListener />
           <AppLayout />
         </AuthProvider>
       </BrowserRouter>
