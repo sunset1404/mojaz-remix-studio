@@ -47,19 +47,23 @@ const SAUDI_CITIES = [
 "تنومة", "سراة عبيدة", "المندق", "العقيق", "رجال ألمع", "ظهران الجنوب"].
 sort((a, b) => a.localeCompare(b, "ar"));
 
+const formatHour12 = (h24: number, min: string): string => {
+  const period = h24 < 12 ? "ص" : "م";
+  const h12 = h24 === 0 ? 12 : h24 > 12 ? h24 - 12 : h24;
+  return `${h12}:${min} ${period}`;
+};
+
 const generateHalfHourSlots = (): string[] => {
   const result: string[] = [];
   for (let h = 5; h < 24; h++) {
-    const hh = String(h).padStart(2, "0");
-    const nextHour = String((h + 1) % 24).padStart(2, "0");
-    result.push(`${hh}:00 - ${hh}:30`);
-    result.push(`${hh}:30 - ${nextHour}:00`);
+    const nextH = (h + 1) % 24;
+    result.push(`${formatHour12(h, "00")} - ${formatHour12(h, "30")}`);
+    result.push(`${formatHour12(h, "30")} - ${formatHour12(nextH, "00")}`);
   }
   for (let h = 0; h < 5; h++) {
-    const hh = String(h).padStart(2, "0");
-    const nextHour = String((h + 1) % 24).padStart(2, "0");
-    result.push(`${hh}:00 - ${hh}:30`);
-    result.push(`${hh}:30 - ${nextHour}:00`);
+    const nextH = (h + 1) % 24;
+    result.push(`${formatHour12(h, "00")} - ${formatHour12(h, "30")}`);
+    result.push(`${formatHour12(h, "30")} - ${formatHour12(nextH, "00")}`);
   }
   return result;
 };
@@ -67,15 +71,17 @@ const generateHalfHourSlots = (): string[] => {
 const halfHourSlots = generateHalfHourSlots();
 
 const TIME_PERIODS = [
-{ label: "الفجر والصباح (5:00 - 12:00)", start: 5, end: 12 },
-{ label: "الظهر والعصر (12:00 - 17:00)", start: 12, end: 17 },
-{ label: "المغرب والعشاء (17:00 - 22:00)", start: 17, end: 22 },
-{ label: "الليل (22:00 - 5:00)", start: 22, end: 29 }];
+{ label: "الفجر والصباح (5:00 ص - 12:00 م)", start: 5, end: 12 },
+{ label: "الظهر والعصر (12:00 م - 5:00 م)", start: 12, end: 17 },
+{ label: "المغرب والعشاء (5:00 م - 10:00 م)", start: 17, end: 22 },
+{ label: "الليل (10:00 م - 5:00 ص)", start: 22, end: 29 }];
 
 
 const getSlotsForPeriod = (period: typeof TIME_PERIODS[0]) =>
-halfHourSlots.filter((slot) => {
-  const hourNum = parseInt(slot.split(":")[0]);
+halfHourSlots.filter((_slot, index) => {
+  // Slots start at hour 5, each hour has 2 slots (00 and 30)
+  // index 0-1 = hour 5, index 2-3 = hour 6, ..., index 36-37 = hour 23, index 38-39 = hour 0, ...
+  const hourNum = (Math.floor(index / 2) + 5) % 24;
   if (period.start < 24 && period.end <= 24) return hourNum >= period.start && hourNum < period.end;
   return hourNum >= 22 || hourNum < 5;
 });
