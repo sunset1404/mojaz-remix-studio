@@ -49,7 +49,7 @@ export interface MoyasarConfig {
     description: string;
     publishable_api_key: string;
     callback_url: string;
-    methods: ("creditcard" | "applepay" | "stcpay")[];
+    methods: ("creditcard" | "applepay" | "stcpay" | "samsungpay")[];
     apple_pay?: {
         country: string;
         label: string;
@@ -75,7 +75,7 @@ export function initMoyasarForm(config: {
     amountSar: number;
     description: string;
     callbackUrl: string;
-    methods?: ("creditcard" | "applepay" | "stcpay")[];
+    methods?: ("creditcard" | "applepay" | "stcpay" | "samsungpay")[];
     onCompleted?: (payment: MoyasarPaymentResponse) => void;
     onFailure?: (error: any) => void;
     onInitiating?: () => void;
@@ -98,7 +98,7 @@ export function initMoyasarForm(config: {
         description: config.description,
         publishable_api_key: publishableKey,
         callback_url: config.callbackUrl,
-        methods: config.methods || ["creditcard", "applepay", "stcpay"],
+        methods: config.methods || ["creditcard", "applepay", "stcpay", "samsungpay"],
         apple_pay: {
             country: "SA",
             label: "إقراء - Mojaz",
