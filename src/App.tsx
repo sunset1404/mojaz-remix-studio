@@ -195,7 +195,7 @@ const AppLayout = () => {
 
   return (
     <SidebarProvider>
-      <div className="max-w-md mx-auto relative min-h-screen bg-background shadow-2xl">
+      <div className="w-full sm:max-w-md mx-auto relative min-h-screen bg-background sm:shadow-2xl">
         <AppRoutes />
       </div>
     </SidebarProvider>
