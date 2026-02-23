@@ -39,10 +39,10 @@ const getPasswordStrength = (pwd: string): {level: number;label: string;color: s
 };
 
 const BASE_STEPS = [
-  { title: "الحساب", icon: Lock },
-  { title: "البيانات الشخصية", icon: User },
-  { title: "الهدف", icon: BookOpen },
-];
+{ title: "الحساب", icon: Lock },
+{ title: "البيانات الشخصية", icon: User },
+{ title: "الهدف", icon: BookOpen }];
+
 
 const IJAZAH_STEP = { title: "بيانات الإجازة", icon: Award };
 
@@ -405,14 +405,14 @@ const StudentSignup = () => {
               <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                   {/* No preference option */}
                   <button
-                    type="button"
-                    onClick={() => setSelectedExamId("")}
-                    className={`w-full text-right p-3 rounded-xl border-2 transition-all ${
-                    selectedExamId === "" ?
-                    "border-primary/40 bg-primary/5" :
-                    "border-border/40 bg-card hover:border-primary/30"}`}>
+                  type="button"
+                  onClick={() => setSelectedExamId("")}
+                  className={`w-full text-right p-3 rounded-xl border-2 transition-all ${
+                  selectedExamId === "" ?
+                  "border-primary/40 bg-primary/5" :
+                  "border-border/40 bg-card hover:border-primary/30"}`}>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">لم أحدد بعد — سيتم إبلاغي لاحقاً</span>
+                        <span className="text-xs text-muted-foreground">لم أحدد بعد، إبلاغي لاحقاً</span>
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
                     selectedExamId === "" ? "border-primary" : "border-muted-foreground/30"}`}>
                           {selectedExamId === "" && <div className="w-2 h-2 rounded-full bg-primary" />}
@@ -421,17 +421,17 @@ const StudentSignup = () => {
                     </button>
 
                   {admissionExams.map((exam) => {
-                    const isSelected = selectedExamId === exam.id;
-                    const committee = [exam.committee_member_1_name, exam.committee_member_2_name, exam.committee_member_3_name].filter(Boolean);
-                    return (
-                      <button
-                        key={exam.id}
-                        type="button"
-                        onClick={() => setSelectedExamId(exam.id)}
-                        className={`w-full text-right p-3 rounded-xl border-2 transition-all ${
-                        isSelected ?
-                        "border-primary bg-primary/8 shadow-sm" :
-                        "border-border/40 bg-card hover:border-primary/40 hover:bg-primary/3"}`}>
+                  const isSelected = selectedExamId === exam.id;
+                  const committee = [exam.committee_member_1_name, exam.committee_member_2_name, exam.committee_member_3_name].filter(Boolean);
+                  return (
+                    <button
+                      key={exam.id}
+                      type="button"
+                      onClick={() => setSelectedExamId(exam.id)}
+                      className={`w-full text-right p-3 rounded-xl border-2 transition-all ${
+                      isSelected ?
+                      "border-primary bg-primary/8 shadow-sm" :
+                      "border-border/40 bg-card hover:border-primary/40 hover:bg-primary/3"}`}>
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
@@ -459,7 +459,7 @@ const StudentSignup = () => {
                             </div>
                           </div>
                         </button>);
-                  })}
+                })}
                 </div>
               }
             </div>
@@ -484,7 +484,7 @@ const StudentSignup = () => {
                   "border-primary/20 bg-card text-foreground hover:border-primary/40"}`}>
                     <div className="flex items-center justify-center gap-2">
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  hasPreviousCertifications === opt.value ? "border-primary" : "border-muted-foreground/30"}`}>
+                    hasPreviousCertifications === opt.value ? "border-primary" : "border-muted-foreground/30"}`}>
                         {hasPreviousCertifications === opt.value && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                       </div>
                       <span>{opt.label}</span>
