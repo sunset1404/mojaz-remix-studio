@@ -133,8 +133,31 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
             await webrtcManager.current.initialize();
 
-            // Get local media stream
-            const stream = await webrtcManager.current.startLocalStream();
+            // Get local media stream with fallback
+            let stream: MediaStream;
+            try {
+                stream = await webrtcManager.current.startLocalStream();
+            } catch (mediaError: any) {
+                console.warn('Failed to get video+audio, trying audio only:', mediaError);
+                try {
+                    stream = await webrtcManager.current.startLocalStream({
+                        video: false,
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                        },
+                    });
+                    setCallState(prev => ({ ...prev, isVideoEnabled: false }));
+                    toast({
+                        title: 'تنبيه',
+                        description: 'لم يتم العثور على كاميرا، تم تفعيل الصوت فقط',
+                    });
+                } catch (audioError: any) {
+                    console.error('Failed to get any media:', audioError);
+                    throw audioError;
+                }
+            }
             setLocalStream(stream);
 
             // Initialize signaling
