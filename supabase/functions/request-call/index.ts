@@ -35,6 +35,17 @@ serve(async (req: Request) => {
             global: { headers: { Authorization: authHeader } },
         });
 
+        // Validate JWT using getClaims
+        const token = authHeader.replace("Bearer ", "");
+        const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+
+        if (claimsError || !claimsData?.claims) {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), {
+                status: 401,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
         // Extract reciter_id from request body
         const body = await req.json();
         const { reciter_id } = body;
@@ -46,17 +57,7 @@ serve(async (req: Request) => {
             });
         }
 
-        // Get the authenticated student user
-        const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-
-        if (authError || !user) {
-            return new Response(JSON.stringify({ error: "Unauthorized" }), {
-                status: 401,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
-        }
-
-        const student_id = user.id;
+        const student_id = claimsData.claims.sub;
 
         // Optional: Fetch student name for the reciter's incoming call screen
         const { data: studentProfile } = await supabaseClient
