@@ -19,10 +19,18 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
         toggleMute,
         toggleVideo,
         endCall,
+        dbStatus,
     } = useVideoCall({ roomId, role, autoStart: true });
 
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
+
+    // When the other side ends the call via DB, navigate away
+    useEffect(() => {
+        if (dbStatus === 'ended') {
+            onEndCall?.();
+        }
+    }, [dbStatus, onEndCall]);
 
     // Attach local stream to video element
     useEffect(() => {
