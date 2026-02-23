@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
 import { Star, Phone, Video, Search, Heart, Mic, User } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOnlineReciters } from "@/hooks/useOnlineReciters";
+import { useToast } from "@/hooks/use-toast";
 
 type Reciter = {
   id: string;
@@ -18,12 +20,41 @@ type FilterType = "all" | "available" | "favorites";
 
 const Reciters = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [reciters, setReciters] = useState<Reciter[]>([]);
   const [loading, setLoading] = useState(true);
+  const [callingId, setCallingId] = useState<string | null>(null);
   const onlineReciters = useOnlineReciters();
+
+  const handleCall = async (reciter: Reciter) => {
+    if (!user) {
+      toast({ title: "يرجى تسجيل الدخول أولاً", variant: "destructive" });
+      return;
+    }
+    if (callingId) return;
+    setCallingId(reciter.user_id);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("request-call", {
+        body: { reciter_id: reciter.user_id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: "جاري الاتصال...", description: `بانتظار رد ${reciter.full_name}` });
+      navigate(`/call/${data.room_id}?role=caller`);
+    } catch (err: any) {
+      console.error("Call error:", err);
+      toast({ title: "فشل بدء المكالمة", description: err.message || "حدث خطأ", variant: "destructive" });
+    } finally {
+      setCallingId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchReciters = async () => {
@@ -179,10 +210,18 @@ const Reciters = () => {
               >
                 <Heart className={`w-4 h-4 ${favorites.includes(reciter.id) ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
               </button>
-              <button className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+              <button
+                onClick={(e) => { e.stopPropagation(); handleCall(reciter); }}
+                disabled={callingId === reciter.user_id}
+                className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors disabled:opacity-50"
+              >
                 <Phone className="w-4 h-4 text-primary" />
               </button>
-              <button className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+              <button
+                onClick={(e) => { e.stopPropagation(); handleCall(reciter); }}
+                disabled={callingId === reciter.user_id}
+                className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors disabled:opacity-50"
+              >
                 <Video className="w-4 h-4 text-primary" />
               </button>
             </div>
