@@ -443,7 +443,7 @@ const ReciterSignup = () => {
           </div>
         </motion.div>
         <motion.h1 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
-        className="text-xl font-bold text-primary-foreground font-cairo">تسجيل حساب مقرئ</motion.h1>
+        className="text-xl font-bold font-cairo text-[#d2ac4b]">تسجيل حساب مقرئ</motion.h1>
       </div>
 
       {/* Progress bar */}
@@ -525,7 +525,7 @@ const ReciterSignup = () => {
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
           className="text-center mt-5 text-card font-semibold drop-shadow-sm">
             لديك حساب بالفعل؟{" "}
-            <button onClick={() => navigate("/login")} className="text-primary-foreground font-bold hover:underline">تسجيل الدخول</button>
+            <button onClick={() => navigate("/login")} className="font-bold hover:underline text-[#d2ac4b]">تسجيل الدخول</button>
           </motion.p>
         </motion.div>
       </div>
