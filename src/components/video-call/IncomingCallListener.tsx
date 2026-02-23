@@ -27,42 +27,44 @@ export const IncomingCallListener = () => {
 
             // Subscribe to new sessions assigned to this reciter
             channel = supabase.channel(`incoming:${userId}`);
-            channel.on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'video_call_sessions',
-                    filter: `reciter_id=eq.${userId}`
-                },
-                (payload) => {
-                    if (payload.new.status === 'waiting') {
-                        setIncomingCall({
-                            id: payload.new.id,
-                            room_id: payload.new.room_id,
-                            student_name: payload.new.student_name || 'طالب',
-                        });
-
-                        // Play ringtone natively or via webaudio if needed
+            channel
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'video_call_sessions',
+                        filter: `reciter_id=eq.${userId}`
+                    },
+                    (payload) => {
+                        console.log('Incoming call INSERT event:', payload);
+                        if (payload.new.status === 'waiting') {
+                            setIncomingCall({
+                                id: payload.new.id,
+                                room_id: payload.new.room_id,
+                                student_name: payload.new.student_name || 'طالب',
+                            });
+                        }
                     }
-                }
-            ).subscribe();
-
-            // Listen for canceled calls
-            channel.on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'video_call_sessions',
-                    filter: `reciter_id=eq.${userId}`
-                },
-                (payload) => {
-                    if (payload.new.status !== 'waiting') {
-                        setIncomingCall(null);
+                )
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'video_call_sessions',
+                        filter: `reciter_id=eq.${userId}`
+                    },
+                    (payload) => {
+                        console.log('Call session UPDATE event:', payload);
+                        if (payload.new.status !== 'waiting') {
+                            setIncomingCall(null);
+                        }
                     }
-                }
-            )
+                )
+                .subscribe((status) => {
+                    console.log('Incoming call channel status:', status);
+                });
         };
 
         setupListener();
