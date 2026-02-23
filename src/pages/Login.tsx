@@ -17,14 +17,10 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showSplash, setShowSplash] = useState(() => {
-    const seen = sessionStorage.getItem("splash_seen");
-    return !seen;
-  });
+  const [showSplash, setShowSplash] = useState(true);
 
   const handleSplashFinish = useCallback(() => {
     setShowSplash(false);
-    sessionStorage.setItem("splash_seen", "1");
   }, []);
 
   if (showSplash) {
