@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ArrowLeft, Check, User, Lock, Mail, Eye, EyeOff, BookOpen, Clock, Calendar, Users, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, User, Lock, Mail, Eye, EyeOff, BookOpen, Clock, Calendar, Users, CheckCircle2, Award } from "lucide-react";
 import logoMojaz from "@/assets/logo-mojaz.webp";
 import CountrySelect from "@/components/CountrySelect";
 import PhoneCodeSelect from "@/components/PhoneCodeSelect";
@@ -38,11 +38,13 @@ const getPasswordStrength = (pwd: string): {level: number;label: string;color: s
   return { level: 5, label: "ممتازة", color: "bg-emerald-500" };
 };
 
-const STEPS = [
-{ title: "الحساب", icon: Lock },
-{ title: "البيانات الشخصية", icon: User },
-{ title: "الهدف", icon: BookOpen }];
+const BASE_STEPS = [
+  { title: "الحساب", icon: Lock },
+  { title: "البيانات الشخصية", icon: User },
+  { title: "الهدف", icon: BookOpen },
+];
 
+const IJAZAH_STEP = { title: "بيانات الإجازة", icon: Award };
 
 const EDUCATION_LEVELS = ["ثانوي", "دبلوم", "بكالوريوس", "ماجستير", "دكتوراه", "أخرى"];
 const RIWAYAT = ["حفص عن عاصم", "ورش عن نافع", "قالون عن نافع", "شعبة عن عاصم", "الدوري عن أبي عمرو", "أخرى"];
@@ -79,6 +81,11 @@ const StudentSignup = () => {
   const [admissionExams, setAdmissionExams] = useState<AdmissionExam[]>([]);
   const [loadingExams, setLoadingExams] = useState(false);
 
+  const isIjazah = preferredTrack === "الحصول على إجازة قرآنية";
+  const steps = isIjazah ? [...BASE_STEPS, IJAZAH_STEP] : BASE_STEPS;
+  const totalSteps = steps.length - 1;
+  const isLastStep = step === totalSteps;
+
   const inputClass = "h-12 rounded-xl border-primary/20 bg-card focus:border-primary focus:bg-card transition-colors shadow-sm";
 
   // Fetch admission exams when track changes to ijazah
@@ -86,7 +93,6 @@ const StudentSignup = () => {
     if (preferredTrack === "الحصول على إجازة قرآنية") {
       setLoadingExams(true);
       const fetchExams = async () => {
-        // Fetch exams
         const { data: examsData } = await (supabase as any).
         from("exams").
         select("id, date, time, capacity, committee_member_1_name, committee_member_2_name, committee_member_3_name").
@@ -96,7 +102,6 @@ const StudentSignup = () => {
 
         if (!examsData) {setLoadingExams(false);return;}
 
-        // Fetch registered count per exam
         const { data: countData } = await (supabase as any).
         from("student_profiles").
         select("selected_exam_id").
@@ -109,7 +114,6 @@ const StudentSignup = () => {
           }
         });
 
-        // Filter out full exams
         const available = examsData.
         map((exam: AdmissionExam) => ({ ...exam, registered_count: countMap[exam.id] || 0 })).
         filter((exam: AdmissionExam) => exam.registered_count < exam.capacity);
@@ -139,7 +143,9 @@ const StudentSignup = () => {
       if (!preferredTrack) {
         toast({ title: "مطلوب", description: "يرجى اختيار المسار", variant: "destructive" });return false;
       }
-      if (preferredTrack === "الحصول على إجازة قرآنية" && !preferredRiwaya) {
+    }
+    if (step === 3 && isIjazah) {
+      if (!preferredRiwaya) {
         toast({ title: "مطلوب", description: "يرجى اختيار الرواية", variant: "destructive" });return false;
       }
     }
@@ -149,7 +155,6 @@ const StudentSignup = () => {
   const nextStep = async () => {
     if (!validateStep()) return;
 
-    // Check email uniqueness on step 0 using SECURITY DEFINER function (bypasses RLS)
     if (step === 0) {
       const { data: emailExists } = await (supabase as any).rpc("check_email_exists", { p_email: email.trim().toLowerCase() });
       if (emailExists) {
@@ -159,7 +164,6 @@ const StudentSignup = () => {
       setEmailError("");
     }
 
-    // Check phone uniqueness on step 1 using SECURITY DEFINER function
     if (step === 1) {
       const fullPhone = `${phoneCode}${phone}`;
       const { data: phoneExists } = await (supabase as any).rpc("check_phone_exists", { p_phone: fullPhone });
@@ -170,11 +174,9 @@ const StudentSignup = () => {
       setPhoneError("");
     }
 
-    setStep((s) => Math.min(s + 1, 2));
+    setStep((s) => Math.min(s + 1, totalSteps));
   };
   const prevStep = () => setStep((s) => Math.max(s - 1, 0));
-
-
 
   const handleSubmit = async () => {
     if (!validateStep()) return;
@@ -271,7 +273,6 @@ const StudentSignup = () => {
                       {strength.label}
                     </p>
                   </div>);
-
               })()}
             </div>
             <div className="space-y-2">
@@ -286,7 +287,6 @@ const StudentSignup = () => {
               </div>
             </div>
           </div>);
-
 
       case 1:
         return (
@@ -335,7 +335,6 @@ const StudentSignup = () => {
             </div>
           </div>);
 
-
       case 2:
         return (
           <div className="space-y-4">
@@ -348,19 +347,21 @@ const StudentSignup = () => {
                   type="button"
                   onClick={() => {
                     setPreferredTrack(t);
-                    if (t !== "الحصول على إجازة قرآنية") setPreferredRiwaya("");
+                    if (t !== "الحصول على إجازة قرآنية") {
+                      setPreferredRiwaya("");
+                      setSelectedExamId("");
+                      setHasPreviousCertifications("");
+                      setPreviousCertifications("");
+                    }
                   }}
                   className={`w-full text-right px-4 py-3 rounded-xl border transition-all text-sm font-medium ${
                   preferredTrack === t ?
                   "border-primary bg-primary/10 text-primary shadow-sm" :
-                  "border-primary/20 bg-card text-foreground hover:border-primary/40"}`
-                  }>
-
+                  "border-primary/20 bg-card text-foreground hover:border-primary/40"}`}>
                     <div className="flex items-center justify-between">
                       <span>{t}</span>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    preferredTrack === t ? "border-primary" : "border-muted-foreground/30"}`
-                    }>
+                    preferredTrack === t ? "border-primary" : "border-muted-foreground/30"}`}>
                         {preferredTrack === t && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                       </div>
                     </div>
@@ -368,62 +369,58 @@ const StudentSignup = () => {
                 )}
               </div>
             </div>
-            {preferredTrack === "الحصول على إجازة قرآنية" &&
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-4">
+          </div>);
 
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-xs font-semibold">7. الرواية أو القراءة المتقنّد لها *</Label>
-                  <select value={preferredRiwaya} onChange={(e) => setPreferredRiwaya(e.target.value)}
-                className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
-                    <option value="" disabled>اختر إجابة</option>
-                    {RIWAYAT.map((r) => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                </div>
+      case 3:
+        // Only shown for ijazah track
+        return (
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-xs font-semibold">7. الرواية أو القراءة المتقنّد لها *</Label>
+              <select value={preferredRiwaya} onChange={(e) => setPreferredRiwaya(e.target.value)}
+              className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
+                <option value="" disabled>اختر إجابة</option>
+                {RIWAYAT.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
 
-                {/* Exam Selection */}
-                <div className="space-y-2">
-                  <Label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-primary" />
-                    8. اختر موعد اختبار القبول المناسب لك
-                    <span className="text-muted-foreground font-normal">(اختياري)</span>
-                  </Label>
-                  {loadingExams ?
-                <div className="flex items-center justify-center py-4">
-                      <span className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full inline-block" />
-                    </div> :
-                admissionExams.length === 0 ?
-                <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4 text-center">
-                      <Calendar className="w-7 h-7 text-primary/40 mx-auto mb-1.5" />
-                      <p className="text-xs text-muted-foreground">لا توجد مواعيد اختبار متاحة حالياً</p>
-                      <p className="text-[11px] text-muted-foreground/70 mt-0.5">سيتم إبلاغك بالموعد لاحقاً</p>
-                    </div> :
+            {/* Exam Selection */}
+            <div className="space-y-2">
+              <Label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-primary" />
+                8. اختر موعد اختبار القبول المناسب لك
+                <span className="text-muted-foreground font-normal">(اختياري)</span>
+              </Label>
+              {loadingExams ?
+              <div className="flex items-center justify-center py-4">
+                  <span className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full inline-block" />
+                </div> :
+              admissionExams.length === 0 ?
+              <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4 text-center">
+                  <Calendar className="w-7 h-7 text-primary/40 mx-auto mb-1.5" />
+                  <p className="text-xs text-muted-foreground">لا توجد مواعيد اختبار متاحة حالياً</p>
+                  <p className="text-[11px] text-muted-foreground/70 mt-0.5">سيتم إبلاغك بالموعد لاحقاً</p>
+                </div> :
 
-                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                      {/* No preference option */}
-                      <button
+              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                  {/* No preference option */}
+                  <button
                     type="button"
                     onClick={() => setSelectedExamId("")}
                     className={`w-full text-right p-3 rounded-xl border-2 transition-all ${
                     selectedExamId === "" ?
                     "border-primary/40 bg-primary/5" :
-                    "border-border/40 bg-card hover:border-primary/30"}`
-                    }>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">لم أحدد بعد — سيتم إبلاغي لاحقاً</span>
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      selectedExamId === "" ? "border-primary" : "border-muted-foreground/30"}`
-                      }>
-                            {selectedExamId === "" && <div className="w-2 h-2 rounded-full bg-primary" />}
-                          </div>
+                    "border-border/40 bg-card hover:border-primary/30"}`}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">لم أحدد بعد — سيتم إبلاغي لاحقاً</span>
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    selectedExamId === "" ? "border-primary" : "border-muted-foreground/30"}`}>
+                          {selectedExamId === "" && <div className="w-2 h-2 rounded-full bg-primary" />}
                         </div>
-                      </button>
+                      </div>
+                    </button>
 
-                      {admissionExams.map((exam) => {
+                  {admissionExams.map((exam) => {
                     const isSelected = selectedExamId === exam.id;
                     const committee = [exam.committee_member_1_name, exam.committee_member_2_name, exam.committee_member_3_name].filter(Boolean);
                     return (
@@ -434,107 +431,93 @@ const StudentSignup = () => {
                         className={`w-full text-right p-3 rounded-xl border-2 transition-all ${
                         isSelected ?
                         "border-primary bg-primary/8 shadow-sm" :
-                        "border-border/40 bg-card hover:border-primary/40 hover:bg-primary/3"}`
-                        }>
-
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${isSelected ? "bg-primary" : "bg-primary/10"}`}>
-                                    <Calendar className={`w-3 h-3 ${isSelected ? "text-primary-foreground" : "text-primary"}`} />
-                                  </div>
-                                  <span className={`text-sm font-bold ${isSelected ? "text-primary" : "text-foreground"}`}>
-                                    {new Date(exam.date).toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-                                  </span>
+                        "border-border/40 bg-card hover:border-primary/40 hover:bg-primary/3"}`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${isSelected ? "bg-primary" : "bg-primary/10"}`}>
+                                  <Calendar className={`w-3 h-3 ${isSelected ? "text-primary-foreground" : "text-primary"}`} />
                                 </div>
-                                <div className="flex items-center gap-3 pr-8">
-                                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                    <Clock className="w-3 h-3" />
-                                    {exam.time}
-                                  </span>
-                                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                    <Users className="w-3 h-3" />
-                                    {exam.capacity - exam.registered_count} مقعد متبقٍ
-                                  </span>
-                                </div>
-                                {committee.length > 0 &&
-                            <p className="text-[11px] text-muted-foreground/70 pr-8 mt-0.5 truncate">
-                                    اللجنة: {committee.join(" · ")}
-                                  </p>
-                            }
+                                <span className={`text-sm font-bold ${isSelected ? "text-primary" : "text-foreground"}`}>
+                                  {new Date(exam.date).toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                                </span>
                               </div>
-                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                          isSelected ? "border-primary bg-primary" : "border-muted-foreground/30"}`
-                          }>
-                                {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+                              <div className="flex items-center gap-3 pr-8">
+                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <Clock className="w-3 h-3" />
+                                  {exam.time}
+                                </span>
+                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <Users className="w-3 h-3" />
+                                  {exam.capacity - exam.registered_count} مقعد متبقٍ
+                                </span>
                               </div>
+                              {committee.length > 0 &&
+                              <p className="text-[11px] text-muted-foreground/70 pr-8 mt-0.5 truncate">
+                                  اللجنة: {committee.join(" · ")}
+                                </p>
+                              }
                             </div>
-                          </button>);
-
-                  })}
-                    </div>
-                }
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-xs font-semibold">9. هل لديك إجازات قرآنية سابقة؟</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                  { value: "yes" as const, label: "نعم" },
-                  { value: "no" as const, label: "لا" }].
-                  map((opt) =>
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      setHasPreviousCertifications(opt.value);
-                      if (opt.value === "no") setPreviousCertifications("");
-                    }}
-                    className={`px-4 py-3 rounded-xl border transition-all text-sm font-medium ${
-                    hasPreviousCertifications === opt.value ?
-                    "border-primary bg-primary/10 text-primary shadow-sm" :
-                    "border-primary/20 bg-card text-foreground hover:border-primary/40"}`
-                    }>
-
-                        <div className="flex items-center justify-center gap-2">
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      hasPreviousCertifications === opt.value ? "border-primary" : "border-muted-foreground/30"}`
-                      }>
-                            {hasPreviousCertifications === opt.value && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                        isSelected ? "border-primary bg-primary" : "border-muted-foreground/30"}`}>
+                              {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+                            </div>
                           </div>
-                          <span>{opt.label}</span>
-                        </div>
-                      </button>
-                  )}
-                  </div>
+                        </button>);
+                  })}
                 </div>
-
-                {hasPreviousCertifications === "yes" &&
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-1.5">
-
-                    <Label className="text-foreground text-xs font-semibold">10. اذكر الإجازات القرآنية السابقة</Label>
-                    <textarea
-                  value={previousCertifications}
-                  onChange={(e) => setPreviousCertifications(e.target.value)}
-                  placeholder="مثال: إجازة في رواية حفص عن عاصم من الشيخ ..."
-                  rows={3}
-                  maxLength={500}
-                  className={`w-full ${inputClass} px-3 py-3 border border-primary/20 bg-card text-foreground resize-none rounded-xl text-sm`} />
-
-                  </motion.div>
               }
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-xs font-semibold">9. هل لديك إجازات قرآنية سابقة؟</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                { value: "yes" as const, label: "نعم" },
+                { value: "no" as const, label: "لا" }].
+                map((opt) =>
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    setHasPreviousCertifications(opt.value);
+                    if (opt.value === "no") setPreviousCertifications("");
+                  }}
+                  className={`px-4 py-3 rounded-xl border transition-all text-sm font-medium ${
+                  hasPreviousCertifications === opt.value ?
+                  "border-primary bg-primary/10 text-primary shadow-sm" :
+                  "border-primary/20 bg-card text-foreground hover:border-primary/40"}`}>
+                    <div className="flex items-center justify-center gap-2">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  hasPreviousCertifications === opt.value ? "border-primary" : "border-muted-foreground/30"}`}>
+                        {hasPreviousCertifications === opt.value && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                      </div>
+                      <span>{opt.label}</span>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {hasPreviousCertifications === "yes" &&
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-1.5">
+                <Label className="text-foreground text-xs font-semibold">10. اذكر الإجازات القرآنية السابقة</Label>
+                <textarea
+                value={previousCertifications}
+                onChange={(e) => setPreviousCertifications(e.target.value)}
+                placeholder="مثال: إجازة في رواية حفص عن عاصم من الشيخ ..."
+                rows={3}
+                maxLength={500}
+                className={`w-full ${inputClass} px-3 py-3 border border-primary/20 bg-card text-foreground resize-none rounded-xl text-sm`} />
               </motion.div>
             }
           </div>);
-
     }
   };
-
-  const totalSteps = STEPS.length - 1;
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden"
@@ -573,15 +556,13 @@ const StudentSignup = () => {
       {/* Progress bar */}
       <div className="relative z-10 px-6 mb-4">
         <div className="flex items-center justify-between max-w-sm mx-auto">
-          {STEPS.map((s, i) =>
+          {steps.map((s, i) =>
           <div key={i} className="flex flex-col items-center relative z-10">
               <motion.div
               initial={{ scale: 0.8 }}
               animate={{ scale: step >= i ? 1 : 0.8 }}
               className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-              step > i ? "bg-primary-foreground text-primary" : step === i ? "bg-primary-foreground text-primary ring-2 ring-gold/50" : "bg-primary-foreground/30 text-primary-foreground/60"}`
-              }>
-
+              step > i ? "bg-primary-foreground text-primary" : step === i ? "bg-primary-foreground text-primary ring-2 ring-gold/50" : "bg-primary-foreground/30 text-primary-foreground/60"}`}>
                 {step > i ? <Check className="w-4 h-4" /> : <s.icon className="w-4 h-4" />}
               </motion.div>
               <span className={`text-[10px] mt-1 font-semibold ${step >= i ? "text-primary-foreground" : "text-primary-foreground/50"}`}>{s.title}</span>
@@ -594,7 +575,6 @@ const StudentSignup = () => {
           initial={{ width: "0%" }}
           animate={{ width: `${step / totalSteps * 70}%` }}
           transition={{ duration: 0.4 }} />
-
       </div>
 
       {/* Form card */}
@@ -609,7 +589,6 @@ const StudentSignup = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.25 }}>
-
                 {renderStep()}
               </motion.div>
             </AnimatePresence>
@@ -623,7 +602,7 @@ const StudentSignup = () => {
                   السابق
                 </Button>
               }
-              {step < totalSteps ?
+              {!isLastStep ?
               <Button type="button" onClick={nextStep}
               className="flex-1 gradient-primary text-primary-foreground h-12 rounded-2xl font-bold shadow-md">
                   التالي
@@ -634,7 +613,6 @@ const StudentSignup = () => {
               className="flex-1 gradient-primary text-primary-foreground h-12 rounded-2xl font-bold shadow-md">
                   {loading ?
                 <span className="animate-spin w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full inline-block" /> :
-
                 <>
                       <Check className="w-5 h-5 ml-1" />
                       إنشاء الحساب
@@ -653,7 +631,6 @@ const StudentSignup = () => {
         </motion.div>
       </div>
     </div>);
-
 };
 
 export default StudentSignup;
