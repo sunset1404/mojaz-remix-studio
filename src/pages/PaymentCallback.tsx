@@ -30,15 +30,7 @@ export default function PaymentCallback() {
 
             const paymentId = searchParams.get("id");
             const paymentStatus = searchParams.get("status");
-            const source = searchParams.get("source") || "subscription";
-            const metaStr = searchParams.get("meta");
-
-            let metadata: Record<string, any> = {};
-            try {
-                if (metaStr) metadata = JSON.parse(metaStr);
-            } catch {
-                console.warn("Failed to parse meta query param");
-            }
+            const paymentRef = searchParams.get("ref");
 
             if (!paymentId) {
                 setStatus("failed");
@@ -52,43 +44,32 @@ export default function PaymentCallback() {
 
                 // Update metadata status if exists
                 // Note: using (supabase as any) because payment_invoice_metadata is not in generated types yet
-                await (supabase as any)
-                    .from("payment_invoice_metadata")
-                    .update({ status: "failed" })
-                    .eq("moyassar_payment_id", paymentId);
+                if (paymentRef) {
+                    await (supabase as any)
+                        .from("payment_invoice_metadata")
+                        .update({ status: "failed" })
+                        .eq("id", paymentRef);
+                }
                 return;
             }
 
-            // Record payment metadata if not already recorded
-            const { data: existing } = await (supabase as any)
+            if (!paymentRef) {
+                setStatus("failed");
+                setMessage("مرجع الدفع غير متوفر. يرجى إعادة المحاولة.");
+                return;
+            }
+
+            // Update metadata with payment id
+            await (supabase as any)
                 .from("payment_invoice_metadata")
-                .select("id, processed")
-                .eq("moyassar_payment_id", paymentId)
-                .maybeSingle();
-
-            if (!existing) {
-                await (supabase as any).from("payment_invoice_metadata").insert({
-                    user_id: user.id,
-                    moyassar_payment_id: paymentId,
-                    source_type: source,
-                    amount_sar: metadata.amount_sar || 0,
-                    metadata,
-                    status: "pending",
-                });
-            } else if (existing.processed) {
-                // Already processed — show success
-                setStatus("success");
-                setMessage("تم تفعيل الاشتراك بنجاح");
-                return;
-            }
+                .update({ moyassar_payment_id: paymentId })
+                .eq("id", paymentRef);
 
             // Call verify-payment edge function
             const { data, error } = await supabase.functions.invoke("verify-payment", {
                 body: {
                     payment_id: paymentId,
-                    user_id: user.id,
-                    source_type: source,
-                    metadata,
+                    payment_ref: paymentRef,
                 },
             });
 

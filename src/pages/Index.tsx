@@ -29,6 +29,23 @@ type ActiveSubscription = {
   status: string;
 };
 
+type DebugPayment = {
+  id: string;
+  status: string;
+  amount_sar: number;
+  source_type: string;
+  moyassar_payment_id: string | null;
+  created_at: string | null;
+};
+
+type DebugTransaction = {
+  id: string;
+  title: string;
+  amount: string;
+  status: string;
+  date: string;
+};
+
 const promoSlides = [
 { title: "القرآن الكريم", desc: "بمقرئين معتمدين", icon: BookOpen, bg: "gradient-primary", iconBg: "bg-gold/20", iconColor: "text-gold" },
 { title: "شهادات معتمدة", desc: "احصل على شهادات في الحفظ", icon: Award, bg: "gradient-gold", iconBg: "bg-primary/20", iconColor: "text-primary" },
@@ -56,6 +73,13 @@ const Index = () => {
   const [topReciters, setTopReciters] = useState<ReciterPreview[]>([]);
   const [activeSubscription, setActiveSubscription] = useState<ActiveSubscription | null>(null);
   const [popupMessage, setPopupMessage] = useState<{ id: string; title: string; message: string; icon: string; color_scheme: string } | null>(null);
+  const showDebug = import.meta.env.MODE !== "production";
+  const [debugLoading, setDebugLoading] = useState(false);
+  const [debugError, setDebugError] = useState("");
+  const [debugPayments, setDebugPayments] = useState<DebugPayment[]>([]);
+  const [debugTransactions, setDebugTransactions] = useState<DebugTransaction[]>([]);
+  const [debugHourCredits, setDebugHourCredits] = useState<number | null>(null);
+  const [debugUpdatedAt, setDebugUpdatedAt] = useState<string | null>(null);
   useEffect(() => {
     if (!user) return;
     // Fetch student profile (name + gender for filtering)
@@ -100,6 +124,52 @@ const Index = () => {
       .maybeSingle()
       .then(({ data }) => { if (data) setActiveSubscription(data); });
   }, [user]);
+
+  const fetchDebugData = useCallback(async () => {
+    if (!user) return;
+    setDebugLoading(true);
+    setDebugError("");
+    try {
+      const [paymentsRes, creditsRes, txRes] = await Promise.all([
+        supabase
+          .from("payment_invoice_metadata")
+          .select("id, status, amount_sar, source_type, moyassar_payment_id, created_at")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        (supabase as any)
+          .from("student_hour_credits")
+          .select("hours, updated_at")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("transactions")
+          .select("id, title, amount, status, date")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+
+      if (paymentsRes.error || creditsRes.error || txRes.error) {
+        throw new Error("تعذر تحميل بيانات الاختبار");
+      }
+
+      setDebugPayments((paymentsRes.data || []) as DebugPayment[]);
+      setDebugTransactions((txRes.data || []) as DebugTransaction[]);
+      setDebugHourCredits(creditsRes.data?.hours ?? null);
+      setDebugUpdatedAt(creditsRes.data?.updated_at ?? null);
+    } catch (err: any) {
+      setDebugError(err?.message || "تعذر تحميل بيانات الاختبار");
+    } finally {
+      setDebugLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (showDebug) {
+      fetchDebugData();
+    }
+  }, [showDebug, fetchDebugData]);
 
   // Popup messages: check for relevant trigger events and show popup
   useEffect(() => {
@@ -455,6 +525,80 @@ const Index = () => {
           </Link>
         </motion.div>
       </div>
+
+      {showDebug && (
+        <div className="px-5 mt-6">
+          <div className="glass-card rounded-2xl p-4 border border-dashed border-primary/30">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <CreditCard className="w-3.5 h-3.5 text-primary" />
+                </div>
+                <h3 className="text-sm font-bold text-foreground">لوحة اختبار الدفع (مؤقتة)</h3>
+              </div>
+              <button
+                onClick={fetchDebugData}
+                className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full"
+              >
+                تحديث
+              </button>
+            </div>
+
+            {debugLoading ? (
+              <p className="text-xs text-muted-foreground">جاري التحميل...</p>
+            ) : debugError ? (
+              <p className="text-xs text-destructive">{debugError}</p>
+            ) : (
+              <div className="space-y-3 text-xs text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <span>رصيد الساعات الإضافية</span>
+                  <span className="font-semibold text-foreground">
+                    {debugHourCredits !== null ? `${debugHourCredits} ساعة` : "غير متوفر"}
+                  </span>
+                </div>
+                {debugUpdatedAt && (
+                  <div className="flex items-center justify-between">
+                    <span>آخر تحديث</span>
+                    <span className="font-semibold text-foreground">{new Date(debugUpdatedAt).toLocaleString()}</span>
+                  </div>
+                )}
+
+                <div>
+                  <p className="text-[11px] font-semibold text-foreground mb-2">آخر المدفوعات</p>
+                  {debugPayments.length === 0 ? (
+                    <p>لا توجد مدفوعات</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {debugPayments.map((p) => (
+                        <div key={p.id} className="flex items-center justify-between">
+                          <span className="truncate">{p.source_type} • {p.status}</span>
+                          <span className="font-semibold text-foreground">{p.amount_sar} ر.س</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-[11px] font-semibold text-foreground mb-2">آخر المعاملات</p>
+                  {debugTransactions.length === 0 ? (
+                    <p>لا توجد معاملات</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {debugTransactions.map((t) => (
+                        <div key={t.id} className="flex items-center justify-between">
+                          <span className="truncate">{t.title}</span>
+                          <span className="font-semibold text-foreground">{t.amount} ر.س</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <PopupMessageCard message={popupMessage} onClose={() => setPopupMessage(null)} />
     </div>);

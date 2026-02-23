@@ -25,7 +25,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         isConnecting: false,
         isReconnecting: false,
         isMuted: false,
-        isVideoEnabled: true,
+        isVideoEnabled: false,
         error: null,
     });
     const [dbStatus, setDbStatus] = useState<VideoCallSession['status']>('waiting');
@@ -177,6 +177,11 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                 }
             }
             if (stream) {
+                const videoTrack = stream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.enabled = false; // camera off by default
+                    setCallState(prev => ({ ...prev, isVideoEnabled: false }));
+                }
                 setLocalStream(stream);
             }
 
@@ -218,7 +223,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
             toast({
                 title: 'جاهز للمكالمة',
-                description: 'تم تفعيل الكاميرا والميكروفون بنجاح',
+                description: 'تم تفعيل الميكروفون. الكاميرا مغلقة افتراضياً',
             });
         } catch (error: any) {
             console.error('Error initializing video call:', error);
@@ -297,7 +302,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             isConnecting: false,
             isReconnecting: false,
             isMuted: false,
-            isVideoEnabled: true,
+            isVideoEnabled: false,
             error: null,
         });
 

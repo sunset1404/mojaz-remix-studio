@@ -36,8 +36,7 @@ const PaymentModal = ({
   const [errorMessage, setErrorMessage] = useState("");
   const formInitialized = useRef(false);
   const moyasarContainerId = "moyasar-payment-form";
-
-  const numericPrice = parseFloat(String(price)) || 0;
+  const [paymentRef, setPaymentRef] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && paymentState === "form" && !formInitialized.current) {
@@ -52,6 +51,7 @@ const PaymentModal = ({
       formInitialized.current = false;
       setPaymentState("form");
       setErrorMessage("");
+      setPaymentRef(null);
     }
   }, [isOpen, paymentState]);
 
@@ -70,19 +70,43 @@ const PaymentModal = ({
 
     const months = durationMonths || (period?.includes("سنو") ? 12 : 1);
 
-    const paymentMetadata = {
+    const baseMetadata = {
       ...metadata,
       student_name: profile?.full_name || "طالب",
       student_phone: profile?.phone || null,
       subscription_type: subscriptionType || planName,
       plan_name: planName,
       duration_months: months,
-      amount_sar: numericPrice,
     };
 
-    const callbackUrl = buildCallbackUrl(sourceType, paymentMetadata);
-
     try {
+      // Create payment record server-side (validated amount)
+      const { data: paymentData, error: paymentError } = await supabase.functions.invoke("create-payment", {
+        body: {
+          source_type: sourceType,
+          plan_name: planName,
+          duration_months: months,
+          metadata: baseMetadata,
+          hours: metadata?.hours,
+          package_label: metadata?.package_label,
+        },
+      });
+
+      if (paymentError || !paymentData?.payment_ref) {
+        throw new Error(paymentError?.message || "تعذر إنشاء سجل الدفع");
+      }
+
+      const validatedAmount = Number(paymentData.amount_sar);
+      const paymentMetadata = {
+        ...baseMetadata,
+        ...paymentData.metadata,
+        amount_sar: validatedAmount,
+        payment_ref: paymentData.payment_ref,
+      };
+
+      setPaymentRef(paymentData.payment_ref);
+      const callbackUrl = buildCallbackUrl(sourceType, paymentMetadata);
+
       // Ensure the container is present in the DOM before initializing
       const container = document.getElementById(moyasarContainerId);
       if (!container) {
@@ -93,10 +117,11 @@ const PaymentModal = ({
 
       initMoyasarForm({
         elementId: moyasarContainerId,
-        amountSar: numericPrice,
+        amountSar: validatedAmount,
         description: `اشتراك ${planName}`,
         callbackUrl,
         methods: ["creditcard", "applepay", "stcpay", "samsungpay"],
+        metadata: { payment_ref: paymentData.payment_ref },
         onCompleted: (payment: MoyasarPaymentResponse) => {
           handlePaymentCompleted(payment, paymentMetadata);
         },
@@ -122,25 +147,26 @@ const PaymentModal = ({
     setPaymentState("verifying");
 
     try {
-      // 1. Record payment in metadata table
-      // Note: using (supabase as any) because payment_invoice_metadata is not in generated types yet
-      // After running the migration and regenerating types, replace with supabase.from("payment_invoice_metadata")
-      await (supabase as any).from("payment_invoice_metadata").insert({
-        user_id: user!.id,
-        moyassar_payment_id: payment.id,
-        source_type: sourceType,
-        amount_sar: numericPrice,
-        metadata: paymentMetadata,
-        status: "pending",
-      });
+      const ref = paymentMetadata.payment_ref || paymentRef;
+      if (!ref) {
+        throw new Error("مرجع الدفع غير متوفر");
+      }
+
+      // 1. Update payment metadata with Moyassar payment ID
+      await (supabase as any)
+        .from("payment_invoice_metadata")
+        .update({
+          moyassar_payment_id: payment.id,
+          status: "pending",
+          metadata: paymentMetadata,
+        })
+        .eq("id", ref);
 
       // 2. Call verify-payment edge function
       const { data, error } = await supabase.functions.invoke("verify-payment", {
         body: {
           payment_id: payment.id,
-          user_id: user!.id,
-          source_type: sourceType,
-          metadata: paymentMetadata,
+          payment_ref: ref,
         },
       });
 

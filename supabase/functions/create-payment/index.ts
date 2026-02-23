@@ -1,23 +1,24 @@
-// Create Payment Edge Function
-// Creates a payment record in payment_invoice_metadata before redirecting to Moyassar
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { computeExpectedAmount, SourceType } from "../_shared/payment.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface CreatePaymentRequest {
-  user_id: string;
-  source_type: "subscription" | "gift" | "extra_hours";
-  amount_sar: number;
-  metadata: Record<string, any>;
+function nowIso(): string {
+  return new Date().toISOString();
 }
 
-async function handler(req: Request): Promise<Response> {
+function generateGiftCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "GIFT-";
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -31,70 +32,101 @@ async function handler(req: Request): Promise<Response> {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const body: CreatePaymentRequest = await req.json();
-    const { user_id, source_type, amount_sar, metadata } = body;
-
-    if (!user_id || !source_type || !amount_sar) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: user_id, source_type, amount_sar" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace("Bearer ", "");
+    if (!token) {
+      return new Response(JSON.stringify({ error: "Missing auth token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Check for existing pending payment with same parameters to avoid duplicates
-    const { data: existing } = await supabase
-      .from("payment_invoice_metadata")
-      .select("id")
-      .eq("user_id", user_id)
-      .eq("source_type", source_type)
-      .eq("amount_sar", amount_sar)
-      .eq("status", "pending")
-      .eq("processed", false)
-      .maybeSingle();
-
-    if (existing) {
-      console.log("Returning existing pending payment:", existing.id);
-      return new Response(
-        JSON.stringify({ success: true, payment_metadata_id: existing.id, duplicate: true }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: userData, error: userError } = await authClient.auth.getUser();
+    if (userError || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Create new payment metadata record
-    const { data: record, error } = await supabase
+    const body = await req.json();
+    const sourceType = body?.source_type as SourceType;
+    if (!sourceType) {
+      return new Response(JSON.stringify({ error: "Missing source_type" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const metaInput = typeof body?.metadata === "object" && body?.metadata ? body.metadata : {};
+    const planName = body?.plan_name || metaInput?.plan_name || metaInput?.planName;
+    const durationMonths = body?.duration_months || metaInput?.duration_months;
+    const hours = body?.hours || metaInput?.hours;
+    const packageLabel = body?.package_label || metaInput?.package_label;
+
+    const expected = await computeExpectedAmount({
+      source_type: sourceType,
+      plan_name: planName,
+      duration_months: durationMonths,
+      hours,
+      package_label: packageLabel,
+    });
+
+    const normalizedMetadata: Record<string, any> = {
+      ...metaInput,
+      ...expected.metadata,
+    };
+
+    if (sourceType === "gift") {
+      if (!normalizedMetadata.recipient_name || !normalizedMetadata.recipient_phone) {
+        return new Response(JSON.stringify({ error: "Missing gift recipient details" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      normalizedMetadata.gift_code = normalizedMetadata.gift_code || generateGiftCode();
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: row, error: insertError } = await supabaseAdmin
       .from("payment_invoice_metadata")
       .insert({
-        user_id,
-        source_type,
-        amount_sar,
-        metadata: metadata || {},
+        user_id: userData.user.id,
+        source_type: sourceType,
+        amount_sar: expected.amount_sar,
+        metadata: normalizedMetadata,
         status: "pending",
         processed: false,
+        updated_at: nowIso(),
       })
       .select("id")
       .single();
 
-    if (error) {
-      console.error("Failed to create payment metadata:", error);
-      throw error;
+    if (insertError || !row) {
+      return new Response(JSON.stringify({ error: "Failed to create payment record" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    console.log("Payment metadata created:", record.id);
-
     return new Response(
-      JSON.stringify({ success: true, payment_metadata_id: record.id }),
+      JSON.stringify({
+        payment_ref: row.id,
+        amount_sar: expected.amount_sar,
+        metadata: normalizedMetadata,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Create payment error:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error", details: String(error) }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Internal server error", details: String(error) }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-}
-
-serve(handler);
+});

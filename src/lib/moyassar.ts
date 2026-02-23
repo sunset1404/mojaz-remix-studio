@@ -55,6 +55,7 @@ export interface MoyasarConfig {
         label: string;
         validate_merchant_url?: string;
     };
+    metadata?: Record<string, any>;
     on_initiating?: () => void;
     on_completed?: (payment: MoyasarPaymentResponse) => void;
     on_failure?: (error: any) => void;
@@ -76,6 +77,7 @@ export function initMoyasarForm(config: {
     description: string;
     callbackUrl: string;
     methods?: ("creditcard" | "applepay" | "stcpay" | "samsungpay")[];
+    metadata?: Record<string, any>;
     onCompleted?: (payment: MoyasarPaymentResponse) => void;
     onFailure?: (error: any) => void;
     onInitiating?: () => void;
@@ -104,6 +106,7 @@ export function initMoyasarForm(config: {
             label: "إقراء - Mojaz",
             validate_merchant_url: "https://api.moyasar.com/v1/applepay/initiate",
         },
+        metadata: config.metadata,
         on_initiating: config.onInitiating,
         on_completed: config.onCompleted,
         on_failure: config.onFailure,
@@ -117,9 +120,9 @@ export function initMoyasarForm(config: {
  */
 export function buildCallbackUrl(sourceType: string, metadata: Record<string, any>): string {
     const base = window.location.origin;
-    const params = new URLSearchParams({
-        source: sourceType,
-        meta: JSON.stringify(metadata),
-    });
+    const params = new URLSearchParams({ source: sourceType });
+    if (metadata?.payment_ref) {
+        params.set("ref", String(metadata.payment_ref));
+    }
     return `${base}/payment/callback?${params.toString()}`;
 }
