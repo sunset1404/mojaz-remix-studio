@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import logoMojaz from "@/assets/logo-mojaz-new.png";
+import { playLogoReveal, playTextReveal, playTransitionChime } from "@/lib/intro-sounds";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,9 +22,10 @@ const Login = () => {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setStep(1), 900);
-    const t2 = setTimeout(() => setStep(2), 2800);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const t0 = setTimeout(() => playLogoReveal(), 300);
+    const t1 = setTimeout(() => { setStep(1); playTextReveal(); }, 900);
+    const t2 = setTimeout(() => { setStep(2); playTransitionChime(); }, 2800);
+    return () => { clearTimeout(t0); clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
