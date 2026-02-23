@@ -72,14 +72,14 @@ export const IncomingCallListener = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) return;
 
-            const { data } = await supabase
+            const { data } = await (supabase as any)
                 .from('video_call_sessions')
                 .select('id, room_id, student_name')
                 .eq('reciter_id', session.user.id)
                 .eq('status', 'waiting')
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .maybeSingle() as any;
+                .maybeSingle();
 
             if (data) {
                 setIncomingCall({
