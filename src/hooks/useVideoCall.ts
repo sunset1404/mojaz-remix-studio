@@ -148,7 +148,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             await webrtcManager.current.initialize();
 
             // Get local media stream with fallback
-            let stream: MediaStream;
+            let stream: MediaStream | null = null;
             try {
                 stream = await webrtcManager.current.startLocalStream();
             } catch (mediaError: any) {
@@ -168,11 +168,17 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                         description: 'لم يتم العثور على كاميرا، تم تفعيل الصوت فقط',
                     });
                 } catch (audioError: any) {
-                    console.error('Failed to get any media:', audioError);
-                    throw audioError;
+                    console.warn('Failed to get any media, proceeding without local stream:', audioError);
+                    setCallState(prev => ({ ...prev, isVideoEnabled: false, isMuted: true }));
+                    toast({
+                        title: 'تنبيه',
+                        description: 'لم يتم العثور على كاميرا أو ميكروفون، يمكنك مشاهدة الطرف الآخر فقط',
+                    });
                 }
             }
-            setLocalStream(stream);
+            if (stream) {
+                setLocalStream(stream);
+            }
 
             // Initialize signaling
             signalingService.current = new SignalingService(roomId, role, handleSignal);
