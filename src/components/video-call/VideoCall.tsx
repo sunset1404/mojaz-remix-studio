@@ -16,12 +16,9 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
         localStream,
         remoteStream,
         callState,
-        startCall,
         toggleMute,
         toggleVideo,
         endCall,
-        initialize,
-        dbStatus,
     } = useVideoCall({ roomId, role, autoStart: true });
 
     const localVideoRef = useRef<HTMLVideoElement>(null);
