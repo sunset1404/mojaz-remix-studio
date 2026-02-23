@@ -92,8 +92,8 @@ const Reciters = () => {
   };
 
   const filtered = reciters.filter((r) => {
-    const matchSearch = r.full_name.includes(search) || r.preferred_track.includes(search);
-    const isOnline = onlineReciters.has(r.user_id);
+    const matchSearch = r.full_name.includes(search) || (r.preferred_track || "").includes(search);
+    const isOnline = onlineReciters.includes(r.user_id);
     const matchFilter =
       filter === "all" ||
       (filter === "available" && isOnline) ||
@@ -143,8 +143,8 @@ const Reciters = () => {
             key={tab.key}
             onClick={() => setFilter(tab.key)}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${filter === tab.key
-                ? "gradient-primary text-primary-foreground shadow-md"
-                : "bg-muted text-muted-foreground"
+              ? "gradient-primary text-primary-foreground shadow-md"
+              : "bg-muted text-muted-foreground"
               }`}
           >
             {tab.label}
@@ -187,7 +187,7 @@ const Reciters = () => {
                 <User className="w-7 h-7 text-muted-foreground" />
               )}
               {(() => {
-                const isOnline = onlineReciters.has(reciter.user_id);
+                const isOnline = onlineReciters.includes(reciter.user_id);
                 return (
                   <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
                 );

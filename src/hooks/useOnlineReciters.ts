@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -15,33 +15,65 @@ interface PresenceState {
  * Student-facing hook that returns a live Set of online reciter user_ids.
  * Subscribes to the same Supabase Realtime Presence channel that reciters broadcast on.
  */
-export function useOnlineReciters() {
-    const [onlineReciterIds, setOnlineReciterIds] = useState<Set<string>>(new Set());
+export function useOnlineReciters(): string[] {
+    const [onlineReciterIds, setOnlineReciterIds] = useState<string[]>([]);
 
     useEffect(() => {
-        const channel: RealtimeChannel = supabase.channel(PRESENCE_CHANNEL);
+        // Find existing channel first to avoid rapid recreate in StrictMode
+        let channel = supabase.getChannels().find(c => c.topic === `realtime:${PRESENCE_CHANNEL}`);
+
+        if (!channel) {
+            channel = supabase.channel(PRESENCE_CHANNEL);
+        }
 
         const syncPresence = () => {
-            const state = channel.presenceState<PresenceState>();
+            const state = channel!.presenceState<PresenceState>();
             const ids = new Set<string>();
-
             for (const key in state) {
-                const presences = state[key] as PresenceState[];
+                const presences = state[key];
                 presences.forEach((p) => {
                     if (p.user_id) ids.add(p.user_id);
                 });
             }
 
-            setOnlineReciterIds(ids);
+            const idsArray = Array.from(ids);
+            console.log('[OnlineReciters] Online IDs:', idsArray);
+
+            setOnlineReciterIds((prev) => {
+                // Only update if the arrays are actually different to prevent infinite re-renders
+                if (prev.length === idsArray.length && prev.every((id, index) => id === idsArray[index])) {
+                    return prev;
+                }
+                return idsArray;
+            });
         };
 
         channel
             .on('presence', { event: 'sync' }, syncPresence)
             .on('presence', { event: 'join' }, syncPresence)
-            .on('presence', { event: 'leave' }, syncPresence)
-            .subscribe();
+            .on('presence', { event: 'leave' }, syncPresence);
+
+        // Only trigger subscribe if it's not already joined
+        let isMounted = true;
+
+        if (channel.state !== 'joined' && channel.state !== 'joining') {
+            channel.subscribe((status) => {
+                console.log('[OnlineReciters] Status:', status);
+                if (status === 'SUBSCRIBED' && isMounted) {
+                    syncPresence();
+                } else if (status === 'TIMED_OUT' && isMounted) {
+                    // Force a retry if it timed out due to a rapid unmount/mount cycle
+                    setTimeout(() => {
+                        if (isMounted) channel.subscribe();
+                    }, 2000);
+                }
+            });
+        } else {
+            syncPresence();
+        }
 
         return () => {
+            isMounted = false;
             supabase.removeChannel(channel);
         };
     }, []);
