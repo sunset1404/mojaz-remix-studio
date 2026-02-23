@@ -3,5 +3,8 @@ project_id = "cfihcvudcwujylipqngk"
 [functions.create-partner]
 verify_jwt = false
 
+[functions.request-call]
+verify_jwt = false
+
 [functions.verify-payment]
 verify_jwt = false
