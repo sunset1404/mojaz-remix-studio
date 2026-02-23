@@ -452,11 +452,6 @@ const StudentSignup = () => {
                                   {exam.capacity - exam.registered_count} مقعد متبقٍ
                                 </span>
                               </div>
-                              {committee.length > 0 &&
-                              <p className="text-[11px] text-muted-foreground/70 pr-8 mt-0.5 truncate">
-                                  اللجنة: {committee.join(" · ")}
-                                </p>
-                              }
                             </div>
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
                         isSelected ? "border-primary bg-primary" : "border-muted-foreground/30"}`}>
