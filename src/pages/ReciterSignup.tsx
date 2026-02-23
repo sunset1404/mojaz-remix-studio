@@ -422,16 +422,24 @@ const ReciterSignup = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden"
-    style={{ background: "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 45%, hsl(var(--turquoise-dark) / 0.6) 70%, hsl(var(--gold) / 0.12) 90%, hsl(var(--gold) / 0.18) 100%)" }}>
+    style={{ background: "linear-gradient(170deg, hsl(174 42% 28%) 0%, hsl(174 42% 35%) 30%, hsl(174 38% 40%) 55%, hsl(174 35% 38%) 80%, hsl(174 30% 32%) 100%)" }}>
 
+      {/* Subtle gold glow overlay */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 85%, hsl(43 50% 50% / 0.25) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 30% 50%, hsl(43 50% 50% / 0.12) 0%, transparent 60%)" }} />
       {/* Decorative */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 0.1 }} transition={{ duration: 1.2 }}
         className="absolute top-12 right-6 w-40 h-40 rounded-full border-2 border-primary-foreground/20" />
         <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 0.08 }} transition={{ duration: 1.2, delay: 0.2 }}
         className="absolute -top-12 -left-12 w-56 h-56 rounded-full border-2 border-primary-foreground/15" />
+        <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 0.06 }} transition={{ duration: 1, delay: 0.4 }}
+        className="absolute bottom-20 right-4 w-28 h-28 rounded-full bg-gold/15 blur-xl" />
+        <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 0.08 }} transition={{ duration: 1, delay: 0.3 }}
+        className="absolute bottom-40 -left-8 w-36 h-36 rounded-full bg-primary-foreground/10 blur-xl" />
         <div className="absolute top-16 right-24 w-3 h-3 rounded-full bg-gold/40" />
-        <div className="absolute bottom-20 right-4 w-28 h-28 rounded-full bg-gold/15 blur-xl" />
+        <div className="absolute top-32 left-10 w-2 h-2 rounded-full bg-gold/50" />
+        <div className="absolute bottom-32 right-16 w-2.5 h-2.5 rounded-full bg-primary-foreground/25" />
+        <div className="absolute top-1/2 left-6 w-2 h-2 rounded-full bg-gold/30" />
       </div>
 
       {/* Header */}
