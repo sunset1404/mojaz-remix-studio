@@ -58,6 +58,9 @@ const PaymentModal = ({
   const initPaymentForm = async () => {
     if (!user || formInitialized.current) return;
 
+    // Mark as initialized immediately to prevent concurrent calls
+    formInitialized.current = true;
+
     // Fetch student profile info for metadata
     const { data: profile } = await supabase
       .from("student_profiles")
@@ -80,6 +83,14 @@ const PaymentModal = ({
     const callbackUrl = buildCallbackUrl(sourceType, paymentMetadata);
 
     try {
+      // Ensure the container is present in the DOM before initializing
+      const container = document.getElementById(moyasarContainerId);
+      if (!container) {
+        throw new Error("Moyassar container element not found");
+      }
+      // Clear container to resolve React 18 StrictMode double mount issues
+      container.innerHTML = "";
+
       initMoyasarForm({
         elementId: moyasarContainerId,
         amountSar: numericPrice,
@@ -95,9 +106,10 @@ const PaymentModal = ({
           setErrorMessage(error?.message || "فشلت عملية الدفع");
         },
       });
-      formInitialized.current = true;
     } catch (err) {
       console.error("Failed to init Moyassar:", err);
+      // Revert flag to allow retry
+      formInitialized.current = false;
       setPaymentState("error");
       setErrorMessage("تعذر تحميل نموذج الدفع");
     }
@@ -257,7 +269,7 @@ const PaymentModal = ({
                   </div>
 
                   {/* Moyassar Payment Form Container */}
-                  <div id={moyasarContainerId} className="moyasar-form-container" />
+                  <div id={moyasarContainerId} className="moyasar-form-container min-h-[400px] w-full" />
 
                   {/* Security Badge */}
                   <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
