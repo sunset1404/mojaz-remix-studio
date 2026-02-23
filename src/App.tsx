@@ -72,6 +72,7 @@ import PaymentCallback from "./pages/PaymentCallback";
 import VideoCallPage from "./pages/VideoCallPage";
 import PublicVideoCall from "./pages/PublicVideoCall";
 import { IncomingCallListener } from "./components/video-call/IncomingCallListener";
+import { ReciterPresenceTracker } from "./components/ReciterPresenceTracker";
 
 const queryClient = new QueryClient();
 
@@ -212,6 +213,7 @@ const App = () => (
         <AuthProvider>
           <ScrollToTop />
           <IncomingCallListener />
+          <ReciterPresenceTracker />
           <AppLayout />
         </AuthProvider>
       </BrowserRouter>

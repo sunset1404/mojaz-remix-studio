@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOnlineReciters } from "@/hooks/useOnlineReciters";
 
 type Reciter = {
   id: string;
@@ -22,6 +23,7 @@ const Reciters = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [reciters, setReciters] = useState<Reciter[]>([]);
   const [loading, setLoading] = useState(true);
+  const onlineReciters = useOnlineReciters();
 
   useEffect(() => {
     const fetchReciters = async () => {
@@ -40,7 +42,7 @@ const Reciters = () => {
         .from("reciter_profiles")
         .select("id, user_id, full_name, preferred_track, stamp_url")
         .eq("status", "approved");
-      
+
       if (studentGender) {
         query = query.eq("gender", studentGender);
       }
@@ -60,9 +62,10 @@ const Reciters = () => {
 
   const filtered = reciters.filter((r) => {
     const matchSearch = r.full_name.includes(search) || r.preferred_track.includes(search);
+    const isOnline = onlineReciters.has(r.user_id);
     const matchFilter =
       filter === "all" ||
-      (filter === "available") || // all approved are "available"
+      (filter === "available" && isOnline) ||
       (filter === "favorites" && favorites.includes(r.id));
     return matchSearch && matchFilter;
   });
@@ -108,11 +111,10 @@ const Reciters = () => {
           <button
             key={tab.key}
             onClick={() => setFilter(tab.key)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-              filter === tab.key
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${filter === tab.key
                 ? "gradient-primary text-primary-foreground shadow-md"
                 : "bg-muted text-muted-foreground"
-            }`}
+              }`}
           >
             {tab.label}
           </button>
@@ -153,7 +155,12 @@ const Reciters = () => {
               ) : (
                 <User className="w-7 h-7 text-muted-foreground" />
               )}
-              <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card bg-green-500" />
+              {(() => {
+                const isOnline = onlineReciters.has(reciter.user_id);
+                return (
+                  <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                );
+              })()}
             </div>
 
             <div className="flex-1 min-w-0">
