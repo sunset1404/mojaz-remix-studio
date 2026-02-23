@@ -24,7 +24,11 @@ const Login = () => {
   }, []);
 
   if (showSplash) {
-    return <SplashScreen onFinish={handleSplashFinish} />;
+    return (
+      <div className="min-h-screen relative overflow-hidden">
+        <SplashScreen onFinish={handleSplashFinish} />
+      </div>
+    );
   }
 
   const handleLogin = async (e: React.FormEvent) => {
