@@ -21,13 +21,6 @@ const Login = () => {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    const skipOnce = sessionStorage.getItem("skip_login_intro_once") === "1";
-    if (skipOnce) {
-      sessionStorage.removeItem("skip_login_intro_once");
-      setStep(2);
-      return;
-    }
-
     const t1 = setTimeout(() => setStep(1), 900);
     const t2 = setTimeout(() => setStep(2), 2800);
     return () => { clearTimeout(t1); clearTimeout(t2); };
@@ -86,10 +79,10 @@ const Login = () => {
       <motion.div
         className="absolute left-1/2 -translate-x-1/2 pointer-events-none z-10"
         style={{ width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, hsl(43 50% 55% / 0.25) 0%, transparent 70%)" }}
-        initial={{ opacity: 0, scale: 0.5, top: "calc(38svh - 160px)" }}
+        initial={{ opacity: 0, scale: 0.5, top: "calc(38vh - 160px)" }}
         animate={settled
           ? { opacity: 0, scale: 0.3, top: "0px" }
-          : { opacity: 0.3, scale: 1, top: "calc(38svh - 160px)" }
+          : { opacity: 0.3, scale: 1, top: "calc(38vh - 160px)" }
         }
         transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
       />
@@ -115,23 +108,31 @@ const Login = () => {
       )}
 
       {/* ====== LOGO AREA ====== */}
-      <div
-        className={`relative z-20 flex flex-col items-center ${settled ? "pt-14" : "min-h-[100svh] justify-center"}`}
-      >
+      <div className="relative z-20 flex flex-col items-center" style={{ minHeight: settled ? "auto" : "100vh" }}>
+        {/* This spacer pushes the logo to center or top */}
+        <motion.div
+          initial={{ height: "calc(38vh - 72px)" }}
+          animate={{ height: settled ? 56 : "calc(38vh - 72px)" }}
+          transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
+        />
+
         {/* Logo container */}
         <motion.div
-          layout="position"
           className="flex flex-col items-center"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut", layout: { duration: 0.9, ease: [0.25, 0.1, 0.25, 1] } }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 120, damping: 14, delay: 0.1 }}
         >
-          <div className="relative">
+          <motion.div
+            className="relative"
+            animate={!settled ? { y: [0, -6, 0] } : { y: 0 }}
+            transition={!settled ? { duration: 3, repeat: Infinity, ease: "easeInOut" } : { duration: 0.6, ease: "easeOut" }}
+          >
             <motion.div
               className="rounded-3xl overflow-hidden shadow-lg border-2 border-primary-foreground/30 p-1 bg-card/90 backdrop-blur-sm"
-              initial={false}
+              initial={{ width: 144, height: 144 }}
               animate={settled ? { width: 96, height: 96 } : { width: 144, height: 144 }}
-              transition={{ duration: 1.0, ease: [0.25, 0.1, 0.25, 1] }}
+              transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
             >
               <img src={logoMojaz} alt="مجاز" className="w-full h-full object-contain rounded-2xl" />
             </motion.div>
@@ -148,7 +149,7 @@ const Login = () => {
                 />
               </div>
             )}
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Text area */}

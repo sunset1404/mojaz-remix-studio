@@ -1,5 +1,3 @@
-import { useState, useCallback } from "react";
-import { AnimatePresence } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -75,7 +73,6 @@ import VideoCallPage from "./pages/VideoCallPage";
 import PublicVideoCall from "./pages/PublicVideoCall";
 import { IncomingCallListener } from "./components/video-call/IncomingCallListener";
 import { ReciterPresenceTracker } from "./components/ReciterPresenceTracker";
-import SplashScreen from "./components/SplashScreen";
 
 const queryClient = new QueryClient();
 
@@ -184,12 +181,6 @@ const AppLayout = () => {
   const { role, loading } = useAuth();
   const isNative = Capacitor.isNativePlatform();
   const isAdmin = !loading && role === "admin" && !isNative;
-  const [showSplash, setShowSplash] = useState(!isAdmin);
-  const handleSplashFinish = useCallback(() => {
-    // If we land on /login right after app splash, skip the login-page intro once
-    sessionStorage.setItem("skip_login_intro_once", "1");
-    setShowSplash(false);
-  }, []);
 
   if (isAdmin) {
     return (
@@ -206,11 +197,8 @@ const AppLayout = () => {
 
   return (
     <SidebarProvider>
-      <div className="w-full sm:max-w-md mx-auto relative min-h-screen bg-background sm:shadow-2xl overflow-hidden">
-        <AnimatePresence>
-          {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
-        </AnimatePresence>
-        {!showSplash && <AppRoutes />}
+      <div className="w-full sm:max-w-md mx-auto relative min-h-screen bg-background sm:shadow-2xl">
+        <AppRoutes />
       </div>
     </SidebarProvider>
   );
