@@ -320,12 +320,27 @@ const ReciterDetail = () => {
               <div>
                 <p className="text-xs text-muted-foreground mb-2">الأوقات المفضلة</p>
                 <div className="flex flex-wrap gap-2">
-                  {reciter.preferred_times.map((time, i) => (
-                    <span key={i} className="text-xs px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 text-primary font-semibold flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-primary/70" />
-                      {time}
-                    </span>
-                  ))}
+                  {reciter.preferred_times.map((time, i) => {
+                    const convertTo12 = (t: string) => {
+                      const match = t.match(/^(\d{1,2}):(\d{2})$/);
+                      if (!match) return t;
+                      let h = parseInt(match[1]);
+                      const m = match[2];
+                      const period = h >= 12 ? "م" : "ص";
+                      if (h === 0) h = 12;
+                      else if (h > 12) h -= 12;
+                      return `${h}:${m} ${period}`;
+                    };
+                    const formatted = time.includes(" - ")
+                      ? time.split(" - ").map(convertTo12).join(" - ")
+                      : convertTo12(time);
+                    return (
+                      <span key={i} className="text-xs px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 text-primary font-semibold flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-primary/70" />
+                        {formatted}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             )}
