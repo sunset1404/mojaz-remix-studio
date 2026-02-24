@@ -21,6 +21,13 @@ const Login = () => {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
+    const skipOnce = sessionStorage.getItem("skip_login_intro_once") === "1";
+    if (skipOnce) {
+      sessionStorage.removeItem("skip_login_intro_once");
+      setStep(2);
+      return;
+    }
+
     const t1 = setTimeout(() => setStep(1), 900);
     const t2 = setTimeout(() => setStep(2), 2800);
     return () => { clearTimeout(t1); clearTimeout(t2); };
@@ -79,10 +86,10 @@ const Login = () => {
       <motion.div
         className="absolute left-1/2 -translate-x-1/2 pointer-events-none z-10"
         style={{ width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, hsl(43 50% 55% / 0.25) 0%, transparent 70%)" }}
-        initial={{ opacity: 0, scale: 0.5, top: "calc(38vh - 160px)" }}
+        initial={{ opacity: 0, scale: 0.5, top: "calc(38svh - 160px)" }}
         animate={settled
           ? { opacity: 0, scale: 0.3, top: "0px" }
-          : { opacity: 0.3, scale: 1, top: "calc(38vh - 160px)" }
+          : { opacity: 0.3, scale: 1, top: "calc(38svh - 160px)" }
         }
         transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
       />
@@ -111,8 +118,8 @@ const Login = () => {
       <div className="relative z-20 flex flex-col items-center" style={{ minHeight: settled ? "auto" : "100vh" }}>
         {/* This spacer pushes the logo to center or top */}
         <motion.div
-          initial={{ height: "calc(38vh - 72px)" }}
-          animate={{ height: settled ? 56 : "calc(38vh - 72px)" }}
+          initial={{ height: "calc(38svh - 72px)" }}
+          animate={{ height: settled ? 56 : "calc(38svh - 72px)" }}
           transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
         />
 

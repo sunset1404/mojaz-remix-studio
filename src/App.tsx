@@ -185,7 +185,11 @@ const AppLayout = () => {
   const isNative = Capacitor.isNativePlatform();
   const isAdmin = !loading && role === "admin" && !isNative;
   const [showSplash, setShowSplash] = useState(!isAdmin);
-  const handleSplashFinish = useCallback(() => setShowSplash(false), []);
+  const handleSplashFinish = useCallback(() => {
+    // If we land on /login right after app splash, skip the login-page intro once
+    sessionStorage.setItem("skip_login_intro_once", "1");
+    setShowSplash(false);
+  }, []);
 
   if (isAdmin) {
     return (
