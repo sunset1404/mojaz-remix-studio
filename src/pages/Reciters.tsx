@@ -39,6 +39,7 @@ const Reciters = () => {
   const [filter, setFilter] = useState<FilterType>("all");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [reciters, setReciters] = useState<Reciter[]>([]);
+  const [queueCounts, setQueueCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [callingId, setCallingId] = useState<string | null>(null);
   const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
@@ -143,6 +144,23 @@ const Reciters = () => {
       }));
 
       setReciters(recitersWithCerts);
+
+      // Fetch queue counts for all reciters
+      if (reciterUserIds.length > 0) {
+        const { data: queueData } = await supabase
+          .from("video_call_sessions")
+          .select("reciter_id")
+          .in("reciter_id", reciterUserIds)
+          .eq("status", "waiting")
+          .eq("caller_role", "student");
+        
+        const counts: Record<string, number> = {};
+        (queueData ?? []).forEach(q => {
+          counts[q.reciter_id] = (counts[q.reciter_id] || 0) + 1;
+        });
+        setQueueCounts(counts);
+      }
+
       setLoading(false);
     };
     fetchReciters();
@@ -265,6 +283,23 @@ const Reciters = () => {
                   ? reciter.certifications.join(" • ")
                   : reciter.preferred_track || "—"}
               </p>
+              {(() => {
+                const qCount = queueCounts[reciter.user_id] || 0;
+                const estimatedMinutes = qCount * 15;
+                return qCount > 0 ? (
+                  <div className="flex items-center gap-1 mt-1">
+                    <Clock className="w-3 h-3 text-gold" />
+                    <span className="text-[10px] font-semibold text-gold">
+                      {qCount} في الطابور • ~{estimatedMinutes} د انتظار
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 mt-1">
+                    <Clock className="w-3 h-3 text-primary" />
+                    <span className="text-[10px] font-semibold text-primary">متاح فوراً</span>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="flex items-center gap-1.5">
