@@ -165,8 +165,30 @@ const Subscription = () => {
         </motion.div>
       </div>
 
+      {/* Gift Banner - Top */}
+      <div className="px-5 mt-5">
+        <Link to="/gift">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.15 }}
+            whileTap={{ scale: 0.98 }}
+            className="rounded-2xl bg-gradient-to-r from-gold to-[hsl(43,74%,38%)] p-5 flex items-center gap-4 shadow-xl"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+              <Gift className="w-7 h-7 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-white font-bold text-base">أهدِ اشتراكًا لمن تحب 🎁</h3>
+              <p className="text-white/70 text-sm mt-0.5">هدية ذات أثر باقٍ</p>
+            </div>
+            <ChevronLeft className="w-5 h-5 text-white/60" />
+          </motion.div>
+        </Link>
+      </div>
+
       {/* Plans */}
-      <div className="px-5 mt-6 space-y-4">
+      <div className="px-5 mt-5 space-y-4">
         {plans.map((plan, i) => {
           const Icon = PlanIcon(plan.icon);
           const isFree = plan.price_monthly === 0;
@@ -175,7 +197,7 @@ const Subscription = () => {
               key={plan.id}
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: i * 0.15 }}
+              transition={{ delay: 0.2 + i * 0.15 }}
               className={`rounded-2xl p-5 relative overflow-hidden ${plan.is_popular
                 ? "bg-gradient-to-br from-gold to-[hsl(43,74%,45%)] text-white shadow-xl"
                 : "glass-card"
@@ -282,31 +304,6 @@ const Subscription = () => {
             </motion.div>
           );
         })}
-      </div>
-
-      {/* Extra Hours Section */}
-      <ExtraHoursSection onPay={(pkg) => setPaymentModal({ open: true, planName: `ساعات إضافية - ${pkg.label}`, price: pkg.price, subscriptionType: "ساعات إضافية", durationMonths: 0, sourceType: "extra_hours", metadata: { hours: pkg.hours, package_label: pkg.label } })} />
-
-      {/* Gift Banner */}
-      <div className="px-5 mt-4">
-        <Link to="/gift">
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            whileTap={{ scale: 0.98 }}
-            className="rounded-2xl bg-gradient-to-r from-[hsl(43,74%,49%)] to-[hsl(43,74%,38%)] p-4 flex items-center gap-3 shadow-lg"
-          >
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-              <Gift className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-white font-bold text-sm">أهدِ اشتراكًا لمن تحب 🎁</h3>
-              <p className="text-white/70 text-xs">هدية ذات أثر باقٍ</p>
-            </div>
-            <ChevronLeft className="w-4 h-4 text-white/60" />
-          </motion.div>
-        </Link>
       </div>
 
       <PaymentModal
