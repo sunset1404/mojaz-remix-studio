@@ -240,6 +240,7 @@ const Reciters = () => {
         {!loading && filtered.map((reciter, i) => (
           <div
             key={reciter.id}
+            onClick={() => navigate(`/reciters/${reciter.user_id}`)}
             className="glass-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:shadow-lg active:scale-[0.98] transition-all animate-fade-in"
             style={{ animationDelay: `${i * 40}ms`, animationFillMode: 'both' }}
           >
