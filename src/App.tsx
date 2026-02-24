@@ -73,6 +73,7 @@ import PaymentCallback from "./pages/PaymentCallback";
 import VideoCallPage from "./pages/VideoCallPage";
 import PublicVideoCall from "./pages/PublicVideoCall";
 import { IncomingCallListener } from "./components/video-call/IncomingCallListener";
+import { StudentIncomingCallListener } from "./components/video-call/StudentIncomingCallListener";
 import { ReciterPresenceTracker } from "./components/ReciterPresenceTracker";
 
 const queryClient = new QueryClient();
@@ -206,6 +207,13 @@ const AppLayout = () => {
   );
 };
 
+const CallListeners = () => {
+  const { role } = useAuth();
+  if (role === "reciter") return <IncomingCallListener />;
+  if (role === "student") return <StudentIncomingCallListener />;
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -214,7 +222,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ScrollToTop />
-          <IncomingCallListener />
+          <CallListeners />
           <ReciterPresenceTracker />
           <AppLayout />
         </AuthProvider>

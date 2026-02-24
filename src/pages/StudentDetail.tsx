@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { CallLinkModal } from "@/components/video-call/CallLinkModal";
 import {
   ArrowRight, User, BookOpen, Clock, Trophy, Award,
   Star, Calendar, Phone, Video, MapPin, GraduationCap,
@@ -19,9 +18,7 @@ const StudentDetail = () => {
   const [achievements, setAchievements] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [callModalOpen, setCallModalOpen] = useState(false);
-  const [callLink, setCallLink] = useState("");
-  const [callRoomId, setCallRoomId] = useState("");
+  const [isCalling, setIsCalling] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -259,49 +256,35 @@ const StudentDetail = () => {
           </button>
           <button
             onClick={async () => {
-              if (!user) return;
+              if (!user || !student?.user_id || isCalling) return;
+              setIsCalling(true);
               try {
-                const roomId = crypto.randomUUID();
-                const accessToken = crypto.randomUUID();
-                await (supabase as any)
-                  .from("video_call_sessions")
-                  .insert({
-                    room_id: roomId,
-                    reciter_id: user.id,
-                    student_id: student?.user_id || null,
-                    access_token: accessToken,
-                    student_name: student?.full_name || "",
-                    status: "waiting",
-                    reciter_joined_at: new Date().toISOString(),
-                  });
-                const baseUrl = window.location.origin;
-                setCallLink(`${baseUrl}/call/join/${accessToken}`);
-                setCallRoomId(roomId);
-                setCallModalOpen(true);
-              } catch {
+                const { data, error } = await supabase.functions.invoke("reciter-call", {
+                  body: { student_id: student.user_id },
+                });
+
+                if (error) throw error;
+                if (data?.error) throw new Error(data.error);
+
+                navigate(`/call/${data.room_id}`);
+              } catch (err: any) {
                 toast({
                   title: "خطأ",
-                  description: "فشل في إنشاء جلسة المكالمة",
+                  description: err?.message || "فشل في بدء المكالمة",
                   variant: "destructive",
                 });
+              } finally {
+                setIsCalling(false);
               }
             }}
-            className="flex-1 bg-primary/10 text-primary py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+            disabled={isCalling}
+            className="flex-1 bg-primary/10 text-primary py-3 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
           >
             <Video className="w-5 h-5" />
-            مكالمة فيديو
+            {isCalling ? "جاري الاتصال..." : "مكالمة فيديو"}
           </button>
         </motion.div>
       </div>
-
-      {/* Call Link Modal */}
-      <CallLinkModal
-        isOpen={callModalOpen}
-        onClose={() => setCallModalOpen(false)}
-        callLink={callLink}
-        calleeName={student?.full_name || ""}
-        onStartCall={() => navigate(`/call/${callRoomId}`)}
-      />
     </div>
   );
 };

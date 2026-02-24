@@ -8,25 +8,22 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 interface IncomingCall {
     id: string;
     room_id: string;
-    student_name: string;
 }
 
-export const IncomingCallListener = () => {
+export const StudentIncomingCallListener = () => {
     const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         let channel: RealtimeChannel;
-        let userId: string;
 
         const setupListener = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) return;
 
-            userId = session.user.id;
+            const userId = session.user.id;
 
-            // Subscribe to new sessions assigned to this reciter
-            channel = supabase.channel(`incoming:${userId}`);
+            channel = supabase.channel(`incoming-student:${userId}`);
             channel
                 .on(
                     'postgres_changes',
@@ -34,16 +31,14 @@ export const IncomingCallListener = () => {
                         event: 'INSERT',
                         schema: 'public',
                         table: 'video_call_sessions',
-                        filter: `reciter_id=eq.${userId}`
+                        filter: `student_id=eq.${userId}`
                     },
                     (payload) => {
-                        console.log('Incoming call INSERT event:', payload);
                         const callerRole = payload.new.caller_role || 'student';
-                        if (payload.new.status === 'waiting' && callerRole === 'student') {
+                        if (payload.new.status === 'waiting' && callerRole === 'reciter') {
                             setIncomingCall({
                                 id: payload.new.id,
                                 room_id: payload.new.room_id,
-                                student_name: payload.new.student_name || 'طالب',
                             });
                         }
                     }
@@ -54,32 +49,28 @@ export const IncomingCallListener = () => {
                         event: 'UPDATE',
                         schema: 'public',
                         table: 'video_call_sessions',
-                        filter: `reciter_id=eq.${userId}`
+                        filter: `student_id=eq.${userId}`
                     },
                     (payload) => {
-                        console.log('Call session UPDATE event:', payload);
                         if (payload.new.status !== 'waiting') {
                             setIncomingCall(null);
                         }
                     }
                 )
-                .subscribe((status) => {
-                    console.log('Incoming call channel status:', status);
-                });
+                .subscribe();
         };
 
         setupListener();
 
-        // Check for missed calls if component remounts
         const checkExistingCalls = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) return;
 
             const { data } = await (supabase as any)
                 .from('video_call_sessions')
-                .select('id, room_id, student_name, caller_role')
-                .eq('reciter_id', session.user.id)
-                .eq('caller_role', 'student')
+                .select('id, room_id, caller_role')
+                .eq('student_id', session.user.id)
+                .eq('caller_role', 'reciter')
                 .eq('status', 'waiting')
                 .order('created_at', { ascending: false })
                 .limit(1)
@@ -89,14 +80,12 @@ export const IncomingCallListener = () => {
                 setIncomingCall({
                     id: data.id,
                     room_id: data.room_id,
-                    student_name: data.student_name || 'طالب',
                 });
             }
         };
 
         checkExistingCalls();
 
-        // Cleanup
         return () => {
             if (channel) {
                 supabase.removeChannel(channel);
@@ -108,15 +97,14 @@ export const IncomingCallListener = () => {
         if (!incomingCall) return;
 
         try {
-            // Update status to active
             await supabase
                 .from('video_call_sessions')
-                .update({ status: 'active', reciter_joined_at: new Date().toISOString() })
+                .update({ status: 'active', student_joined_at: new Date().toISOString() })
                 .eq('id', incomingCall.id);
 
             const roomId = incomingCall.room_id;
             setIncomingCall(null);
-            navigate(`/call/${roomId}?role=callee`);
+            navigate(`/call/${roomId}`);
         } catch (error) {
             console.error('Failed to accept call:', error);
         }
@@ -148,9 +136,7 @@ export const IncomingCallListener = () => {
 
                 <div className="text-center space-y-2">
                     <h3 className="text-2xl font-bold text-gray-900">مكالمة واردة</h3>
-                    <p className="text-gray-500 text-lg">
-                        من الطالب/ة <span className="font-semibold text-primary">{incomingCall.student_name}</span>
-                    </p>
+                    <p className="text-gray-500 text-lg">من المقرئ</p>
                 </div>
 
                 <div className="flex gap-4 w-full mt-4">

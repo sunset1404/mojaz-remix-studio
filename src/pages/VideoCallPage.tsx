@@ -39,23 +39,43 @@ const VideoCallPage = () => {
                     return;
                 }
 
-                // Determine role
-                if (session.student_id === user.id) {
-                    setCallRole("caller");
-                    setOtherUserName("المقرئ");
-                } else {
-                    setCallRole("callee");
-                    setOtherUserName(session.student_name || "الطالب");
+                const isStudent = session.student_id === user.id;
+                const callerRole = session.caller_role || (isStudent ? "student" : "reciter");
 
-                    // Update reciter join time
-                    if (!session.reciter_joined_at) {
-                        await (supabase as any)
-                            .from("video_call_sessions")
-                            .update({
-                                reciter_joined_at: new Date().toISOString(),
-                                status: "active",
-                            })
-                            .eq("room_id", roomId);
+                if (callerRole === "student") {
+                    if (isStudent) {
+                        setCallRole("caller");
+                        setOtherUserName("المقرئ");
+                    } else {
+                        setCallRole("callee");
+                        setOtherUserName(session.student_name || "الطالب");
+
+                        if (!session.reciter_joined_at) {
+                            await (supabase as any)
+                                .from("video_call_sessions")
+                                .update({
+                                    reciter_joined_at: new Date().toISOString(),
+                                    status: "active",
+                                })
+                                .eq("room_id", roomId);
+                        }
+                    }
+                } else {
+                    if (isStudent) {
+                        setCallRole("callee");
+                        setOtherUserName("المقرئ");
+                    } else {
+                        setCallRole("caller");
+                        setOtherUserName(session.student_name || "الطالب");
+
+                        if (!session.reciter_joined_at) {
+                            await (supabase as any)
+                                .from("video_call_sessions")
+                                .update({
+                                    reciter_joined_at: new Date().toISOString(),
+                                })
+                                .eq("room_id", roomId);
+                        }
                     }
                 }
 
