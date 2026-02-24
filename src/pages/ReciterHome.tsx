@@ -48,8 +48,24 @@ const ReciterHome = () => {
         .from("student_profiles")
         .select("user_id, full_name, gender, preferred_track, preferred_riwaya")
         .eq("assigned_reciter_id", user.id)
-        .then(({ data }) => {
-          if (data) setAssignedStudents(data);
+        .then(async ({ data }) => {
+          if (data && data.length > 0) {
+            const userIds = data.map(s => s.user_id);
+            const { data: profiles } = await supabase
+              .from("profiles")
+              .select("user_id, avatar_url")
+              .in("user_id", userIds);
+            const avatarMap: Record<string, string | null> = {};
+            profiles?.forEach(p => {
+              if (p.avatar_url) {
+                const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(p.avatar_url);
+                avatarMap[p.user_id] = urlData?.publicUrl || null;
+              }
+            });
+            setAssignedStudents(data.map(s => ({ ...s, avatarUrl: avatarMap[s.user_id] || null })));
+          } else {
+            setAssignedStudents(data || []);
+          }
         });
     }
     // Fetch unread notifications count
@@ -263,7 +279,11 @@ const ReciterHome = () => {
                     <Link to="/my-students" className="flex flex-col items-center gap-2">
                       <div className="relative">
                         <div className="w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md bg-muted flex items-center justify-center">
-                          <User className="w-8 h-8 text-muted-foreground" />
+                          {student.avatarUrl ? (
+                            <img src={student.avatarUrl} alt={student.full_name} className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-8 h-8 text-muted-foreground" />
+                          )}
                         </div>
                       </div>
                       <span className="text-xs font-semibold text-foreground text-center leading-tight line-clamp-1">
