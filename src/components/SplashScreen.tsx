@@ -48,7 +48,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
       {/* Splash glow */}
       <motion.div
         className="absolute left-1/2 -translate-x-1/2 pointer-events-none z-10"
-        style={{ width: 320, height: 320, borderRadius: "50%", top: "calc(38vh - 160px)", background: "radial-gradient(circle, hsl(43 50% 55% / 0.25) 0%, transparent 70%)" }}
+        style={{ width: 320, height: 320, borderRadius: "50%", top: "calc(38svh - 160px)", background: "radial-gradient(circle, hsl(43 50% 55% / 0.25) 0%, transparent 70%)" }}
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 0.3, scale: 1 }}
         transition={{ duration: 1.2 }}
