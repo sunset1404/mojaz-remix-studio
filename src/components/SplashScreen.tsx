@@ -17,7 +17,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+      className="absolute inset-0 z-[9999] flex flex-col items-center justify-center"
       style={{
         background:
           "linear-gradient(170deg, hsl(174 42% 28%) 0%, hsl(174 42% 35%) 30%, hsl(174 38% 40%) 55%, hsl(174 35% 38%) 80%, hsl(174 30% 32%) 100%)",

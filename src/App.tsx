@@ -184,6 +184,8 @@ const AppLayout = () => {
   const { role, loading } = useAuth();
   const isNative = Capacitor.isNativePlatform();
   const isAdmin = !loading && role === "admin" && !isNative;
+  const [showSplash, setShowSplash] = useState(!isAdmin);
+  const handleSplashFinish = useCallback(() => setShowSplash(false), []);
 
   if (isAdmin) {
     return (
@@ -200,36 +202,31 @@ const AppLayout = () => {
 
   return (
     <SidebarProvider>
-      <div className="w-full sm:max-w-md mx-auto relative min-h-screen bg-background sm:shadow-2xl">
-        <AppRoutes />
+      <div className="w-full sm:max-w-md mx-auto relative min-h-screen bg-background sm:shadow-2xl overflow-hidden">
+        <AnimatePresence>
+          {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
+        </AnimatePresence>
+        {!showSplash && <AppRoutes />}
       </div>
     </SidebarProvider>
   );
 };
 
-const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
-  const handleSplashFinish = useCallback(() => setShowSplash(false), []);
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AnimatePresence>
-          {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
-        </AnimatePresence>
-        <BrowserRouter>
-          <AuthProvider>
-            <ScrollToTop />
-            <IncomingCallListener />
-            <ReciterPresenceTracker />
-            <AppLayout />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-};
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <ScrollToTop />
+          <IncomingCallListener />
+          <ReciterPresenceTracker />
+          <AppLayout />
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;
