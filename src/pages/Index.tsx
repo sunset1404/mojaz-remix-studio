@@ -13,8 +13,8 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogAction,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
+  AlertDialogCancel } from
+"@/components/ui/alert-dialog";
 
 type StudentStats = {
   parts_memorized: number;
@@ -63,11 +63,11 @@ const promoSlides = [
 
 
 const quickStatsConfig = [
-  { label: "أجزاء محفوظة", key: "parts_memorized" as keyof StudentStats, icon: BookOpen, color: "primary" },
-  { label: "نجوم مكتسبة", key: "sessions_count" as keyof StudentStats, icon: Star, color: "gold" },
-  { label: "التزام%", key: "commitment_rate" as keyof StudentStats, icon: Calendar, color: "primary" },
-  { label: "شهادات", key: "certificates_count" as keyof StudentStats, icon: Trophy, color: "gold" },
-];
+{ label: "أجزاء محفوظة", key: "parts_memorized" as keyof StudentStats, icon: BookOpen, color: "primary" },
+{ label: "نجوم مكتسبة", key: "sessions_count" as keyof StudentStats, icon: Star, color: "gold" },
+{ label: "التزام%", key: "commitment_rate" as keyof StudentStats, icon: Calendar, color: "primary" },
+{ label: "شهادات", key: "certificates_count" as keyof StudentStats, icon: Trophy, color: "gold" }];
+
 
 const features = [
 { title: "خطتي الأسبوعية", desc: "تابع تقدمك اليومي", icon: CalendarDays, color: "primary", path: "/weekly-plan" },
@@ -82,7 +82,7 @@ const Index = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [topReciters, setTopReciters] = useState<ReciterPreview[]>([]);
   const [activeSubscription, setActiveSubscription] = useState<ActiveSubscription | null>(null);
-  const [popupMessage, setPopupMessage] = useState<{ id: string; title: string; message: string; icon: string; color_scheme: string } | null>(null);
+  const [popupMessage, setPopupMessage] = useState<{id: string;title: string;message: string;icon: string;color_scheme: string;} | null>(null);
   const [showExpiredDialog, setShowExpiredDialog] = useState(false);
   const showDebug = import.meta.env.MODE !== "production";
   const [debugLoading, setDebugLoading] = useState(false);
@@ -94,88 +94,88 @@ const Index = () => {
   useEffect(() => {
     if (!user) return;
     // Fetch student profile (name + gender for filtering)
-    supabase.from("student_profiles").select("full_name, gender").eq("user_id", user.id).maybeSingle()
-      .then(({ data }) => {
-        if (data?.full_name) {
-          setUserName(data.full_name);
-        } else {
-          supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle()
-            .then(({ data: p }) => { if (p?.full_name) setUserName(p.full_name); });
-        }
+    supabase.from("student_profiles").select("full_name, gender").eq("user_id", user.id).maybeSingle().
+    then(({ data }) => {
+      if (data?.full_name) {
+        setUserName(data.full_name);
+      } else {
+        supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle().
+        then(({ data: p }) => {if (p?.full_name) setUserName(p.full_name);});
+      }
 
-        // Fetch approved reciters filtered by same gender
-        let reciterQuery = supabase.from("reciter_profiles")
-          .select("user_id, full_name, preferred_track, stamp_url")
-          .eq("status", "approved")
-          .limit(6);
-        
-        if (data?.gender) {
-          reciterQuery = reciterQuery.eq("gender", data.gender);
-        }
+      // Fetch approved reciters filtered by same gender
+      let reciterQuery = supabase.from("reciter_profiles").
+      select("user_id, full_name, preferred_track, stamp_url").
+      eq("status", "approved").
+      limit(6);
 
-        reciterQuery.then(({ data: recitersData }) => {
-          if (recitersData) {
-            setTopReciters(recitersData.map((r) => ({
-              user_id: r.user_id,
-              full_name: r.full_name,
-              preferred_track: r.preferred_track,
-              avatar_url: r.stamp_url ?? null,
-            })));
-          }
-        });
+      if (data?.gender) {
+        reciterQuery = reciterQuery.eq("gender", data.gender);
+      }
+
+      reciterQuery.then(({ data: recitersData }) => {
+        if (recitersData) {
+          setTopReciters(recitersData.map((r) => ({
+            user_id: r.user_id,
+            full_name: r.full_name,
+            preferred_track: r.preferred_track,
+            avatar_url: r.stamp_url ?? null
+          })));
+        }
       });
+    });
 
     // Fetch active subscription
-    supabase.from("student_subscriptions")
-      .select("subscription_type, amount, duration_months, start_date, end_date, status")
-      .eq("student_id", user.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          // Check if subscription has expired
-          const endDate = new Date(data.end_date);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          if (endDate < today) {
-            // Mark as expired in DB
-            supabase.from("student_subscriptions")
-              .update({ status: "expired" })
-              .eq("student_id", user.id)
-              .eq("status", "active")
-              .lte("end_date", today.toISOString().split("T")[0])
-              .then(() => {
-                // Show expired dialog only once per session
-                const expiredKey = `subscription_expired_shown_${user.id}`;
-                if (!sessionStorage.getItem(expiredKey)) {
-                  setShowExpiredDialog(true);
-                  sessionStorage.setItem(expiredKey, "1");
-                }
-              });
-          } else {
-            setActiveSubscription(data);
-          }
+    supabase.from("student_subscriptions").
+    select("subscription_type, amount, duration_months, start_date, end_date, status").
+    eq("student_id", user.id).
+    eq("status", "active").
+    order("created_at", { ascending: false }).
+    limit(1).
+    maybeSingle().
+    then(({ data }) => {
+      if (data) {
+        // Check if subscription has expired
+        const endDate = new Date(data.end_date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (endDate < today) {
+          // Mark as expired in DB
+          supabase.from("student_subscriptions").
+          update({ status: "expired" }).
+          eq("student_id", user.id).
+          eq("status", "active").
+          lte("end_date", today.toISOString().split("T")[0]).
+          then(() => {
+            // Show expired dialog only once per session
+            const expiredKey = `subscription_expired_shown_${user.id}`;
+            if (!sessionStorage.getItem(expiredKey)) {
+              setShowExpiredDialog(true);
+              sessionStorage.setItem(expiredKey, "1");
+            }
+          });
         } else {
-          // Check if there's any expired subscription to show dialog
-          supabase.from("student_subscriptions")
-            .select("id")
-            .eq("student_id", user.id)
-            .eq("status", "expired")
-            .limit(1)
-            .maybeSingle()
-            .then(({ data: expired }) => {
-              if (expired) {
-                const expiredKey = `subscription_expired_shown_${user.id}`;
-                if (!sessionStorage.getItem(expiredKey)) {
-                  setShowExpiredDialog(true);
-                  sessionStorage.setItem(expiredKey, "1");
-                }
-              }
-            });
+          setActiveSubscription(data);
         }
-      });
+      } else {
+        // Check if there's any expired subscription to show dialog
+        supabase.from("student_subscriptions").
+        select("id").
+        eq("student_id", user.id).
+        eq("status", "expired").
+        limit(1).
+        maybeSingle().
+        then(({ data: expired }) => {
+          if (expired) {
+            const expiredKey = `subscription_expired_shown_${user.id}`;
+            if (!sessionStorage.getItem(expiredKey)) {
+              setShowExpiredDialog(true);
+              sessionStorage.setItem(expiredKey, "1");
+            }
+          }
+        });
+      }
+    });
   }, [user]);
 
   const fetchDebugData = useCallback(async () => {
@@ -184,24 +184,24 @@ const Index = () => {
     setDebugError("");
     try {
       const [paymentsRes, creditsRes, txRes] = await Promise.all([
-        supabase
-          .from("payment_invoice_metadata")
-          .select("id, status, amount_sar, source_type, moyassar_payment_id, created_at")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(5),
-        (supabase as any)
-          .from("student_hour_credits")
-          .select("hours, updated_at")
-          .eq("user_id", user.id)
-          .maybeSingle(),
-        supabase
-          .from("transactions")
-          .select("id, title, amount, status, date")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(5),
-      ]);
+      supabase.
+      from("payment_invoice_metadata").
+      select("id, status, amount_sar, source_type, moyassar_payment_id, created_at").
+      eq("user_id", user.id).
+      order("created_at", { ascending: false }).
+      limit(5),
+      (supabase as any).
+      from("student_hour_credits").
+      select("hours, updated_at").
+      eq("user_id", user.id).
+      maybeSingle(),
+      supabase.
+      from("transactions").
+      select("id, title, amount, status, date").
+      eq("user_id", user.id).
+      order("created_at", { ascending: false }).
+      limit(5)]
+      );
 
       if (paymentsRes.error || creditsRes.error || txRes.error) {
         throw new Error("تعذر تحميل بيانات الاختبار");
@@ -230,29 +230,29 @@ const Index = () => {
 
     const checkPopups = async () => {
       // Fetch all active popup messages for students
-      const { data: popups } = await supabase
-        .from("popup_messages" as any)
-        .select("*")
-        .eq("target_role", "student")
-        .eq("is_active", true);
+      const { data: popups } = await supabase.
+      from("popup_messages" as any).
+      select("*").
+      eq("target_role", "student").
+      eq("is_active", true);
       if (!popups || popups.length === 0) return;
 
       // Fetch already-shown events from DB
-      const { data: viewedRows } = await supabase
-        .from("popup_message_views" as any)
-        .select("trigger_event")
-        .eq("user_id", user.id);
+      const { data: viewedRows } = await supabase.
+      from("popup_message_views" as any).
+      select("trigger_event").
+      eq("user_id", user.id);
       const viewedEvents = new Set((viewedRows || []).map((r: any) => r.trigger_event));
 
       // Check for recent certificates (last 7 days)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const { data: recentCerts } = await supabase
-        .from("certificates")
-        .select("id, type, created_at")
-        .eq("user_id", user.id)
-        .gte("created_at", sevenDaysAgo.toISOString())
-        .order("created_at", { ascending: false });
+      const { data: recentCerts } = await supabase.
+      from("certificates").
+      select("id, type, created_at").
+      eq("user_id", user.id).
+      gte("created_at", sevenDaysAgo.toISOString()).
+      order("created_at", { ascending: false });
 
       const triggeredEvents: string[] = [];
 
@@ -274,13 +274,13 @@ const Index = () => {
             title: matching.title,
             message: matching.message,
             icon: matching.icon,
-            color_scheme: matching.color_scheme,
+            color_scheme: matching.color_scheme
           });
           // Persist in DB so it never shows again
           await supabase.from("popup_message_views" as any).insert({
             user_id: user.id,
             trigger_event: event,
-            popup_message_id: matching.id,
+            popup_message_id: matching.id
           });
           break;
         }
@@ -310,11 +310,11 @@ const Index = () => {
           className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full overflow-hidden ring-2 ring-primary/20 bg-muted flex items-center justify-center shrink-0">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="صورة المستخدم" className="w-full h-full object-cover" />
-              ) : (
-                <User className="w-5 h-5 text-muted-foreground" />
-              )}
+              {avatarUrl ?
+              <img src={avatarUrl} alt="صورة المستخدم" className="w-full h-full object-cover" /> :
+
+              <User className="w-5 h-5 text-muted-foreground" />
+              }
             </div>
           <h1 className="text-2xl font-bold text-foreground font-cairo">
               أهلاً {userName ? userName.split(" ").slice(0, 2).join(" ") : "بك"} 👋
@@ -322,12 +322,12 @@ const Index = () => {
           </div>
           <button
             onClick={() => navigate("/notifications")}
-            className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative"
-          >
+            className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative">
+
             <Bell className="w-5 h-5 text-primary" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-gold rounded-full border-2 border-background" />
-            )}
+            {unreadCount > 0 &&
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-gold rounded-full border-2 border-background" />
+            }
           </button>
         </motion.div>
       </div>
@@ -394,20 +394,20 @@ const Index = () => {
             const value = studentStats ? studentStats[stat.key] : 0;
             const displayValue = stat.key === "commitment_rate" ? `${Math.round(Number(value))}%` : String(value);
             return (
-            <motion.div
-              key={stat.label}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.5 + i * 0.1 }}
-              className="flex flex-col items-center text-center">
+              <motion.div
+                key={stat.label}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.5 + i * 0.1 }}
+                className="flex flex-col items-center text-center">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-1 ${
                 stat.color === "gold" ? "bg-gold/20" : "bg-primary/10"}`}>
                 <stat.icon className={`w-5 h-5 ${stat.color === "gold" ? "text-gold" : "text-primary"}`} />
               </div>
               <span className="text-lg font-bold text-foreground">{displayValue}</span>
               <span className="text-[10px] text-muted-foreground leading-tight">{stat.label}</span>
-            </motion.div>
-            );
+            </motion.div>);
+
           })}
         </motion.div>
       </div>
@@ -459,9 +459,9 @@ const Index = () => {
             </Link>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {topReciters.length === 0 && (
-              <p className="text-xs text-muted-foreground py-4 px-2">لا يوجد مقرئون متاحون حالياً</p>
-            )}
+            {topReciters.length === 0 &&
+            <p className="text-xs text-muted-foreground py-4 px-2">لا يوجد مقرئون متاحون حالياً</p>
+            }
             {topReciters.map((reciter, i) =>
             <motion.div
               key={reciter.user_id}
@@ -474,11 +474,11 @@ const Index = () => {
                   <Link to="/reciters" className="flex flex-col items-center gap-2 w-full">
                     <div className="relative">
                       <div className="w-[64px] h-[64px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md bg-muted flex items-center justify-center">
-                        {reciter.avatar_url ? (
-                          <img src={reciter.avatar_url} alt={reciter.full_name} className="w-full h-full object-cover" />
-                        ) : (
-                          <User className="w-8 h-8 text-muted-foreground" />
-                        )}
+                        {reciter.avatar_url ?
+                      <img src={reciter.avatar_url} alt={reciter.full_name} className="w-full h-full object-cover" /> :
+
+                      <User className="w-8 h-8 text-muted-foreground" />
+                      }
                       </div>
                       <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-[2.5px] border-card bg-green-500" />
                     </div>
@@ -520,7 +520,7 @@ const Index = () => {
                   const start = new Date(activeSubscription.start_date);
                   const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
                   const daysLeft = Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-                  const pct = totalDays > 0 ? Math.round((daysLeft / totalDays) * 100) : 0;
+                  const pct = totalDays > 0 ? Math.round(daysLeft / totalDays * 100) : 0;
                   return (
                     <>
                       <div className="flex-1">
@@ -537,10 +537,10 @@ const Index = () => {
                         </div>
                         <span className="text-primary-foreground/80 text-[10px] font-medium">متبقي</span>
                       </div>
-                    </>
-                  );
-                })() : (
-                  <>
+                    </>);
+
+                })() :
+                <>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <CreditCard className="w-4 h-4 text-gold" />
@@ -553,7 +553,7 @@ const Index = () => {
                       <ChevronLeft className="w-5 h-5 text-primary-foreground/70" />
                     </div>
                   </>
-                )}
+                }
               </div>
             </div>
           </Link>
@@ -586,79 +586,79 @@ const Index = () => {
         </motion.div>
       </div>
 
-      {showDebug && (
-        <div className="px-5 mt-6">
-          <div className="glass-card rounded-2xl p-4 border border-dashed border-primary/30">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <CreditCard className="w-3.5 h-3.5 text-primary" />
-                </div>
-                <h3 className="text-sm font-bold text-foreground">لوحة اختبار الدفع (مؤقتة)</h3>
-              </div>
-              <button
-                onClick={fetchDebugData}
-                className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full"
-              >
-                تحديث
-              </button>
-            </div>
+      {showDebug &&
+      <div className="px-5 mt-6">
+          
 
-            {debugLoading ? (
-              <p className="text-xs text-muted-foreground">جاري التحميل...</p>
-            ) : debugError ? (
-              <p className="text-xs text-destructive">{debugError}</p>
-            ) : (
-              <div className="space-y-3 text-xs text-muted-foreground">
-                <div className="flex items-center justify-between">
-                  <span>رصيد الساعات الإضافية</span>
-                  <span className="font-semibold text-foreground">
-                    {debugHourCredits !== null ? `${debugHourCredits} ساعة` : "غير متوفر"}
-                  </span>
-                </div>
-                {debugUpdatedAt && (
-                  <div className="flex items-center justify-between">
-                    <span>آخر تحديث</span>
-                    <span className="font-semibold text-foreground">{new Date(debugUpdatedAt).toLocaleString()}</span>
-                  </div>
-                )}
 
-                <div>
-                  <p className="text-[11px] font-semibold text-foreground mb-2">آخر المدفوعات</p>
-                  {debugPayments.length === 0 ? (
-                    <p>لا توجد مدفوعات</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {debugPayments.map((p) => (
-                        <div key={p.id} className="flex items-center justify-between">
-                          <span className="truncate">{p.source_type} • {p.status}</span>
-                          <span className="font-semibold text-foreground">{p.amount_sar} ر.س</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
 
-                <div>
-                  <p className="text-[11px] font-semibold text-foreground mb-2">آخر المعاملات</p>
-                  {debugTransactions.length === 0 ? (
-                    <p>لا توجد معاملات</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {debugTransactions.map((t) => (
-                        <div key={t.id} className="flex items-center justify-between">
-                          <span className="truncate">{t.title}</span>
-                          <span className="font-semibold text-foreground">{t.amount} ر.س</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         </div>
-      )}
+      }
 
       <PopupMessageCard message={popupMessage} onClose={() => setPopupMessage(null)} />
 
@@ -676,8 +676,8 @@ const Index = () => {
           <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
             <AlertDialogAction
               onClick={() => navigate("/subscription")}
-              className="w-full gradient-primary text-primary-foreground rounded-xl"
-            >
+              className="w-full gradient-primary text-primary-foreground rounded-xl">
+
               تصفح الباقات
             </AlertDialogAction>
             <AlertDialogCancel className="w-full rounded-xl mt-0">
