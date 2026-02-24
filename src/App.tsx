@@ -1,3 +1,5 @@
+import { useState, useCallback } from "react";
+import { AnimatePresence } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -73,6 +75,7 @@ import VideoCallPage from "./pages/VideoCallPage";
 import PublicVideoCall from "./pages/PublicVideoCall";
 import { IncomingCallListener } from "./components/video-call/IncomingCallListener";
 import { ReciterPresenceTracker } from "./components/ReciterPresenceTracker";
+import SplashScreen from "./components/SplashScreen";
 
 const queryClient = new QueryClient();
 
@@ -204,21 +207,29 @@ const AppLayout = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <ScrollToTop />
-          <IncomingCallListener />
-          <ReciterPresenceTracker />
-          <AppLayout />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [showSplash, setShowSplash] = useState(true);
+  const handleSplashFinish = useCallback(() => setShowSplash(false), []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AnimatePresence>
+          {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
+        </AnimatePresence>
+        <BrowserRouter>
+          <AuthProvider>
+            <ScrollToTop />
+            <IncomingCallListener />
+            <ReciterPresenceTracker />
+            <AppLayout />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
