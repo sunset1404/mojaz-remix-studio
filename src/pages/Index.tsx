@@ -205,11 +205,10 @@ const Index = () => {
         if (hasCert) triggeredEvents.push("certificate_earned");
       }
 
-      // Find first matching popup not shown recently (within 24h)
+      // Find first matching popup not shown before (show only once per event)
       const now = Date.now();
       for (const event of triggeredEvents) {
-        const lastShown = shownMap[event] || 0;
-        if (now - lastShown < 24 * 60 * 60 * 1000) continue; // skip if shown in last 24h
+        if (shownMap[event]) continue; // skip if already shown once
 
         const matching = (popups as any[]).find((p: any) => p.trigger_event === event);
         if (matching) {
