@@ -126,6 +126,8 @@ const ReciterSignup = () => {
   const validateStep = () => {
     if (step === 0) {
       if (!email || !password || !confirmPassword) {toast({ title: "مطلوب", description: "أدخل البريد وكلمة المرور وتأكيدها", variant: "destructive" });return false;}
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {setEmailError("صيغة البريد الإلكتروني غير صحيحة");return false;}
       if (password.length < 6) {toast({ title: "كلمة المرور قصيرة", description: "يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });return false;}
       if (password !== confirmPassword) {toast({ title: "عدم تطابق", description: "كلمة المرور وتأكيدها غير متطابقتين", variant: "destructive" });return false;}
     }
