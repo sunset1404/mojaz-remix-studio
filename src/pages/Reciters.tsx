@@ -18,12 +18,15 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 
+
+
 type Reciter = {
   id: string;
   user_id: string;
   full_name: string;
   preferred_track: string;
   stamp_url: string | null;
+  certifications: string[];
 };
 
 type FilterType = "all" | "available" | "favorites";
@@ -116,7 +119,30 @@ const Reciters = () => {
       }
 
       const { data } = await query;
-      setReciters(data ?? []);
+
+      // Fetch certifications for all reciters
+      const reciterUserIds = (data ?? []).map(r => r.user_id);
+      let certMap: Record<string, string[]> = {};
+      
+      if (reciterUserIds.length > 0) {
+        const { data: certs } = await supabase
+          .from("reciter_certifications")
+          .select("reciter_id, type, riwaya, certification_text")
+          .in("reciter_id", reciterUserIds);
+        
+        (certs ?? []).forEach(c => {
+          const label = c.riwaya || c.certification_text || (c.type === 'khatm' ? 'ختم القرآن' : 'إجازة');
+          if (!certMap[c.reciter_id]) certMap[c.reciter_id] = [];
+          certMap[c.reciter_id].push(label);
+        });
+      }
+
+      const recitersWithCerts: Reciter[] = (data ?? []).map(r => ({
+        ...r,
+        certifications: certMap[r.user_id] || [],
+      }));
+
+      setReciters(recitersWithCerts);
       setLoading(false);
     };
     fetchReciters();
@@ -233,7 +259,11 @@ const Reciters = () => {
 
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-foreground truncate">{reciter.full_name}</h3>
-              <p className="text-xs text-muted-foreground">{reciter.preferred_track || "—"}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {reciter.certifications.length > 0
+                  ? reciter.certifications.join(" • ")
+                  : reciter.preferred_track || "—"}
+              </p>
             </div>
 
             <div className="flex items-center gap-1.5">
