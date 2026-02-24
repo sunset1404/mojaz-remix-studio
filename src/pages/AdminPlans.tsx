@@ -269,12 +269,36 @@ const FeatureEditor = ({
     setNewItem("");
   };
 
+  const moveItem = (index: number, direction: "up" | "down") => {
+    const newItems = [...items];
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newItems.length) return;
+    [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
+    onChange(newItems);
+  };
+
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
       <div className="space-y-1">
         {items.map((item, i) => (
-          <div key={i} className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
+          <div key={i} className="flex items-center gap-1.5 bg-muted/50 rounded-lg px-3 py-1.5">
+            <div className="flex flex-col gap-0.5">
+              <button
+                onClick={() => moveItem(i, "up")}
+                disabled={i === 0}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+              >
+                <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => moveItem(i, "down")}
+                disabled={i === items.length - 1}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+              >
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+            </div>
             <span className="text-sm flex-1">{item}</span>
             <button onClick={() => onChange(items.filter((_, j) => j !== i))} className="text-destructive hover:text-destructive/80">
               <X className="w-3.5 h-3.5" />
