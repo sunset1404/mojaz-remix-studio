@@ -32,6 +32,7 @@ const ReciterHome = () => {
   const [userName, setUserName] = useState("");
   const [assignedStudents, setAssignedStudents] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [queueCount, setQueueCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -58,6 +59,15 @@ const ReciterHome = () => {
       .eq("user_id", user.id)
       .eq("read", false)
       .then(({ count }) => { setUnreadCount(count || 0); });
+
+    // Fetch waiting queue count
+    supabase
+      .from("video_call_sessions")
+      .select("id", { count: "exact", head: true })
+      .eq("reciter_id", user.id)
+      .eq("status", "waiting")
+      .eq("caller_role", "student")
+      .then(({ count }) => { setQueueCount(count || 0); });
   }, [user, reciterType]);
 
   const nextSlide = useCallback(() => {
@@ -197,8 +207,16 @@ const ReciterHome = () => {
                   <CalendarDays className="w-6 h-6 text-gold" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg text-primary-foreground">{reciterType === "general" ? "الطابور الإلكتروني" : "جلساتي القادمة"}</h3>
-                  <p className="text-sm text-primary-foreground/75 mt-0.5">{reciterType === "general" ? "حجز الجلسات - الطلاب المنتظرون" : "3 جلسات مجدولة اليوم"}</p>
+                  <h3 className="font-bold text-lg text-primary-foreground">
+                    {reciterType === "ijazah" ? "جلساتي القادمة" : "الطابور الإلكتروني"}
+                  </h3>
+                  <p className="text-sm text-primary-foreground/75 mt-0.5">
+                    {reciterType === "ijazah"
+                      ? `${queueCount} جلسة منتظرة`
+                      : queueCount > 0
+                        ? `${queueCount} طالب في الانتظار`
+                        : "لا يوجد طلاب في الانتظار حالياً"}
+                  </p>
                 </div>
                 <ChevronLeft className="w-5 h-5 text-primary-foreground/60 shrink-0" />
               </div>
