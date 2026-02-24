@@ -95,6 +95,24 @@ const Subscription = () => {
 
       if (error) throw error;
 
+      // Add 60 minutes (1 hour) to student credits
+      const { data: existingCredit } = await (supabase as any)
+        .from("student_hour_credits")
+        .select("id, remaining_minutes")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (existingCredit) {
+        await (supabase as any)
+          .from("student_hour_credits")
+          .update({ remaining_minutes: Number(existingCredit.remaining_minutes) + 60 })
+          .eq("id", existingCredit.id);
+      } else {
+        await (supabase as any)
+          .from("student_hour_credits")
+          .insert({ user_id: user.id, remaining_minutes: 60 });
+      }
+
       toast.success("تم تفعيل الباقة المجانية بنجاح! 🎉");
       navigate("/");
     } catch (err) {

@@ -7,13 +7,7 @@ const corsHeaders = {
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-/**
- * request-call Edge Function
- * Invoked by the student to initiate a call with a reciter.
- * Inserts a video_call_sessions record, triggering Postgres Realtime listeners for the reciter.
- */
 serve(async (req: Request) => {
-    // Handle CORS preflight
     if (req.method === "OPTIONS") {
         return new Response(null, { headers: corsHeaders });
     }
@@ -21,8 +15,8 @@ serve(async (req: Request) => {
     try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-        // Create client using the request's auth header to run as the calling user
         const authHeader = req.headers.get("Authorization");
         if (!authHeader) {
             return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
@@ -35,7 +29,6 @@ serve(async (req: Request) => {
             global: { headers: { Authorization: authHeader } },
         });
 
-        // Validate JWT using getClaims
         const token = authHeader.replace("Bearer ", "");
         const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
 
@@ -46,7 +39,6 @@ serve(async (req: Request) => {
             });
         }
 
-        // Extract reciter_id from request body
         const body = await req.json();
         const { reciter_id } = body;
 
@@ -59,7 +51,49 @@ serve(async (req: Request) => {
 
         const student_id = claimsData.claims.sub;
 
-        // Optional: Fetch student name for the reciter's incoming call screen
+        // Use service role to check credits (bypasses RLS)
+        const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+        // Check active subscription
+        const { data: activeSub } = await adminClient
+            .from("student_subscriptions")
+            .select("id, end_date")
+            .eq("student_id", student_id)
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (!activeSub) {
+            return new Response(JSON.stringify({ 
+                error: "no_subscription",
+                message: "ليس لديك اشتراك نشط. يرجى الاشتراك أولاً." 
+            }), {
+                status: 403,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
+        // Check remaining minutes
+        const { data: credits } = await adminClient
+            .from("student_hour_credits")
+            .select("remaining_minutes")
+            .eq("user_id", student_id)
+            .maybeSingle();
+
+        const remainingMinutes = credits?.remaining_minutes ?? 0;
+
+        if (remainingMinutes <= 0) {
+            return new Response(JSON.stringify({ 
+                error: "no_credits",
+                message: "نفذ رصيد ساعاتك. يرجى تجديد الاشتراك أو شراء ساعات إضافية." 
+            }), {
+                status: 403,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
+        // Fetch student name
         const { data: studentProfile } = await supabaseClient
             .from('student_profiles')
             .select('full_name')
@@ -88,7 +122,7 @@ serve(async (req: Request) => {
             });
         }
 
-        console.log(`Call requested by ${student_id} for reciter ${reciter_id}. Session ID: ${callSession.id}`);
+        console.log(`Call requested by ${student_id} for reciter ${reciter_id}. Session ID: ${callSession.id}. Remaining minutes: ${remainingMinutes}`);
 
         return new Response(JSON.stringify(callSession), {
             status: 200,

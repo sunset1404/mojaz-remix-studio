@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Star, Phone, Video, Search, Heart, Mic, User } from "lucide-react";
+import { Star, Phone, Video, Search, Heart, Mic, User, Clock, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOnlineReciters } from "@/hooks/useOnlineReciters";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 type Reciter = {
   id: string;
@@ -28,6 +38,8 @@ const Reciters = () => {
   const [reciters, setReciters] = useState<Reciter[]>([]);
   const [loading, setLoading] = useState(true);
   const [callingId, setCallingId] = useState<string | null>(null);
+  const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
+  const [noCreditsMessage, setNoCreditsMessage] = useState("");
   const onlineReciters = useOnlineReciters();
 
   const handleCall = async (reciter: Reciter) => {
@@ -43,13 +55,39 @@ const Reciters = () => {
         body: { reciter_id: reciter.user_id },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a credits/subscription error from edge function
+        const errorBody = error.message ? JSON.parse(error.message || "{}") : {};
+        if (errorBody?.error === "no_credits" || errorBody?.error === "no_subscription") {
+          setNoCreditsMessage(errorBody.message || "نفذ رصيد ساعاتك");
+          setShowNoCreditsDialog(true);
+          return;
+        }
+        throw error;
+      }
+
+      // Check for error in response body (403 returns as data, not error)
+      if (data?.error === "no_credits" || data?.error === "no_subscription") {
+        setNoCreditsMessage(data.message || "نفذ رصيد ساعاتك");
+        setShowNoCreditsDialog(true);
+        return;
+      }
+
       if (data?.error) throw new Error(data.error);
 
       toast({ title: "جاري الاتصال...", description: `بانتظار رد ${reciter.full_name}` });
       navigate(`/call/${data.room_id}?role=caller`);
     } catch (err: any) {
       console.error("Call error:", err);
+      // Try to parse JSON error from edge function
+      try {
+        const parsed = JSON.parse(err?.message || "{}");
+        if (parsed?.error === "no_credits" || parsed?.error === "no_subscription") {
+          setNoCreditsMessage(parsed.message || "نفذ رصيد ساعاتك");
+          setShowNoCreditsDialog(true);
+          return;
+        }
+      } catch {}
       toast({ title: "فشل بدء المكالمة", description: err.message || "حدث خطأ", variant: "destructive" });
     } finally {
       setCallingId(null);
@@ -58,7 +96,6 @@ const Reciters = () => {
 
   useEffect(() => {
     const fetchReciters = async () => {
-      // Get student gender first
       let studentGender: string | null = null;
       if (user) {
         const { data: profile } = await supabase
@@ -228,6 +265,38 @@ const Reciters = () => {
           </div>
         ))}
       </div>
+
+      {/* No Credits Dialog */}
+      <AlertDialog open={showNoCreditsDialog} onOpenChange={setShowNoCreditsDialog}>
+        <AlertDialogContent className="rounded-2xl max-w-sm mx-auto" dir="rtl">
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-3">
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                <Clock className="w-8 h-8 text-destructive" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-center text-lg">نفذ رصيد الساعات</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-sm">
+              {noCreditsMessage || "لا يوجد لديك رصيد كافٍ لبدء مكالمة. يرجى تجديد اشتراكك أو شراء ساعات إضافية."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <AlertDialogAction
+              onClick={() => navigate("/subscription")}
+              className="gradient-primary text-primary-foreground rounded-xl"
+            >
+              تجديد الاشتراك
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => navigate("/subscription")}
+              className="bg-gold text-white rounded-xl hover:bg-gold/90"
+            >
+              شراء ساعات إضافية
+            </AlertDialogAction>
+            <AlertDialogCancel className="rounded-xl">إلغاء</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
