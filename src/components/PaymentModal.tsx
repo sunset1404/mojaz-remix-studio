@@ -36,7 +36,7 @@ const PaymentModal = ({
   const [errorMessage, setErrorMessage] = useState("");
   const formInitialized = useRef(false);
   const moyasarContainerId = "moyasar-payment-form";
-  const [paymentRef, setPaymentRef] = useState<string | null>(null);
+  const paymentRefLocal = useRef<string | null>(null);
 
   useEffect(() => {
     if (isOpen && paymentState === "form" && !formInitialized.current) {
@@ -51,7 +51,7 @@ const PaymentModal = ({
       formInitialized.current = false;
       setPaymentState("form");
       setErrorMessage("");
-      setPaymentRef(null);
+      paymentRefLocal.current = null;
     }
   }, [isOpen, paymentState]);
 
@@ -104,7 +104,7 @@ const PaymentModal = ({
         payment_ref: paymentData.payment_ref,
       };
 
-      setPaymentRef(paymentData.payment_ref);
+      paymentRefLocal.current = paymentData.payment_ref;
       const callbackUrl = buildCallbackUrl(sourceType, paymentMetadata);
 
       // Ensure the container is present in the DOM before initializing
@@ -115,12 +115,14 @@ const PaymentModal = ({
       // Clear container to resolve React 18 StrictMode double mount issues
       container.innerHTML = "";
 
+      console.log("Moyassar init: element exists =", !!container, "SDK loaded =", !!window.Moyasar, "amount =", validatedAmount);
+
       await initMoyasarForm({
         elementId: moyasarContainerId,
         amountSar: validatedAmount,
         description: `اشتراك ${planName}`,
         callbackUrl,
-        methods: ["creditcard"],
+        methods: ["creditcard", "stcpay"],
         metadata: { payment_ref: paymentData.payment_ref },
         onCompleted: (payment: MoyasarPaymentResponse) => {
           handlePaymentCompleted(payment, paymentMetadata);
@@ -156,7 +158,7 @@ const PaymentModal = ({
     setPaymentState("verifying");
 
     try {
-      const ref = paymentMetadata.payment_ref || paymentRef;
+      const ref = paymentMetadata.payment_ref || paymentRefLocal.current;
       if (!ref) {
         throw new Error("مرجع الدفع غير متوفر");
       }
@@ -304,7 +306,7 @@ const PaymentModal = ({
                   </div>
 
                   {/* Moyassar Payment Form Container */}
-                  <div id={moyasarContainerId} className="moyasar-form-container min-h-[400px] w-full" />
+                  <div id={moyasarContainerId} className="mysr-form min-h-[400px] w-full" />
 
                   {/* Security Badge */}
                   <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">

@@ -43,7 +43,7 @@ export interface MoyasarPaymentResponse {
 }
 
 export interface MoyasarConfig {
-    element: string;
+    element: string | HTMLElement;
     amount: number; // In halalas (smallest unit)
     currency: string;
     description: string;
@@ -59,6 +59,7 @@ export interface MoyasarConfig {
     on_initiating?: () => void;
     on_completed?: (payment: MoyasarPaymentResponse) => void;
     on_failure?: (error: any) => void;
+    fixed_width?: boolean;
 }
 
 /**
@@ -102,26 +103,34 @@ export async function initMoyasarForm(config: {
         throw new Error("Moyassar SDK not loaded");
     }
 
-    const moyasarConfig: MoyasarConfig = {
-        element: `#${config.elementId}`,
+    // Ensure element is ready for Moyassar by waiting for next animation frame
+    await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+            setTimeout(resolve, 50);
+        });
+    });
+
+    // Re-verify element exists
+    const el = document.querySelector(`#${config.elementId}`);
+    if (!el) {
+        throw new Error("Payment form element not found after SDK load");
+    }
+
+    console.log("Moyassar: calling init with class selector .mysr-form");
+
+    // Use minimal config with class selector (Moyassar standard)
+    window.Moyasar.init({
+        element: ".mysr-form",
         amount: toHalalas(config.amountSar),
         currency: "SAR",
         description: config.description,
         publishable_api_key: publishableKey,
         callback_url: config.callbackUrl,
-        methods: config.methods || ["creditcard", "applepay", "stcpay", "samsungpay"],
-        apple_pay: {
-            country: "SA",
-            label: "إقراء - Mojaz",
-            validate_merchant_url: "https://api.moyasar.com/v1/applepay/initiate",
-        },
-        metadata: config.metadata,
-        on_initiating: config.onInitiating,
+        methods: config.methods || ["creditcard"],
+        metadata: config.metadata || {},
         on_completed: config.onCompleted,
         on_failure: config.onFailure,
-    };
-
-    window.Moyasar.init(moyasarConfig);
+    } as any);
 }
 
 /**
