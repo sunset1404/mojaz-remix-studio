@@ -11,6 +11,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import ReciterHome from "./pages/ReciterHome";
 import Reciters from "./pages/Reciters";
+import ReciterDetail from "./pages/ReciterDetail";
 import Subscription from "./pages/Subscription";
 import Achievements from "./pages/Achievements";
 import WeeklyPlan from "./pages/WeeklyPlan";
@@ -135,6 +136,7 @@ const AppRoutes = () => (
 
     {/* Student-only routes */}
     <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/reciters/:reciterId" element={<ProtectedRoute allowedRole="student"><><ReciterDetail /><BottomNav /></></ProtectedRoute>} />
     <Route path="/subscription" element={<ProtectedRoute allowedRole="student"><><Subscription /><BottomNav /></></ProtectedRoute>} />
     <Route path="/gift" element={<ProtectedRoute allowedRole="student"><><GiftSubscription /><BottomNav /></></ProtectedRoute>} />
 
