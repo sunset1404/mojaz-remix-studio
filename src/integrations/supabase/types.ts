@@ -629,6 +629,41 @@ export type Database = {
         }
         Relationships: []
       }
+      popup_message_views: {
+        Row: {
+          created_at: string
+          id: string
+          popup_message_id: string | null
+          shown_at: string
+          trigger_event: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          popup_message_id?: string | null
+          shown_at?: string
+          trigger_event: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          popup_message_id?: string | null
+          shown_at?: string
+          trigger_event?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "popup_message_views_popup_message_id_fkey"
+            columns: ["popup_message_id"]
+            isOneToOne: false
+            referencedRelation: "popup_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       popup_messages: {
         Row: {
           color_scheme: string

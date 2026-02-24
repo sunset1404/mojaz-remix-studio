@@ -224,11 +224,9 @@ const Index = () => {
     }
   }, [showDebug, fetchDebugData]);
 
-  // Popup messages: check for relevant trigger events and show popup
+  // Popup messages: check for relevant trigger events and show popup (persisted in DB)
   useEffect(() => {
     if (!user) return;
-    const SHOWN_KEY = `popup_shown_${user.id}`;
-    const shownMap: Record<string, number> = JSON.parse(localStorage.getItem(SHOWN_KEY) || "{}");
 
     const checkPopups = async () => {
       // Fetch all active popup messages for students
@@ -238,6 +236,13 @@ const Index = () => {
         .eq("target_role", "student")
         .eq("is_active", true);
       if (!popups || popups.length === 0) return;
+
+      // Fetch already-shown events from DB
+      const { data: viewedRows } = await supabase
+        .from("popup_message_views" as any)
+        .select("trigger_event")
+        .eq("user_id", user.id);
+      const viewedEvents = new Set((viewedRows || []).map((r: any) => r.trigger_event));
 
       // Check for recent certificates (last 7 days)
       const sevenDaysAgo = new Date();
@@ -258,10 +263,9 @@ const Index = () => {
         if (hasCert) triggeredEvents.push("certificate_earned");
       }
 
-      // Find first matching popup not shown before (show only once per event)
-      const now = Date.now();
+      // Find first matching popup not shown before (persisted in DB)
       for (const event of triggeredEvents) {
-        if (shownMap[event]) continue; // skip if already shown once
+        if (viewedEvents.has(event)) continue;
 
         const matching = (popups as any[]).find((p: any) => p.trigger_event === event);
         if (matching) {
@@ -272,8 +276,12 @@ const Index = () => {
             icon: matching.icon,
             color_scheme: matching.color_scheme,
           });
-          shownMap[event] = now;
-          localStorage.setItem(SHOWN_KEY, JSON.stringify(shownMap));
+          // Persist in DB so it never shows again
+          await supabase.from("popup_message_views" as any).insert({
+            user_id: user.id,
+            trigger_event: event,
+            popup_message_id: matching.id,
+          });
           break;
         }
       }
