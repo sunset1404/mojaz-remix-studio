@@ -39,80 +39,55 @@ serve(async (req: Request) => {
             });
         }
 
-        const body = await req.json();
-        const { reciter_id } = body;
+        const reciter_id = claimsData.claims.sub;
 
-        if (!reciter_id) {
-            return new Response(JSON.stringify({ error: "reciter_id is required" }), {
+        const body = await req.json();
+        const { student_id } = body;
+
+        if (!student_id) {
+            return new Response(JSON.stringify({ error: "student_id is required" }), {
                 status: 400,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
 
-        const student_id = claimsData.claims.sub;
-
-        // Use service role to check credits (bypasses RLS)
         const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-        // Check active subscription
-        const { data: activeSub } = await adminClient
-            .from("student_subscriptions")
-            .select("id, end_date")
-            .eq("student_id", student_id)
-            .eq("status", "active")
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-        if (!activeSub) {
-            return new Response(JSON.stringify({ 
-                error: "no_subscription",
-                message: "ليس لديك اشتراك نشط. يرجى الاشتراك أولاً." 
-            }), {
-                status: 403,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
-        }
-
-        // Check remaining minutes
-        const { data: credits } = await adminClient
-            .from("student_hour_credits")
-            .select("remaining_minutes")
+        // Validate the student is assigned to this reciter
+        const { data: studentProfile, error: studentError } = await adminClient
+            .from("student_profiles")
+            .select("full_name, assigned_reciter_id")
             .eq("user_id", student_id)
             .maybeSingle();
 
-        const remainingMinutes = credits?.remaining_minutes ?? 0;
+        if (!studentProfile) {
+            return new Response(JSON.stringify({ error: "student_not_found", message: "لم يتم العثور على الطالب" }), {
+                status: 404,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
 
-        if (remainingMinutes <= 0) {
-            return new Response(JSON.stringify({ 
-                error: "no_credits",
-                message: "نفذ رصيد ساعاتك. يرجى تجديد الاشتراك أو شراء ساعات إضافية." 
-            }), {
+        if (studentProfile.assigned_reciter_id !== reciter_id) {
+            return new Response(JSON.stringify({ error: "not_assigned", message: "هذا الطالب غير مسجل لديك" }), {
                 status: 403,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
 
-        // Fetch student name
-        const { data: studentProfile } = await supabaseClient
-            .from('student_profiles')
-            .select('full_name')
-            .eq('user_id', student_id)
-            .single();
+        const student_name = studentProfile.full_name || "طالب بدون اسم";
 
-        const student_name = studentProfile?.full_name || "طالب بدون اسم";
-
-        // Insert the video call session
-        const { data: callSession, error: insertError } = await supabaseClient
-            .from('video_call_sessions')
+        // Insert call session using service role (bypasses RLS)
+        const { data: callSession, error: insertError } = await adminClient
+            .from("video_call_sessions")
             .insert({
                 reciter_id,
                 student_id,
                 student_name,
-                status: 'waiting',
-                caller_role: 'student',
+                status: "waiting",
+                caller_role: "reciter",
+                reciter_joined_at: new Date().toISOString(),
             })
-            .select()
+            .select("id, room_id")
             .single();
 
         if (insertError) {
@@ -123,9 +98,9 @@ serve(async (req: Request) => {
             });
         }
 
-        console.log(`Call requested by ${student_id} for reciter ${reciter_id}. Session ID: ${callSession.id}. Remaining minutes: ${remainingMinutes}`);
+        console.log(`Reciter ${reciter_id} calling student ${student_id}. Session: ${callSession.id}, Room: ${callSession.room_id}`);
 
-        return new Response(JSON.stringify(callSession), {
+        return new Response(JSON.stringify({ room_id: callSession.room_id, session_id: callSession.id }), {
             status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
