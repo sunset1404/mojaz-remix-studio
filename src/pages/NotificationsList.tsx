@@ -109,7 +109,7 @@ const NotificationsList = () => {
       </div>
 
       {/* Content */}
-      <div className="px-5 -mt-3 space-y-3">
+      <div className="px-5 mt-5 space-y-3">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
