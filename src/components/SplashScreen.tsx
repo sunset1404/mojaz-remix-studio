@@ -73,29 +73,24 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
       {/* Logo */}
       <motion.div
         className="relative z-20 flex flex-col items-center"
-        initial={{ scale: 0, opacity: 0 }}
+        initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 120, damping: 14, delay: 0.1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <motion.div
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <div className="rounded-3xl overflow-hidden shadow-lg border-2 border-primary-foreground/30 p-1 bg-card/90 backdrop-blur-sm w-36 h-36">
-            <img src={logoMojaz} alt="مجاز" className="w-full h-full object-contain rounded-2xl" />
-          </div>
+        <div className="rounded-3xl overflow-hidden shadow-lg border-2 border-primary-foreground/30 p-1 bg-card/90 backdrop-blur-sm w-36 h-36">
+          <img src={logoMojaz} alt="مجاز" className="w-full h-full object-contain rounded-2xl" />
+        </div>
 
-          {/* Shine sweep */}
-          <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
-            <motion.div
-              className="absolute w-full h-full"
-              style={{ background: "linear-gradient(105deg, transparent 40%, hsla(0,0%,100%,0.3) 45%, hsla(0,0%,100%,0.1) 50%, transparent 55%)" }}
-              initial={{ x: "-100%" }}
-              animate={{ x: "200%" }}
-              transition={{ duration: 1.2, delay: 0.6, ease: "easeInOut" }}
-            />
-          </div>
-        </motion.div>
+        {/* Shine sweep */}
+        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+          <motion.div
+            className="absolute w-full h-full"
+            style={{ background: "linear-gradient(105deg, transparent 40%, hsla(0,0%,100%,0.3) 45%, hsla(0,0%,100%,0.1) 50%, transparent 55%)" }}
+            initial={{ x: "-100%" }}
+            animate={{ x: "200%" }}
+            transition={{ duration: 1.2, delay: 0.6, ease: "easeInOut" }}
+          />
+        </div>
       </motion.div>
 
       {/* Text */}
