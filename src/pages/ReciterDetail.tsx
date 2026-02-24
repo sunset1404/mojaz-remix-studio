@@ -321,8 +321,8 @@ const ReciterDetail = () => {
                 <p className="text-xs text-muted-foreground mb-2">الأوقات المفضلة</p>
                 <div className="flex flex-wrap gap-2">
                   {reciter.preferred_times.map((time, i) => (
-                    <span key={i} className="text-xs px-3 py-1.5 rounded-lg bg-muted text-foreground font-semibold flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
+                    <span key={i} className="text-xs px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 text-primary font-semibold flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-primary/70" />
                       {time}
                     </span>
                   ))}
