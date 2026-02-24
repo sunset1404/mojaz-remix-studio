@@ -284,8 +284,17 @@ const Reciters = () => {
                   : reciter.preferred_track || "—"}
               </p>
               {(() => {
+                const isOnline = onlineReciters.includes(reciter.user_id);
                 const qCount = queueCounts[reciter.user_id] || 0;
-                const estimatedMinutes = qCount * 15;
+                const estimatedMinutes = qCount * 30;
+                if (!isOnline) {
+                  return (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Clock className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-[10px] font-semibold text-muted-foreground">غير متصل</span>
+                    </div>
+                  );
+                }
                 return qCount > 0 ? (
                   <div className="flex items-center gap-1 mt-1">
                     <Clock className="w-3 h-3 text-gold" />
