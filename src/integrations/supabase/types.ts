@@ -1207,6 +1207,7 @@ export type Database = {
       video_call_sessions: {
         Row: {
           access_token: string | null
+          caller_role: string
           created_at: string | null
           ended_at: string | null
           id: string
@@ -1225,6 +1226,7 @@ export type Database = {
         }
         Insert: {
           access_token?: string | null
+          caller_role?: string
           created_at?: string | null
           ended_at?: string | null
           id?: string
@@ -1243,6 +1245,7 @@ export type Database = {
         }
         Update: {
           access_token?: string | null
+          caller_role?: string
           created_at?: string | null
           ended_at?: string | null
           id?: string
