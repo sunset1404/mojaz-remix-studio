@@ -47,7 +47,7 @@ const PopupMessageCard = ({ message, onClose }: Props) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 60, scale: 0.95 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="fixed bottom-28 left-0 right-0 mx-auto z-50 w-full max-w-sm px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
             dir="rtl"
           >
             <div className={`bg-gradient-to-br ${getGradient(message.color_scheme)} p-0.5 rounded-3xl shadow-2xl`}>
