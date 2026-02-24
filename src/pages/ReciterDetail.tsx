@@ -148,7 +148,6 @@ const ReciterDetail = () => {
     { icon: MapPin, label: "المدينة", value: reciter.city },
     { icon: Briefcase, label: "المهنة", value: reciter.profession },
     { icon: GraduationCap, label: "المؤهلات", value: reciter.qualifications },
-    { icon: BookOpen, label: "خبرة التدريس", value: reciter.teaching_experience },
     { icon: BookOpen, label: "المسار", value: reciter.preferred_track },
   ].filter(item => item.value);
 
@@ -263,6 +262,27 @@ const ReciterDetail = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Teaching Experience / Achievements */}
+      {reciter.teaching_experience && (
+        <div className="px-5 mt-4">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.25 }}
+            className="bg-card rounded-2xl p-5 shadow-sm"
+          >
+            <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-primary" />
+              أبرز المحطات التعليمية والمنجزات
+            </h3>
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-primary/5 border border-primary/10">
+              <BookOpen className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-sm text-foreground leading-relaxed">{reciter.teaching_experience}</p>
             </div>
           </motion.div>
         </div>
