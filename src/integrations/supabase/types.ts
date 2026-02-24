@@ -263,6 +263,42 @@ export type Database = {
         }
         Relationships: []
       }
+      extra_hour_packages: {
+        Row: {
+          created_at: string
+          hours: number
+          id: string
+          is_active: boolean
+          label: string
+          original_price: number | null
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hours?: number
+          id?: string
+          is_active?: boolean
+          label: string
+          original_price?: number | null
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hours?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          original_price?: number | null
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gift_plans: {
         Row: {
           created_at: string

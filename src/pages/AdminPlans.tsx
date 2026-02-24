@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Crown, Sparkles, Zap, Gift, Star, Check, Clock,
-  Plus, Pencil, Trash2, Power, PowerOff, X, Save, ChevronDown, ChevronUp,
+  Plus, Pencil, Trash2, X, Save, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +50,16 @@ interface GiftPlan {
   is_active: boolean;
 }
 
+interface ExtraHourPackage {
+  id: string;
+  label: string;
+  hours: number;
+  price: number;
+  original_price: number | null;
+  sort_order: number;
+  is_active: boolean;
+}
+
 // ─── Icon map ───────────────────────────────────────────────────────────────
 const iconMap: Record<string, React.ElementType> = {
   Crown, Sparkles, Zap, Gift, Star, Clock,
@@ -66,6 +76,9 @@ const emptyGiftPlan: Omit<GiftPlan, "id"> = {
   name: "", price: 0, original_price: null, duration: "شهر واحد",
   duration_months: 1, hours: "10 ساعات", discount: null, features: [],
   icon: "Gift", is_popular: false, sort_order: 99, is_active: true,
+};
+const emptyExtraHour: Omit<ExtraHourPackage, "id"> = {
+  label: "", hours: 1, price: 0, original_price: null, sort_order: 99, is_active: true,
 };
 
 // ─── SubscriptionPlanCard ───────────────────────────────────────────────────
@@ -90,21 +103,18 @@ const SubscriptionPlanCard = ({
           : "bg-card border-border shadow-sm"
       }`}
     >
-      {/* Popular badge */}
       {isPopular && plan.is_active && (
         <div className="absolute top-3 left-3 bg-primary-foreground/20 text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
           الأكثر طلباً ⭐
         </div>
       )}
 
-      {/* Status badge */}
       <div className="absolute top-3 right-3 flex items-center gap-2">
         <Badge variant={plan.is_active ? "default" : "secondary"} className="text-[10px]">
           {plan.is_active ? "مفعّل" : "معطّل"}
         </Badge>
       </div>
 
-      {/* Icon + name + price */}
       <div className="flex items-start gap-3 mt-6 mb-4">
         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isPopular ? "bg-white/20" : "bg-primary/10"}`}>
           <Icon className={`w-6 h-6 ${isPopular ? "text-white" : "text-primary"}`} />
@@ -131,7 +141,6 @@ const SubscriptionPlanCard = ({
         <p className={`text-xs mb-3 text-center ${isPopular ? "text-white/70" : "text-muted-foreground"}`}>{plan.subtitle}</p>
       )}
 
-      {/* Features */}
       <div className="space-y-1.5 mb-4">
         {plan.features.map((f) => (
           <div key={f} className="flex items-center gap-2">
@@ -149,7 +158,6 @@ const SubscriptionPlanCard = ({
         ))}
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-2 pt-3 border-t border-white/20">
         <Switch
           checked={plan.is_active}
@@ -257,6 +265,70 @@ const GiftPlanCard = ({
   );
 };
 
+// ─── ExtraHourCard ──────────────────────────────────────────────────────────
+const ExtraHourCard = ({
+  pkg, onToggle, onEdit, onDelete,
+}: {
+  pkg: ExtraHourPackage;
+  onToggle: (id: string, v: boolean) => void;
+  onEdit: (pkg: ExtraHourPackage) => void;
+  onDelete: (id: string) => void;
+}) => {
+  return (
+    <motion.div
+      initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+      className={`rounded-2xl p-5 relative overflow-hidden border-2 transition-all ${
+        !pkg.is_active ? "opacity-50 border-border" : "bg-card border-border shadow-sm"
+      }`}
+    >
+      <div className="absolute top-3 right-3">
+        <Badge variant={pkg.is_active ? "default" : "secondary"} className="text-[10px]">
+          {pkg.is_active ? "مفعّل" : "معطّل"}
+        </Badge>
+      </div>
+
+      <div className="flex items-start gap-3 mt-6 mb-4">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-primary/10">
+          <Clock className="w-6 h-6 text-primary" />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-foreground">{pkg.label}</h3>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-extrabold text-foreground">{pkg.price}</span>
+            <span className="text-sm text-muted-foreground">ريال</span>
+            {pkg.original_price && (
+              <span className="text-sm line-through text-muted-foreground/60">{pkg.original_price} ريال</span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">{pkg.hours} ساعة</p>
+          {pkg.original_price && (
+            <span className="inline-block mt-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+              وفّر {Math.round((1 - pkg.price / pkg.original_price) * 100)}%
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 pt-3 border-t border-border">
+        <Switch
+          checked={pkg.is_active}
+          onCheckedChange={(v) => onToggle(pkg.id, v)}
+          className="data-[state=checked]:bg-green-500"
+        />
+        <span className="text-xs flex-1 text-muted-foreground">
+          {pkg.is_active ? "مفعّل" : "معطّل"}
+        </span>
+        <button onClick={() => onEdit(pkg)} className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground">
+          <Pencil className="w-4 h-4" />
+        </button>
+        <button onClick={() => onDelete(pkg.id)} className="p-2 rounded-xl hover:bg-destructive/20 transition-colors text-destructive">
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
 // ─── FeatureEditor ────────────────────────────────────────────────────────────
 const FeatureEditor = ({
   label, items, onChange,
@@ -340,6 +412,13 @@ const AdminPlans = () => {
   const [editingGift, setEditingGift] = useState<GiftPlan | null>(null);
   const [giftForm, setGiftForm] = useState<Omit<GiftPlan, "id">>(emptyGiftPlan);
 
+  // Extra hours state
+  const [extraHours, setExtraHours] = useState<ExtraHourPackage[]>([]);
+  const [extraLoading, setExtraLoading] = useState(true);
+  const [extraDialog, setExtraDialog] = useState(false);
+  const [editingExtra, setEditingExtra] = useState<ExtraHourPackage | null>(null);
+  const [extraForm, setExtraForm] = useState<Omit<ExtraHourPackage, "id">>(emptyExtraHour);
+
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchSubPlans = async () => {
     setSubLoading(true);
@@ -355,7 +434,14 @@ const AdminPlans = () => {
     setGiftLoading(false);
   };
 
-  useEffect(() => { fetchSubPlans(); fetchGiftPlans(); }, []);
+  const fetchExtraHours = async () => {
+    setExtraLoading(true);
+    const { data } = await (supabase as any).from("extra_hour_packages").select("*").order("sort_order");
+    setExtraHours(data || []);
+    setExtraLoading(false);
+  };
+
+  useEffect(() => { fetchSubPlans(); fetchGiftPlans(); fetchExtraHours(); }, []);
 
   // ── Sub plan CRUD ──────────────────────────────────────────────────────────
   const openAddSub = () => { setEditingSub(null); setSubForm(emptySubPlan); setSubDialog(true); };
@@ -427,6 +513,41 @@ const AdminPlans = () => {
     fetchGiftPlans();
   };
 
+  // ── Extra hours CRUD ───────────────────────────────────────────────────────
+  const openAddExtra = () => { setEditingExtra(null); setExtraForm(emptyExtraHour); setExtraDialog(true); };
+  const openEditExtra = (pkg: ExtraHourPackage) => {
+    setEditingExtra(pkg);
+    setExtraForm({ ...pkg });
+    setExtraDialog(true);
+  };
+
+  const saveExtra = async () => {
+    if (!extraForm.label) { toast({ title: "يرجى إدخال اسم الباقة", variant: "destructive" }); return; }
+    if (editingExtra) {
+      const { error } = await (supabase as any).from("extra_hour_packages").update(extraForm).eq("id", editingExtra.id);
+      if (error) { toast({ title: "حدث خطأ", variant: "destructive" }); return; }
+      toast({ title: "تم تحديث الباقة" });
+    } else {
+      const { error } = await (supabase as any).from("extra_hour_packages").insert(extraForm);
+      if (error) { toast({ title: "حدث خطأ", variant: "destructive" }); return; }
+      toast({ title: "تم إضافة الباقة" });
+    }
+    setExtraDialog(false);
+    fetchExtraHours();
+  };
+
+  const toggleExtra = async (id: string, value: boolean) => {
+    await (supabase as any).from("extra_hour_packages").update({ is_active: value }).eq("id", id);
+    fetchExtraHours();
+  };
+
+  const deleteExtra = async (id: string) => {
+    if (!confirm("هل تريد حذف هذه الباقة؟")) return;
+    await (supabase as any).from("extra_hour_packages").delete().eq("id", id);
+    toast({ title: "تم الحذف" });
+    fetchExtraHours();
+  };
+
   const IconPreview = ({ iconName }: { iconName: string }) => {
     const Icon = iconMap[iconName] || Crown;
     return <Icon className="w-5 h-5" />;
@@ -439,18 +560,21 @@ const AdminPlans = () => {
         <SidebarTrigger />
         <div>
           <h1 className="text-2xl font-bold text-foreground">إدارة الباقات</h1>
-          <p className="text-muted-foreground text-sm">تحكم في باقات الاشتراكات والإهداءات المعروضة في التطبيق</p>
+          <p className="text-muted-foreground text-sm">تحكم في باقات الاشتراكات والإهداءات والساعات الإضافية</p>
         </div>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="subscriptions" dir="rtl">
-        <TabsList className="w-full grid grid-cols-2">
+        <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="subscriptions" className="gap-2">
-            <Crown className="w-4 h-4" /> باقات الاشتراكات
+            <Crown className="w-4 h-4" /> الاشتراكات
           </TabsTrigger>
           <TabsTrigger value="gifts" className="gap-2">
-            <Gift className="w-4 h-4" /> باقات الإهداءات
+            <Gift className="w-4 h-4" /> الإهداءات
+          </TabsTrigger>
+          <TabsTrigger value="extra-hours" className="gap-2">
+            <Clock className="w-4 h-4" /> ساعات إضافية
           </TabsTrigger>
         </TabsList>
 
@@ -503,6 +627,31 @@ const AdminPlans = () => {
             </div>
           )}
         </TabsContent>
+
+        {/* ── Extra Hours Tab ── */}
+        <TabsContent value="extra-hours" className="mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm text-muted-foreground">{extraHours.length} باقة • {extraHours.filter(p => p.is_active).length} مفعّلة</p>
+            <Button onClick={openAddExtra} size="sm" className="gap-2">
+              <Plus className="w-4 h-4" /> إضافة باقة ساعات
+            </Button>
+          </div>
+
+          {extraLoading ? (
+            <div className="flex justify-center py-12">
+              <span className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {extraHours.map((pkg) => (
+                <ExtraHourCard
+                  key={pkg.id} pkg={pkg}
+                  onToggle={toggleExtra} onEdit={openEditExtra} onDelete={deleteExtra}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
 
       {/* ── Subscription Dialog ── */}
@@ -513,13 +662,11 @@ const AdminPlans = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            {/* Name */}
             <div className="space-y-1">
               <Label>اسم الباقة *</Label>
               <Input value={subForm.name} onChange={(e) => setSubForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: الحفظ والمراجعة" className="text-right" />
             </div>
 
-            {/* Icon */}
             <div className="space-y-1">
               <Label>الأيقونة</Label>
               <div className="flex flex-wrap gap-2">
@@ -535,7 +682,6 @@ const AdminPlans = () => {
               </div>
             </div>
 
-            {/* Prices */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>السعر الشهري (ريال)</Label>
@@ -547,19 +693,16 @@ const AdminPlans = () => {
               </div>
             </div>
 
-            {/* Period */}
             <div className="space-y-1">
               <Label>وصف الفترة</Label>
               <Input value={subForm.period} onChange={(e) => setSubForm(f => ({ ...f, period: e.target.value }))} placeholder="ريال / شهرياً" className="text-right" />
             </div>
 
-            {/* Subtitle */}
             <div className="space-y-1">
               <Label>وصف إضافي (اختياري)</Label>
               <Input value={subForm.subtitle ?? ""} onChange={(e) => setSubForm(f => ({ ...f, subtitle: e.target.value || null }))} className="text-right" />
             </div>
 
-            {/* Toggles */}
             <div className="flex gap-4 flex-wrap">
               <label className="flex items-center gap-2 cursor-pointer">
                 <Switch checked={subForm.is_popular} onCheckedChange={(v) => setSubForm(f => ({ ...f, is_popular: v }))} />
@@ -575,7 +718,6 @@ const AdminPlans = () => {
               </label>
             </div>
 
-            {/* Features */}
             <FeatureEditor
               label="الميزات المتضمنة"
               items={subForm.features}
@@ -587,7 +729,6 @@ const AdminPlans = () => {
               onChange={(items) => setSubForm(f => ({ ...f, not_included: items }))}
             />
 
-            {/* Sort order */}
             <div className="space-y-1">
               <Label>الترتيب</Label>
               <Input type="number" value={subForm.sort_order} onChange={(e) => setSubForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))} className="text-right" />
@@ -609,13 +750,11 @@ const AdminPlans = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            {/* Name */}
             <div className="space-y-1">
               <Label>اسم الباقة *</Label>
               <Input value={giftForm.name} onChange={(e) => setGiftForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: هدية الانطلاقة" className="text-right" />
             </div>
 
-            {/* Icon */}
             <div className="space-y-1">
               <Label>الأيقونة</Label>
               <div className="flex flex-wrap gap-2">
@@ -631,7 +770,6 @@ const AdminPlans = () => {
               </div>
             </div>
 
-            {/* Prices */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>السعر (ريال) *</Label>
@@ -643,7 +781,6 @@ const AdminPlans = () => {
               </div>
             </div>
 
-            {/* Duration + hours */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>المدة (نص)</Label>
@@ -666,7 +803,6 @@ const AdminPlans = () => {
               </div>
             </div>
 
-            {/* Toggles */}
             <div className="flex gap-4 flex-wrap">
               <label className="flex items-center gap-2 cursor-pointer">
                 <Switch checked={giftForm.is_popular} onCheckedChange={(v) => setGiftForm(f => ({ ...f, is_popular: v }))} />
@@ -678,14 +814,12 @@ const AdminPlans = () => {
               </label>
             </div>
 
-            {/* Features */}
             <FeatureEditor
               label="الميزات المتضمنة"
               items={giftForm.features}
               onChange={(items) => setGiftForm(f => ({ ...f, features: items }))}
             />
 
-            {/* Sort */}
             <div className="space-y-1">
               <Label>الترتيب</Label>
               <Input type="number" value={giftForm.sort_order} onChange={(e) => setGiftForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))} className="text-right" />
@@ -695,6 +829,55 @@ const AdminPlans = () => {
           <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setGiftDialog(false)}>إلغاء</Button>
             <Button onClick={saveGift} className="gap-2"><Save className="w-4 h-4" />حفظ</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Extra Hours Dialog ── */}
+      <Dialog open={extraDialog} onOpenChange={setExtraDialog}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>{editingExtra ? "تعديل باقة الساعات" : "إضافة باقة ساعات جديدة"}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label>اسم الباقة *</Label>
+              <Input value={extraForm.label} onChange={(e) => setExtraForm(f => ({ ...f, label: e.target.value }))} placeholder="مثال: ٣ ساعات" className="text-right" />
+            </div>
+
+            <div className="space-y-1">
+              <Label>عدد الساعات *</Label>
+              <Input type="number" value={extraForm.hours} onChange={(e) => setExtraForm(f => ({ ...f, hours: parseInt(e.target.value) || 1 }))} className="text-right" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>السعر (ريال) *</Label>
+                <Input type="number" value={extraForm.price} onChange={(e) => setExtraForm(f => ({ ...f, price: parseFloat(e.target.value) || 0 }))} className="text-right" />
+              </div>
+              <div className="space-y-1">
+                <Label>السعر الأصلي (قبل الخصم)</Label>
+                <Input type="number" value={extraForm.original_price ?? ""} onChange={(e) => setExtraForm(f => ({ ...f, original_price: e.target.value ? parseFloat(e.target.value) : null }))} placeholder="اختياري" className="text-right" />
+              </div>
+            </div>
+
+            <div className="flex gap-4 flex-wrap">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Switch checked={extraForm.is_active} onCheckedChange={(v) => setExtraForm(f => ({ ...f, is_active: v }))} />
+                <span className="text-sm">مفعّل</span>
+              </label>
+            </div>
+
+            <div className="space-y-1">
+              <Label>الترتيب</Label>
+              <Input type="number" value={extraForm.sort_order} onChange={(e) => setExtraForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))} className="text-right" />
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setExtraDialog(false)}>إلغاء</Button>
+            <Button onClick={saveExtra} className="gap-2"><Save className="w-4 h-4" />حفظ</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

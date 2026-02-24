@@ -306,15 +306,25 @@ const Subscription = () => {
   );
 };
 
-const hourPackages = [
-  { hours: 1, price: 15, label: "ساعة واحدة" },
-  { hours: 3, price: 40, originalPrice: 45, label: "٣ ساعات" },
-  { hours: 5, price: 60, originalPrice: 75, label: "٥ ساعات" },
-  { hours: 10, price: 100, originalPrice: 150, label: "١٠ ساعات" },
-];
+type HourPackage = { id: string; label: string; hours: number; price: number; original_price: number | null };
 
 const ExtraHoursSection = ({ onPay }: { onPay: (pkg: { label: string; price: number; hours: number }) => void }) => {
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
+  const [hourPackages, setHourPackages] = useState<HourPackage[]>([]);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("extra_hour_packages")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (data) setHourPackages(data);
+    };
+    fetch();
+  }, []);
+
+  if (hourPackages.length === 0) return null;
 
   return (
     <div className="px-5 mt-6">
@@ -332,7 +342,7 @@ const ExtraHoursSection = ({ onPay }: { onPay: (pkg: { label: string; price: num
         <div className="grid grid-cols-2 gap-3">
           {hourPackages.map((pkg, i) => (
             <motion.button
-              key={pkg.hours}
+              key={pkg.id}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.5 + i * 0.08 }}
@@ -352,19 +362,19 @@ const ExtraHoursSection = ({ onPay }: { onPay: (pkg: { label: string; price: num
                 <span className="text-lg font-extrabold text-foreground">{pkg.price}</span>
                 <span className="text-[10px] text-muted-foreground">ريال</span>
               </div>
-              {pkg.originalPrice && (
-                <p className="text-[10px] text-muted-foreground line-through">{pkg.originalPrice} ريال</p>
+              {pkg.original_price && (
+                <p className="text-[10px] text-muted-foreground line-through">{pkg.original_price} ريال</p>
               )}
-              {pkg.originalPrice && (
+              {pkg.original_price && (
                 <span className="inline-block mt-1 text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                  وفّر {Math.round((1 - pkg.price / pkg.originalPrice) * 100)}%
+                  وفّر {Math.round((1 - pkg.price / pkg.original_price) * 100)}%
                 </span>
               )}
             </motion.button>
           ))}
         </div>
 
-        {selectedPackage !== null && (
+        {selectedPackage !== null && hourPackages[selectedPackage] && (
           <motion.button
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
