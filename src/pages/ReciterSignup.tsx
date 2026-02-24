@@ -135,6 +135,9 @@ const ReciterSignup = () => {
       if (!fullName || !gender || !nationality || !idNumber || !phone || !city) {
         toast({ title: "مطلوب", description: "يرجى ملء جميع الحقول", variant: "destructive" });return false;
       }
+      if (phone.replace(/\D/g, '').length !== 9) {
+        setPhoneError("رقم الجوال يجب أن يتكون من 9 أرقام");return false;
+      }
     }
     if (step === 2) {
       if (!profession || !qualifications || !quranCertifications || !teachingExperience) {
