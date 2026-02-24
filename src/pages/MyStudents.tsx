@@ -24,23 +24,33 @@ const MyStudents = () => {
       .from("student_profiles")
       .select("user_id, full_name, preferred_riwaya, preferred_track")
       .eq("assigned_reciter_id", user.id)
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (data) {
-          // Fetch achievements for each student
           const studentIds = data.map(s => s.user_id);
-          supabase
-            .from("student_achievements")
-            .select("student_id, parts_memorized")
-            .in("student_id", studentIds.length > 0 ? studentIds : ["none"])
-            .then(({ data: achievements }) => {
-              const achMap: Record<string, number> = {};
-              achievements?.forEach(a => { achMap[a.student_id] = a.parts_memorized; });
-              setStudents(data.map(s => ({
-                ...s,
-                parts_memorized: achMap[s.user_id] || 0,
-              })));
-              setLoading(false);
-            });
+          const safeIds = studentIds.length > 0 ? studentIds : ["none"];
+          
+          const [{ data: achievements }, { data: profiles }] = await Promise.all([
+            supabase.from("student_achievements").select("student_id, parts_memorized").in("student_id", safeIds),
+            supabase.from("profiles").select("user_id, avatar_url").in("user_id", safeIds),
+          ]);
+          
+          const achMap: Record<string, number> = {};
+          achievements?.forEach(a => { achMap[a.student_id] = a.parts_memorized; });
+          
+          const avatarMap: Record<string, string | null> = {};
+          profiles?.forEach(p => {
+            if (p.avatar_url) {
+              const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(p.avatar_url);
+              avatarMap[p.user_id] = urlData?.publicUrl || null;
+            }
+          });
+          
+          setStudents(data.map(s => ({
+            ...s,
+            parts_memorized: achMap[s.user_id] || 0,
+            avatarUrl: avatarMap[s.user_id] || null,
+          })));
+          setLoading(false);
         } else {
           setLoading(false);
         }
@@ -129,7 +139,11 @@ const MyStudents = () => {
               style={{ animationDelay: `${i * 40}ms`, animationFillMode: 'both' }}
             >
               <div className="relative w-14 h-14 rounded-2xl overflow-hidden shrink-0 bg-muted flex items-center justify-center">
-                <User className="w-7 h-7 text-muted-foreground" />
+                {student.avatarUrl ? (
+                  <img src={student.avatarUrl} alt={student.full_name} className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-7 h-7 text-muted-foreground" />
+                )}
               </div>
 
               <div className="flex-1 min-w-0">
