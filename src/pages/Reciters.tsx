@@ -234,10 +234,6 @@ const Reciters = () => {
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-foreground truncate">{reciter.full_name}</h3>
               <p className="text-xs text-muted-foreground">{reciter.preferred_track || "—"}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <Star className="w-3 h-3 text-gold fill-current" />
-                <span className="text-xs text-gold font-semibold">معتمد</span>
-              </div>
             </div>
 
             <div className="flex items-center gap-1.5">
