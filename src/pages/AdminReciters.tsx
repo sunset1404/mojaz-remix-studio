@@ -49,6 +49,7 @@ interface ReciterProfile {
   preferred_times: string[];
   id_number: string;
   status: string;
+  reciter_type: string;
   created_at: string;
   stamp_url: string | null;
   signature_url: string | null;
@@ -599,6 +600,33 @@ const AdminReciters = () => {
                                         <div className="flex gap-2"><span className="text-muted-foreground shrink-0">الأيام:</span> <span className="font-medium text-foreground">{reciter.preferred_days?.join("، ") || "غير محدد"}</span></div>
                                         <div className="flex gap-2"><span className="text-muted-foreground shrink-0">الأوقات:</span> <span className="font-medium text-foreground">{reciter.preferred_times?.join("، ") || "غير محدد"}</span></div>
                                         <div className="flex gap-2"><span className="text-muted-foreground shrink-0">التسجيل:</span> <span className="font-medium text-foreground">{new Date(reciter.created_at).toLocaleDateString("ar-SA")}</span></div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <span className="text-muted-foreground shrink-0">نوع المقرئ:</span>
+                                          <Select
+                                            value={reciter.reciter_type || "general"}
+                                            onValueChange={async (val) => {
+                                              try {
+                                                const { error } = await supabase
+                                                  .from("reciter_profiles")
+                                                  .update({ reciter_type: val })
+                                                  .eq("id", reciter.id);
+                                                if (error) throw error;
+                                                setReciters(prev => prev.map(r => r.id === reciter.id ? { ...r, reciter_type: val } : r));
+                                                toast({ title: "تم تحديث نوع المقرئ ✅" });
+                                              } catch (e: any) {
+                                                toast({ title: "خطأ", description: e.message, variant: "destructive" });
+                                              }
+                                            }}
+                                          >
+                                            <SelectTrigger className="h-7 w-[130px] text-xs bg-card border-border/50">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="general">مقرئ عام</SelectItem>
+                                              <SelectItem value="ijazah">مقرئ إجازات</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
                                       </div>
 
                                       {/* Approval Actions */}
