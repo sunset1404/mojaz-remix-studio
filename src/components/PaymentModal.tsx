@@ -115,7 +115,7 @@ const PaymentModal = ({
       // Clear container to resolve React 18 StrictMode double mount issues
       container.innerHTML = "";
 
-      initMoyasarForm({
+      await initMoyasarForm({
         elementId: moyasarContainerId,
         amountSar: validatedAmount,
         description: `اشتراك ${planName}`,
@@ -128,9 +128,18 @@ const PaymentModal = ({
         onFailure: (error: any) => {
           console.error("Payment failed:", error);
           setPaymentState("error");
-          setErrorMessage(error?.message || "فشلت عملية الدفع");
+          setErrorMessage(error?.message || typeof error === "string" ? String(error) : "فشلت عملية الدفع");
         },
       });
+
+      // Timeout: if the form is still showing "Loading" after 8 seconds, show error
+      setTimeout(() => {
+        const container = document.getElementById(moyasarContainerId);
+        if (container && container.textContent?.trim() === "Loading") {
+          setPaymentState("error");
+          setErrorMessage("تعذر تحميل نموذج الدفع. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.");
+        }
+      }, 8000);
     } catch (err) {
       console.error("Failed to init Moyassar:", err);
       // Revert flag to allow retry
