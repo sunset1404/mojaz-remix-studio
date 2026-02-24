@@ -71,7 +71,7 @@ export function toHalalas(amountSar: number): number {
 /**
  * Initialize the Moyassar payment form inside a target element
  */
-export function initMoyasarForm(config: {
+export async function initMoyasarForm(config: {
     elementId: string;
     amountSar: number;
     description: string;
@@ -81,16 +81,25 @@ export function initMoyasarForm(config: {
     onCompleted?: (payment: MoyasarPaymentResponse) => void;
     onFailure?: (error: any) => void;
     onInitiating?: () => void;
-}): void {
+}): Promise<void> {
     const publishableKey = import.meta.env.VITE_MOYASSAR_PUBLISHABLE_KEY;
 
     if (!publishableKey || publishableKey === "pk_test_REPLACE_ME") {
         console.warn("Moyassar publishable key not configured");
     }
 
+    // Wait for Moyassar SDK to load (up to 10 seconds)
+    if (!window.Moyasar) {
+        let waited = 0;
+        while (!window.Moyasar && waited < 10000) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+            waited += 200;
+        }
+    }
+
     if (!window.Moyasar) {
         console.error("Moyassar SDK not loaded. Make sure moyasar.js is included in index.html");
-        return;
+        throw new Error("Moyassar SDK not loaded");
     }
 
     const moyasarConfig: MoyasarConfig = {
