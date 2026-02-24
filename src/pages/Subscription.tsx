@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
 import { Check, Crown, Sparkles, Zap, Gift, ChevronLeft, Clock } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import PaymentModal from "@/components/PaymentModal";
 
 type Plan = {
@@ -85,8 +88,70 @@ const plans: Plan[] = [
 
 
 const Subscription = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
+  const [freeLoading, setFreeLoading] = useState(false);
   const [paymentModal, setPaymentModal] = useState<{ open: boolean; planName: string; price: number | string; period?: string; subscriptionType?: string; durationMonths?: number; sourceType?: "subscription" | "gift" | "extra_hours"; metadata?: Record<string, any> }>({ open: false, planName: "", price: 0 });
+
+  const handleFreePlan = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    setFreeLoading(true);
+    try {
+      // Check if user already has an active subscription
+      const { data: existing } = await supabase
+        .from("student_subscriptions")
+        .select("id")
+        .eq("student_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (existing) {
+        toast.info("لديك اشتراك نشط بالفعل");
+        setFreeLoading(false);
+        return;
+      }
+
+      // Get student profile info
+      const { data: profile } = await supabase
+        .from("student_profiles")
+        .select("full_name, phone")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 1);
+
+      const { error } = await supabase
+        .from("student_subscriptions")
+        .insert({
+          student_id: user.id,
+          student_name: profile?.full_name || "طالب",
+          student_phone: profile?.phone || null,
+          subscription_type: "المجاني",
+          amount: 0,
+          duration_months: 1,
+          start_date: startDate.toISOString().split("T")[0],
+          end_date: endDate.toISOString().split("T")[0],
+          status: "active",
+          notes: "اشتراك مجاني - ساعة واحدة شهرياً",
+        });
+
+      if (error) throw error;
+
+      toast.success("تم تفعيل الباقة المجانية بنجاح! 🎉");
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      toast.error("حدث خطأ أثناء تفعيل الباقة المجانية");
+    } finally {
+      setFreeLoading(false);
+    }
+  };
 
   const getPrice = (plan: Plan) => {
     if (!plan.hasBilling) return plan.monthlyPrice;
@@ -211,20 +276,27 @@ const Subscription = () => {
 
             <motion.button
               whileTap={{ scale: 0.97 }}
-              onClick={() => plan.monthlyPrice !== "0" && setPaymentModal({
-                open: true,
-                planName: plan.name,
-                price: getPrice(plan) ?? "",
-                period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
-                subscriptionType: plan.name,
-                durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1,
-              })}
-              className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${plan.popular
+              disabled={plan.monthlyPrice === "0" && freeLoading}
+              onClick={() => {
+                if (plan.monthlyPrice === "0") {
+                  handleFreePlan();
+                } else {
+                  setPaymentModal({
+                    open: true,
+                    planName: plan.name,
+                    price: getPrice(plan) ?? "",
+                    period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
+                    subscriptionType: plan.name,
+                    durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1,
+                  });
+                }
+              }}
+              className={`w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60 ${plan.popular
                 ? "bg-white text-gold-foreground hover:bg-white/90"
                 : "gradient-primary text-primary-foreground hover:opacity-90"
                 }`}
             >
-              {plan.monthlyPrice === "0" ? "ابدأ مجاناً" : "اشترك الآن"}
+              {plan.monthlyPrice === "0" ? (freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً") : "اشترك الآن"}
             </motion.button>
           </motion.div>
         ))}

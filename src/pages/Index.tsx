@@ -5,6 +5,16 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import PopupMessageCard from "@/components/PopupMessageCard";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 type StudentStats = {
   parts_memorized: number;
@@ -73,6 +83,7 @@ const Index = () => {
   const [topReciters, setTopReciters] = useState<ReciterPreview[]>([]);
   const [activeSubscription, setActiveSubscription] = useState<ActiveSubscription | null>(null);
   const [popupMessage, setPopupMessage] = useState<{ id: string; title: string; message: string; icon: string; color_scheme: string } | null>(null);
+  const [showExpiredDialog, setShowExpiredDialog] = useState(false);
   const showDebug = import.meta.env.MODE !== "production";
   const [debugLoading, setDebugLoading] = useState(false);
   const [debugError, setDebugError] = useState("");
@@ -122,7 +133,49 @@ const Index = () => {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()
-      .then(({ data }) => { if (data) setActiveSubscription(data); });
+      .then(({ data }) => {
+        if (data) {
+          // Check if subscription has expired
+          const endDate = new Date(data.end_date);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          if (endDate < today) {
+            // Mark as expired in DB
+            supabase.from("student_subscriptions")
+              .update({ status: "expired" })
+              .eq("student_id", user.id)
+              .eq("status", "active")
+              .lte("end_date", today.toISOString().split("T")[0])
+              .then(() => {
+                // Show expired dialog only once per session
+                const expiredKey = `subscription_expired_shown_${user.id}`;
+                if (!sessionStorage.getItem(expiredKey)) {
+                  setShowExpiredDialog(true);
+                  sessionStorage.setItem(expiredKey, "1");
+                }
+              });
+          } else {
+            setActiveSubscription(data);
+          }
+        } else {
+          // Check if there's any expired subscription to show dialog
+          supabase.from("student_subscriptions")
+            .select("id")
+            .eq("student_id", user.id)
+            .eq("status", "expired")
+            .limit(1)
+            .maybeSingle()
+            .then(({ data: expired }) => {
+              if (expired) {
+                const expiredKey = `subscription_expired_shown_${user.id}`;
+                if (!sessionStorage.getItem(expiredKey)) {
+                  setShowExpiredDialog(true);
+                  sessionStorage.setItem(expiredKey, "1");
+                }
+              }
+            });
+        }
+      });
   }, [user]);
 
   const fetchDebugData = useCallback(async () => {
@@ -600,6 +653,31 @@ const Index = () => {
       )}
 
       <PopupMessageCard message={popupMessage} onClose={() => setPopupMessage(null)} />
+
+      {/* Expired Subscription Dialog */}
+      <AlertDialog open={showExpiredDialog} onOpenChange={setShowExpiredDialog}>
+        <AlertDialogContent className="max-w-sm rounded-2xl" dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center text-lg">
+              ⏰ انتهى اشتراكك
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-sm leading-relaxed">
+              انتهت مدة اشتراكك الحالي. يمكنك تجديد اشتراكك بإحدى الباقات المتاحة أو شراء رصيد ساعات إضافية لمتابعة رحلتك القرآنية.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+            <AlertDialogAction
+              onClick={() => navigate("/subscription")}
+              className="w-full gradient-primary text-primary-foreground rounded-xl"
+            >
+              تصفح الباقات
+            </AlertDialogAction>
+            <AlertDialogCancel className="w-full rounded-xl mt-0">
+              لاحقاً
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>);
 
 };
