@@ -1073,6 +1073,7 @@ export type Database = {
           id: string
           is_active: boolean
           is_popular: boolean
+          monthly_minutes: number
           name: string
           not_included: string[]
           period: string
@@ -1090,6 +1091,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_popular?: boolean
+          monthly_minutes?: number
           name: string
           not_included?: string[]
           period?: string
@@ -1107,6 +1109,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_popular?: boolean
+          monthly_minutes?: number
           name?: string
           not_included?: string[]
           period?: string

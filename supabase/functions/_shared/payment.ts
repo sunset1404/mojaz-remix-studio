@@ -158,6 +158,28 @@ export async function processMoyasarPayment(params: {
 
       if (subError) throw subError;
 
+      // Add subscription minutes to student credits
+      const monthlyMinutes = safeNumber(metadata.monthly_minutes) ?? 0;
+      if (monthlyMinutes > 0) {
+        const totalMinutes = monthlyMinutes * months;
+        const { data: existingCredit } = await supabase
+          .from("student_hour_credits")
+          .select("id, remaining_minutes")
+          .eq("user_id", paymentRow.user_id)
+          .maybeSingle();
+
+        if (existingCredit) {
+          await supabase
+            .from("student_hour_credits")
+            .update({ remaining_minutes: Number(existingCredit.remaining_minutes) + totalMinutes, updated_at: nowIso() })
+            .eq("id", existingCredit.id);
+        } else {
+          await supabase
+            .from("student_hour_credits")
+            .insert({ user_id: paymentRow.user_id, remaining_minutes: totalMinutes, updated_at: nowIso() });
+        }
+      }
+
       await supabase.from("transactions").insert({
         user_id: paymentRow.user_id,
         title: `اشتراك ${metadata.plan_name || ""}`,
@@ -203,22 +225,23 @@ export async function processMoyasarPayment(params: {
 
     } else if (sourceType === "extra_hours") {
       const hours = safeNumber(metadata.hours) ?? 0;
+      const minutesToAdd = hours * 60;
 
       const { data: existingCredit } = await supabase
         .from("student_hour_credits")
-        .select("id, hours")
+        .select("id, remaining_minutes")
         .eq("user_id", paymentRow.user_id)
         .maybeSingle();
 
       if (existingCredit) {
         await supabase
           .from("student_hour_credits")
-          .update({ hours: Number(existingCredit.hours) + hours, updated_at: nowIso() })
+          .update({ remaining_minutes: Number(existingCredit.remaining_minutes) + minutesToAdd, updated_at: nowIso() })
           .eq("id", existingCredit.id);
       } else {
         await supabase
           .from("student_hour_credits")
-          .insert({ user_id: paymentRow.user_id, hours, updated_at: nowIso() });
+          .insert({ user_id: paymentRow.user_id, remaining_minutes: minutesToAdd, updated_at: nowIso() });
       }
 
       await supabase.from("transactions").insert({
@@ -275,7 +298,7 @@ export async function computeExpectedAmount(params: {
 
     const { data: plan } = await supabase
       .from("subscription_plans")
-      .select("name, price_monthly, price_yearly, has_billing")
+      .select("name, price_monthly, price_yearly, has_billing, monthly_minutes")
       .eq("name", planName)
       .eq("is_active", true)
       .maybeSingle();
@@ -291,6 +314,7 @@ export async function computeExpectedAmount(params: {
       metadata: {
         plan_name: plan.name,
         duration_months: months,
+        monthly_minutes: plan.monthly_minutes ?? 0,
       },
     };
   }
@@ -322,13 +346,32 @@ export async function computeExpectedAmount(params: {
 
   const hours = safeNumber(params.hours);
   if (!hours) throw new Error("Missing hours");
-  const pkg = EXTRA_HOURS_PACKAGES.find((p) => p.hours === hours);
-  if (!pkg) throw new Error("Unknown hours package");
+
+  // Look up package from database
+  const { data: pkg } = await supabase
+    .from("extra_hour_packages")
+    .select("hours, price, label")
+    .eq("hours", hours)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!pkg) {
+    // Fallback to hardcoded packages
+    const fallbackPkg = EXTRA_HOURS_PACKAGES.find((p) => p.hours === hours);
+    if (!fallbackPkg) throw new Error("Unknown hours package");
+    return {
+      amount_sar: fallbackPkg.price,
+      metadata: {
+        hours: fallbackPkg.hours,
+        package_label: params.package_label || fallbackPkg.label,
+      },
+    };
+  }
 
   return {
-    amount_sar: pkg.price,
+    amount_sar: Number(pkg.price),
     metadata: {
-      hours: pkg.hours,
+      hours: Number(pkg.hours),
       package_label: params.package_label || pkg.label,
     },
   };
