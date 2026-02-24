@@ -44,6 +44,8 @@ const Reciters = () => {
   const [callingId, setCallingId] = useState<string | null>(null);
   const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
   const [noCreditsMessage, setNoCreditsMessage] = useState("");
+  const [ijazahStatus, setIjazahStatus] = useState<string | null>(null); // null = not ijazah student
+  const [isIjazahStudent, setIsIjazahStudent] = useState(false);
   const onlineReciters = useOnlineReciters();
 
   const handleCall = async (reciter: Reciter) => {
@@ -101,13 +103,31 @@ const Reciters = () => {
   useEffect(() => {
     const fetchReciters = async () => {
       let studentGender: string | null = null;
+      let studentTrack: string | null = null;
+      let assignedReciterId: string | null = null;
+      let studentIjazahStatus: string | null = null;
+
       if (user) {
         const { data: profile } = await supabase
           .from("student_profiles")
-          .select("gender")
+          .select("gender, preferred_track, assigned_reciter_id, ijazah_status")
           .eq("user_id", user.id)
           .maybeSingle();
         studentGender = profile?.gender ?? null;
+        studentTrack = profile?.preferred_track ?? null;
+        assignedReciterId = profile?.assigned_reciter_id ?? null;
+        studentIjazahStatus = profile?.ijazah_status ?? null;
+      }
+
+      // Check if ijazah student
+      const isIjazah = studentTrack === "الحصول على إجازة قرآنية";
+      setIsIjazahStudent(isIjazah);
+      setIjazahStatus(studentIjazahStatus);
+
+      // If ijazah student without assigned reciter, show message only
+      if (isIjazah && !assignedReciterId) {
+        setLoading(false);
+        return;
       }
 
       let query = supabase
@@ -115,7 +135,10 @@ const Reciters = () => {
         .select("id, user_id, full_name, preferred_track, stamp_url")
         .eq("status", "approved");
 
-      if (studentGender) {
+      // Ijazah students only see their assigned reciter
+      if (isIjazah && assignedReciterId) {
+        query = query.eq("user_id", assignedReciterId);
+      } else if (studentGender) {
         query = query.eq("gender", studentGender);
       }
 
@@ -217,24 +240,47 @@ const Reciters = () => {
         </motion.div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="px-5 mt-4 flex gap-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setFilter(tab.key)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${filter === tab.key
-              ? "gradient-primary text-primary-foreground shadow-md"
-              : "bg-muted text-muted-foreground"
-              }`}
+      {/* Ijazah student without assigned reciter - show notice */}
+      {isIjazahStudent && reciters.length === 0 && !loading ? (
+        <div className="px-5 mt-6">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="glass-card rounded-2xl p-6 text-center"
           >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+            <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-gold" />
+            </div>
+            <h3 className="font-bold text-foreground text-lg mb-2">مسار الإجازة القرآنية</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {ijazahStatus === "pending_test"
+                ? "سيتم إظهار المقرئ المخصص لك بعد اجتياز اختبار القبول. يرجى متابعة موعد الاختبار والاستعداد له."
+                : "جاري معالجة طلبك. سيتم تعيين مقرئ لك قريباً بإذن الله."}
+            </p>
+          </motion.div>
+        </div>
+      ) : (
+        <>
+          {/* Filter Tabs - hide for ijazah students */}
+          {!isIjazahStudent && (
+            <div className="px-5 mt-4 flex gap-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setFilter(tab.key)}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${filter === tab.key
+                    ? "gradient-primary text-primary-foreground shadow-md"
+                    : "bg-muted text-muted-foreground"
+                    }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
 
-      {/* Reciters List */}
-      <div className="px-5 mt-4 space-y-3">
+          {/* Reciters List */}
+          <div className="px-5 mt-4 space-y-3">
         {loading && (
           <div className="space-y-3">
             {[1, 2, 3].map((n) => (
@@ -336,6 +382,8 @@ const Reciters = () => {
           </div>
         ))}
       </div>
+        </>
+      )}
 
       {/* No Credits Dialog */}
       <AlertDialog open={showNoCreditsDialog} onOpenChange={setShowNoCreditsDialog}>
