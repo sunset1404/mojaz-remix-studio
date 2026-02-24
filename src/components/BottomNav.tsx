@@ -20,7 +20,7 @@ const reciterIjazahTabs = [
 ];
 
 const reciterGeneralTabs = [
-  { path: "/sessions", icon: Calendar, label: "الجلسات" },
+  { path: "/sessions", icon: Calendar, label: "الطابور" },
   { path: "/reciter-session-log", icon: ClipboardList, label: "سجل الجلسات" },
   { path: "/", icon: Home, label: "الرئيسية", main: true },
   { path: "/reciter-my-stats", icon: BarChart3, label: "إحصائياتي" },

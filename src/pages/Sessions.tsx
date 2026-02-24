@@ -33,6 +33,7 @@ const Sessions = () => {
       .from("video_call_sessions")
       .select("id, room_id, student_id, student_name, created_at, caller_role")
       .eq("reciter_id", user.id)
+      .eq("caller_role", "student")
       .eq("status", "waiting")
       .order("created_at", { ascending: true });
 

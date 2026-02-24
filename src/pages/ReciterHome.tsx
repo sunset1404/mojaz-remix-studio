@@ -197,8 +197,8 @@ const ReciterHome = () => {
                   <CalendarDays className="w-6 h-6 text-gold" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg text-primary-foreground">جلساتي القادمة</h3>
-                  <p className="text-sm text-primary-foreground/75 mt-0.5">3 جلسات مجدولة اليوم</p>
+                  <h3 className="font-bold text-lg text-primary-foreground">{reciterType === "general" ? "الطابور الإلكتروني" : "جلساتي القادمة"}</h3>
+                  <p className="text-sm text-primary-foreground/75 mt-0.5">{reciterType === "general" ? "حجز الجلسات - الطلاب المنتظرون" : "3 جلسات مجدولة اليوم"}</p>
                 </div>
                 <ChevronLeft className="w-5 h-5 text-primary-foreground/60 shrink-0" />
               </div>
