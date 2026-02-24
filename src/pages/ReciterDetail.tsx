@@ -34,11 +34,7 @@ type ReciterProfile = {
   gender: string;
 };
 
-type Certification = {
-  type: string;
-  riwaya: string | null;
-  certification_text: string;
-};
+
 
 const ReciterDetail = () => {
   const { reciterId } = useParams<{ reciterId: string }>();
@@ -47,7 +43,6 @@ const ReciterDetail = () => {
   const { toast } = useToast();
   const onlineReciters = useOnlineReciters();
   const [reciter, setReciter] = useState<ReciterProfile | null>(null);
-  const [certifications, setCertifications] = useState<Certification[]>([]);
   const [loading, setLoading] = useState(true);
   const [callingId, setCallingId] = useState<string | null>(null);
   const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
@@ -57,21 +52,14 @@ const ReciterDetail = () => {
     const fetchReciter = async () => {
       if (!reciterId) return;
 
-      const [{ data: reciterData }, { data: certsData }] = await Promise.all([
-        supabase
+      const { data: reciterData } = await supabase
           .from("reciter_profiles")
           .select("id, user_id, full_name, preferred_track, stamp_url, city, nationality, profession, qualifications, quran_certifications, teaching_experience, preferred_days, preferred_times, gender")
           .eq("user_id", reciterId)
           .eq("status", "approved")
-          .maybeSingle(),
-        supabase
-          .from("reciter_certifications")
-          .select("type, riwaya, certification_text")
-          .eq("reciter_id", reciterId),
-      ]);
+          .maybeSingle();
 
       setReciter(reciterData);
-      setCertifications(certsData ?? []);
       setLoading(false);
     };
     fetchReciter();
@@ -229,8 +217,8 @@ const ReciterDetail = () => {
         </motion.div>
       </div>
 
-      {/* Certifications */}
-      {certifications.length > 0 && (
+      {/* Certifications from profile */}
+      {reciter.quran_certifications && (
         <div className="px-5 mt-4">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -240,22 +228,11 @@ const ReciterDetail = () => {
           >
             <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
               <GraduationCap className="w-5 h-5 text-primary" />
-              الإجازات والشهادات
+              الإجازات القرآنية
             </h3>
-            <div className="space-y-2">
-              {certifications.map((cert, i) => (
-                <div key={i} className="flex items-start gap-2 p-3 rounded-xl bg-muted/50">
-                  <BookOpen className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {cert.riwaya || (cert.type === 'khatm' ? 'شهادة ختم القرآن' : 'إجازة')}
-                    </p>
-                    {cert.certification_text && (
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{cert.certification_text}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-primary/5 border border-primary/10">
+              <BookOpen className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-sm text-foreground leading-relaxed">{reciter.quran_certifications}</p>
             </div>
           </motion.div>
         </div>
