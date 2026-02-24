@@ -1,98 +1,52 @@
 import { motion } from "framer-motion";
-import { Check, Crown, Sparkles, Zap, Gift, ChevronLeft, Clock } from "lucide-react";
-import { useState } from "react";
+import { Check, Crown, Sparkles, Zap, Gift, ChevronLeft, Clock, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PaymentModal from "@/components/PaymentModal";
 
-type Plan = {
-  id: string;
-  name: string;
-  monthlyPrice: string;
-  yearlyPrice?: string;
-  period: string;
-  icon: typeof Zap;
-  color: string;
-  features: string[];
-  notIncluded: string[];
-  popular: boolean;
-  hasBilling: boolean;
-  subtitle?: string;
+const iconMap: Record<string, typeof Zap> = {
+  Zap, Crown, Sparkles,
 };
 
-const plans: Plan[] = [
-  {
-    id: "free",
-    name: "المجاني",
-    monthlyPrice: "0",
-    period: "ساعة مجانية للحساب الجديد",
-    icon: Zap,
-    color: "muted",
-    features: [
-      "ساعة واحدة مجانية للتجربة",
-      "اختيار مقرئ واحد",
-      "تتبع أساسي للتقدم",
-    ],
-    notIncluded: [
-      "ساعات إضافية بعد التجربة",
-      "إجازات قرآنية",
-      "شهادات معتمدة",
-    ],
-    popular: false,
-    hasBilling: false,
-    subtitle: "بعد انتهاء الساعة المجانية يتم تفعيل الاشتراك الشهري",
-  },
-  {
-    id: "memorization",
-    name: "الحفظ والمراجعة",
-    monthlyPrice: "89",
-    yearlyPrice: "890",
-    period: "ريال / شهرياً",
-    icon: Crown,
-    color: "primary",
-    features: [
-      "10 ساعات شهرياً",
-      "حفظ ومراجعة القرآن",
-      "تصحيح التلاوة والتجويد",
-      "جميع المقرئين متاحين",
-      "تتبع متقدم للتقدم",
-      "دعم أولوي 24/7",
-    ],
-    notIncluded: [],
-    popular: true,
-    hasBilling: true,
-  },
-  {
-    id: "ijazah",
-    name: "الإجازات القرآنية",
-    monthlyPrice: "89",
-    yearlyPrice: "890",
-    period: "ريال / شهرياً",
-    icon: Sparkles,
-    color: "gold",
-    features: [
-      "10 ساعات شهرياً",
-      "إجازة في القراءة",
-      "شهادات معتمدة",
-      "مقرئين متخصصين بالإجازات",
-      "متابعة مستمرة للتقدم",
-      "أولوية حجز المقرئين",
-    ],
-    notIncluded: [],
-    popular: false,
-    hasBilling: true,
-  },
-];
-
+type DBPlan = {
+  id: string;
+  name: string;
+  price_monthly: number;
+  price_yearly: number | null;
+  period: string;
+  icon: string;
+  features: string[];
+  not_included: string[];
+  is_popular: boolean;
+  has_billing: boolean;
+  subtitle: string | null;
+  sort_order: number;
+};
 
 const Subscription = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [plans, setPlans] = useState<DBPlan[]>([]);
+  const [loading, setLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
   const [freeLoading, setFreeLoading] = useState(false);
   const [paymentModal, setPaymentModal] = useState<{ open: boolean; planName: string; price: number | string; period?: string; subscriptionType?: string; durationMonths?: number; sourceType?: "subscription" | "gift" | "extra_hours"; metadata?: Record<string, any> }>({ open: false, planName: "", price: 0 });
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      const { data } = await supabase
+        .from("subscription_plans")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (data) setPlans(data);
+      setLoading(false);
+    };
+    fetchPlans();
+  }, []);
 
   const handleFreePlan = async () => {
     if (!user) {
@@ -101,7 +55,6 @@ const Subscription = () => {
     }
     setFreeLoading(true);
     try {
-      // Check if user already has an active subscription
       const { data: existing } = await supabase
         .from("student_subscriptions")
         .select("id")
@@ -115,7 +68,6 @@ const Subscription = () => {
         return;
       }
 
-      // Get student profile info
       const { data: profile } = await supabase
         .from("student_profiles")
         .select("full_name, phone")
@@ -153,13 +105,13 @@ const Subscription = () => {
     }
   };
 
-  const getPrice = (plan: Plan) => {
-    if (!plan.hasBilling) return plan.monthlyPrice;
-    return (billingCycle[plan.id] || "monthly") === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
+  const getPrice = (plan: DBPlan) => {
+    if (!plan.has_billing) return String(plan.price_monthly);
+    return (billingCycle[plan.id] || "monthly") === "yearly" ? String(plan.price_yearly ?? plan.price_monthly) : String(plan.price_monthly);
   };
 
-  const getPeriod = (plan: Plan) => {
-    if (!plan.hasBilling) return plan.period;
+  const getPeriod = (plan: DBPlan) => {
+    if (!plan.has_billing) return plan.period;
     return (billingCycle[plan.id] || "monthly") === "yearly" ? "ريال / سنوياً" : "ريال / شهرياً";
   };
 
@@ -169,6 +121,16 @@ const Subscription = () => {
       [planId]: (prev[planId] || "monthly") === "monthly" ? "yearly" : "monthly",
     }));
   };
+
+  const PlanIcon = (iconName: string) => iconMap[iconName] || Zap;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -187,120 +149,123 @@ const Subscription = () => {
 
       {/* Plans */}
       <div className="px-5 mt-6 space-y-4">
-        {plans.map((plan, i) => (
-          <motion.div
-            key={plan.id}
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: i * 0.15 }}
-            className={`rounded-2xl p-5 relative overflow-hidden ${plan.popular
-              ? "bg-gradient-to-br from-gold to-[hsl(43,74%,45%)] text-white shadow-xl"
-              : "glass-card"
-              }`}
-          >
-            {plan.popular && (
-              <div className="absolute top-3 left-3 bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
-                الأكثر طلباً ⭐
-              </div>
-            )}
-
-            <div className="flex items-start gap-3 mb-4">
-              <div
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center ${plan.popular ? "bg-white/20" : "bg-gold/10"
-                  }`}
-              >
-                <plan.icon className={`w-6 h-6 ${plan.popular ? "text-white" : "text-gold"}`} />
-              </div>
-              <div>
-                <h3 className={`text-lg font-bold ${plan.popular ? "" : "text-foreground"}`}>{plan.name}</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className={`text-3xl font-extrabold ${plan.popular ? "" : "text-foreground"}`}>
-                    {getPrice(plan)}
-                  </span>
-                  <span className={`text-sm ${plan.popular ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    {getPeriod(plan)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Billing toggle */}
-            {plan.hasBilling && (
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <span className={`text-xs font-semibold ${(billingCycle[plan.id] || "monthly") === "monthly" ? (plan.popular ? "" : "text-foreground") : "text-muted-foreground"}`}>شهري</span>
-                <button
-                  onClick={() => toggleBilling(plan.id)}
-                  className={`w-12 h-6 rounded-full relative transition-all ${(billingCycle[plan.id] || "monthly") === "yearly"
-                    ? plan.popular ? "bg-primary-foreground/30" : "bg-primary"
-                    : "bg-muted"
-                    }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full bg-primary-foreground absolute top-0.5 transition-all ${(billingCycle[plan.id] || "monthly") === "yearly" ? "left-0.5" : "right-0.5"
-                      }`}
-                  />
-                </button>
-                <span className={`text-xs font-semibold ${(billingCycle[plan.id] || "monthly") === "yearly" ? (plan.popular ? "" : "text-foreground") : "text-muted-foreground"}`}>سنوي</span>
-              </div>
-            )}
-
-            {plan.subtitle && (
-              <p className={`text-xs mb-3 text-center ${plan.popular ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                {plan.subtitle}
-              </p>
-            )}
-
-            <div className="space-y-2 mb-4">
-              {plan.features.map((feature) => (
-                <div key={feature} className="flex items-center gap-2">
-                  <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.popular ? "bg-primary/20" : "bg-gold/10"
-                      }`}
-                  >
-                    <Check className={`w-3 h-3 ${plan.popular ? "text-primary" : "text-gold"}`} />
-                  </div>
-                  <span className={`text-sm ${plan.popular ? "text-primary-foreground/90" : "text-foreground"}`}>
-                    {feature}
-                  </span>
-                </div>
-              ))}
-              {plan.notIncluded.map((feature) => (
-                <div key={feature} className="flex items-center gap-2 opacity-40">
-                  <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
-                    <span className="text-xs">✕</span>
-                  </div>
-                  <span className="text-sm line-through">{feature}</span>
-                </div>
-              ))}
-            </div>
-
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              disabled={plan.monthlyPrice === "0" && freeLoading}
-              onClick={() => {
-                if (plan.monthlyPrice === "0") {
-                  handleFreePlan();
-                } else {
-                  setPaymentModal({
-                    open: true,
-                    planName: plan.name,
-                    price: getPrice(plan) ?? "",
-                    period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
-                    subscriptionType: plan.name,
-                    durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1,
-                  });
-                }
-              }}
-              className={`w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60 ${plan.popular
-                ? "bg-white text-gold-foreground hover:bg-white/90"
-                : "gradient-primary text-primary-foreground hover:opacity-90"
+        {plans.map((plan, i) => {
+          const Icon = PlanIcon(plan.icon);
+          const isFree = plan.price_monthly === 0;
+          return (
+            <motion.div
+              key={plan.id}
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: i * 0.15 }}
+              className={`rounded-2xl p-5 relative overflow-hidden ${plan.is_popular
+                ? "bg-gradient-to-br from-gold to-[hsl(43,74%,45%)] text-white shadow-xl"
+                : "glass-card"
                 }`}
             >
-              {plan.monthlyPrice === "0" ? (freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً") : "اشترك الآن"}
-            </motion.button>
-          </motion.div>
-        ))}
+              {plan.is_popular && (
+                <div className="absolute top-3 left-3 bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                  الأكثر طلباً ⭐
+                </div>
+              )}
+
+              <div className="flex items-start gap-3 mb-4">
+                <div
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center ${plan.is_popular ? "bg-white/20" : "bg-gold/10"}`}
+                >
+                  <Icon className={`w-6 h-6 ${plan.is_popular ? "text-white" : "text-gold"}`} />
+                </div>
+                <div>
+                  <h3 className={`text-lg font-bold ${plan.is_popular ? "" : "text-foreground"}`}>{plan.name}</h3>
+                  <div className="flex items-baseline gap-1">
+                    <span className={`text-3xl font-extrabold ${plan.is_popular ? "" : "text-foreground"}`}>
+                      {getPrice(plan)}
+                    </span>
+                    <span className={`text-sm ${plan.is_popular ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                      {getPeriod(plan)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Billing toggle */}
+              {plan.has_billing && (
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <span className={`text-xs font-semibold ${(billingCycle[plan.id] || "monthly") === "monthly" ? (plan.is_popular ? "" : "text-foreground") : "text-muted-foreground"}`}>شهري</span>
+                  <button
+                    onClick={() => toggleBilling(plan.id)}
+                    className={`w-12 h-6 rounded-full relative transition-all ${(billingCycle[plan.id] || "monthly") === "yearly"
+                      ? plan.is_popular ? "bg-primary-foreground/30" : "bg-primary"
+                      : "bg-muted"
+                      }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-full bg-primary-foreground absolute top-0.5 transition-all ${(billingCycle[plan.id] || "monthly") === "yearly" ? "left-0.5" : "right-0.5"
+                        }`}
+                    />
+                  </button>
+                  <span className={`text-xs font-semibold ${(billingCycle[plan.id] || "monthly") === "yearly" ? (plan.is_popular ? "" : "text-foreground") : "text-muted-foreground"}`}>سنوي</span>
+                </div>
+              )}
+
+              {plan.subtitle && (
+                <p className={`text-xs mb-3 text-center ${plan.is_popular ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                  {plan.subtitle}
+                </p>
+              )}
+
+              <div className="space-y-2 mb-4">
+                {plan.features.map((feature) => (
+                  <div key={feature} className="flex items-center gap-2">
+                    <div
+                      className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.is_popular ? "bg-primary/20" : "bg-gold/10"}`}
+                    >
+                      <Check className={`w-3 h-3 ${plan.is_popular ? "text-primary" : "text-gold"}`} />
+                    </div>
+                    <span className={`text-sm ${plan.is_popular ? "text-primary-foreground/90" : "text-foreground"}`}>
+                      {feature}
+                    </span>
+                  </div>
+                ))}
+                {plan.not_included.map((feature) => (
+                  <div key={feature} className="flex items-center gap-2 opacity-40">
+                    <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
+                      <span className="text-xs">✕</span>
+                    </div>
+                    <span className="text-sm line-through">{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                disabled={isFree && freeLoading}
+                onClick={() => {
+                  if (isFree) {
+                    handleFreePlan();
+                  } else {
+                    setPaymentModal({
+                      open: true,
+                      planName: plan.name,
+                      price: getPrice(plan),
+                      period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
+                      subscriptionType: plan.name,
+                      durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1,
+                    });
+                  }
+                }}
+                className={`w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60 ${plan.is_popular
+                  ? "bg-white text-gold-foreground hover:bg-white/90"
+                  : "gradient-primary text-primary-foreground hover:opacity-90"
+                  }`}
+              >
+                {isFree ? (freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً") : "اشترك الآن"}
+              </motion.button>
+            </motion.div>
+          );
+        })}
       </div>
+
       {/* Extra Hours Section */}
       <ExtraHoursSection onPay={(pkg) => setPaymentModal({ open: true, planName: `ساعات إضافية - ${pkg.label}`, price: pkg.price, subscriptionType: "ساعات إضافية", durationMonths: 0, sourceType: "extra_hours", metadata: { hours: pkg.hours, package_label: pkg.label } })} />
 
