@@ -923,6 +923,30 @@ export type Database = {
         }
         Relationships: []
       }
+      student_hour_credits: {
+        Row: {
+          created_at: string
+          id: string
+          remaining_minutes: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          remaining_minutes?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          remaining_minutes?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_profiles: {
         Row: {
           assigned_reciter_id: string | null
