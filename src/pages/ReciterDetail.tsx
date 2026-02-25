@@ -198,16 +198,16 @@ const ReciterDetail = () => {
           <div className="flex items-center justify-center gap-3 mt-5">
             <button
               onClick={handleCall}
-              disabled={callingId === reciter.user_id}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+              disabled={callingId === reciter.user_id || !isOnline}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Phone className="w-5 h-5" />
               اتصال صوتي
             </button>
             <button
               onClick={handleCall}
-              disabled={callingId === reciter.user_id}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-all disabled:opacity-50"
+              disabled={callingId === reciter.user_id || !isOnline}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Video className="w-5 h-5" />
               مكالمة فيديو
