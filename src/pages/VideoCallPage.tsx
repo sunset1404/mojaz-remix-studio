@@ -5,6 +5,7 @@ import { ChevronRight, Loader2, AlertCircle, PhoneOff } from "lucide-react";
 import { VideoCall } from "@/components/video-call/VideoCall";
 import { ReciterSessionPanel, SessionNoteData } from "@/components/video-call/ReciterSessionPanel";
 import { SessionConfirmDialog } from "@/components/video-call/SessionConfirmDialog";
+import { StudentSessionPopup } from "@/components/video-call/StudentSessionPopup";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +23,8 @@ const VideoCallPage = () => {
     const [otherUserName, setOtherUserName] = useState<string>("");
     const [isReciter, setIsReciter] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [showStudentPopup, setShowStudentPopup] = useState(false);
+    const [sessionFeedback, setSessionFeedback] = useState<{ rating: number; notes: string }>({ rating: 0, notes: '' });
     const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
 
     useEffect(() => {
@@ -97,7 +100,7 @@ const VideoCallPage = () => {
         loadSession();
     }, [roomId, user]);
 
-    // When session is already ended, navigate back with toast
+    // When session is already ended on load, navigate back with toast
     useEffect(() => {
         if (pageState === "ended") {
             toast({
@@ -108,13 +111,56 @@ const VideoCallPage = () => {
         }
     }, [pageState]);
 
+    // Fetch session feedback from DB for student popup
+    const fetchSessionFeedback = async () => {
+        if (!roomId) return { rating: 0, notes: '' };
+        // Small delay to let the reciter's save propagate
+        await new Promise(r => setTimeout(r, 800));
+        const { data } = await (supabase as any)
+            .from("video_call_sessions")
+            .select("rating, notes")
+            .eq("room_id", roomId)
+            .maybeSingle();
+        return { rating: data?.rating || 0, notes: data?.notes || '' };
+    };
+
     const handleEndCall = async () => {
-        // If reciter, show confirmation dialog first
-        if (isReciter && !showConfirm) {
-            setShowConfirm(true);
+        if (isReciter) {
+            if (!showConfirm) {
+                setShowConfirm(true);
+                return;
+            }
+        } else {
+            // Student ending the call — show popup after saving
+            await saveSessionAsEnded();
+            const feedback = await fetchSessionFeedback();
+            setSessionFeedback(feedback);
+            setShowStudentPopup(true);
             return;
         }
         await saveAndEnd();
+    };
+
+    // Called when the other party ends the call (student side receives dbStatus=ended)
+    const handleOtherPartyEnded = async () => {
+        if (!isReciter) {
+            // Student: fetch the reciter's feedback and show popup
+            const feedback = await fetchSessionFeedback();
+            setSessionFeedback(feedback);
+            setShowStudentPopup(true);
+        } else {
+            // Reciter: just navigate back
+            toast({ title: "انتهت المكالمة", description: "تم إنهاء الجلسة" });
+            navigate(-1);
+        }
+    };
+
+    const saveSessionAsEnded = async () => {
+        if (!roomId) return;
+        await (supabase as any)
+            .from("video_call_sessions")
+            .update({ status: "ended", ended_at: new Date().toISOString() })
+            .eq("room_id", roomId);
     };
 
     const saveAndEnd = async () => {
@@ -151,6 +197,12 @@ const VideoCallPage = () => {
             title: "انتهت المكالمة",
             description: "تم إنهاء الجلسة بنجاح",
         });
+        navigate(-1);
+    };
+
+    const handleStudentPopupClose = () => {
+        setShowStudentPopup(false);
+        toast({ title: "انتهت المكالمة", description: "تم إنهاء الجلسة بنجاح" });
         navigate(-1);
     };
 
@@ -191,7 +243,8 @@ const VideoCallPage = () => {
                 roomId={roomId!}
                 role={callRole}
                 otherUserName={otherUserName}
-                onEndCall={handleEndCall}
+                onEndCall={isReciter ? handleEndCall : handleEndCall}
+                onOtherPartyEnded={handleOtherPartyEnded}
                 autoStartCall={callRole === "caller"}
             />
             {isReciter && (
@@ -205,6 +258,15 @@ const VideoCallPage = () => {
                         data={sessionNoteRef.current}
                         onConfirm={saveAndEnd}
                         onCancel={() => setShowConfirm(false)}
+                    />
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {showStudentPopup && (
+                    <StudentSessionPopup
+                        rating={sessionFeedback.rating}
+                        notes={sessionFeedback.notes}
+                        onClose={handleStudentPopupClose}
                     />
                 )}
             </AnimatePresence>

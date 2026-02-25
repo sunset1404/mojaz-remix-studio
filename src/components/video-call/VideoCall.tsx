@@ -8,10 +8,11 @@ interface VideoCallProps {
     role: 'caller' | 'callee';
     otherUserName?: string;
     onEndCall?: () => void;
+    onOtherPartyEnded?: () => void;
     autoStartCall?: boolean;
 }
 
-export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCall = false }: VideoCallProps) {
+export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false }: VideoCallProps) {
     const {
         localStream,
         remoteStream,
@@ -52,10 +53,14 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
         onEndCall?.();
     };
 
-    // Call ended by other party — navigate back immediately
+    // Call ended by other party — notify parent
     useEffect(() => {
         if (showEndedScreen) {
-            onEndCall?.();
+            if (onOtherPartyEnded) {
+                onOtherPartyEnded();
+            } else {
+                onEndCall?.();
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [showEndedScreen]);
