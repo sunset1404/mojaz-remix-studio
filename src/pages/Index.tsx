@@ -218,6 +218,12 @@ const Index = () => {
     fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    const handler = () => { fetchData(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    window.addEventListener("home-refresh", handler);
+    return () => window.removeEventListener("home-refresh", handler);
+  }, [fetchData]);
+
   const fetchDebugData = useCallback(async () => {
     if (!user) return;
     setDebugLoading(true);

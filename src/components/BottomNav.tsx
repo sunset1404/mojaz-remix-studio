@@ -1,5 +1,5 @@
 import { Home, Mic, Crown, Trophy, User, Users, Calendar, LayoutDashboard, Settings, BarChart3, ClipboardList } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -44,9 +44,17 @@ const adminTabs = [
 
 const BottomNav = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { role, reciterType } = useAuth();
   const reciterTabs = reciterType === "ijazah" ? reciterIjazahTabs : reciterGeneralTabs;
   const tabs = role === "admin" ? adminTabs : role === "partner" ? partnerTabs : role === "reciter" ? reciterTabs : studentTabs;
+
+  const handleTabClick = (e: React.MouseEvent, tab: typeof tabs[0]) => {
+    if (location.pathname === tab.path) {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("home-refresh"));
+    }
+  };
 
   return (
     <div className="fixed bottom-0 inset-x-0 z-50 max-w-md mx-auto">
@@ -58,6 +66,7 @@ const BottomNav = () => {
               <Link
                 key={tab.path}
                 to={tab.path}
+                onClick={(e) => handleTabClick(e, tab)}
                 className="flex-1 flex items-center justify-center py-2">
 
                 {tab.main ?
