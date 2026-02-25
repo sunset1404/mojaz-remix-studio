@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnlineReciters } from "@/hooks/useOnlineReciters";
+import PullToRefresh from "@/components/PullToRefresh";
 import reciter1 from "@/assets/reciters/reciter1.jpg";
 import reciter2 from "@/assets/reciters/reciter2.jpg";
 import reciter3 from "@/assets/reciters/reciter3.jpg";
@@ -37,7 +38,7 @@ const ReciterHome = () => {
   const onlineReciters = useOnlineReciters();
   const isOnline = user ? onlineReciters.includes(user.id) : false;
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
     supabase.from("reciter_profiles").select("full_name").eq("user_id", user.id).maybeSingle()
       .then(({ data }) => { if (data) {
@@ -45,7 +46,6 @@ const ReciterHome = () => {
         setUserName(parts.slice(0, 2).join(" "));
       }});
 
-    // Fetch assigned students for ijazah reciters
     if (reciterType === "ijazah") {
       supabase
         .from("student_profiles")
@@ -71,7 +71,6 @@ const ReciterHome = () => {
           }
         });
     }
-    // Fetch unread notifications count
     supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
@@ -79,7 +78,6 @@ const ReciterHome = () => {
       .eq("read", false)
       .then(({ count }) => { setUnreadCount(count || 0); });
 
-    // Fetch waiting queue count
     supabase
       .from("video_call_sessions")
       .select("id", { count: "exact", head: true })
@@ -87,6 +85,10 @@ const ReciterHome = () => {
       .eq("status", "waiting")
       .eq("caller_role", "student")
       .then(({ count }) => { setQueueCount(count || 0); });
+  }, [user, reciterType]);
+
+  useEffect(() => {
+    fetchData();
   }, [user, reciterType]);
 
   const nextSlide = useCallback(() => {
@@ -99,6 +101,7 @@ const ReciterHome = () => {
   }, [nextSlide]);
 
   return (
+    <PullToRefresh onRefresh={fetchData}>
     <div className="min-h-screen bg-background pb-24">
       {/* Hero Section */}
       <div className="px-6 pt-10 pb-3">
@@ -380,6 +383,7 @@ const ReciterHome = () => {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 };
 
