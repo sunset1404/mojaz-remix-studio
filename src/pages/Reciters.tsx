@@ -367,14 +367,14 @@ const Reciters = () => {
               <button
                 onClick={(e) => { e.stopPropagation(); handleCall(reciter); }}
                 disabled={callingId === reciter.user_id || !onlineReciters.includes(reciter.user_id)}
-                className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors disabled:opacity-30"
               >
                 <Phone className="w-4 h-4 text-primary" />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); handleCall(reciter); }}
                 disabled={callingId === reciter.user_id || !onlineReciters.includes(reciter.user_id)}
-                className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors disabled:opacity-30"
               >
                 <Video className="w-4 h-4 text-primary" />
               </button>
