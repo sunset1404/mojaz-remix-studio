@@ -52,34 +52,13 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
         onEndCall?.();
     };
 
-    // Call ended by other party screen
-    if (showEndedScreen) {
-        return (
-            <div
-                className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6 px-6"
-                dir="rtl"
-                style={{ background: "radial-gradient(circle at 50% 15%, hsl(var(--primary) / 0.3), hsl(var(--background)) 65%)" }}
-            >
-                <div className="w-20 h-20 rounded-full bg-card/60 border border-border flex items-center justify-center">
-                    <PhoneOff className="w-10 h-10 text-destructive" />
-                </div>
-                <div className="text-center space-y-2">
-                    <h2 className="text-xl font-bold text-foreground">
-                        {dbStatus === 'failed' ? 'تم رفض المكالمة' : 'انتهت المكالمة'}
-                    </h2>
-                    <p className="text-muted-foreground text-sm">
-                        {dbStatus === 'failed' ? 'تم رفض المكالمة من قبل الطرف الآخر' : 'تم إنهاء المكالمة من قبل الطرف الآخر'}
-                    </p>
-                </div>
-                <button
-                    onClick={() => onEndCall?.()}
-                    className="mt-4 px-8 py-3 rounded-2xl border border-primary/20 bg-card/70 hover:bg-card text-foreground font-semibold transition-colors"
-                >
-                    العودة
-                </button>
-            </div>
-        );
-    }
+    // Call ended by other party — navigate back immediately
+    useEffect(() => {
+        if (showEndedScreen) {
+            onEndCall?.();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [showEndedScreen]);
 
     // Connection status indicator
     const renderStatusBadge = () => {

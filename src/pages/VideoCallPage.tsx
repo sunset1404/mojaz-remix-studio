@@ -7,6 +7,7 @@ import { ReciterSessionPanel, SessionNoteData } from "@/components/video-call/Re
 import { SessionConfirmDialog } from "@/components/video-call/SessionConfirmDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 type CallPageState = "loading" | "ready" | "in-call" | "ended" | "error";
 
@@ -14,6 +15,7 @@ const VideoCallPage = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const navigate = useNavigate();
     const { user, role } = useAuth();
+    const { toast } = useToast();
     const [pageState, setPageState] = useState<CallPageState>("loading");
     const [error, setError] = useState<string>("");
     const [callRole, setCallRole] = useState<"caller" | "callee">("caller");
@@ -95,6 +97,17 @@ const VideoCallPage = () => {
         loadSession();
     }, [roomId, user]);
 
+    // When session is already ended, navigate back with toast
+    useEffect(() => {
+        if (pageState === "ended") {
+            toast({
+                title: "انتهت المكالمة",
+                description: "هذه الجلسة انتهت مسبقاً",
+            });
+            navigate(-1);
+        }
+    }, [pageState]);
+
     const handleEndCall = async () => {
         // If reciter, show confirmation dialog first
         if (isReciter && !showConfirm) {
@@ -134,6 +147,10 @@ const VideoCallPage = () => {
                 .update(updatePayload)
                 .eq("room_id", roomId);
         }
+        toast({
+            title: "انتهت المكالمة",
+            description: "تم إنهاء الجلسة بنجاح",
+        });
         navigate(-1);
     };
 
@@ -165,21 +182,7 @@ const VideoCallPage = () => {
     }
 
     if (pageState === "ended") {
-        return (
-            <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6" dir="rtl">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                    <PhoneOff className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <p className="text-foreground font-semibold">انتهت المكالمة</p>
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-1 text-primary text-sm font-medium"
-                >
-                    <ChevronRight className="w-4 h-4" />
-                    العودة
-                </button>
-            </div>
-        );
+        return null;
     }
 
     return (
