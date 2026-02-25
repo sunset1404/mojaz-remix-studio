@@ -771,7 +771,6 @@ export type Database = {
           gender: string
           id: string
           id_number: string
-          last_seen_at: string | null
           nationality: string
           phone: string
           preferred_days: string[]
@@ -795,7 +794,6 @@ export type Database = {
           gender: string
           id?: string
           id_number: string
-          last_seen_at?: string | null
           nationality: string
           phone: string
           preferred_days?: string[]
@@ -819,7 +817,6 @@ export type Database = {
           gender?: string
           id?: string
           id_number?: string
-          last_seen_at?: string | null
           nationality?: string
           phone?: string
           preferred_days?: string[]
