@@ -163,10 +163,22 @@ const MyStudents = () => {
                 >
                   <Heart className={`w-4 h-4 ${favorites.includes(student.user_id) ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
                 </button>
-                <button className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("/call/new", { state: { studentId: student.user_id, studentName: student.full_name } });
+                  }}
+                  className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+                >
                   <Phone className="w-4 h-4 text-primary" />
                 </button>
-                <button className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("/call/new", { state: { studentId: student.user_id, studentName: student.full_name } });
+                  }}
+                  className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+                >
                   <Video className="w-4 h-4 text-primary" />
                 </button>
               </div>

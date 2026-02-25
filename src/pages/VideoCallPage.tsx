@@ -30,7 +30,7 @@ const VideoCallPage = () => {
     const { toast } = useToast();
 
     // State from navigation (new call flow)
-    const navState = location.state as { reciterId?: string; reciterName?: string } | null;
+    const navState = location.state as { reciterId?: string; reciterName?: string; studentId?: string; studentName?: string } | null;
 
     const [roomId, setRoomId] = useState<string | null>(routeRoomId || null);
     const [pageState, setPageState] = useState<CallPageState>(routeRoomId ? "loading" : "creating");
@@ -47,13 +47,32 @@ const VideoCallPage = () => {
 
     // ── New call creation flow ──
     useEffect(() => {
-        if (pageState !== "creating" || !user || !navState?.reciterId) return;
+        if (pageState !== "creating" || !user) return;
+        // Determine if this is a student→reciter or reciter→student call
+        const isReciterCall = !!navState?.studentId;
+        const isStudentCall = !!navState?.reciterId;
+        if (!isReciterCall && !isStudentCall) return;
 
         const createSession = async () => {
             try {
-                const { data, error: fnError } = await supabase.functions.invoke("request-call", {
-                    body: { reciter_id: navState.reciterId },
-                });
+                let data: any;
+                let fnError: any;
+
+                if (isReciterCall) {
+                    // Reciter calling student
+                    const result = await supabase.functions.invoke("reciter-call", {
+                        body: { student_id: navState!.studentId },
+                    });
+                    data = result.data;
+                    fnError = result.error;
+                } else {
+                    // Student calling reciter
+                    const result = await supabase.functions.invoke("request-call", {
+                        body: { reciter_id: navState!.reciterId },
+                    });
+                    data = result.data;
+                    fnError = result.error;
+                }
 
                 if (fnError) {
                     let parsed: any = {};
@@ -72,13 +91,17 @@ const VideoCallPage = () => {
                     return;
                 }
 
-                if (data?.error) throw new Error(data.error);
+                if (data?.error) throw new Error(data.message || data.error);
 
                 // Session created — set roomId and proceed
                 setRoomId(data.room_id);
                 setCallRole("caller");
-                setIsReciter(false);
-                setOtherUserName(navState.reciterName || "المقرئ");
+                setIsReciter(isReciterCall);
+                setOtherUserName(
+                    isReciterCall
+                        ? navState!.studentName || "الطالب"
+                        : navState!.reciterName || "المقرئ"
+                );
                 setPageState("in-call");
 
                 // Update URL without re-render
@@ -314,8 +337,8 @@ const VideoCallPage = () => {
                     <p className="text-foreground font-semibold text-lg">
                         {pageState === "creating" ? "جاري بدء المكالمة..." : "جاري تحميل المكالمة..."}
                     </p>
-                    {navState?.reciterName && (
-                        <p className="text-muted-foreground text-sm">الاتصال بـ {navState.reciterName}</p>
+                    {(navState?.reciterName || navState?.studentName) && (
+                        <p className="text-muted-foreground text-sm">الاتصال بـ {navState?.reciterName || navState?.studentName}</p>
                     )}
                 </div>
                 {/* No credits dialog */}
