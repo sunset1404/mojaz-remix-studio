@@ -55,7 +55,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
     // Call ended by other party screen
     if (showEndedScreen) {
         return (
-            <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center gap-6 px-6" dir="rtl">
+            <div className="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center gap-6 px-6" dir="rtl">
                 <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center">
                     <PhoneOff className="w-10 h-10 text-red-400" />
                 </div>
@@ -117,7 +117,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
     };
 
     return (
-        <div className="fixed inset-0 bg-black z-50 flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
+        <div className="absolute inset-0 bg-black z-50 flex flex-col">
             {/* Status badge */}
             {renderStatusBadge()}
 

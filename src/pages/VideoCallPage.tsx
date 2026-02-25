@@ -148,13 +148,15 @@ const VideoCallPage = () => {
     }
 
     return (
-        <VideoCall
-            roomId={roomId!}
-            role={callRole}
-            otherUserName={otherUserName}
-            onEndCall={handleEndCall}
-            autoStartCall={callRole === "caller"}
-        />
+        <div className="relative w-full h-screen">
+            <VideoCall
+                roomId={roomId!}
+                role={callRole}
+                otherUserName={otherUserName}
+                onEndCall={handleEndCall}
+                autoStartCall={callRole === "caller"}
+            />
+        </div>
     );
 };
 
