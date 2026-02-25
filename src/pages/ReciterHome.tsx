@@ -91,6 +91,12 @@ const ReciterHome = () => {
     fetchData();
   }, [user, reciterType]);
 
+  useEffect(() => {
+    const handler = () => { fetchData(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    window.addEventListener("home-refresh", handler);
+    return () => window.removeEventListener("home-refresh", handler);
+  }, [fetchData]);
+
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % promoSlides.length);
   }, []);
