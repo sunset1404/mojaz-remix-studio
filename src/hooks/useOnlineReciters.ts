@@ -87,13 +87,13 @@ export function useOnlineReciters(): string[] {
             const threshold = new Date(Date.now() - 60000).toISOString();
             const { data, error } = await supabase
                 .from('reciter_profiles')
-                .select('user_id, last_seen_at')
-                .gte('last_seen_at', threshold)
+                .select('user_id, last_seen_at' as any)
+                .gte('last_seen_at' as any, threshold)
                 .eq('status', 'approved');
 
             if (error || !isMounted) return;
 
-            const ids = (data || []).map((row) => row.user_id).filter(Boolean);
+            const ids = (data || []).map((row: any) => row.user_id).filter(Boolean);
             ids.sort();
             setRecentReciterIds((prev) => {
                 if (prev.length === ids.length && prev.every((id, index) => id === ids[index])) {

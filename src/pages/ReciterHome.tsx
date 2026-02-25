@@ -34,6 +34,8 @@ const ReciterHome = () => {
   const [assignedStudents, setAssignedStudents] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [queueCount, setQueueCount] = useState(0);
+  const onlineReciters = useOnlineReciters();
+  const isOnline = user ? onlineReciters.includes(user.id) : false;
 
   useEffect(() => {
     if (!user) return;
@@ -106,16 +108,34 @@ const ReciterHome = () => {
           className="flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full overflow-hidden ring-2 ring-primary/20 bg-muted flex items-center justify-center shrink-0">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="صورة المستخدم" className="w-full h-full object-cover" />
-              ) : (
-                <User className="w-5 h-5 text-muted-foreground" />
-              )}
+            <div className="relative w-11 h-11 shrink-0">
+              <div className="w-11 h-11 rounded-full overflow-hidden ring-2 ring-primary/20 bg-muted flex items-center justify-center">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="صورة المستخدم" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-5 h-5 text-muted-foreground" />
+                )}
+              </div>
+              <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/50'}`} />
             </div>
-            <h1 className="text-2xl font-bold text-foreground font-cairo">
-              أهلاً {userName || "أيها المقرئ"} 👋
-            </h1>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground font-cairo">
+                أهلاً {userName || "أيها المقرئ"} 👋
+              </h1>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {isOnline ? (
+                  <>
+                    <Wifi className="w-3 h-3 text-emerald-500" />
+                    <span className="text-xs font-medium text-emerald-500">متصل - ظاهر للطلاب</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-xs font-medium text-muted-foreground">غير متصل</span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
           <button
             onClick={() => navigate("/notifications")}

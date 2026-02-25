@@ -57,7 +57,7 @@ export function useReciterPresence() {
             try {
                 await supabase
                     .from('reciter_profiles')
-                    .update({ last_seen_at: new Date().toISOString() })
+                    .update({ last_seen_at: new Date().toISOString() } as any)
                     .eq('user_id', user.id);
             } catch {
                 // ignore last_seen update failures
