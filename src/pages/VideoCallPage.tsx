@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronRight, Loader2, AlertCircle, PhoneOff } from "lucide-react";
 import { VideoCall } from "@/components/video-call/VideoCall";
+import { ReciterSessionPanel, SessionNoteData } from "@/components/video-call/ReciterSessionPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,6 +17,8 @@ const VideoCallPage = () => {
     const [error, setError] = useState<string>("");
     const [callRole, setCallRole] = useState<"caller" | "callee">("caller");
     const [otherUserName, setOtherUserName] = useState<string>("");
+    const [isReciter, setIsReciter] = useState(false);
+    const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
 
     useEffect(() => {
         if (!roomId || !user) return;
@@ -40,6 +43,7 @@ const VideoCallPage = () => {
                 }
 
                 const isStudent = session.student_id === user.id;
+                setIsReciter(!isStudent);
                 const callerRole = session.caller_role || (isStudent ? "student" : "reciter");
 
                 if (callerRole === "student") {
@@ -91,12 +95,32 @@ const VideoCallPage = () => {
 
     const handleEndCall = async () => {
         if (roomId) {
+            const noteData = sessionNoteRef.current;
+            const updatePayload: any = {
+                status: "ended",
+                ended_at: new Date().toISOString(),
+            };
+
+            if (isReciter) {
+                if (noteData.rating > 0) updatePayload.rating = noteData.rating;
+                const noteParts: string[] = [];
+                if (noteData.startSurah || noteData.startAyah) {
+                    noteParts.push(`بدأ من: ${noteData.startSurah} آية ${noteData.startAyah}`);
+                }
+                if (noteData.endSurah || noteData.endAyah) {
+                    noteParts.push(`انتهى عند: ${noteData.endSurah} آية ${noteData.endAyah}`);
+                }
+                if (noteData.notes) {
+                    noteParts.push(`ملاحظات: ${noteData.notes}`);
+                }
+                if (noteParts.length > 0) {
+                    updatePayload.notes = noteParts.join('\n');
+                }
+            }
+
             await (supabase as any)
                 .from("video_call_sessions")
-                .update({
-                    status: "ended",
-                    ended_at: new Date().toISOString(),
-                })
+                .update(updatePayload)
                 .eq("room_id", roomId);
         }
         navigate(-1);
@@ -156,6 +180,11 @@ const VideoCallPage = () => {
                 onEndCall={handleEndCall}
                 autoStartCall={callRole === "caller"}
             />
+            {isReciter && (
+                <ReciterSessionPanel
+                    onDataChange={(data) => { sessionNoteRef.current = data; }}
+                />
+            )}
         </div>
     );
 };
