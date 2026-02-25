@@ -29,8 +29,11 @@ export function useReciterPresence() {
         const isNative = Capacitor.isNativePlatform();
 
         const isAppForeground = () => {
+            if (isNative) {
+                return nativeAppActiveRef.current;
+            }
             const isVisible = typeof document !== 'undefined' ? document.visibilityState === 'visible' : true;
-            return isVisible && nativeAppActiveRef.current;
+            return isVisible;
         };
 
         const destroyChannel = async () => {
@@ -99,15 +102,20 @@ export function useReciterPresence() {
         const setup = async () => {
             reconnectAndTrack();
 
-            document.addEventListener('visibilitychange', handleVisibilityChange);
+            if (!isNative) {
+                document.addEventListener('visibilitychange', handleVisibilityChange);
+            }
 
             if (isNative) {
                 const state = await CapacitorApp.getState();
                 nativeAppActiveRef.current = state.isActive;
+                if (state.isActive) {
+                    reconnectAndTrack();
+                }
 
                 appStateListener = await CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
                     nativeAppActiveRef.current = isActive;
-                    if (isAppForeground()) {
+                    if (isActive) {
                         reconnectAndTrack();
                     } else {
                         await goOffline();
