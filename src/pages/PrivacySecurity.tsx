@@ -1,4 +1,4 @@
-import { ChevronRight, Shield, Lock, Smartphone } from "lucide-react";
+import { ChevronRight, Shield, Lock, Smartphone, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,10 +17,25 @@ const PrivacySecurity = () => {
 
   // Password change state
   const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+
+  const getPasswordStrength = (pwd: string): { level: number; label: string; color: string } => {
+    if (!pwd) return { level: 0, label: "", color: "" };
+    let score = 0;
+    if (pwd.length >= 6) score++;
+    if (pwd.length >= 10) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    if (score <= 1) return { level: 1, label: "ضعيفة", color: "bg-destructive" };
+    if (score <= 2) return { level: 2, label: "مقبولة", color: "bg-orange-400" };
+    if (score <= 3) return { level: 3, label: "جيدة", color: "bg-yellow-400" };
+    if (score <= 4) return { level: 4, label: "قوية", color: "bg-emerald-400" };
+    return { level: 5, label: "ممتازة", color: "bg-emerald-500" };
+  };
 
   const handleBiometricToggle = () => {
     const newVal = !biometric;
@@ -49,7 +64,7 @@ const PrivacySecurity = () => {
     } else {
       toast({ title: "تم", description: "تم تغيير كلمة المرور بنجاح" });
       setShowPasswordForm(false);
-      setCurrentPassword("");
+      
       setNewPassword("");
       setConfirmPassword("");
     }
@@ -90,20 +105,57 @@ const PrivacySecurity = () => {
 
             {showPasswordForm && (
               <div className="px-4 pb-4 space-y-3">
-                <Input
-                  type="password"
-                  placeholder="كلمة المرور الجديدة"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  minLength={6}
-                />
-                <Input
-                  type="password"
-                  placeholder="تأكيد كلمة المرور الجديدة"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  minLength={6}
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="كلمة المرور الجديدة"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pl-12 text-left"
+                    dir="ltr"
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
+                  </button>
+                </div>
+                {newPassword && (() => {
+                  const strength = getPasswordStrength(newPassword);
+                  return (
+                    <div className="space-y-1">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= strength.level ? strength.color : "bg-muted/30"}`} />
+                        ))}
+                      </div>
+                      <p className={`text-[11px] font-semibold text-right ${strength.level <= 1 ? "text-destructive" : strength.level <= 2 ? "text-orange-400" : strength.level <= 3 ? "text-yellow-500" : "text-emerald-500"}`}>
+                        {strength.label}
+                      </p>
+                    </div>
+                  );
+                })()}
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="تأكيد كلمة المرور الجديدة"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-12 text-left"
+                    dir="ltr"
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
+                  </button>
+                </div>
                 <Button onClick={handleChangePassword} disabled={changingPassword} className="w-full">
                   {changingPassword ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
                   تغيير كلمة المرور
