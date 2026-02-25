@@ -498,11 +498,11 @@ const Index = () => {
               const isOnline = onlineReciterIds.includes(assignedReciter.user_id);
               return (
                 <div className="relative rounded-2xl overflow-hidden p-5 shadow-xl"
-                  style={{ background: "linear-gradient(135deg, hsl(174 42% 28%) 0%, hsl(174 42% 35%) 50%, hsl(174 38% 40%) 100%)" }}>
+                  style={{ background: "linear-gradient(135deg, hsl(43 74% 49%) 0%, hsl(43 74% 42%) 50%, hsl(43 74% 38%) 100%)" }}>
                   {/* Decorative */}
                   <div className="absolute top-0 left-0 w-28 h-28 rounded-full bg-white/5 -translate-x-8 -translate-y-8" />
                   <div className="absolute bottom-0 right-0 w-20 h-20 rounded-full bg-white/5 translate-x-6 translate-y-6" />
-                  <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 70% 50% at 50% 90%, hsl(43 50% 50% / 0.15) 0%, transparent 70%)" }} />
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 70% 50% at 50% 10%, hsl(0 0% 100% / 0.1) 0%, transparent 60%)" }} />
 
                   <div className="relative z-10">
                     {/* Header */}
@@ -523,7 +523,7 @@ const Index = () => {
                             <User className="w-9 h-9 text-white/60" />
                           )}
                         </div>
-                        <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[2.5px] border-[hsl(174,42%,32%)] ${isOnline ? 'bg-green-400' : 'bg-muted-foreground/50'}`} />
+                        <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[2.5px] border-[hsl(43,74%,44%)] ${isOnline ? 'bg-green-400' : 'bg-white/40'}`} />
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -546,9 +546,9 @@ const Index = () => {
                         </button>
                         <button
                           onClick={() => isOnline && navigate(`/reciters/${assignedReciter.user_id}`)}
-                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isOnline ? 'bg-[#d2ac4b]/30 hover:bg-[#d2ac4b]/50 active:scale-95' : 'bg-white/5 opacity-40 cursor-not-allowed'}`}
+                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isOnline ? 'bg-white/25 hover:bg-white/35 active:scale-95' : 'bg-white/5 opacity-40 cursor-not-allowed'}`}
                           disabled={!isOnline}>
-                          <Video className="w-5 h-5 text-[#d2ac4b]" />
+                          <Video className="w-5 h-5 text-white" />
                         </button>
                       </div>
                     </div>
