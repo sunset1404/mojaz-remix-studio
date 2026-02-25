@@ -28,7 +28,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
 
     // When the other side ends the call via DB, show ended screen
     useEffect(() => {
-        if (dbStatus === 'ended') {
+        if (dbStatus === 'ended' || dbStatus === 'failed') {
             setShowEndedScreen(true);
         }
     }, [dbStatus]);
@@ -60,8 +60,12 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
                     <PhoneOff className="w-10 h-10 text-red-400" />
                 </div>
                 <div className="text-center space-y-2">
-                    <h2 className="text-xl font-bold text-white">انتهت المكالمة</h2>
-                    <p className="text-white/60 text-sm">تم إنهاء المكالمة من قبل الطرف الآخر</p>
+                    <h2 className="text-xl font-bold text-white">
+                        {dbStatus === 'failed' ? 'تم رفض المكالمة' : 'انتهت المكالمة'}
+                    </h2>
+                    <p className="text-white/60 text-sm">
+                        {dbStatus === 'failed' ? 'تم رفض المكالمة من قبل الطرف الآخر' : 'تم إنهاء المكالمة من قبل الطرف الآخر'}
+                    </p>
                 </div>
                 <button
                     onClick={() => onEndCall?.()}
