@@ -183,6 +183,8 @@ const Payments = () => {
                   </div>
                   <Input
                     placeholder="رقم البطاقة"
+                    name="cc-number"
+                    autoComplete="cc-number"
                     value={cardNumber}
                     onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
                     maxLength={19}
@@ -193,6 +195,8 @@ const Payments = () => {
                   <div className="flex gap-2">
                     <Input
                       placeholder="MM/YY"
+                      name="cc-exp"
+                      autoComplete="cc-exp"
                       value={cardExpiry}
                       onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
                       maxLength={5}
@@ -202,6 +206,8 @@ const Payments = () => {
                     />
                     <Input
                       placeholder="اسم حامل البطاقة"
+                      name="cc-name"
+                      autoComplete="cc-name"
                       value={cardHolder}
                       onChange={(e) => setCardHolder(e.target.value)}
                       className="flex-[2]"
