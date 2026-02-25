@@ -1,21 +1,11 @@
 import { motion } from "framer-motion";
-import { ArrowRight, User, Phone, Video, MapPin, Briefcase, BookOpen, GraduationCap, Calendar, Clock, Heart } from "lucide-react";
+import { ArrowRight, User, Phone, Video, MapPin, Briefcase, BookOpen, GraduationCap, Calendar, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOnlineReciters } from "@/hooks/useOnlineReciters";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
 
 type ReciterProfile = {
   id: string;
@@ -45,8 +35,6 @@ const ReciterDetail = () => {
   const [reciter, setReciter] = useState<ReciterProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [callingId, setCallingId] = useState<string | null>(null);
-  const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
-  const [noCreditsMessage, setNoCreditsMessage] = useState("");
 
   useEffect(() => {
     const fetchReciter = async () => {
@@ -65,53 +53,14 @@ const ReciterDetail = () => {
     fetchReciter();
   }, [reciterId]);
 
-  const handleCall = async () => {
+  const handleCall = () => {
     if (!user || !reciter) {
       toast({ title: "يرجى تسجيل الدخول أولاً", variant: "destructive" });
       return;
     }
     if (callingId) return;
-    setCallingId(reciter.user_id);
-
-    try {
-      const { data, error } = await supabase.functions.invoke("request-call", {
-        body: { reciter_id: reciter.user_id },
-      });
-
-      if (error) {
-        const errorBody = error.message ? JSON.parse(error.message || "{}") : {};
-        if (errorBody?.error === "no_credits" || errorBody?.error === "no_subscription") {
-          setNoCreditsMessage(errorBody.message || "نفذ رصيد ساعاتك");
-          setShowNoCreditsDialog(true);
-          return;
-        }
-        throw error;
-      }
-
-      if (data?.error === "no_credits" || data?.error === "no_subscription") {
-        setNoCreditsMessage(data.message || "نفذ رصيد ساعاتك");
-        setShowNoCreditsDialog(true);
-        return;
-      }
-
-      if (data?.error) throw new Error(data.error);
-
-      toast({ title: "جاري الاتصال...", description: `بانتظار رد ${reciter.full_name}` });
-      navigate(`/call/${data.room_id}?role=caller`);
-    } catch (err: any) {
-      console.error("Call error:", err);
-      try {
-        const parsed = JSON.parse(err?.message || "{}");
-        if (parsed?.error === "no_credits" || parsed?.error === "no_subscription") {
-          setNoCreditsMessage(parsed.message || "نفذ رصيد ساعاتك");
-          setShowNoCreditsDialog(true);
-          return;
-        }
-      } catch {}
-      toast({ title: "فشل بدء المكالمة", description: err.message || "حدث خطأ", variant: "destructive" });
-    } finally {
-      setCallingId(null);
-    }
+    // Navigate immediately — VideoCallPage will handle session creation
+    navigate(`/call/new`, { state: { reciterId: reciter.user_id, reciterName: reciter.full_name } });
   };
 
   const isOnline = reciter ? onlineReciters.includes(reciter.user_id) : false;
@@ -345,31 +294,6 @@ const ReciterDetail = () => {
         </div>
       )}
 
-      {/* No Credits Dialog */}
-      <AlertDialog open={showNoCreditsDialog} onOpenChange={setShowNoCreditsDialog}>
-        <AlertDialogContent className="rounded-2xl max-w-sm mx-auto" dir="rtl">
-          <AlertDialogHeader>
-            <div className="flex justify-center mb-3">
-              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
-                <Clock className="w-8 h-8 text-destructive" />
-              </div>
-            </div>
-            <AlertDialogTitle className="text-center text-lg">نفذ رصيد الساعات</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-sm">
-              {noCreditsMessage || "لا يوجد لديك رصيد كافٍ لبدء مكالمة. يرجى تجديد اشتراكك أو شراء ساعات إضافية."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
-            <AlertDialogAction onClick={() => navigate("/subscription")} className="gradient-primary text-primary-foreground rounded-xl">
-              تجديد الاشتراك
-            </AlertDialogAction>
-            <AlertDialogAction onClick={() => navigate("/subscription")} className="bg-gold text-white rounded-xl hover:bg-gold/90">
-              شراء ساعات إضافية
-            </AlertDialogAction>
-            <AlertDialogCancel className="rounded-xl">إلغاء</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

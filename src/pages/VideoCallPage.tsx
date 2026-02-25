@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Loader2, AlertCircle, PhoneOff } from "lucide-react";
+import { ChevronRight, Loader2, AlertCircle, PhoneOff, Clock } from "lucide-react";
 import { VideoCall } from "@/components/video-call/VideoCall";
 import { ReciterSessionPanel, SessionNoteData } from "@/components/video-call/ReciterSessionPanel";
 import { SessionConfirmDialog } from "@/components/video-call/SessionConfirmDialog";
@@ -9,26 +9,101 @@ import { StudentSessionPopup } from "@/components/video-call/StudentSessionPopup
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogAction,
+    AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
-type CallPageState = "loading" | "ready" | "in-call" | "ended" | "error";
+type CallPageState = "creating" | "loading" | "in-call" | "ended" | "error";
 
 const VideoCallPage = () => {
-    const { roomId } = useParams<{ roomId: string }>();
+    const { roomId: routeRoomId } = useParams<{ roomId: string }>();
+    const location = useLocation();
     const navigate = useNavigate();
-    const { user, role } = useAuth();
+    const { user } = useAuth();
     const { toast } = useToast();
-    const [pageState, setPageState] = useState<CallPageState>("loading");
+
+    // State from navigation (new call flow)
+    const navState = location.state as { reciterId?: string; reciterName?: string } | null;
+
+    const [roomId, setRoomId] = useState<string | null>(routeRoomId || null);
+    const [pageState, setPageState] = useState<CallPageState>(routeRoomId ? "loading" : "creating");
     const [error, setError] = useState<string>("");
     const [callRole, setCallRole] = useState<"caller" | "callee">("caller");
-    const [otherUserName, setOtherUserName] = useState<string>("");
+    const [otherUserName, setOtherUserName] = useState<string>(navState?.reciterName || "");
     const [isReciter, setIsReciter] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [showStudentPopup, setShowStudentPopup] = useState(false);
     const [sessionFeedback, setSessionFeedback] = useState<{ rating: number; notes: string }>({ rating: 0, notes: '' });
+    const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
+    const [noCreditsMessage, setNoCreditsMessage] = useState("");
     const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
 
+    // ── New call creation flow ──
     useEffect(() => {
-        if (!roomId || !user) return;
+        if (pageState !== "creating" || !user || !navState?.reciterId) return;
+
+        const createSession = async () => {
+            try {
+                const { data, error: fnError } = await supabase.functions.invoke("request-call", {
+                    body: { reciter_id: navState.reciterId },
+                });
+
+                if (fnError) {
+                    let parsed: any = {};
+                    try { parsed = JSON.parse(fnError.message || "{}"); } catch {}
+                    if (parsed?.error === "no_credits" || parsed?.error === "no_subscription") {
+                        setNoCreditsMessage(parsed.message || "نفذ رصيد ساعاتك");
+                        setShowNoCreditsDialog(true);
+                        return;
+                    }
+                    throw fnError;
+                }
+
+                if (data?.error === "no_credits" || data?.error === "no_subscription") {
+                    setNoCreditsMessage(data.message || "نفذ رصيد ساعاتك");
+                    setShowNoCreditsDialog(true);
+                    return;
+                }
+
+                if (data?.error) throw new Error(data.error);
+
+                // Session created — set roomId and proceed
+                setRoomId(data.room_id);
+                setCallRole("caller");
+                setIsReciter(false);
+                setOtherUserName(navState.reciterName || "المقرئ");
+                setPageState("in-call");
+
+                // Update URL without re-render
+                window.history.replaceState(null, "", `/call/${data.room_id}?role=caller`);
+            } catch (err: any) {
+                console.error("Call creation error:", err);
+                try {
+                    const parsed = JSON.parse(err?.message || "{}");
+                    if (parsed?.error === "no_credits" || parsed?.error === "no_subscription") {
+                        setNoCreditsMessage(parsed.message || "نفذ رصيد ساعاتك");
+                        setShowNoCreditsDialog(true);
+                        return;
+                    }
+                } catch {}
+                setError(err.message || "فشل بدء المكالمة");
+                setPageState("error");
+            }
+        };
+
+        createSession();
+    }, [pageState, user, navState]);
+
+    // ── Existing room flow ──
+    useEffect(() => {
+        if (pageState !== "loading" || !roomId || !user) return;
 
         const loadSession = async () => {
             try {
@@ -60,14 +135,10 @@ const VideoCallPage = () => {
                     } else {
                         setCallRole("callee");
                         setOtherUserName(session.student_name || "الطالب");
-
                         if (!session.reciter_joined_at) {
                             await (supabase as any)
                                 .from("video_call_sessions")
-                                .update({
-                                    reciter_joined_at: new Date().toISOString(),
-                                    status: "active",
-                                })
+                                .update({ reciter_joined_at: new Date().toISOString(), status: "active" })
                                 .eq("room_id", roomId);
                         }
                     }
@@ -78,13 +149,10 @@ const VideoCallPage = () => {
                     } else {
                         setCallRole("caller");
                         setOtherUserName(session.student_name || "الطالب");
-
                         if (!session.reciter_joined_at) {
                             await (supabase as any)
                                 .from("video_call_sessions")
-                                .update({
-                                    reciter_joined_at: new Date().toISOString(),
-                                })
+                                .update({ reciter_joined_at: new Date().toISOString() })
                                 .eq("room_id", roomId);
                         }
                     }
@@ -98,23 +166,19 @@ const VideoCallPage = () => {
         };
 
         loadSession();
-    }, [roomId, user]);
+    }, [pageState, roomId, user]);
 
-    // When session is already ended on load, navigate back with toast
+    // When session is already ended on load
     useEffect(() => {
         if (pageState === "ended") {
-            toast({
-                title: "انتهت المكالمة",
-                description: "هذه الجلسة انتهت مسبقاً",
-            });
+            toast({ title: "انتهت المكالمة", description: "هذه الجلسة انتهت مسبقاً" });
             navigate(-1);
         }
     }, [pageState]);
 
-    // Fetch session feedback from DB for student popup
+    // ── Session end helpers ──
     const fetchSessionFeedback = async () => {
         if (!roomId) return { rating: 0, notes: '' };
-        // Small delay to let the reciter's save propagate
         await new Promise(r => setTimeout(r, 800));
         const { data } = await (supabase as any)
             .from("video_call_sessions")
@@ -128,15 +192,11 @@ const VideoCallPage = () => {
         if (isReciter) {
             setShowConfirm(true);
             return;
-        } else {
-            // Student ending the call — show popup after saving
-            await saveSessionAsEnded();
-            const feedback = await fetchSessionFeedback();
-            setSessionFeedback(feedback);
-            setShowStudentPopup(true);
-            return;
         }
-        await saveAndEnd();
+        await saveSessionAsEnded();
+        const feedback = await fetchSessionFeedback();
+        setSessionFeedback(feedback);
+        setShowStudentPopup(true);
     };
 
     const handleConfirmEnd = async (updatedData: SessionNoteData) => {
@@ -145,15 +205,12 @@ const VideoCallPage = () => {
         await saveAndEnd();
     };
 
-    // Called when the other party ends the call (student side receives dbStatus=ended)
     const handleOtherPartyEnded = async () => {
         if (!isReciter) {
-            // Student: fetch the reciter's feedback and show popup
             const feedback = await fetchSessionFeedback();
             setSessionFeedback(feedback);
             setShowStudentPopup(true);
         } else {
-            // Reciter: just navigate back
             toast({ title: "انتهت المكالمة", description: "تم إنهاء الجلسة" });
             navigate(-1);
         }
@@ -170,26 +227,15 @@ const VideoCallPage = () => {
     const saveAndEnd = async () => {
         if (roomId) {
             const noteData = sessionNoteRef.current;
-            const updatePayload: any = {
-                status: "ended",
-                ended_at: new Date().toISOString(),
-            };
+            const updatePayload: any = { status: "ended", ended_at: new Date().toISOString() };
 
             if (isReciter) {
                 if (noteData.rating > 0) updatePayload.rating = noteData.rating;
                 const noteParts: string[] = [];
-                if (noteData.startSurah || noteData.startAyah) {
-                    noteParts.push(`بدأ من: ${noteData.startSurah} آية ${noteData.startAyah}`);
-                }
-                if (noteData.endSurah || noteData.endAyah) {
-                    noteParts.push(`انتهى عند: ${noteData.endSurah} آية ${noteData.endAyah}`);
-                }
-                if (noteData.notes) {
-                    noteParts.push(`ملاحظات: ${noteData.notes}`);
-                }
-                if (noteParts.length > 0) {
-                    updatePayload.notes = noteParts.join('\n');
-                }
+                if (noteData.startSurah || noteData.startAyah) noteParts.push(`بدأ من: ${noteData.startSurah} آية ${noteData.startAyah}`);
+                if (noteData.endSurah || noteData.endAyah) noteParts.push(`انتهى عند: ${noteData.endSurah} آية ${noteData.endAyah}`);
+                if (noteData.notes) noteParts.push(`ملاحظات: ${noteData.notes}`);
+                if (noteParts.length > 0) updatePayload.notes = noteParts.join('\n');
             }
 
             await (supabase as any)
@@ -197,10 +243,7 @@ const VideoCallPage = () => {
                 .update(updatePayload)
                 .eq("room_id", roomId);
         }
-        toast({
-            title: "انتهت المكالمة",
-            description: "تم إنهاء الجلسة بنجاح",
-        });
+        toast({ title: "انتهت المكالمة", description: "تم إنهاء الجلسة بنجاح" });
         navigate(-1);
     };
 
@@ -210,12 +253,46 @@ const VideoCallPage = () => {
         navigate(-1);
     };
 
-    if (pageState === "loading") {
+    // ── Render ──
+    if (pageState === "creating" || pageState === "loading") {
         return (
-            <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4" dir="rtl">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                <p className="text-muted-foreground">جاري تحميل المكالمة...</p>
-            </div>
+            <>
+                <div
+                    className="min-h-screen flex flex-col items-center justify-center gap-4"
+                    dir="rtl"
+                    style={{ background: "radial-gradient(circle at 50% 12%, hsl(var(--primary) / 0.25), hsl(var(--background)) 58%)" }}
+                >
+                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                    <p className="text-foreground font-semibold text-lg">
+                        {pageState === "creating" ? "جاري بدء المكالمة..." : "جاري تحميل المكالمة..."}
+                    </p>
+                    {navState?.reciterName && (
+                        <p className="text-muted-foreground text-sm">الاتصال بـ {navState.reciterName}</p>
+                    )}
+                </div>
+                {/* No credits dialog */}
+                <AlertDialog open={showNoCreditsDialog} onOpenChange={(open) => { if (!open) navigate(-1); }}>
+                    <AlertDialogContent className="rounded-2xl max-w-sm mx-auto" dir="rtl">
+                        <AlertDialogHeader>
+                            <div className="flex justify-center mb-3">
+                                <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                                    <Clock className="w-8 h-8 text-destructive" />
+                                </div>
+                            </div>
+                            <AlertDialogTitle className="text-center text-lg">نفذ رصيد الساعات</AlertDialogTitle>
+                            <AlertDialogDescription className="text-center text-sm">
+                                {noCreditsMessage || "لا يوجد لديك رصيد كافٍ لبدء مكالمة."}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+                            <AlertDialogAction onClick={() => navigate("/subscription")} className="gradient-primary text-primary-foreground rounded-xl">
+                                تجديد الاشتراك
+                            </AlertDialogAction>
+                            <AlertDialogCancel onClick={() => navigate(-1)} className="rounded-xl">إلغاء</AlertDialogCancel>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </>
         );
     }
 
@@ -226,10 +303,7 @@ const VideoCallPage = () => {
                     <AlertCircle className="w-8 h-8 text-destructive" />
                 </div>
                 <p className="text-foreground font-semibold">{error}</p>
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-1 text-primary text-sm font-medium"
-                >
+                <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-primary text-sm font-medium">
                     <ChevronRight className="w-4 h-4" />
                     العودة
                 </button>
@@ -237,9 +311,7 @@ const VideoCallPage = () => {
         );
     }
 
-    if (pageState === "ended") {
-        return null;
-    }
+    if (pageState === "ended") return null;
 
     return (
         <div className="relative w-full h-screen">
@@ -247,14 +319,12 @@ const VideoCallPage = () => {
                 roomId={roomId!}
                 role={callRole}
                 otherUserName={otherUserName}
-                onEndCall={isReciter ? handleEndCall : handleEndCall}
+                onEndCall={handleEndCall}
                 onOtherPartyEnded={handleOtherPartyEnded}
                 autoStartCall={callRole === "caller"}
             />
             {isReciter && (
-                <ReciterSessionPanel
-                    onDataChange={(data) => { sessionNoteRef.current = data; }}
-                />
+                <ReciterSessionPanel onDataChange={(data) => { sessionNoteRef.current = data; }} />
             )}
             <AnimatePresence>
                 {showConfirm && isReciter && (
