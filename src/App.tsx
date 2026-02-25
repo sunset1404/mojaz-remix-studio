@@ -166,6 +166,7 @@ const AppRoutes = () => (
     <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
     <Route path="/payment/callback" element={<ProtectedRoute><PaymentCallback /></ProtectedRoute>} />
     <Route path="/call-history" element={<ProtectedRoute><CallHistory /></ProtectedRoute>} />
+     <Route path="/call/new" element={<ProtectedRoute><VideoCallPage /></ProtectedRoute>} />
     <Route path="/call/:roomId" element={<ProtectedRoute><VideoCallPage /></ProtectedRoute>} />
     <Route path="/call/join/:token" element={<PublicVideoCall />} />
     <Route path="/notifications" element={<ProtectedRoute><><NotificationsList /><BottomNav /></></ProtectedRoute>} />
