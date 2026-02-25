@@ -772,7 +772,7 @@ const WeeklyPlan = () => {
                                   return (
                                     <button
                                       key={time}
-                                      onClick={() => setSelectedTimes([time])}
+                                      onClick={() => setSelectedTimes(prev => prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time])}
                                       className={`rounded-lg py-2 px-1 text-center transition-all border ${
                                         selected
                                           ? "border-primary bg-primary/10 text-primary font-bold"
