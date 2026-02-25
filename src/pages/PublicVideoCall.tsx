@@ -174,11 +174,13 @@ const PublicVideoCall = () => {
 
     // In-call state
     return (
-        <VideoCall
-            roomId={session!.room_id}
-            role="caller"
-            onEndCall={handleEndCall}
-        />
+        <div className="relative w-full h-screen">
+            <VideoCall
+                roomId={session!.room_id}
+                role="caller"
+                onEndCall={handleEndCall}
+            />
+        </div>
     );
 };
 
