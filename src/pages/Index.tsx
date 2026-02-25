@@ -110,7 +110,7 @@ const Index = () => {
       }
 
       // Check if ijazah track
-      const isIjazah = data?.preferred_track === "إجازة" || data?.preferred_track === "ijazah";
+      const isIjazah = data?.preferred_track === "الحصول على إجازة قرآنية";
       setIsIjazahTrack(isIjazah);
 
       if (isIjazah && data?.assigned_reciter_id) {
