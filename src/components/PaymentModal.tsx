@@ -306,7 +306,18 @@ const PaymentModal = ({
                   </div>
 
                   {/* Moyassar Payment Form Container */}
-                  <div id={moyasarContainerId} className="mysr-form min-h-[400px] w-full" />
+                  <div id={moyasarContainerId} className="mysr-form min-h-[400px] w-full">
+                    {/* Loading skeleton while Moyasar SDK initializes */}
+                    <div className="space-y-4 animate-pulse">
+                      <div className="h-10 bg-muted rounded-lg w-full" />
+                      <div className="h-10 bg-muted rounded-lg w-full" />
+                      <div className="flex gap-3">
+                        <div className="h-10 bg-muted rounded-lg flex-1" />
+                        <div className="h-10 bg-muted rounded-lg flex-1" />
+                      </div>
+                      <div className="h-12 bg-muted rounded-xl w-full mt-2" />
+                    </div>
+                  </div>
 
                   {/* Security Badge */}
                   <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
