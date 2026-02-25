@@ -1,4 +1,4 @@
-import { ChevronRight, Shield, Lock, Smartphone, Eye, EyeOff } from "lucide-react";
+import { ChevronRight, Shield, Lock, Smartphone, Eye, EyeOff, FileText } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -190,6 +190,22 @@ const PrivacySecurity = () => {
             </button>
           </div>
         </div>
+
+          {/* Privacy Policy */}
+          <Link
+            to="/privacy-policy"
+            className="glass-card rounded-2xl p-4 flex items-center gap-3 animate-fade-in"
+            style={{ animationDelay: "80ms", animationFillMode: "both" }}
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-foreground text-sm">سياسة الخصوصية</p>
+              <p className="text-[10px] text-muted-foreground">الشروط والأحكام</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground rotate-180" />
+          </Link>
       </div>
     </div>
   );

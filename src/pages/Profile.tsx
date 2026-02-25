@@ -35,7 +35,7 @@ const menuSections = [
       { icon: Info, label: "عن التطبيق", desc: "الإصدار ١.٠.٠", path: "/about" },
       { icon: Star, label: "تقييم التطبيق", desc: "شاركنا رأيك وقيّم التجربة", isRate: true },
       { icon: Share2, label: "مشاركة التطبيق", desc: "شارك التطبيق مع أصدقائك", path: "/share-app" },
-      { icon: FileText, label: "سياسة الخصوصية", desc: "الشروط والأحكام", path: "/privacy-policy" },
+      
     ],
   },
 ];
