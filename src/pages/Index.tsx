@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnlineReciters } from "@/hooks/useOnlineReciters";
 import PopupMessageCard from "@/components/PopupMessageCard";
+import PullToRefresh from "@/components/PullToRefresh";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -97,9 +98,8 @@ const Index = () => {
   const [debugTransactions, setDebugTransactions] = useState<DebugTransaction[]>([]);
   const [debugHourCredits, setDebugHourCredits] = useState<number | null>(null);
   const [debugUpdatedAt, setDebugUpdatedAt] = useState<string | null>(null);
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
-    // Fetch student profile (name + gender for filtering)
     supabase.from("student_profiles").select("full_name, gender, preferred_track, assigned_reciter_id").eq("user_id", user.id).maybeSingle().
     then(({ data }) => {
       if (data?.full_name) {
@@ -109,12 +109,10 @@ const Index = () => {
         then(({ data: p }) => {if (p?.full_name) setUserName(p.full_name);});
       }
 
-      // Check if ijazah track
       const isIjazah = data?.preferred_track === "الحصول على إجازة قرآنية";
       setIsIjazahTrack(isIjazah);
 
       if (isIjazah && data?.assigned_reciter_id) {
-        // Fetch assigned reciter details
         supabase.from("reciter_profiles")
           .select("user_id, full_name, preferred_track, stamp_url")
           .eq("user_id", data.assigned_reciter_id)
@@ -130,7 +128,6 @@ const Index = () => {
             }
           });
       } else if (!isIjazah) {
-        // Fetch approved reciters filtered by same gender (normal track only)
         let reciterQuery = supabase.from("reciter_profiles").
         select("user_id, full_name, preferred_track, stamp_url").
         eq("status", "approved").
@@ -153,7 +150,6 @@ const Index = () => {
       }
     });
 
-    // Fetch active subscription
     supabase.from("student_subscriptions").
     select("subscription_type, amount, duration_months, start_date, end_date, status").
     eq("student_id", user.id).
@@ -163,19 +159,16 @@ const Index = () => {
     maybeSingle().
     then(({ data }) => {
       if (data) {
-        // Check if subscription has expired
         const endDate = new Date(data.end_date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (endDate < today) {
-          // Mark as expired in DB
           supabase.from("student_subscriptions").
           update({ status: "expired" }).
           eq("student_id", user.id).
           eq("status", "active").
           lte("end_date", today.toISOString().split("T")[0]).
           then(() => {
-            // Show expired dialog only once per session
             const expiredKey = `subscription_expired_shown_${user.id}`;
             if (!sessionStorage.getItem(expiredKey)) {
               setShowExpiredDialog(true);
@@ -184,7 +177,6 @@ const Index = () => {
           });
         } else {
           setActiveSubscription(data);
-          // Fetch total minutes from the subscription plan
           supabase.from("subscription_plans")
             .select("monthly_minutes")
             .eq("name", data.subscription_type)
@@ -195,7 +187,6 @@ const Index = () => {
             });
         }
       } else {
-        // Check if there's any expired subscription to show dialog
         supabase.from("student_subscriptions").
         select("id").
         eq("student_id", user.id).
@@ -214,7 +205,6 @@ const Index = () => {
       }
     });
 
-    // Fetch remaining minutes
     supabase.from("student_hour_credits")
       .select("remaining_minutes")
       .eq("user_id", user.id)
@@ -223,6 +213,10 @@ const Index = () => {
         if (data) setRemainingMinutes(data.remaining_minutes);
       });
   }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const fetchDebugData = useCallback(async () => {
     if (!user) return;
@@ -347,6 +341,7 @@ const Index = () => {
 
 
   return (
+    <PullToRefresh onRefresh={fetchData}>
     <div className="min-h-screen bg-background pb-24">
       {/* Hero Section */}
       <div className="px-6 pt-10 pb-3">
@@ -820,7 +815,8 @@ const Index = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>);
+    </div>
+    </PullToRefresh>);
 
 };
 
