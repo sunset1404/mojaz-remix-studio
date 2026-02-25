@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, WifiOff, User } from 'lucide-react';
 import { useVideoCall } from '@/hooks/useVideoCall';
@@ -24,13 +24,14 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
 
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
+    const [showEndedScreen, setShowEndedScreen] = useState(false);
 
-    // When the other side ends the call via DB, navigate away
+    // When the other side ends the call via DB, show ended screen
     useEffect(() => {
         if (dbStatus === 'ended') {
-            onEndCall?.();
+            setShowEndedScreen(true);
         }
-    }, [dbStatus, onEndCall]);
+    }, [dbStatus]);
 
     // Attach local stream to video element
     useEffect(() => {
@@ -51,6 +52,27 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
         onEndCall?.();
     };
 
+    // Call ended by other party screen
+    if (showEndedScreen) {
+        return (
+            <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center gap-6 px-6" dir="rtl">
+                <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center">
+                    <PhoneOff className="w-10 h-10 text-red-400" />
+                </div>
+                <div className="text-center space-y-2">
+                    <h2 className="text-xl font-bold text-white">انتهت المكالمة</h2>
+                    <p className="text-white/60 text-sm">تم إنهاء المكالمة من قبل الطرف الآخر</p>
+                </div>
+                <button
+                    onClick={() => onEndCall?.()}
+                    className="mt-4 px-8 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors"
+                >
+                    العودة
+                </button>
+            </div>
+        );
+    }
+
     // Connection status indicator
     const renderStatusBadge = () => {
         if (callState.isReconnecting) {
@@ -58,7 +80,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-amber-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium"
+                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-amber-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium safe-top"
                 >
                     <WifiOff className="w-4 h-4 animate-pulse" />
                     جاري إعادة الاتصال...
@@ -71,7 +93,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-primary/90 backdrop-blur-sm text-white px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium"
+                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-primary/90 backdrop-blur-sm text-white px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium safe-top"
                 >
                     <Loader2 className="w-4 h-4 animate-spin" />
                     جاري الاتصال...
@@ -84,7 +106,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-destructive/90 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium max-w-[90%] text-center"
+                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-destructive/90 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium max-w-[90%] text-center safe-top"
                 >
                     {callState.error}
                 </motion.div>
@@ -95,12 +117,12 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
     };
 
     return (
-        <div className="fixed inset-0 bg-black z-50 flex flex-col">
+        <div className="fixed inset-0 bg-black z-50 flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
             {/* Status badge */}
             {renderStatusBadge()}
 
             {/* Remote video (full screen) */}
-            <div className="flex-1 relative">
+            <div className="flex-1 relative overflow-hidden">
                 {remoteStream ? (
                     <video
                         ref={remoteVideoRef}
@@ -149,15 +171,13 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
                 )}
             </div>
 
-            {/* Controls */}
-            <motion.div
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="bg-gradient-to-t from-black/90 to-transparent px-6 py-8 flex items-center justify-center gap-6"
-            >
+            {/* Controls - fixed at bottom with safe area */}
+            <div className="shrink-0 bg-gradient-to-t from-black via-black/90 to-transparent px-6 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex items-center justify-center gap-6">
                 {/* Mute button */}
-                <button
+                <motion.button
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
                     onClick={toggleMute}
                     className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${callState.isMuted
                         ? 'bg-red-500/90 text-white'
@@ -165,18 +185,24 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
                         }`}
                 >
                     {callState.isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                </button>
+                </motion.button>
 
                 {/* End call button */}
-                <button
+                <motion.button
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
                     onClick={handleEndCall}
                     className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all shadow-lg shadow-red-500/30"
                 >
                     <PhoneOff className="w-7 h-7" />
-                </button>
+                </motion.button>
 
                 {/* Video toggle button */}
-                <button
+                <motion.button
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
                     onClick={toggleVideo}
                     className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${!callState.isVideoEnabled
                         ? 'bg-red-500/90 text-white'
@@ -184,8 +210,8 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, autoStartCal
                         }`}
                 >
                     {callState.isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
-                </button>
-            </motion.div>
+                </motion.button>
+            </div>
         </div>
     );
 }
