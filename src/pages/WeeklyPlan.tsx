@@ -335,13 +335,18 @@ const WeeklyPlan = () => {
                           <FirstGoalIcon className="w-5 h-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-foreground text-sm">{plan.goalLabels.join(" · ")}</h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-muted-foreground" />
-                              <span className="text-[10px] text-muted-foreground">{plan.times.join(" · ")}</span>
-                            </div>
-                            <span className="text-[10px] text-gold font-semibold">• {plan.scopeLabel}</span>
+                          <h3 className="font-bold text-foreground text-sm">
+                            {plan.goalLabels.map(label => {
+                              const goal = [...studentGoalTypes, ...reciterGoalTypes].find(g => g.label === label);
+                              return goal ? `${goal.label} - ${goal.desc}` : label;
+                            }).join(" · ")}
+                          </h3>
+                          {plan.scopeLabel && (
+                            <span className="text-[10px] text-gold font-semibold block mt-0.5">{plan.scopeLabel}</span>
+                          )}
+                          <div className="flex items-center gap-1 mt-1 flex-wrap">
+                            <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                            <span className="text-[10px] text-muted-foreground">{plan.times.join(" · ")}</span>
                           </div>
                         </div>
                       </div>
