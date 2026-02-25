@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -16,7 +16,8 @@ interface PresenceState {
  * Subscribes to the same Supabase Realtime Presence channel that reciters broadcast on.
  */
 export function useOnlineReciters(): string[] {
-    const [onlineReciterIds, setOnlineReciterIds] = useState<string[]>([]);
+    const [presenceReciterIds, setPresenceReciterIds] = useState<string[]>([]);
+    const [recentReciterIds, setRecentReciterIds] = useState<string[]>([]);
 
     useEffect(() => {
         // Find existing channel first to avoid rapid recreate in StrictMode
@@ -37,9 +38,10 @@ export function useOnlineReciters(): string[] {
             }
 
             const idsArray = Array.from(ids);
+            idsArray.sort();
             console.log('[OnlineReciters] Online IDs:', idsArray);
 
-            setOnlineReciterIds((prev) => {
+            setPresenceReciterIds((prev) => {
                 // Only update if the arrays are actually different to prevent infinite re-renders
                 if (prev.length === idsArray.length && prev.every((id, index) => id === idsArray[index])) {
                     return prev;
@@ -78,5 +80,41 @@ export function useOnlineReciters(): string[] {
         };
     }, []);
 
-    return onlineReciterIds;
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchRecent = async () => {
+            const threshold = new Date(Date.now() - 60000).toISOString();
+            const { data, error } = await supabase
+                .from('reciter_profiles')
+                .select('user_id, last_seen_at')
+                .gte('last_seen_at', threshold)
+                .eq('status', 'approved');
+
+            if (error || !isMounted) return;
+
+            const ids = (data || []).map((row) => row.user_id).filter(Boolean);
+            ids.sort();
+            setRecentReciterIds((prev) => {
+                if (prev.length === ids.length && prev.every((id, index) => id === ids[index])) {
+                    return prev;
+                }
+                return ids;
+            });
+        };
+
+        fetchRecent();
+        const interval = setInterval(fetchRecent, 30000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, []);
+
+    const combined = useMemo(() => {
+        return Array.from(new Set([...presenceReciterIds, ...recentReciterIds]));
+    }, [presenceReciterIds, recentReciterIds]);
+
+    return combined;
 }

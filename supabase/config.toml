@@ -13,7 +13,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.reciter-call]
-verify_jwt = false
+verify_jwt = true
 
 [functions.moyasar-webhook]
 verify_jwt = false

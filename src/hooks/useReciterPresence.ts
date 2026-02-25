@@ -19,6 +19,9 @@ export function useReciterPresence() {
     const isCleanedUp = useRef(false);
     const nativeAppActiveRef = useRef(true);
     const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const isTrackingRef = useRef(false);
+    const lastSeenSyncRef = useRef(0);
 
     useEffect(() => {
         if (!user || role !== 'reciter') return;
@@ -47,13 +50,54 @@ export function useReciterPresence() {
             channelRef.current = null;
         };
 
+        const syncLastSeen = async () => {
+            const now = Date.now();
+            if (now - lastSeenSyncRef.current < 20000) return;
+            lastSeenSyncRef.current = now;
+            try {
+                await supabase
+                    .from('reciter_profiles')
+                    .update({ last_seen_at: new Date().toISOString() })
+                    .eq('user_id', user.id);
+            } catch {
+                // ignore last_seen update failures
+            }
+        };
+
         const trackOnline = async () => {
             if (!channelRef.current || isCleanedUp.current || !isAppForeground()) return;
-            await channelRef.current.track({
-                user_id: user.id,
-                online_at: new Date().toISOString(),
-            });
-            console.log('[Presence] Reciter is online');
+            if (channelRef.current.state !== 'joined') return;
+            if (isTrackingRef.current) return;
+            isTrackingRef.current = true;
+            try {
+                await channelRef.current.track({
+                    user_id: user.id,
+                    online_at: new Date().toISOString(),
+                });
+                await syncLastSeen();
+                console.log('[Presence] Reciter is online');
+            } finally {
+                isTrackingRef.current = false;
+            }
+        };
+
+        const startHeartbeat = () => {
+            if (heartbeatTimerRef.current) return;
+            heartbeatTimerRef.current = setInterval(() => {
+                if (isCleanedUp.current || !isAppForeground()) return;
+                if (!channelRef.current || channelRef.current.state !== 'joined') {
+                    reconnectAndTrack();
+                    return;
+                }
+                trackOnline();
+            }, 25000);
+        };
+
+        const stopHeartbeat = () => {
+            if (heartbeatTimerRef.current) {
+                clearInterval(heartbeatTimerRef.current);
+                heartbeatTimerRef.current = null;
+            }
         };
 
         const reconnectAndTrack = () => {
@@ -72,12 +116,16 @@ export function useReciterPresence() {
                 channel.subscribe(async (status) => {
                     if (status === 'SUBSCRIBED') {
                         await trackOnline();
+                        startHeartbeat();
+                    } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+                        reconnectAndTrack();
                     }
                 });
             }, 300);
         };
 
         const goOffline = async () => {
+            stopHeartbeat();
             if (channelRef.current) {
                 try {
                     await channelRef.current.untrack();
@@ -92,18 +140,24 @@ export function useReciterPresence() {
             if (isCleanedUp.current) return;
             if (isAppForeground()) {
                 reconnectAndTrack();
+                startHeartbeat();
             } else {
                 await goOffline();
             }
         };
 
         let appStateListener: PluginListenerHandle | null = null;
+        let resumeListener: PluginListenerHandle | null = null;
+        let pauseListener: PluginListenerHandle | null = null;
 
         const setup = async () => {
             reconnectAndTrack();
+            startHeartbeat();
 
             if (!isNative) {
-                document.addEventListener('visibilitychange', handleVisibilityChange);
+                if (typeof document !== 'undefined') {
+                    document.addEventListener('visibilitychange', handleVisibilityChange);
+                }
             }
 
             if (isNative) {
@@ -111,15 +165,28 @@ export function useReciterPresence() {
                 nativeAppActiveRef.current = state.isActive;
                 if (state.isActive) {
                     reconnectAndTrack();
+                    startHeartbeat();
                 }
 
                 appStateListener = await CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
                     nativeAppActiveRef.current = isActive;
                     if (isActive) {
                         reconnectAndTrack();
+                        startHeartbeat();
                     } else {
                         await goOffline();
                     }
+                });
+
+                resumeListener = await CapacitorApp.addListener('resume', () => {
+                    nativeAppActiveRef.current = true;
+                    reconnectAndTrack();
+                    startHeartbeat();
+                });
+
+                pauseListener = await CapacitorApp.addListener('pause', async () => {
+                    nativeAppActiveRef.current = false;
+                    await goOffline();
                 });
             }
         };
@@ -134,8 +201,13 @@ export function useReciterPresence() {
                 reconnectTimerRef.current = null;
             }
 
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            if (typeof document !== 'undefined') {
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
+            }
             appStateListener?.remove();
+            resumeListener?.remove();
+            pauseListener?.remove();
+            stopHeartbeat();
             destroyChannel();
         };
     }, [user, role]);

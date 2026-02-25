@@ -103,7 +103,7 @@ serve(async (req: Request) => {
         const student_name = studentProfile?.full_name || "طالب بدون اسم";
 
         // Insert the video call session
-        const { data: callSession, error: insertError } = await supabaseClient
+        const { data: callSession, error: insertError } = await adminClient
             .from('video_call_sessions')
             .insert({
                 reciter_id,
