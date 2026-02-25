@@ -2,85 +2,133 @@ import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 
 const PRESENCE_CHANNEL = 'reciter-presence';
 
 /**
  * useReciterPresence
  * 
- * Tracks reciter's online presence via Supabase Realtime Presence.
- * Handles app backgrounding/foregrounding by fully reconnecting the channel.
+ * Tracks reciter's online presence via Realtime Presence.
+ * Online only when app is truly active (foreground + visible).
  */
 export function useReciterPresence() {
     const { user, role } = useAuth();
     const channelRef = useRef<RealtimeChannel | null>(null);
     const isCleanedUp = useRef(false);
+    const nativeAppActiveRef = useRef(true);
+    const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         if (!user || role !== 'reciter') return;
-        isCleanedUp.current = false;
 
-        const createAndTrack = () => {
-            // Remove old channel if exists
+        isCleanedUp.current = false;
+        nativeAppActiveRef.current = true;
+
+        const isNative = Capacitor.isNativePlatform();
+
+        const isAppForeground = () => {
+            const isVisible = typeof document !== 'undefined' ? document.visibilityState === 'visible' : true;
+            return isVisible && nativeAppActiveRef.current;
+        };
+
+        const destroyChannel = async () => {
+            if (!channelRef.current) return;
+            try {
+                await channelRef.current.untrack();
+            } catch {
+                // ignore untrack failures
+            }
+            await supabase.removeChannel(channelRef.current);
+            channelRef.current = null;
+        };
+
+        const trackOnline = async () => {
+            if (!channelRef.current || isCleanedUp.current || !isAppForeground()) return;
+            await channelRef.current.track({
+                user_id: user.id,
+                online_at: new Date().toISOString(),
+            });
+            console.log('[Presence] Reciter is online');
+        };
+
+        const reconnectAndTrack = () => {
+            if (reconnectTimerRef.current) {
+                clearTimeout(reconnectTimerRef.current);
+            }
+
+            reconnectTimerRef.current = setTimeout(async () => {
+                if (isCleanedUp.current || !isAppForeground()) return;
+
+                await destroyChannel();
+
+                const channel = supabase.channel(PRESENCE_CHANNEL);
+                channelRef.current = channel;
+
+                channel.subscribe(async (status) => {
+                    if (status === 'SUBSCRIBED') {
+                        await trackOnline();
+                    }
+                });
+            }, 300);
+        };
+
+        const goOffline = async () => {
             if (channelRef.current) {
                 try {
-                    channelRef.current.untrack();
-                    supabase.removeChannel(channelRef.current);
-                } catch (e) {
+                    await channelRef.current.untrack();
+                    console.log('[Presence] Reciter is offline');
+                } catch {
                     // ignore
                 }
-                channelRef.current = null;
             }
-
-            if (isCleanedUp.current) return;
-
-            const channel = supabase.channel(PRESENCE_CHANNEL);
-            channelRef.current = channel;
-
-            channel.subscribe(async (status) => {
-                if (status === 'SUBSCRIBED' && !isCleanedUp.current) {
-                    await channel.track({
-                        user_id: user.id,
-                        online_at: new Date().toISOString(),
-                    });
-                    console.log('[Presence] Reciter is now online');
-                }
-            });
         };
 
-        // Initial connection
-        createAndTrack();
-
-        // Visibility change handler - recreate channel on foreground
-        const handleVisibility = () => {
+        const handleVisibilityChange = async () => {
             if (isCleanedUp.current) return;
-
-            if (document.visibilityState === 'visible') {
-                console.log('[Presence] App foregrounded – reconnecting channel');
-                // Small delay to let the WebSocket reconnect first
-                setTimeout(() => {
-                    if (!isCleanedUp.current) {
-                        createAndTrack();
-                    }
-                }, 500);
+            if (isAppForeground()) {
+                reconnectAndTrack();
             } else {
-                console.log('[Presence] App backgrounded – untracking');
-                if (channelRef.current) {
-                    channelRef.current.untrack();
-                }
+                await goOffline();
             }
         };
 
-        document.addEventListener('visibilitychange', handleVisibility);
+        let appStateListener: PluginListenerHandle | null = null;
+
+        const setup = async () => {
+            reconnectAndTrack();
+
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+
+            if (isNative) {
+                const state = await CapacitorApp.getState();
+                nativeAppActiveRef.current = state.isActive;
+
+                appStateListener = await CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
+                    nativeAppActiveRef.current = isActive;
+                    if (isAppForeground()) {
+                        reconnectAndTrack();
+                    } else {
+                        await goOffline();
+                    }
+                });
+            }
+        };
+
+        setup();
 
         return () => {
             isCleanedUp.current = true;
-            document.removeEventListener('visibilitychange', handleVisibility);
-            if (channelRef.current) {
-                channelRef.current.untrack();
-                supabase.removeChannel(channelRef.current);
-                channelRef.current = null;
+
+            if (reconnectTimerRef.current) {
+                clearTimeout(reconnectTimerRef.current);
+                reconnectTimerRef.current = null;
             }
+
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            appStateListener?.remove();
+            destroyChannel();
         };
     }, [user, role]);
 }
