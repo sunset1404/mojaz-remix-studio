@@ -209,10 +209,10 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                     console.log('DB Session status updated via Realtime:', newStatus);
                     setDbStatus(newStatus);
 
-                    if (newStatus === 'ended') {
+                    if (newStatus === 'ended' || newStatus === 'failed') {
                         toast({
-                            title: 'انتهت المكالمة',
-                            description: 'تم إنهاء المكالمة من قبل الطرف الآخر',
+                            title: newStatus === 'failed' ? 'تم رفض المكالمة' : 'انتهت المكالمة',
+                            description: newStatus === 'failed' ? 'تم رفض المكالمة من قبل الطرف الآخر' : 'تم إنهاء المكالمة من قبل الطرف الآخر',
                         });
                         endCall();
                     }
