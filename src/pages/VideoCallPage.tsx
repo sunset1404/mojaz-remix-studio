@@ -227,7 +227,8 @@ const VideoCallPage = () => {
     const saveAndEnd = async () => {
         if (roomId) {
             const noteData = sessionNoteRef.current;
-            const updatePayload: any = { status: "ended", ended_at: new Date().toISOString() };
+            const endedAt = new Date().toISOString();
+            const updatePayload: any = { status: "ended", ended_at: endedAt };
 
             if (isReciter) {
                 if (noteData.rating > 0) updatePayload.rating = noteData.rating;
@@ -242,6 +243,53 @@ const VideoCallPage = () => {
                 .from("video_call_sessions")
                 .update(updatePayload)
                 .eq("room_id", roomId);
+
+            // Create session_record for the student to update achievements
+            try {
+                const { data: session } = await (supabase as any)
+                    .from("video_call_sessions")
+                    .select("student_id, reciter_id, started_at, student_name, created_at")
+                    .eq("room_id", roomId)
+                    .maybeSingle();
+
+                if (session) {
+                    const startTime = session.started_at || session.created_at || endedAt;
+                    const durationMs = new Date(endedAt).getTime() - new Date(startTime).getTime();
+                    const durationMinutes = Math.max(1, Math.round(durationMs / 60000));
+                    const durationText = durationMinutes >= 60
+                        ? `${Math.floor(durationMinutes / 60)} ساعة ${durationMinutes % 60 > 0 ? `و ${durationMinutes % 60} دقيقة` : ''}`
+                        : `${durationMinutes} دقيقة`;
+
+                    const now = new Date();
+                    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+                    // Get reciter name
+                    let reciterName = "المقرئ";
+                    const { data: reciterProfile } = await supabase
+                        .from("reciter_profiles")
+                        .select("full_name")
+                        .eq("user_id", session.reciter_id)
+                        .maybeSingle();
+                    if (reciterProfile) reciterName = reciterProfile.full_name;
+
+                    // Insert session record for the student
+                    await (supabase as any)
+                        .from("session_records")
+                        .insert({
+                            user_id: session.student_id,
+                            date: dateStr,
+                            time: timeStr,
+                            duration: durationText,
+                            other_user_name: reciterName,
+                            rating: noteData.rating > 0 ? noteData.rating : null,
+                            notes: updatePayload.notes || null,
+                            status: "مكتملة",
+                        });
+                }
+            } catch (err) {
+                console.error("Error creating session record:", err);
+            }
         }
         toast({ title: "انتهت المكالمة", description: "تم إنهاء الجلسة بنجاح" });
         navigate(-1);
