@@ -126,10 +126,8 @@ const VideoCallPage = () => {
 
     const handleEndCall = async () => {
         if (isReciter) {
-            if (!showConfirm) {
-                setShowConfirm(true);
-                return;
-            }
+            setShowConfirm(true);
+            return;
         } else {
             // Student ending the call — show popup after saving
             await saveSessionAsEnded();
@@ -138,6 +136,12 @@ const VideoCallPage = () => {
             setShowStudentPopup(true);
             return;
         }
+        await saveAndEnd();
+    };
+
+    const handleConfirmEnd = async (updatedData: SessionNoteData) => {
+        sessionNoteRef.current = updatedData;
+        setShowConfirm(false);
         await saveAndEnd();
     };
 
@@ -256,7 +260,7 @@ const VideoCallPage = () => {
                 {showConfirm && isReciter && (
                     <SessionConfirmDialog
                         data={sessionNoteRef.current}
-                        onConfirm={saveAndEnd}
+                        onConfirm={handleConfirmEnd}
                         onCancel={() => setShowConfirm(false)}
                     />
                 )}
