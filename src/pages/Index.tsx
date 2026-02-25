@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useOnlineReciters } from "@/hooks/useOnlineReciters";
 import PopupMessageCard from "@/components/PopupMessageCard";
 import {
   AlertDialog,
@@ -81,6 +82,9 @@ const Index = () => {
   const [studentStats, setStudentStats] = useState<StudentStats | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [topReciters, setTopReciters] = useState<ReciterPreview[]>([]);
+  const [isIjazahTrack, setIsIjazahTrack] = useState(false);
+  const [assignedReciter, setAssignedReciter] = useState<ReciterPreview | null>(null);
+  const onlineReciterIds = useOnlineReciters();
   const [activeSubscription, setActiveSubscription] = useState<ActiveSubscription | null>(null);
   const [remainingMinutes, setRemainingMinutes] = useState<number | null>(null);
   const [totalMinutes, setTotalMinutes] = useState<number | null>(null);
@@ -96,7 +100,7 @@ const Index = () => {
   useEffect(() => {
     if (!user) return;
     // Fetch student profile (name + gender for filtering)
-    supabase.from("student_profiles").select("full_name, gender").eq("user_id", user.id).maybeSingle().
+    supabase.from("student_profiles").select("full_name, gender, preferred_track, assigned_reciter_id").eq("user_id", user.id).maybeSingle().
     then(({ data }) => {
       if (data?.full_name) {
         setUserName(data.full_name);
@@ -105,26 +109,48 @@ const Index = () => {
         then(({ data: p }) => {if (p?.full_name) setUserName(p.full_name);});
       }
 
-      // Fetch approved reciters filtered by same gender
-      let reciterQuery = supabase.from("reciter_profiles").
-      select("user_id, full_name, preferred_track, stamp_url").
-      eq("status", "approved").
-      limit(6);
+      // Check if ijazah track
+      const isIjazah = data?.preferred_track === "إجازة" || data?.preferred_track === "ijazah";
+      setIsIjazahTrack(isIjazah);
 
-      if (data?.gender) {
-        reciterQuery = reciterQuery.eq("gender", data.gender);
-      }
+      if (isIjazah && data?.assigned_reciter_id) {
+        // Fetch assigned reciter details
+        supabase.from("reciter_profiles")
+          .select("user_id, full_name, preferred_track, stamp_url")
+          .eq("user_id", data.assigned_reciter_id)
+          .maybeSingle()
+          .then(({ data: reciterData }) => {
+            if (reciterData) {
+              setAssignedReciter({
+                user_id: reciterData.user_id,
+                full_name: reciterData.full_name,
+                preferred_track: reciterData.preferred_track,
+                avatar_url: reciterData.stamp_url ?? null,
+              });
+            }
+          });
+      } else if (!isIjazah) {
+        // Fetch approved reciters filtered by same gender (normal track only)
+        let reciterQuery = supabase.from("reciter_profiles").
+        select("user_id, full_name, preferred_track, stamp_url").
+        eq("status", "approved").
+        limit(6);
 
-      reciterQuery.then(({ data: recitersData }) => {
-        if (recitersData) {
-          setTopReciters(recitersData.map((r) => ({
-            user_id: r.user_id,
-            full_name: r.full_name,
-            preferred_track: r.preferred_track,
-            avatar_url: r.stamp_url ?? null
-          })));
+        if (data?.gender) {
+          reciterQuery = reciterQuery.eq("gender", data.gender);
         }
-      });
+
+        reciterQuery.then(({ data: recitersData }) => {
+          if (recitersData) {
+            setTopReciters(recitersData.map((r) => ({
+              user_id: r.user_id,
+              full_name: r.full_name,
+              preferred_track: r.preferred_track,
+              avatar_url: r.stamp_url ?? null
+            })));
+          }
+        });
+      }
     });
 
     // Fetch active subscription
@@ -464,60 +490,134 @@ const Index = () => {
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.65 }}
-          className="glass-card rounded-2xl p-4">
+          transition={{ delay: 0.65 }}>
 
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Mic className="w-4 h-4 text-primary" />
-              </div>
-              <h2 className="font-bold text-foreground text-base">المقرئون</h2>
-            </div>
-            <Link to="/reciters" className="flex items-center gap-1 text-xs text-primary font-semibold">
-              المزيد <ChevronLeft className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {topReciters.length === 0 &&
-            <p className="text-xs text-muted-foreground py-4 px-2">لا يوجد مقرئون متاحون حالياً</p>
-            }
-            {topReciters.map((reciter, i) =>
-            <motion.div
-              key={reciter.user_id}
-              initial={{ scale: 0.85, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.7 + i * 0.08 }}
-              whileTap={{ scale: 0.97 }}>
+          {isIjazahTrack ? (
+            /* Ijazah track: Show assigned reciter card */
+            assignedReciter ? (() => {
+              const isOnline = onlineReciterIds.includes(assignedReciter.user_id);
+              return (
+                <div className="relative rounded-2xl overflow-hidden p-5 shadow-xl"
+                  style={{ background: "linear-gradient(135deg, hsl(174 42% 28%) 0%, hsl(174 42% 35%) 50%, hsl(174 38% 40%) 100%)" }}>
+                  {/* Decorative */}
+                  <div className="absolute top-0 left-0 w-28 h-28 rounded-full bg-white/5 -translate-x-8 -translate-y-8" />
+                  <div className="absolute bottom-0 right-0 w-20 h-20 rounded-full bg-white/5 translate-x-6 translate-y-6" />
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 70% 50% at 50% 90%, hsl(43 50% 50% / 0.15) 0%, transparent 70%)" }} />
 
-                <div className="flex flex-col items-center gap-2.5 w-[110px] bg-card rounded-2xl p-3 border border-border/50 shadow-sm">
-                  <Link to="/reciters" className="flex flex-col items-center gap-2 w-full">
-                    <div className="relative">
-                      <div className="w-[64px] h-[64px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md bg-muted flex items-center justify-center">
-                        {reciter.avatar_url ?
-                      <img src={reciter.avatar_url} alt={reciter.full_name} className="w-full h-full object-cover" /> :
-
-                      <User className="w-8 h-8 text-muted-foreground" />
-                      }
+                  <div className="relative z-10">
+                    {/* Header */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
+                        <Mic className="w-4 h-4 text-white" />
                       </div>
-                      <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-[2.5px] border-card bg-green-500" />
+                      <h2 className="font-bold text-white text-base">مقرئك المعتمد</h2>
                     </div>
-                    <span className="text-xs font-semibold text-foreground text-center leading-tight line-clamp-2">
-                      {reciter.full_name}
-                    </span>
-                  </Link>
-                  <div className="flex items-center gap-2 w-full justify-center">
-                    <button className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
-                      <Video className="w-4 h-4 text-primary" />
-                    </button>
-                    <button className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
-                      <Phone className="w-4 h-4 text-primary" />
-                    </button>
+
+                    {/* Reciter info */}
+                    <div className="flex items-center gap-4">
+                      <div className="relative shrink-0">
+                        <div className="w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-white/30 shadow-lg bg-white/10 flex items-center justify-center">
+                          {assignedReciter.avatar_url ? (
+                            <img src={assignedReciter.avatar_url} alt={assignedReciter.full_name} className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-9 h-9 text-white/60" />
+                          )}
+                        </div>
+                        <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[2.5px] border-[hsl(174,42%,32%)] ${isOnline ? 'bg-green-400' : 'bg-muted-foreground/50'}`} />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-white font-bold text-lg leading-tight">{assignedReciter.full_name}</h3>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-400 animate-pulse' : 'bg-white/30'}`} />
+                          <span className={`text-xs font-medium ${isOnline ? 'text-green-300' : 'text-white/50'}`}>
+                            {isOnline ? 'متصل الآن' : 'غير متصل'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Call buttons */}
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={() => isOnline && navigate(`/reciters/${assignedReciter.user_id}`)}
+                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isOnline ? 'bg-white/20 hover:bg-white/30 active:scale-95' : 'bg-white/5 opacity-40 cursor-not-allowed'}`}
+                          disabled={!isOnline}>
+                          <Phone className="w-5 h-5 text-white" />
+                        </button>
+                        <button
+                          onClick={() => isOnline && navigate(`/reciters/${assignedReciter.user_id}`)}
+                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isOnline ? 'bg-[#d2ac4b]/30 hover:bg-[#d2ac4b]/50 active:scale-95' : 'bg-white/5 opacity-40 cursor-not-allowed'}`}
+                          disabled={!isOnline}>
+                          <Video className="w-5 h-5 text-[#d2ac4b]" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </div>
+              );
+            })() : (
+              <div className="glass-card rounded-2xl p-5 text-center">
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <Mic className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground text-base mb-1">لم يتم تعيين مقرئ بعد</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">سيظهر مقرئك هنا بعد اجتياز اختبار القبول وتسكينك من قبل الإدارة</p>
+              </div>
+            )
+          ) : (
+            /* Normal track: Show reciters list */
+            <div className="glass-card rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Mic className="w-4 h-4 text-primary" />
+                  </div>
+                  <h2 className="font-bold text-foreground text-base">المقرئون</h2>
+                </div>
+                <Link to="/reciters" className="flex items-center gap-1 text-xs text-primary font-semibold">
+                  المزيد <ChevronLeft className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {topReciters.length === 0 &&
+                <p className="text-xs text-muted-foreground py-4 px-2">لا يوجد مقرئون متاحون حالياً</p>
+                }
+                {topReciters.map((reciter, i) =>
+                <motion.div
+                  key={reciter.user_id}
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.7 + i * 0.08 }}
+                  whileTap={{ scale: 0.97 }}>
+                    <div className="flex flex-col items-center gap-2.5 w-[110px] bg-card rounded-2xl p-3 border border-border/50 shadow-sm">
+                      <Link to="/reciters" className="flex flex-col items-center gap-2 w-full">
+                        <div className="relative">
+                          <div className="w-[64px] h-[64px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md bg-muted flex items-center justify-center">
+                            {reciter.avatar_url ?
+                          <img src={reciter.avatar_url} alt={reciter.full_name} className="w-full h-full object-cover" /> :
+                          <User className="w-8 h-8 text-muted-foreground" />
+                            }
+                          </div>
+                          <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-[2.5px] border-card ${onlineReciterIds.includes(reciter.user_id) ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
+                        </div>
+                        <span className="text-xs font-semibold text-foreground text-center leading-tight line-clamp-2">
+                          {reciter.full_name}
+                        </span>
+                      </Link>
+                      <div className="flex items-center gap-2 w-full justify-center">
+                        <button className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
+                          <Video className="w-4 h-4 text-primary" />
+                        </button>
+                        <button className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
+                          <Phone className="w-4 h-4 text-primary" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </div>
+          )}
         </motion.div>
       </div>
 
