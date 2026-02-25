@@ -219,8 +219,8 @@ const Subscription = () => {
                   <h3 className={`text-lg font-bold ${plan.is_popular ? "" : "text-foreground"}`}>{plan.name}</h3>
                   <div className="flex items-baseline gap-1">
                     {isFree ? (
-                      <span className={`text-xl font-extrabold ${plan.is_popular ? "" : "text-primary"}`}>
-                        مجاني
+                      <span className={`text-lg font-extrabold ${plan.is_popular ? "" : "text-primary"}`}>
+                        ساعة واحدة مجاناً
                       </span>
                     ) : (
                       <>
