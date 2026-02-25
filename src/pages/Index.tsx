@@ -497,40 +497,39 @@ const Index = () => {
             assignedReciter ? (() => {
               const isOnline = onlineReciterIds.includes(assignedReciter.user_id);
               return (
-                <div className="relative rounded-2xl overflow-hidden p-5 shadow-xl"
-                  style={{ background: "linear-gradient(135deg, hsl(43 74% 49%) 0%, hsl(43 74% 42%) 50%, hsl(43 74% 38%) 100%)" }}>
-                  {/* Decorative */}
-                  <div className="absolute top-0 left-0 w-28 h-28 rounded-full bg-white/5 -translate-x-8 -translate-y-8" />
-                  <div className="absolute bottom-0 right-0 w-20 h-20 rounded-full bg-white/5 translate-x-6 translate-y-6" />
-                  <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 70% 50% at 50% 10%, hsl(0 0% 100% / 0.1) 0%, transparent 60%)" }} />
+                <div className="relative rounded-2xl overflow-hidden p-5 shadow-lg bg-card border border-border/50">
+                  {/* Decorative accent lines */}
+                  <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-primary/5 -translate-y-10 translate-x-10" />
+                  <div className="absolute bottom-0 left-0 w-16 h-16 rounded-full bg-gold/5 translate-y-6 -translate-x-6" />
+                  <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{ background: "linear-gradient(90deg, hsl(174 42% 35%), hsl(43 74% 49%))" }} />
 
                   <div className="relative z-10">
                     {/* Header */}
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
-                        <Mic className="w-4 h-4 text-white" />
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Mic className="w-4 h-4 text-primary" />
                       </div>
-                      <h2 className="font-bold text-white text-base">مقرئك المعتمد</h2>
+                      <h2 className="font-bold text-foreground text-base">مقرئك المعتمد</h2>
                     </div>
 
                     {/* Reciter info */}
                     <div className="flex items-center gap-4">
                       <div className="relative shrink-0">
-                        <div className="w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-white/30 shadow-lg bg-white/10 flex items-center justify-center">
+                        <div className="w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-primary/20 shadow-md bg-muted flex items-center justify-center">
                           {assignedReciter.avatar_url ? (
                             <img src={assignedReciter.avatar_url} alt={assignedReciter.full_name} className="w-full h-full object-cover" />
                           ) : (
-                            <User className="w-9 h-9 text-white/60" />
+                            <User className="w-9 h-9 text-muted-foreground" />
                           )}
                         </div>
-                        <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[2.5px] border-[hsl(43,74%,44%)] ${isOnline ? 'bg-green-400' : 'bg-white/40'}`} />
+                        <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[2.5px] border-card ${isOnline ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-white font-bold text-lg leading-tight">{assignedReciter.full_name}</h3>
+                        <h3 className="text-foreground font-bold text-lg leading-tight">{assignedReciter.full_name}</h3>
                         <div className="flex items-center gap-1.5 mt-1">
-                          <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-400 animate-pulse' : 'bg-white/30'}`} />
-                          <span className={`text-xs font-medium ${isOnline ? 'text-green-300' : 'text-white/50'}`}>
+                          <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-muted-foreground/30'}`} />
+                          <span className={`text-xs font-medium ${isOnline ? 'text-green-600' : 'text-muted-foreground'}`}>
                             {isOnline ? 'متصل الآن' : 'غير متصل'}
                           </span>
                         </div>
@@ -540,15 +539,15 @@ const Index = () => {
                       <div className="flex gap-2 shrink-0">
                         <button
                           onClick={() => isOnline && navigate(`/reciters/${assignedReciter.user_id}`)}
-                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isOnline ? 'bg-white/20 hover:bg-white/30 active:scale-95' : 'bg-white/5 opacity-40 cursor-not-allowed'}`}
+                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isOnline ? 'bg-primary/10 hover:bg-primary/20 active:scale-95' : 'bg-muted/50 opacity-40 cursor-not-allowed'}`}
                           disabled={!isOnline}>
-                          <Phone className="w-5 h-5 text-white" />
+                          <Phone className="w-5 h-5 text-primary" />
                         </button>
                         <button
                           onClick={() => isOnline && navigate(`/reciters/${assignedReciter.user_id}`)}
-                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isOnline ? 'bg-white/25 hover:bg-white/35 active:scale-95' : 'bg-white/5 opacity-40 cursor-not-allowed'}`}
+                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isOnline ? 'bg-gold/15 hover:bg-gold/25 active:scale-95' : 'bg-muted/50 opacity-40 cursor-not-allowed'}`}
                           disabled={!isOnline}>
-                          <Video className="w-5 h-5 text-white" />
+                          <Video className="w-5 h-5 text-gold" />
                         </button>
                       </div>
                     </div>
