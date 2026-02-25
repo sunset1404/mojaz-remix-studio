@@ -1,27 +1,38 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, BookOpen, FileText, CheckCircle2, X } from 'lucide-react';
+import { Star, BookOpen, FileText, CheckCircle2 } from 'lucide-react';
 import { SessionNoteData } from './ReciterSessionPanel';
+import { SurahSelect } from './SurahSelect';
 
 interface SessionConfirmDialogProps {
   data: SessionNoteData;
-  onConfirm: () => void;
+  onConfirm: (updatedData: SessionNoteData) => void;
   onCancel: () => void;
 }
 
 export function SessionConfirmDialog({ data, onConfirm, onCancel }: SessionConfirmDialogProps) {
-  const hasData = data.rating > 0 || data.startSurah || data.endSurah || data.notes;
+  const [rating, setRating] = useState(data.rating);
+  const [startSurah, setStartSurah] = useState(data.startSurah);
+  const [startAyah, setStartAyah] = useState(data.startAyah);
+  const [endSurah, setEndSurah] = useState(data.endSurah);
+  const [endAyah, setEndAyah] = useState(data.endAyah);
+  const [notes, setNotes] = useState(data.notes);
+  const [startMaxAyahs, setStartMaxAyahs] = useState(0);
+  const [endMaxAyahs, setEndMaxAyahs] = useState(0);
+
+  const handleConfirm = () => {
+    onConfirm({ rating, startSurah, startAyah, endSurah, endAyah, notes });
+  };
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-6" dir="rtl">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4" dir="rtl">
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onCancel} />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.92, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 30 }}
-        className="relative w-full max-w-sm rounded-3xl border border-border bg-card shadow-2xl overflow-hidden"
+        className="relative w-full max-w-sm rounded-3xl border border-border bg-card shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
       >
         {/* Gradient top */}
         <div
@@ -29,81 +40,115 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel }: SessionConfi
           style={{ background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--gold)))" }}
         />
 
-        <div className="p-6 space-y-5">
-          <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--gold) / 0.15))" }}>
-              <CheckCircle2 className="w-7 h-7 text-primary" />
+        <div className="p-5 space-y-4">
+          {/* Header */}
+          <div className="text-center space-y-1.5">
+            <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--gold) / 0.15))" }}>
+              <CheckCircle2 className="w-6 h-6 text-primary" />
             </div>
             <h3 className="text-lg font-bold text-foreground">تأكيد بيانات الجلسة</h3>
-            <p className="text-sm text-muted-foreground">راجع البيانات قبل حفظها</p>
+            <p className="text-xs text-muted-foreground">أدخل أو عدّل البيانات قبل حفظها</p>
           </div>
 
-          {hasData ? (
-            <div className="rounded-2xl border border-border bg-background/60 p-4 space-y-3">
-              {/* Rating */}
-              {data.rating > 0 && (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">التقييم</span>
-                  <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star
-                        key={s}
-                        className={`w-5 h-5 ${s <= data.rating ? 'fill-gold text-gold' : 'text-border'}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Start */}
-              {(data.startSurah || data.startAyah) && (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                    <BookOpen className="w-3 h-3" />
-                    بدأ من
-                  </span>
-                  <span className="text-sm font-semibold text-foreground">
-                    {data.startSurah} {data.startAyah && `- آية ${data.startAyah}`}
-                  </span>
-                </div>
-              )}
-
-              {/* End */}
-              {(data.endSurah || data.endAyah) && (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                    <BookOpen className="w-3 h-3" />
-                    انتهى عند
-                  </span>
-                  <span className="text-sm font-semibold text-foreground">
-                    {data.endSurah} {data.endAyah && `- آية ${data.endAyah}`}
-                  </span>
-                </div>
-              )}
-
-              {/* Notes */}
-              {data.notes && (
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                    <FileText className="w-3 h-3" />
-                    ملاحظات
-                  </span>
-                  <p className="text-sm text-foreground bg-card rounded-lg p-2 border border-border">
-                    {data.notes}
-                  </p>
-                </div>
-              )}
+          {/* Rating */}
+          <div className="space-y-1.5">
+            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 text-gold" />
+              تقييم الجلسة
+            </label>
+            <div className="flex gap-1.5 justify-start">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setRating(s)}
+                  className="p-0.5 transition-transform hover:scale-110"
+                >
+                  <Star
+                    className={`w-7 h-7 transition-all ${
+                      s <= rating
+                        ? 'fill-gold text-gold drop-shadow-sm'
+                        : 'text-border hover:text-gold/40'
+                    }`}
+                  />
+                </button>
+              ))}
             </div>
-          ) : (
-            <div className="rounded-2xl border border-border bg-background/60 p-6 text-center">
-              <p className="text-sm text-muted-foreground">لم يتم تسجيل أي ملاحظات للجلسة</p>
+          </div>
+
+          {/* Start point */}
+          <div className="space-y-1.5">
+            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-primary" />
+              بدأ من
+            </label>
+            <div className="flex gap-2">
+              <SurahSelect
+                value={startSurah}
+                onChange={(name, maxAyahs) => {
+                  setStartSurah(name);
+                  setStartMaxAyahs(maxAyahs);
+                }}
+              />
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={startMaxAyahs || undefined}
+                placeholder="الآية"
+                value={startAyah}
+                onChange={(e) => setStartAyah(e.target.value)}
+                className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
             </div>
-          )}
+          </div>
+
+          {/* End point */}
+          <div className="space-y-1.5">
+            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-gold" />
+              انتهى عند
+            </label>
+            <div className="flex gap-2">
+              <SurahSelect
+                value={endSurah}
+                onChange={(name, maxAyahs) => {
+                  setEndSurah(name);
+                  setEndMaxAyahs(maxAyahs);
+                }}
+              />
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={endMaxAyahs || undefined}
+                placeholder="الآية"
+                value={endAyah}
+                onChange={(e) => setEndAyah(e.target.value)}
+                className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-1.5">
+            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-primary" />
+              ملاحظات
+            </label>
+            <textarea
+              placeholder="ملاحظات على أداء الطالب..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
 
           {/* Buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-1">
             <button
-              onClick={onConfirm}
+              onClick={handleConfirm}
               className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all hover:brightness-110 shadow-lg"
               style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--gold)))" }}
             >
