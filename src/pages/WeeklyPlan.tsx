@@ -20,20 +20,30 @@ const timeSlots = [
   "بعد الفجر", "الصباح", "بعد الظهر", "بعد العصر", "بعد المغرب", "بعد العشاء",
 ];
 
-// Generate 30-minute interval slots for reciters (24 hours)
-const generateHalfHourSlots = (): string[] => {
+// Generate 30-minute interval slots in 12-hour format (ص/م)
+const generateHalfHourSlots12 = (): string[] => {
   const slots: string[] = [];
-  for (let h = 5; h < 29; h++) {
-    const hour = h % 24;
-    const hStr = String(hour).padStart(2, "0");
-    slots.push(`${hStr}:00 - ${hStr}:30`);
-    slots.push(`${hStr}:30 - ${String((hour + (30 >= 30 ? 1 : 0)) % 24).padStart(2, "0")}:00`);
+  // From 5:00 AM to 4:30 AM next day (full cycle starting from Fajr)
+  const hours = [
+    5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4
+  ];
+  for (const h of hours) {
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    const period = h >= 0 && h < 12 ? "ص" : "م";
+    // Handle special case: 0 is 12 AM (ص)
+    const actualPeriod = h === 0 ? "ص" : period;
+    const hStr = String(h12);
+    slots.push(`${hStr}:00 ${actualPeriod}`);
+    slots.push(`${hStr}:30 ${actualPeriod}`);
   }
-  // Deduplicate and trim to 24h starting from 05:00
+  return slots;
+};
+
+// Generate 24h format slots for backward compatibility
+const generateHalfHourSlots = (): string[] => {
   const result: string[] = [];
   for (let h = 5; h < 24; h++) {
     const hh = String(h).padStart(2, "0");
-    const nextHalf = String(h).padStart(2, "0");
     const nextHour = String((h + 1) % 24).padStart(2, "0");
     result.push(`${hh}:00 - ${hh}:30`);
     result.push(`${hh}:30 - ${nextHour}:00`);
@@ -46,6 +56,8 @@ const generateHalfHourSlots = (): string[] => {
   }
   return result;
 };
+
+const studentHalfHourSlots = generateHalfHourSlots12();
 
 const reciterTimeSlots = generateHalfHourSlots();
 
@@ -719,33 +731,59 @@ const WeeklyPlan = () => {
                         })}
                       </div>
                     ) : (
-                      <>
-                        <div className="grid grid-cols-2 gap-2">
-                          {timeSlots.map(time => {
-                            const selected = selectedTimes.includes(time);
-                            return (
-                              <button
-                                key={time}
-                                onClick={() => {
-                                  setSelectedTimes([time]);
-                                  setCustomTime("");
-                                }}
-                                className={`rounded-xl p-3.5 flex items-center justify-between transition-all border-2 ${
-                                  selected
-                                    ? "border-primary bg-primary/5"
-                                    : "border-border bg-card hover:border-primary/30"
-                                }`}
-                              >
-                                <span className="font-semibold text-foreground text-sm">{time}</span>
-                                {selected && (
-                                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                                    <Check className="w-3 h-3 text-primary-foreground" />
-                                  </div>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
+                      <div className="space-y-3">
+                        {/* Student 30-min slots grouped by period */}
+                        {[
+                          { label: "الفجر والصباح (5 - 12 ص)", filter: (s: string) => { const parts = s.split(" "); return parts[1] === "ص" && parseInt(parts[0]) >= 5; } },
+                          { label: "الظهر والعصر (12 - 5 م)", filter: (s: string) => { const parts = s.split(" "); const h = parseInt(parts[0]); return parts[1] === "م" && h >= 12 && h !== 5 && h !== 6 && h !== 7 && h !== 8 && h !== 9 && h !== 10 && h !== 11; } },
+                          { label: "المغرب والعشاء (5 - 10 م)", filter: (s: string) => { const parts = s.split(" "); const h = parseInt(parts[0]); return parts[1] === "م" && h >= 5 && h <= 10 && h !== 12; } },
+                          { label: "الليل (11 م - 4 ص)", filter: (s: string) => { const parts = s.split(" "); const h = parseInt(parts[0]); return (parts[1] === "م" && (h === 11)) || (parts[1] === "ص" && h >= 12) || (parts[1] === "ص" && h < 5); } },
+                        ].map(period => {
+                          // Better filtering based on 24h equivalent
+                          const getH24 = (slot: string) => {
+                            const [time, ampm] = slot.split(" ");
+                            let h = parseInt(time.split(":")[0]);
+                            if (ampm === "م" && h !== 12) h += 12;
+                            if (ampm === "ص" && h === 12) h = 0;
+                            return h;
+                          };
+                          let periodSlots: string[];
+                          if (period.label.includes("الفجر")) {
+                            periodSlots = studentHalfHourSlots.filter(s => { const h = getH24(s); return h >= 5 && h < 12; });
+                          } else if (period.label.includes("الظهر")) {
+                            periodSlots = studentHalfHourSlots.filter(s => { const h = getH24(s); return h >= 12 && h < 17; });
+                          } else if (period.label.includes("المغرب")) {
+                            periodSlots = studentHalfHourSlots.filter(s => { const h = getH24(s); return h >= 17 && h < 22; });
+                          } else {
+                            periodSlots = studentHalfHourSlots.filter(s => { const h = getH24(s); return h >= 22 || h < 5; });
+                          }
+
+                          if (periodSlots.length === 0) return null;
+                          return (
+                            <div key={period.label}>
+                              <span className="text-xs font-bold text-foreground mb-2 block">{period.label}</span>
+                              <div className="grid grid-cols-3 gap-1.5">
+                                {periodSlots.map(time => {
+                                  const selected = selectedTimes.includes(time);
+                                  return (
+                                    <button
+                                      key={time}
+                                      onClick={() => setSelectedTimes([time])}
+                                      className={`rounded-lg py-2 px-1 text-center transition-all border ${
+                                        selected
+                                          ? "border-primary bg-primary/10 text-primary font-bold"
+                                          : "border-border bg-card text-foreground hover:border-primary/30"
+                                      }`}
+                                    >
+                                      <span className="text-[11px] font-medium">{time}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+
                         {/* Custom time picker */}
                         <div className="mt-3">
                           <button
@@ -758,18 +796,18 @@ const WeeklyPlan = () => {
                               }
                             }}
                             className={`w-full rounded-xl p-3.5 flex items-center gap-3 transition-all border-2 ${
-                              selectedTimes.some(t => !timeSlots.includes(t))
+                              selectedTimes.some(t => !studentHalfHourSlots.includes(t))
                                 ? "border-primary bg-primary/5"
                                 : "border-border bg-card hover:border-primary/30"
                             }`}
                           >
                             <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
                             <span className={`flex-1 text-sm font-semibold text-right ${
-                              selectedTimes.some(t => !timeSlots.includes(t)) ? "text-foreground" : "text-muted-foreground"
+                              selectedTimes.some(t => !studentHalfHourSlots.includes(t)) ? "text-foreground" : "text-muted-foreground"
                             }`}>
-                              {selectedTimes.find(t => !timeSlots.includes(t)) || "وقت مخصص"}
+                              {selectedTimes.find(t => !studentHalfHourSlots.includes(t)) || "وقت مخصص"}
                             </span>
-                            {selectedTimes.some(t => !timeSlots.includes(t)) && (
+                            {selectedTimes.some(t => !studentHalfHourSlots.includes(t)) && (
                               <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
                                 <Check className="w-3 h-3 text-primary-foreground" />
                               </div>
@@ -790,15 +828,12 @@ const WeeklyPlan = () => {
                                       setCustomPeriod(e.target.value);
                                       const built = `${customHour}:${customMinute} ${e.target.value}`;
                                       setCustomTime(built);
-                                      setSelectedTimes(prev => {
-                                        const withoutCustom = prev.filter(t => timeSlots.includes(t));
-                                        return [...withoutCustom, built];
-                                      });
+                                      setSelectedTimes([built]);
                                     }}
                                     className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center"
                                   >
-                                    <option value="صباحاً">صباحاً</option>
-                                    <option value="مساءً">مساءً</option>
+                                    <option value="ص">ص</option>
+                                    <option value="م">م</option>
                                   </select>
                                   <span className="text-lg font-bold text-muted-foreground">:</span>
                                   <select
@@ -807,16 +842,12 @@ const WeeklyPlan = () => {
                                       setCustomMinute(e.target.value);
                                       const built = `${customHour}:${e.target.value} ${customPeriod}`;
                                       setCustomTime(built);
-                                      setSelectedTimes(prev => {
-                                        const withoutCustom = prev.filter(t => timeSlots.includes(t));
-                                        return [...withoutCustom, built];
-                                      });
+                                      setSelectedTimes([built]);
                                     }}
                                     className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center w-16"
                                   >
-                                    {Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0")).map(m => (
-                                      <option key={m} value={m}>{m}</option>
-                                    ))}
+                                    <option value="00">00</option>
+                                    <option value="30">30</option>
                                   </select>
                                   <span className="text-lg font-bold text-muted-foreground">:</span>
                                   <select
@@ -825,14 +856,11 @@ const WeeklyPlan = () => {
                                       setCustomHour(e.target.value);
                                       const built = `${e.target.value}:${customMinute} ${customPeriod}`;
                                       setCustomTime(built);
-                                      setSelectedTimes(prev => {
-                                        const withoutCustom = prev.filter(t => timeSlots.includes(t));
-                                        return [...withoutCustom, built];
-                                      });
+                                      setSelectedTimes([built]);
                                     }}
                                     className="bg-muted rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground outline-none border border-border focus:border-primary appearance-none text-center w-16"
                                   >
-                                    {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(h => (
+                                    {Array.from({ length: 12 }, (_, i) => String(i + 1)).map(h => (
                                       <option key={h} value={h}>{h}</option>
                                     ))}
                                   </select>
@@ -841,7 +869,7 @@ const WeeklyPlan = () => {
                             )}
                           </AnimatePresence>
                         </div>
-                      </>
+                      </div>
                     )}
                   </motion.div>
                 )}
