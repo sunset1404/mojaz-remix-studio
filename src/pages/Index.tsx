@@ -82,6 +82,8 @@ const Index = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [topReciters, setTopReciters] = useState<ReciterPreview[]>([]);
   const [activeSubscription, setActiveSubscription] = useState<ActiveSubscription | null>(null);
+  const [remainingMinutes, setRemainingMinutes] = useState<number | null>(null);
+  const [totalMinutes, setTotalMinutes] = useState<number | null>(null);
   const [popupMessage, setPopupMessage] = useState<{id: string;title: string;message: string;icon: string;color_scheme: string;} | null>(null);
   const [showExpiredDialog, setShowExpiredDialog] = useState(false);
   const showDebug = import.meta.env.MODE !== "production";
@@ -156,6 +158,15 @@ const Index = () => {
           });
         } else {
           setActiveSubscription(data);
+          // Fetch total minutes from the subscription plan
+          supabase.from("subscription_plans")
+            .select("monthly_minutes")
+            .eq("name", data.subscription_type)
+            .eq("is_active", true)
+            .maybeSingle()
+            .then(({ data: planData }) => {
+              if (planData) setTotalMinutes(planData.monthly_minutes);
+            });
         }
       } else {
         // Check if there's any expired subscription to show dialog
@@ -176,6 +187,15 @@ const Index = () => {
         });
       }
     });
+
+    // Fetch remaining minutes
+    supabase.from("student_hour_credits")
+      .select("remaining_minutes")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setRemainingMinutes(data.remaining_minutes);
+      });
   }, [user]);
 
   const fetchDebugData = useCallback(async () => {
@@ -530,6 +550,21 @@ const Index = () => {
                         </div>
                         <h3 className="text-primary-foreground font-bold text-lg">{daysLeft} يوم متبقي</h3>
                         <p className="text-primary-foreground/70 text-xs mt-1">ينتهي في {activeSubscription.end_date}</p>
+                        {totalMinutes !== null && remainingMinutes !== null && (
+                          <div className="mt-2 space-y-1">
+                            <div className="flex items-center gap-2 text-primary-foreground/80 text-[11px]">
+                              <span>الإجمالي: {Math.round(totalMinutes / 60)} ساعة</span>
+                              <span>•</span>
+                              <span>المتبقي: {Math.round(remainingMinutes / 60)} ساعة</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gold rounded-full transition-all"
+                                style={{ width: `${Math.min(100, totalMinutes > 0 ? (remainingMinutes / totalMinutes) * 100 : 0)}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col items-center gap-1">
                         <div className="w-16 h-16 rounded-full bg-gold/20 border-[3px] border-gold/40 flex items-center justify-center shadow-lg">
