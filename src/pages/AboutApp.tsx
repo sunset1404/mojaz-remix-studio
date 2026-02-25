@@ -42,7 +42,10 @@ const AboutApp = () => {
           <img src={logoMojaz} alt="شعار مجاز" className="w-24 h-28 object-contain mx-auto mb-4" />
           <h2 className="text-lg font-bold text-foreground">مجاز</h2>
           <p className="text-sm text-muted-foreground mt-1">سند متصل بالسماء</p>
-          <p className="text-[10px] text-muted-foreground mt-2">الإصدار 1.0.0</p>
+          <p className="text-[12px] text-muted-foreground leading-relaxed mt-3">
+            تطبيق مجاز هو منصة رقمية متخصصة في تعليم القرآن الكريم وإقرائه بالسند المتصل، وهو أحد تطبيقات جمعية إقراء القرآن الكريم بمكة المكرمة. يهدف التطبيق إلى تيسير التواصل بين الطلاب والمقرئين المجازين، وتقديم تجربة تعليمية متكاملة تشمل الحفظ والمراجعة والإجازة القرآنية.
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-3">الإصدار 1.0.0</p>
         </div>
 
         {/* Eqraa Association */}
