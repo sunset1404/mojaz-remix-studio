@@ -119,7 +119,7 @@ export async function initMoyasarForm(config: {
     console.log("Moyassar: calling init with class selector .mysr-form");
 
     // Use minimal config with class selector (Moyassar standard)
-    window.Moyasar.init({
+    const moyasarConfig: any = {
         element: ".mysr-form",
         amount: toHalalas(config.amountSar),
         currency: "SAR",
@@ -130,7 +130,18 @@ export async function initMoyasarForm(config: {
         metadata: config.metadata || {},
         on_completed: config.onCompleted,
         on_failure: config.onFailure,
-    } as any);
+    };
+
+    // Add Apple Pay config if included in methods
+    if (config.methods?.includes("applepay")) {
+        moyasarConfig.apple_pay = {
+            country: "SA",
+            label: "إقراء",
+            validate_merchant_url: "https://api.moyasar.com/v1/applepay/initiate",
+        };
+    }
+
+    window.Moyasar.init(moyasarConfig);
 }
 
 /**
