@@ -218,12 +218,20 @@ const Subscription = () => {
                 <div>
                   <h3 className={`text-lg font-bold ${plan.is_popular ? "" : "text-foreground"}`}>{plan.name}</h3>
                   <div className="flex items-baseline gap-1">
-                    <span className={`text-3xl font-extrabold ${plan.is_popular ? "" : "text-foreground"}`}>
-                      {getPrice(plan)}
-                    </span>
-                    <span className={`text-sm ${plan.is_popular ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                      {getPeriod(plan)}
-                    </span>
+                    {isFree ? (
+                      <span className={`text-xl font-extrabold ${plan.is_popular ? "" : "text-primary"}`}>
+                        مجاني
+                      </span>
+                    ) : (
+                      <>
+                        <span className={`text-3xl font-extrabold ${plan.is_popular ? "" : "text-foreground"}`}>
+                          {getPrice(plan)}
+                        </span>
+                        <span className={`text-sm ${plan.is_popular ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                          {getPeriod(plan)}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
