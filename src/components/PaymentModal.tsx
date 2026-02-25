@@ -40,11 +40,11 @@ const PaymentModal = ({
 
   useEffect(() => {
     if (isOpen && paymentState === "form" && !formInitialized.current) {
-      // Small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
+      // Use requestAnimationFrame to ensure DOM is ready without artificial delay
+      const raf = requestAnimationFrame(() => {
         initPaymentForm();
-      }, 300);
-      return () => clearTimeout(timer);
+      });
+      return () => cancelAnimationFrame(raf);
     }
 
     if (!isOpen) {
