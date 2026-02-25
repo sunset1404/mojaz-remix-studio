@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Loader2, AlertCircle, PhoneOff } from "lucide-react";
 import { VideoCall } from "@/components/video-call/VideoCall";
 import { ReciterSessionPanel, SessionNoteData } from "@/components/video-call/ReciterSessionPanel";
+import { SessionConfirmDialog } from "@/components/video-call/SessionConfirmDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,6 +19,7 @@ const VideoCallPage = () => {
     const [callRole, setCallRole] = useState<"caller" | "callee">("caller");
     const [otherUserName, setOtherUserName] = useState<string>("");
     const [isReciter, setIsReciter] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
     const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
 
     useEffect(() => {
@@ -94,6 +96,15 @@ const VideoCallPage = () => {
     }, [roomId, user]);
 
     const handleEndCall = async () => {
+        // If reciter, show confirmation dialog first
+        if (isReciter && !showConfirm) {
+            setShowConfirm(true);
+            return;
+        }
+        await saveAndEnd();
+    };
+
+    const saveAndEnd = async () => {
         if (roomId) {
             const noteData = sessionNoteRef.current;
             const updatePayload: any = {
@@ -185,6 +196,15 @@ const VideoCallPage = () => {
                     onDataChange={(data) => { sessionNoteRef.current = data; }}
                 />
             )}
+            <AnimatePresence>
+                {showConfirm && isReciter && (
+                    <SessionConfirmDialog
+                        data={sessionNoteRef.current}
+                        onConfirm={saveAndEnd}
+                        onCancel={() => setShowConfirm(false)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
