@@ -168,6 +168,35 @@ export default function AdminWhatsAppTemplates() {
     loadAll();
   };
 
+  const handleCreatePreset = async () => {
+    const presetName = "certificate_notification";
+    const exists = templates.find(t => t.name === presetName);
+    if (exists) {
+      toast.info(`القالب "${presetName}" موجود بالفعل (الحالة: ${STATUS_CONFIG[exists.status]?.label || exists.status})`);
+      return;
+    }
+    const components = [
+      { type: "HEADER", format: "DOCUMENT" },
+      {
+        type: "BODY",
+        text: "🎉 مبارك عليك يا {{1}}!\n\nيسرّنا في منصة مجاز للقرآن الكريم أن نهنئك بحصولك على {{2}}، تجدها مرفقة في هذه الرسالة.\n\nنسأل الله لك دوام التوفيق والسداد، وأن يجعل القرآن ربيع قلبك ونور صدرك.",
+        example: { body_text: [["محمد أحمد", "إجازة في القرآن الكريم برواية حفص"]] },
+      },
+      { type: "FOOTER", text: "منصة مجاز للقرآن الكريم" },
+    ];
+    setCreating(true);
+    const result = await callFunction("create", {
+      method: "POST",
+      body: { name: presetName, category: "UTILITY", language: "ar", components },
+    });
+    setCreating(false);
+    if (result.error) {
+      toast.error("فشل إنشاء القالب: " + result.error);
+      return;
+    }
+    toast.success("تم إرسال قالب الشهادات لاعتماد ميتا. الحالة: قيد المراجعة");
+    loadAll();
+
   return (
     <div className="min-h-screen bg-background" dir="rtl">
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur border-b border-border/50 px-6 py-4 flex items-center gap-4">
