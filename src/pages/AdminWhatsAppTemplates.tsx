@@ -196,6 +196,7 @@ export default function AdminWhatsAppTemplates() {
     }
     toast.success("تم إرسال قالب الشهادات لاعتماد ميتا. الحالة: قيد المراجعة");
     loadAll();
+  };
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
