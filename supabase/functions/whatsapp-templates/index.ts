@@ -81,48 +81,35 @@ Deno.serve(async (req) => {
       }
 
       // For media headers (DOCUMENT/IMAGE/VIDEO), Meta requires example.header_handle
-      // We auto-upload a sample file via Resumable Upload API and inject the handle
-      const APP_ID = Deno.env.get("META_WHATSAPP_APP_ID");
+      // Upload sample via PHONE_NUMBER_ID/media (works with WhatsApp System User token)
+      // then use the returned media id as header_handle.
       for (const comp of components) {
         if (comp.type === "HEADER" && ["DOCUMENT", "IMAGE", "VIDEO"].includes(comp.format) && !comp.example) {
-          if (!APP_ID) {
-            return json({
-              error: "META_WHATSAPP_APP_ID is required for media-header templates. Add it as a secret.",
-            }, 400);
-          }
-          // Sample PDF (small valid PDF)
           const sampleUrl = comp.format === "DOCUMENT"
             ? "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
             : "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png";
           const sampleRes = await fetch(sampleUrl);
           if (!sampleRes.ok) return json({ error: "Failed to fetch sample file" }, 500);
-          const sampleBytes = new Uint8Array(await sampleRes.arrayBuffer());
+          const sampleBlob = await sampleRes.blob();
           const mime = comp.format === "DOCUMENT" ? "application/pdf" : "image/png";
+          const filename = comp.format === "DOCUMENT" ? "sample.pdf" : "sample.png";
 
-          // Step 1: Create upload session
-          const sessRes = await fetch(
-            `${META_API}/${APP_ID}/uploads?file_length=${sampleBytes.length}&file_type=${encodeURIComponent(mime)}&access_token=${ACCESS_TOKEN}`,
-            { method: "POST" }
-          );
-          const sessData = await sessRes.json();
-          if (!sessRes.ok || !sessData.id) {
-            return json({ error: "Upload session failed", details: sessData.error }, 500);
-          }
+          // Upload via WhatsApp Media endpoint (uses same WABA token, no APP_ID needed)
+          const fd = new FormData();
+          fd.append("messaging_product", "whatsapp");
+          fd.append("type", mime);
+          fd.append("file", new File([sampleBlob], filename, { type: mime }));
 
-          // Step 2: Upload bytes
-          const upRes = await fetch(`${META_API}/${sessData.id}`, {
+          const upRes = await fetch(`${META_API}/${PHONE_NUMBER_ID}/media`, {
             method: "POST",
-            headers: {
-              Authorization: `OAuth ${ACCESS_TOKEN}`,
-              file_offset: "0",
-            },
-            body: sampleBytes,
+            headers: { Authorization: `Bearer ${ACCESS_TOKEN}` },
+            body: fd,
           });
           const upData = await upRes.json();
-          if (!upRes.ok || !upData.h) {
-            return json({ error: "Upload failed", details: upData.error || upData }, 500);
+          if (!upRes.ok || !upData.id) {
+            return json({ error: "Media upload failed", details: upData.error || upData }, 500);
           }
-          comp.example = { header_handle: [upData.h] };
+          comp.example = { header_handle: [upData.id] };
         }
       }
 
