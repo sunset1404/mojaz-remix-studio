@@ -121,6 +121,7 @@ const AdminSidebar = () => {
                 { title: "المكافآت والنقاط", icon: Star, path: "/admin/rewards" },
                 { title: "الرسائل المنبثقة", icon: MessageSquareText, path: "/admin/popup-messages" },
                 { title: "رسائل واتساب", icon: MessageCircle, path: "/admin/whatsapp" },
+                { title: "قوالب واتساب (Meta)", icon: MessageCircle, path: "/admin/whatsapp-templates" },
                 { title: "الاشتراكات", icon: CreditCard, path: "/admin/subscriptions" },
                 { title: "إدارة المستخدمين", icon: Shield, path: "/admin/users" },
               ].map((item) => {

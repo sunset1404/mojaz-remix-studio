@@ -60,6 +60,7 @@ import AdminAchievements from "./pages/AdminAchievements";
 import AdminRewards from "./pages/AdminRewards";
 import AdminPopupMessages from "./pages/AdminPopupMessages";
 import AdminWhatsApp from "./pages/AdminWhatsApp";
+import AdminWhatsAppTemplates from "./pages/AdminWhatsAppTemplates";
 import AdminSubscriptions from "./pages/AdminSubscriptions";
 import AdminGifts from "./pages/AdminGifts";
 import AdminPlans from "./pages/AdminPlans";
@@ -130,6 +131,7 @@ const AppRoutes = () => (
     <Route path="/admin/rewards" element={<ProtectedRoute><AdminRewards /></ProtectedRoute>} />
     <Route path="/admin/popup-messages" element={<ProtectedRoute><AdminPopupMessages /></ProtectedRoute>} />
     <Route path="/admin/whatsapp" element={<ProtectedRoute><AdminWhatsApp /></ProtectedRoute>} />
+    <Route path="/admin/whatsapp-templates" element={<ProtectedRoute><AdminWhatsAppTemplates /></ProtectedRoute>} />
     <Route path="/admin/subscriptions" element={<ProtectedRoute><AdminSubscriptions /></ProtectedRoute>} />
     <Route path="/admin/gifts" element={<ProtectedRoute><AdminGifts /></ProtectedRoute>} />
     <Route path="/admin/plans" element={<ProtectedRoute><AdminPlans /></ProtectedRoute>} />
