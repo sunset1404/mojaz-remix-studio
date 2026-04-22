@@ -80,36 +80,38 @@ Deno.serve(async (req) => {
         return json({ error: "Missing fields" }, 400);
       }
 
-      // For media headers (DOCUMENT/IMAGE/VIDEO), Meta requires example.header_handle
-      // Upload sample via PHONE_NUMBER_ID/media (works with WhatsApp System User token)
-      // then use the returned media id as header_handle.
+      // For media headers, use Resumable Upload API to get header_handle
+      const APP_ID = Deno.env.get("META_WHATSAPP_APP_ID");
       for (const comp of components) {
         if (comp.type === "HEADER" && ["DOCUMENT", "IMAGE", "VIDEO"].includes(comp.format) && !comp.example) {
+          if (!APP_ID) return json({ error: "META_WHATSAPP_APP_ID required" }, 400);
           const sampleUrl = comp.format === "DOCUMENT"
             ? "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
             : "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png";
           const sampleRes = await fetch(sampleUrl);
           if (!sampleRes.ok) return json({ error: "Failed to fetch sample file" }, 500);
-          const sampleBlob = await sampleRes.blob();
+          const sampleBytes = new Uint8Array(await sampleRes.arrayBuffer());
           const mime = comp.format === "DOCUMENT" ? "application/pdf" : "image/png";
-          const filename = comp.format === "DOCUMENT" ? "sample.pdf" : "sample.png";
 
-          // Upload via WhatsApp Media endpoint (uses same WABA token, no APP_ID needed)
-          const fd = new FormData();
-          fd.append("messaging_product", "whatsapp");
-          fd.append("type", mime);
-          fd.append("file", new File([sampleBlob], filename, { type: mime }));
+          const sessRes = await fetch(
+            `${META_API}/${APP_ID}/uploads?file_length=${sampleBytes.length}&file_type=${encodeURIComponent(mime)}&access_token=${ACCESS_TOKEN}`,
+            { method: "POST" }
+          );
+          const sessData = await sessRes.json();
+          if (!sessRes.ok || !sessData.id) {
+            return json({ error: "Upload session failed", details: sessData.error || sessData }, 500);
+          }
 
-          const upRes = await fetch(`${META_API}/${PHONE_NUMBER_ID}/media`, {
+          const upRes = await fetch(`${META_API}/${sessData.id}`, {
             method: "POST",
-            headers: { Authorization: `Bearer ${ACCESS_TOKEN}` },
-            body: fd,
+            headers: { Authorization: `OAuth ${ACCESS_TOKEN}`, file_offset: "0" },
+            body: sampleBytes,
           });
           const upData = await upRes.json();
-          if (!upRes.ok || !upData.id) {
-            return json({ error: "Media upload failed", details: upData.error || upData }, 500);
+          if (!upRes.ok || !upData.h) {
+            return json({ error: "Upload failed", details: upData.error || upData }, 500);
           }
-          comp.example = { header_handle: [upData.id] };
+          comp.example = { header_handle: [upData.h] };
         }
       }
 
