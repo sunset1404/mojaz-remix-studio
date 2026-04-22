@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Clock, RefreshCw, Plus, Trash2, MessageCircle, Phone } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, RefreshCw, Plus, Trash2, MessageCircle, Phone, Award } from "lucide-react";
 
 interface MetaTemplate {
   id: string;
@@ -168,6 +168,36 @@ export default function AdminWhatsAppTemplates() {
     loadAll();
   };
 
+  const handleCreatePreset = async () => {
+    const presetName = "certificate_notification";
+    const exists = templates.find(t => t.name === presetName);
+    if (exists) {
+      toast.info(`القالب "${presetName}" موجود بالفعل (الحالة: ${STATUS_CONFIG[exists.status]?.label || exists.status})`);
+      return;
+    }
+    const components = [
+      { type: "HEADER", format: "DOCUMENT" },
+      {
+        type: "BODY",
+        text: "🎉 مبارك عليك يا {{1}}!\n\nيسرّنا في منصة مجاز للقرآن الكريم أن نهنئك بحصولك على {{2}}، تجدها مرفقة في هذه الرسالة.\n\nنسأل الله لك دوام التوفيق والسداد، وأن يجعل القرآن ربيع قلبك ونور صدرك.",
+        example: { body_text: [["محمد أحمد", "إجازة في القرآن الكريم برواية حفص"]] },
+      },
+      { type: "FOOTER", text: "منصة مجاز للقرآن الكريم" },
+    ];
+    setCreating(true);
+    const result = await callFunction("create", {
+      method: "POST",
+      body: { name: presetName, category: "UTILITY", language: "ar", components },
+    });
+    setCreating(false);
+    if (result.error) {
+      toast.error("فشل إنشاء القالب: " + result.error);
+      return;
+    }
+    toast.success("تم إرسال قالب الشهادات لاعتماد ميتا. الحالة: قيد المراجعة");
+    loadAll();
+  };
+
   return (
     <div className="min-h-screen bg-background" dir="rtl">
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur border-b border-border/50 px-6 py-4 flex items-center gap-4">
@@ -227,13 +257,18 @@ export default function AdminWhatsAppTemplates() {
             <h2 className="text-lg font-bold">القوالب ({templates.length})</h2>
             <p className="text-xs text-muted-foreground">القوالب المسجلة في حسابك على Meta</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4" />
-                إنشاء قالب جديد
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCreatePreset} disabled={creating || !connection?.connected}>
+              <Award className="w-4 h-4" />
+              قالب الشهادات والإجازات الجاهز
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4" />
+                  إنشاء قالب جديد
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
               <DialogHeader>
                 <DialogTitle>إنشاء قالب واتساب جديد</DialogTitle>
@@ -325,8 +360,9 @@ export default function AdminWhatsAppTemplates() {
                   {creating ? "جاري الإرسال..." : "إرسال للاعتماد"}
                 </Button>
               </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <div className="grid gap-4">
