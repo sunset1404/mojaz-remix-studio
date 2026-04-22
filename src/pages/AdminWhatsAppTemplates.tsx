@@ -257,13 +257,18 @@ export default function AdminWhatsAppTemplates() {
             <h2 className="text-lg font-bold">القوالب ({templates.length})</h2>
             <p className="text-xs text-muted-foreground">القوالب المسجلة في حسابك على Meta</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4" />
-                إنشاء قالب جديد
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCreatePreset} disabled={creating || !connection?.connected}>
+              <Award className="w-4 h-4" />
+              قالب الشهادات والإجازات الجاهز
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4" />
+                  إنشاء قالب جديد
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
               <DialogHeader>
                 <DialogTitle>إنشاء قالب واتساب جديد</DialogTitle>
