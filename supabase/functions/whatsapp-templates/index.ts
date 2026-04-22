@@ -79,6 +79,53 @@ Deno.serve(async (req) => {
       if (!name || !category || !language || !components) {
         return json({ error: "Missing fields" }, 400);
       }
+
+      // For media headers (DOCUMENT/IMAGE/VIDEO), Meta requires example.header_handle
+      // We auto-upload a sample file via Resumable Upload API and inject the handle
+      const APP_ID = Deno.env.get("META_WHATSAPP_APP_ID");
+      for (const comp of components) {
+        if (comp.type === "HEADER" && ["DOCUMENT", "IMAGE", "VIDEO"].includes(comp.format) && !comp.example) {
+          if (!APP_ID) {
+            return json({
+              error: "META_WHATSAPP_APP_ID is required for media-header templates. Add it as a secret.",
+            }, 400);
+          }
+          // Sample PDF (small valid PDF)
+          const sampleUrl = comp.format === "DOCUMENT"
+            ? "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+            : "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png";
+          const sampleRes = await fetch(sampleUrl);
+          if (!sampleRes.ok) return json({ error: "Failed to fetch sample file" }, 500);
+          const sampleBytes = new Uint8Array(await sampleRes.arrayBuffer());
+          const mime = comp.format === "DOCUMENT" ? "application/pdf" : "image/png";
+
+          // Step 1: Create upload session
+          const sessRes = await fetch(
+            `${META_API}/${APP_ID}/uploads?file_length=${sampleBytes.length}&file_type=${encodeURIComponent(mime)}&access_token=${ACCESS_TOKEN}`,
+            { method: "POST" }
+          );
+          const sessData = await sessRes.json();
+          if (!sessRes.ok || !sessData.id) {
+            return json({ error: "Upload session failed", details: sessData.error }, 500);
+          }
+
+          // Step 2: Upload bytes
+          const upRes = await fetch(`${META_API}/${sessData.id}`, {
+            method: "POST",
+            headers: {
+              Authorization: `OAuth ${ACCESS_TOKEN}`,
+              file_offset: "0",
+            },
+            body: sampleBytes,
+          });
+          const upData = await upRes.json();
+          if (!upRes.ok || !upData.h) {
+            return json({ error: "Upload failed", details: upData.error || upData }, 500);
+          }
+          comp.example = { header_handle: [upData.h] };
+        }
+      }
+
       const r = await fetch(`${META_API}/${WABA_ID}/message_templates`, {
         method: "POST",
         headers: {
