@@ -360,8 +360,9 @@ export default function AdminWhatsAppTemplates() {
                   {creating ? "جاري الإرسال..." : "إرسال للاعتماد"}
                 </Button>
               </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <div className="grid gap-4">
