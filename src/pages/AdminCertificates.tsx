@@ -830,6 +830,17 @@ const AdminCertificates = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* WhatsApp Send Dialog */}
+      <SendCertificateWhatsAppDialog
+        open={waOpen}
+        onOpenChange={(v) => { setWaOpen(v); if (!v) { setWaCert(null); setWaPdfUrl(undefined); } }}
+        defaultPhone={waCert?.student_phone || ""}
+        defaultName={waCert?.student_name || ""}
+        certificateLabel={waCert?.title || ""}
+        pdfUrl={waPdfUrl}
+        pdfFilename={waPdfFilename}
+      />
     </div>
   );
 };
