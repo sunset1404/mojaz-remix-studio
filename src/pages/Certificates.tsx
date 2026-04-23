@@ -122,18 +122,17 @@ const Certificates = () => {
       });
 
       const iframeDoc = iframe.contentDocument!;
+      const iframeWin = iframe.contentWindow! as any;
 
-      const fontLink = iframeDoc.createElement("link");
-      fontLink.rel = "stylesheet";
-      fontLink.href = "https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;500;600;700;800&display=swap";
-      iframeDoc.head.appendChild(fontLink);
-
-      const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
-      styles.forEach((s) => {
-        iframeDoc.head.appendChild(s.cloneNode(true));
-      });
-
-      iframeDoc.body.style.cssText = "margin:0;padding:0;font-family:'Cairo','Amiri',sans-serif;direction:rtl;";
+      // Inject Google Fonts (Amiri + Cairo) directly via @import in a style tag
+      // so that document.fonts.ready can reliably await them inside the iframe.
+      const fontStyle = iframeDoc.createElement("style");
+      fontStyle.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;500;600;700;800&display=swap');
+        html, body { margin: 0; padding: 0; background: #ffffff; }
+        body { font-family: 'Cairo', 'Amiri', sans-serif; direction: rtl; }
+      `;
+      iframeDoc.head.appendChild(fontStyle);
 
       const certEl = iframeDoc.createElement("div");
       certEl.style.width = `${downloadWidth}px`;
@@ -152,8 +151,26 @@ const Certificates = () => {
         />
       );
 
-      await new Promise(r => setTimeout(r, 2000));
+      // Wait for React render + fonts to fully load inside the iframe.
+      await new Promise(r => setTimeout(r, 300));
+      try {
+        if (iframeWin.document?.fonts?.ready) {
+          await iframeWin.document.fonts.ready;
+          // Force-load the specific Arabic faces we use to avoid swap glitches.
+          await Promise.all([
+            iframeWin.document.fonts.load("700 32px Amiri"),
+            iframeWin.document.fonts.load("400 17px Amiri"),
+            iframeWin.document.fonts.load("700 16px Cairo"),
+            iframeWin.document.fonts.load("400 14px Cairo"),
+          ]);
+        }
+      } catch {}
+      // Extra settle time for layout reflow with newly-loaded Arabic glyphs.
+      await new Promise(r => setTimeout(r, 800));
 
+      // foreignObjectRendering preserves native browser text shaping (critical
+      // for Arabic — without it, html2canvas paints letters individually and
+      // they appear disconnected and overlapping).
       const canvas = await (html2canvas as any)(certEl, {
         scale: 2,
         useCORS: true,
@@ -163,6 +180,7 @@ const Certificates = () => {
         windowWidth: downloadWidth,
         width: downloadWidth,
         height: downloadHeight,
+        foreignObjectRendering: true,
         window: iframe.contentWindow!,
       });
 
