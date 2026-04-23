@@ -1,4 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
+import { createRoot } from "react-dom/client";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -290,6 +293,67 @@ const AdminCertificates = () => {
     }
   };
 
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (cert: CertificateRow) => {
+    setDownloadingId(cert.id);
+    try {
+      const reciter = cert.reciter_id ? reciters.find(r => r.user_id === cert.reciter_id) : null;
+      const W = 1754; // A4 landscape ~150dpi
+      const H = 1240;
+
+      const container = document.createElement("div");
+      container.style.position = "fixed";
+      container.style.top = "-10000px";
+      container.style.left = "0";
+      container.style.width = `${W}px`;
+      container.style.height = `${H}px`;
+      container.style.background = "#ffffff";
+      document.body.appendChild(container);
+
+      const root = createRoot(container);
+      await new Promise<void>((resolve) => {
+        root.render(
+          <CertificateViewer
+            cert={cert}
+            reciterSignatureUrl={reciter?.signature_url || null}
+            reciterStampUrl={reciter?.stamp_url || null}
+            renderWidth={W}
+            renderHeight={H}
+          />
+        );
+        setTimeout(resolve, 700);
+      });
+
+      const target = (container.querySelector('[dir="rtl"] > div > div') as HTMLElement) || container;
+      const canvas = await html2canvas(target, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfW, pdfH);
+
+      const safeName = (cert.student_name || "certificate").replace(/[^\p{L}\p{N}\s_-]/gu, "").trim() || "certificate";
+      const typeLabel = cert.type === "ijaza" ? "إجازة" : "شهادة";
+      pdf.save(`${typeLabel}-${safeName}.pdf`);
+
+      root.unmount();
+      document.body.removeChild(container);
+      toast({ title: "تم تحميل الشهادة بنجاح ✅" });
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "تعذّر تحميل الشهادة", description: e.message, variant: "destructive" });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const stats = useMemo(() => ({
     total: certificates.length,
     ijazat: certificates.filter(c => c.type === "ijaza").length,
@@ -466,11 +530,17 @@ const AdminCertificates = () => {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
-                              onClick={() => setViewCert(cert)}>
+                              onClick={() => setViewCert(cert)} title="معاينة">
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                              onClick={() => handleDownload(cert)} disabled={downloadingId === cert.id} title="تحميل PDF">
+                              {downloadingId === cert.id
+                                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                : <Download className="w-3.5 h-3.5" />}
+                            </Button>
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDelete(cert.id)}>
+                              onClick={() => handleDelete(cert.id)} title="حذف">
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </div>
@@ -660,11 +730,20 @@ const AdminCertificates = () => {
             <DialogDescription>معاينة الشهادة بالتصميم الرسمي</DialogDescription>
           </DialogHeader>
           {viewCert && (
-            <CertificateViewer
-              cert={viewCert}
-              reciterSignatureUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.signature_url : null}
-              reciterStampUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.stamp_url : null}
-            />
+            <>
+              <CertificateViewer
+                cert={viewCert}
+                reciterSignatureUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.signature_url : null}
+                reciterStampUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.stamp_url : null}
+              />
+              <div className="flex justify-center mt-4">
+                <Button onClick={() => handleDownload(viewCert)} disabled={downloadingId === viewCert.id} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl">
+                  {downloadingId === viewCert.id
+                    ? <><RefreshCw className="w-4 h-4 animate-spin" /> جارٍ التحميل...</>
+                    : <><Download className="w-4 h-4" /> تحميل PDF</>}
+                </Button>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
