@@ -119,7 +119,7 @@ export default function AdminWhatsAppTemplates() {
 
     return "فشل إنشاء القالب: " + (result.error || "حدث خطأ غير متوقع");
   };
-...
+
   const handleCreate = async () => {
     if (!name.match(/^[a-z0-9_]+$/)) {
       toast.error("اسم القالب يجب أن يكون حروف صغيرة وأرقام و _ فقط");
