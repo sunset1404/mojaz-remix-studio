@@ -293,6 +293,67 @@ const AdminCertificates = () => {
     }
   };
 
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (cert: CertificateRow) => {
+    setDownloadingId(cert.id);
+    try {
+      const reciter = cert.reciter_id ? reciters.find(r => r.user_id === cert.reciter_id) : null;
+      const W = 1754; // A4 landscape ~150dpi
+      const H = 1240;
+
+      const container = document.createElement("div");
+      container.style.position = "fixed";
+      container.style.top = "-10000px";
+      container.style.left = "0";
+      container.style.width = `${W}px`;
+      container.style.height = `${H}px`;
+      container.style.background = "#ffffff";
+      document.body.appendChild(container);
+
+      const root = createRoot(container);
+      await new Promise<void>((resolve) => {
+        root.render(
+          <CertificateViewer
+            cert={cert}
+            reciterSignatureUrl={reciter?.signature_url || null}
+            reciterStampUrl={reciter?.stamp_url || null}
+            renderWidth={W}
+            renderHeight={H}
+          />
+        );
+        setTimeout(resolve, 700);
+      });
+
+      const target = (container.querySelector('[dir="rtl"] > div > div') as HTMLElement) || container;
+      const canvas = await html2canvas(target, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfW, pdfH);
+
+      const safeName = (cert.student_name || "certificate").replace(/[^\p{L}\p{N}\s_-]/gu, "").trim() || "certificate";
+      const typeLabel = cert.type === "ijaza" ? "إجازة" : "شهادة";
+      pdf.save(`${typeLabel}-${safeName}.pdf`);
+
+      root.unmount();
+      document.body.removeChild(container);
+      toast({ title: "تم تحميل الشهادة بنجاح ✅" });
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "تعذّر تحميل الشهادة", description: e.message, variant: "destructive" });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const stats = useMemo(() => ({
     total: certificates.length,
     ijazat: certificates.filter(c => c.type === "ijaza").length,
