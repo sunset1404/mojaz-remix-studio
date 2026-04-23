@@ -118,6 +118,11 @@ const AdminCertificates = () => {
   const [typeFilter, setTypeFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [viewCert, setViewCert] = useState<CertificateRow | null>(null);
+  const [waCert, setWaCert] = useState<CertificateRow | null>(null);
+  const [waPdfUrl, setWaPdfUrl] = useState<string | undefined>(undefined);
+  const [waPdfFilename, setWaPdfFilename] = useState<string>("certificate.pdf");
+  const [waOpen, setWaOpen] = useState(false);
+  const [preparingWaId, setPreparingWaId] = useState<string | null>(null);
 
   // Form state
   const [formType, setFormType] = useState<string>("ijaza");
@@ -355,7 +360,76 @@ const AdminCertificates = () => {
     }
   };
 
-  const stats = useMemo(() => ({
+  // Render the certificate as PDF, upload to storage, and return public URL
+  const renderAndUploadPdf = async (cert: CertificateRow): Promise<{ url: string; filename: string }> => {
+    const reciter = cert.reciter_id ? reciters.find(r => r.user_id === cert.reciter_id) : null;
+    const W = 1754;
+    const H = 1240;
+
+    const container = document.createElement("div");
+    container.style.position = "fixed";
+    container.style.top = "-10000px";
+    container.style.left = "0";
+    container.style.width = `${W}px`;
+    container.style.height = `${H}px`;
+    container.style.background = "#ffffff";
+    document.body.appendChild(container);
+
+    const root = createRoot(container);
+    await new Promise<void>((resolve) => {
+      root.render(
+        <CertificateViewer
+          cert={cert}
+          reciterSignatureUrl={reciter?.signature_url || null}
+          reciterStampUrl={reciter?.stamp_url || null}
+          renderWidth={W}
+          renderHeight={H}
+        />
+      );
+      setTimeout(resolve, 700);
+    });
+
+    const target = (container.querySelector('[dir="rtl"] > div > div') as HTMLElement) || container;
+    const canvas = await html2canvas(target, {
+      scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false,
+    });
+    const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = pdf.internal.pageSize.getHeight();
+    pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, pdfW, pdfH);
+    const blob = pdf.output("blob");
+
+    root.unmount();
+    document.body.removeChild(container);
+
+    const typeLabel = cert.type === "ijaza" ? "ijaza" : "khatm";
+    const filename = `${typeLabel}-${cert.id}.pdf`;
+    const path = `${cert.user_id}/${filename}`;
+    const { error: upErr } = await supabase.storage.from("certificates").upload(path, blob, {
+      contentType: "application/pdf",
+      upsert: true,
+    });
+    if (upErr) throw upErr;
+    const { data: pub } = supabase.storage.from("certificates").getPublicUrl(path);
+    const arabicFilename = (cert.type === "ijaza" ? "إجازة" : "شهادة") + `-${cert.student_name || ""}.pdf`;
+    return { url: pub.publicUrl, filename: arabicFilename };
+  };
+
+  const handleSendWhatsApp = async (cert: CertificateRow) => {
+    setPreparingWaId(cert.id);
+    try {
+      const { url, filename } = await renderAndUploadPdf(cert);
+      setWaCert(cert);
+      setWaPdfUrl(url);
+      setWaPdfFilename(filename);
+      setWaOpen(true);
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "تعذّر تجهيز ملف الشهادة", description: e.message, variant: "destructive" });
+    } finally {
+      setPreparingWaId(null);
+    }
+  };
     total: certificates.length,
     ijazat: certificates.filter(c => c.type === "ijaza").length,
     certs: certificates.filter(c => c.type === "certificate").length,
