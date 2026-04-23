@@ -158,7 +158,17 @@ export default function AdminWhatsAppTemplates() {
       components.push({ type: "HEADER", format: "IMAGE" });
     }
 
-    components.push({ type: "BODY", text: bodyText });
+    // Extract variables {{1}}, {{2}}, ... and provide example values (Meta requires this)
+    const varMatches = bodyText.match(/\{\{(\d+)\}\}/g) || [];
+    const uniqueVarCount = new Set(varMatches.map(v => v.replace(/[^0-9]/g, ""))).size;
+    const bodyComponent: any = { type: "BODY", text: bodyText };
+    if (uniqueVarCount > 0) {
+      const sampleValues = ["محمد أحمد", "إجازة في القرآن الكريم برواية حفص", "1446", "مكة المكرمة", "حفص عن عاصم"];
+      bodyComponent.example = {
+        body_text: [Array.from({ length: uniqueVarCount }, (_, i) => sampleValues[i] || `مثال ${i + 1}`)],
+      };
+    }
+    components.push(bodyComponent);
 
     if (footerText) {
       components.push({ type: "FOOTER", text: footerText });
