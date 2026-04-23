@@ -215,339 +215,389 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
               />
             </div>
 
-            {/* ================= BODY (cream paper) ================= */}
+            {/* ================= BODY (light, modern, card-based) ================= */}
             <div
               style={{
                 position: "relative",
-                padding: L ? "32px 60px 28px" : "20px 24px 18px",
+                padding: L ? "28px 40px 28px" : "18px 18px 16px",
                 height: H ? `${H - headerH}px` : "auto",
                 boxSizing: "border-box",
                 display: "flex",
                 flexDirection: "column",
+                background: "#f6f8fa",
+                gap: L ? "18px" : "12px",
               }}
             >
-              {/* Subtle paper texture */}
+              {/* Soft ambient background tints */}
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
-                  backgroundImage: `radial-gradient(ellipse at top right, ${gold}08, transparent 50%), radial-gradient(ellipse at bottom left, ${teal}06, transparent 50%)`,
+                  backgroundImage: `radial-gradient(ellipse at top right, ${gold}10, transparent 55%), radial-gradient(ellipse at bottom left, ${teal}08, transparent 55%)`,
                   pointerEvents: "none",
                 }}
               />
 
-              {/* Inner gold double border */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: L ? "16px" : "10px",
-                  left: L ? "16px" : "10px",
-                  right: L ? "16px" : "10px",
-                  bottom: L ? "16px" : "10px",
-                  border: `1px solid ${gold}55`,
-                  borderRadius: "4px",
-                  pointerEvents: "none",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  top: L ? "21px" : "14px",
-                  left: L ? "21px" : "14px",
-                  right: L ? "21px" : "14px",
-                  bottom: L ? "21px" : "14px",
-                  border: `1px solid ${gold}25`,
-                  borderRadius: "2px",
-                  pointerEvents: "none",
-                }}
-              />
-
-              {/* Corner ornaments */}
+              {/* Corner ornaments (subtle) */}
               {[
-                { pos: { top: L ? 12 : 8, right: L ? 12 : 8 }, transform: "" },
-                { pos: { top: L ? 12 : 8, left: L ? 12 : 8 }, transform: "scaleX(-1)" },
-                { pos: { bottom: L ? 12 : 8, right: L ? 12 : 8 }, transform: "scaleY(-1)" },
-                { pos: { bottom: L ? 12 : 8, left: L ? 12 : 8 }, transform: "scale(-1)" },
+                { pos: { top: L ? 14 : 10, right: L ? 14 : 10 }, transform: "" },
+                { pos: { top: L ? 14 : 10, left: L ? 14 : 10 }, transform: "scaleX(-1)" },
+                { pos: { bottom: L ? 14 : 10, right: L ? 14 : 10 }, transform: "scaleY(-1)" },
+                { pos: { bottom: L ? 14 : 10, left: L ? 14 : 10 }, transform: "scale(-1)" },
               ].map((c, i) => (
-                <div key={i} style={{ position: "absolute", ...c.pos, transform: c.transform, pointerEvents: "none" }}>
-                  <svg width={L ? 50 : 32} height={L ? 50 : 32} viewBox="0 0 50 50" fill="none">
-                    <path d="M0 0 L20 0" stroke={gold} strokeWidth="1.2" />
-                    <path d="M0 0 L0 20" stroke={gold} strokeWidth="1.2" />
-                    <path d="M5 5 Q14 5 14 14 Q14 22 22 22" stroke={goldDeep} strokeWidth="0.8" fill="none" opacity="0.7" />
-                    <circle cx="5" cy="5" r="2" fill={gold} />
-                    <circle cx="14" cy="14" r="1.5" fill={goldDeep} opacity="0.7" />
+                <div key={i} style={{ position: "absolute", ...c.pos, transform: c.transform, pointerEvents: "none", opacity: 0.55 }}>
+                  <svg width={L ? 38 : 24} height={L ? 38 : 24} viewBox="0 0 50 50" fill="none">
+                    <path d="M0 0 L18 0" stroke={gold} strokeWidth="1.2" />
+                    <path d="M0 0 L0 18" stroke={gold} strokeWidth="1.2" />
+                    <circle cx="5" cy="5" r="1.8" fill={gold} />
+                    <path d="M5 5 Q12 5 12 12" stroke={goldDeep} strokeWidth="0.8" fill="none" opacity="0.7" />
                   </svg>
                 </div>
               ))}
 
-              {/* Content wrapper (inside borders) */}
-              <div style={{ position: "relative", zIndex: 2, padding: L ? "20px 28px" : "14px 16px", flex: 1, display: "flex", flexDirection: "column" }}>
-
-                {/* Title section */}
-                <div style={{ textAlign: "center", marginBottom: L ? "20px" : "14px" }}>
-                  <p
-                    style={{
-                      fontSize: L ? "11px" : "8px",
-                      color: gold,
-                      letterSpacing: L ? "8px" : "5px",
-                      margin: "0 0 8px 0",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {isIjaza ? "إجــازة قــرآنيــة" : "شهــادة تقديــر"}
-                  </p>
-                  <h2
-                    style={{
-                      fontSize: L ? "36px" : "22px",
-                      fontWeight: 700,
-                      color: tealDark,
-                      margin: 0,
-                      lineHeight: 1.25,
-                      fontFamily: "'Amiri', 'Cairo', serif",
-                      letterSpacing: "-0.3px",
-                    }}
-                  >
-                    {cert.title}
-                  </h2>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginTop: L ? "10px" : "6px" }}>
-                    <div style={{ width: L ? "80px" : "44px", height: "1px", background: `linear-gradient(90deg, transparent, ${gold})` }} />
-                    <svg width={L ? 18 : 12} height={L ? 18 : 12} viewBox="0 0 18 18" fill="none">
-                      <path d="M9 0 L11 7 L18 9 L11 11 L9 18 L7 11 L0 9 L7 7 Z" fill={gold} />
-                    </svg>
-                    <div style={{ width: L ? "80px" : "44px", height: "1px", background: `linear-gradient(90deg, ${gold}, transparent)` }} />
-                  </div>
-                </div>
-
-                {/* Details row */}
+              {/* ===== Title card (white) ===== */}
+              <div
+                style={{
+                  position: "relative",
+                  zIndex: 2,
+                  background: "#ffffff",
+                  borderRadius: L ? "18px" : "14px",
+                  padding: L ? "22px 24px 20px" : "14px 16px 12px",
+                  boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
+                  border: `1px solid #eef0f3`,
+                  textAlign: "center",
+                }}
+              >
+                {/* Top gold thin accent */}
                 <div
                   style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: L ? "32px" : "14px",
-                    marginBottom: L ? "20px" : "12px",
-                    flexWrap: "wrap",
-                    paddingBottom: L ? "16px" : "10px",
-                    borderBottom: `1px dashed ${gold}40`,
+                    position: "absolute",
+                    top: 0,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: L ? "60px" : "40px",
+                    height: "3px",
+                    background: `linear-gradient(90deg, ${gold}, ${goldLight}, ${gold})`,
+                    borderRadius: "0 0 4px 4px",
+                  }}
+                />
+
+                <p
+                  style={{
+                    fontSize: L ? "10px" : "7.5px",
+                    color: gold,
+                    letterSpacing: L ? "7px" : "4px",
+                    margin: "0 0 6px 0",
+                    fontWeight: 700,
                   }}
                 >
-                  {[
-                    { label: "الطالب/ة", value: cert.student_name },
-                    { label: "المقرئ/ة", value: cert.reciter_name || cert.sheikh_name },
-                    { label: "الرواية", value: cert.riwaya },
-                    { label: "التاريخ", value: cert.date },
-                  ]
-                    .filter((item) => item.value)
-                    .map((item, idx, arr) => (
-                      <div key={item.label} style={{ display: "flex", alignItems: "center", gap: L ? "20px" : "10px" }}>
-                        <div style={{ textAlign: "center" }}>
-                          <p
-                            style={{
-                              fontSize: L ? "10px" : "7px",
-                              color: muted,
-                              margin: "0 0 4px 0",
-                              letterSpacing: "1.5px",
-                              fontWeight: 700,
-                              textTransform: "uppercase",
-                            }}
-                          >
-                            {item.label}
-                          </p>
-                          <p style={{ fontSize: L ? "16px" : "11px", fontWeight: 700, color: tealDark, margin: 0, lineHeight: 1.2 }}>
-                            {item.value}
-                          </p>
-                        </div>
-                        {idx < arr.length - 1 && (
-                          <div style={{ width: "1px", height: L ? "30px" : "22px", background: `${gold}50` }} />
-                        )}
-                      </div>
-                    ))}
+                  {isIjaza ? "إجــازة قــرآنيــة" : "شهــادة تقديــر"}
+                </p>
+                <h2
+                  style={{
+                    fontSize: L ? "32px" : "20px",
+                    fontWeight: 700,
+                    color: tealDark,
+                    margin: 0,
+                    lineHeight: 1.25,
+                    fontFamily: "'Amiri', 'Cairo', serif",
+                    letterSpacing: "-0.3px",
+                  }}
+                >
+                  {cert.title}
+                </h2>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginTop: L ? "8px" : "5px" }}>
+                  <div style={{ width: L ? "60px" : "32px", height: "1px", background: `linear-gradient(90deg, transparent, ${gold})` }} />
+                  <svg width={L ? 14 : 10} height={L ? 14 : 10} viewBox="0 0 18 18" fill="none">
+                    <path d="M9 0 L11 7 L18 9 L11 11 L9 18 L7 11 L0 9 L7 7 Z" fill={gold} />
+                  </svg>
+                  <div style={{ width: L ? "60px" : "32px", height: "1px", background: `linear-gradient(90deg, ${gold}, transparent)` }} />
                 </div>
+              </div>
 
-                {/* Body text */}
-                {cert.certificate_text && (
+              {/* ===== Details card (white grid) ===== */}
+              {(() => {
+                const items = [
+                  { label: "الطالب/ة", value: cert.student_name, icon: "user" },
+                  { label: "المقرئ/ة", value: cert.reciter_name || cert.sheikh_name, icon: "teacher" },
+                  { label: "الرواية", value: cert.riwaya, icon: "book" },
+                  { label: "التاريخ", value: cert.date, icon: "calendar" },
+                ].filter((i) => i.value);
+
+                return (
                   <div
                     style={{
-                      flex: L ? 1 : undefined,
-                      overflow: L ? "hidden" : undefined,
-                      display: "flex",
-                      alignItems: "center",
                       position: "relative",
-                      padding: L ? "8px 28px" : "6px 14px",
+                      zIndex: 2,
+                      background: "#ffffff",
+                      borderRadius: L ? "18px" : "14px",
+                      padding: L ? "16px 20px" : "10px 12px",
+                      boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
+                      border: `1px solid #eef0f3`,
+                      display: "grid",
+                      gridTemplateColumns: `repeat(${items.length}, 1fr)`,
+                      gap: L ? "12px" : "6px",
                     }}
                   >
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: L ? "-10px" : "-6px",
-                        right: L ? "8px" : "4px",
-                        fontSize: L ? "64px" : "40px",
-                        lineHeight: 1,
-                        color: `${gold}35`,
-                        fontFamily: "'Amiri', serif",
-                        fontWeight: 700,
-                        pointerEvents: "none",
-                      }}
-                    >
-                      ❝
-                    </span>
-                    <span
-                      style={{
-                        position: "absolute",
-                        bottom: L ? "-22px" : "-14px",
-                        left: L ? "8px" : "4px",
-                        fontSize: L ? "64px" : "40px",
-                        lineHeight: 1,
-                        color: `${gold}35`,
-                        fontFamily: "'Amiri', serif",
-                        fontWeight: 700,
-                        pointerEvents: "none",
-                      }}
-                    >
-                      ❞
-                    </span>
-
-                    <p
-                      style={{
-                        fontSize: L ? "16.5px" : "12px",
-                        lineHeight: L ? 2.1 : 1.95,
-                        textAlign: "justify",
-                        fontWeight: 400,
-                        color: inkSoft,
-                        fontFamily: "'Amiri', 'Cairo', serif",
-                        margin: 0,
-                        width: "100%",
-                        letterSpacing: "0.2px",
-                      }}
-                    >
-                      {cert.certificate_text}
-                    </p>
-                  </div>
-                )}
-
-                {/* Footer */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-end",
-                    justifyContent: "space-between",
-                    width: "100%",
-                    marginTop: "auto",
-                    paddingTop: L ? "18px" : "12px",
-                    borderTop: `1px solid ${gold}30`,
-                    gap: L ? "20px" : "10px",
-                  }}
-                >
-                  {/* QR */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "5px", flexShrink: 0 }}>
-                    <div
-                      style={{
-                        padding: L ? "8px" : "5px",
-                        borderRadius: L ? "8px" : "5px",
-                        background: "#fff",
-                        border: `1.5px solid ${gold}60`,
-                        boxShadow: `0 4px 12px ${tealDark}15`,
-                      }}
-                    >
-                      <QRCodeSVG value={verificationUrl} size={L ? 78 : 50} level="M" fgColor={tealDark} bgColor="transparent" />
-                    </div>
-                    <p style={{ fontSize: L ? "8px" : "6px", color: muted, margin: 0, letterSpacing: "1px", fontWeight: 700 }}>
-                      للتحقق من الشهادة
-                    </p>
-                  </div>
-
-                  {/* Issuer seal */}
-                  <div style={{ textAlign: "center", flex: 1, padding: "0 8px" }}>
-                    <div
-                      style={{
-                        display: "inline-flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        padding: L ? "12px 32px" : "7px 16px",
-                        borderRadius: "4px",
-                        background: `linear-gradient(180deg, ${cream}, ${creamDeep})`,
-                        border: `1px solid ${gold}55`,
-                        borderTop: `2.5px solid ${teal}`,
-                        borderBottom: `2.5px solid ${gold}`,
-                      }}
-                    >
-                      <p style={{ fontSize: L ? "9px" : "6.5px", margin: 0, color: muted, letterSpacing: "2px", fontWeight: 700 }}>
-                        صــــادرة من
-                      </p>
-                      <p
+                    {items.map((item, idx) => (
+                      <div
+                        key={item.label}
                         style={{
-                          fontSize: L ? "15px" : "11px",
-                          fontWeight: 800,
-                          color: tealDark,
-                          margin: "3px 0 0",
-                          letterSpacing: "0.3px",
+                          textAlign: "center",
+                          padding: L ? "6px 8px" : "4px 4px",
+                          borderRight: idx < items.length - 1 ? `1px dashed ${gold}30` : "none",
                         }}
                       >
-                        منصة مجاز لإقراء القرآن الكريم
+                        <p
+                          style={{
+                            fontSize: L ? "10px" : "7px",
+                            color: muted,
+                            margin: "0 0 6px 0",
+                            letterSpacing: "1.5px",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {item.label}
+                        </p>
+                        <p
+                          style={{
+                            fontSize: L ? "16px" : "11px",
+                            fontWeight: 700,
+                            color: tealDark,
+                            margin: 0,
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {item.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              {/* ===== Body text card (white) ===== */}
+              {cert.certificate_text && (
+                <div
+                  style={{
+                    position: "relative",
+                    zIndex: 2,
+                    flex: L ? 1 : undefined,
+                    background: "#ffffff",
+                    borderRadius: L ? "18px" : "14px",
+                    padding: L ? "22px 30px 26px" : "14px 16px 16px",
+                    boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
+                    border: `1px solid #eef0f3`,
+                    display: "flex",
+                    alignItems: "center",
+                    overflow: L ? "hidden" : undefined,
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: L ? "8px" : "4px",
+                      right: L ? "16px" : "10px",
+                      fontSize: L ? "56px" : "34px",
+                      lineHeight: 1,
+                      color: `${gold}30`,
+                      fontFamily: "'Amiri', serif",
+                      fontWeight: 700,
+                      pointerEvents: "none",
+                    }}
+                  >
+                    ❝
+                  </span>
+                  <span
+                    style={{
+                      position: "absolute",
+                      bottom: L ? "0px" : "-4px",
+                      left: L ? "16px" : "10px",
+                      fontSize: L ? "56px" : "34px",
+                      lineHeight: 1,
+                      color: `${gold}30`,
+                      fontFamily: "'Amiri', serif",
+                      fontWeight: 700,
+                      pointerEvents: "none",
+                    }}
+                  >
+                    ❞
+                  </span>
+
+                  <p
+                    style={{
+                      fontSize: L ? "16.5px" : "12px",
+                      lineHeight: L ? 2.1 : 1.95,
+                      textAlign: "justify",
+                      fontWeight: 400,
+                      color: inkSoft,
+                      fontFamily: "'Amiri', 'Cairo', serif",
+                      margin: 0,
+                      width: "100%",
+                      letterSpacing: "0.2px",
+                    }}
+                  >
+                    {cert.certificate_text}
+                  </p>
+                </div>
+              )}
+
+              {/* ===== Footer (3 white cards) ===== */}
+              <div
+                style={{
+                  position: "relative",
+                  zIndex: 2,
+                  display: "grid",
+                  gridTemplateColumns: "auto 1fr auto",
+                  gap: L ? "14px" : "8px",
+                  alignItems: "stretch",
+                }}
+              >
+                {/* QR card */}
+                <div
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: L ? "16px" : "12px",
+                    padding: L ? "12px 14px 10px" : "8px 8px 6px",
+                    boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
+                    border: `1px solid #eef0f3`,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: L ? "6px" : "4px",
+                  }}
+                >
+                  <QRCodeSVG value={verificationUrl} size={L ? 76 : 50} level="M" fgColor={tealDark} bgColor="transparent" />
+                  <p style={{ fontSize: L ? "8px" : "6px", color: muted, margin: 0, letterSpacing: "1px", fontWeight: 700 }}>
+                    للتحقق
+                  </p>
+                </div>
+
+                {/* Issuer seal card */}
+                <div
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: L ? "16px" : "12px",
+                    padding: L ? "14px 18px" : "8px 10px",
+                    boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
+                    border: `1px solid #eef0f3`,
+                    textAlign: "center",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    position: "relative",
+                  }}
+                >
+                  {/* Top gold accent */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: L ? "50px" : "32px",
+                      height: "2.5px",
+                      background: `linear-gradient(90deg, ${teal}, ${gold})`,
+                      borderRadius: "0 0 4px 4px",
+                    }}
+                  />
+                  <p
+                    style={{
+                      fontSize: L ? "9px" : "6.5px",
+                      margin: "4px 0 4px",
+                      color: muted,
+                      letterSpacing: "2px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    صــــادرة من
+                  </p>
+                  <p
+                    style={{
+                      fontSize: L ? "15px" : "11px",
+                      fontWeight: 800,
+                      color: tealDark,
+                      margin: 0,
+                      letterSpacing: "0.3px",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    منصة مجاز لإقراء القرآن الكريم
+                  </p>
+                  <p
+                    style={{
+                      fontSize: L ? "8px" : "6px",
+                      marginTop: L ? "6px" : "4px",
+                      letterSpacing: "3px",
+                      color: muted,
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontWeight: 700,
+                    }}
+                  >
+                    رقم · {cert.id.slice(0, 8).toUpperCase()}
+                  </p>
+                </div>
+
+                {/* Signature & stamp card */}
+                <div
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: L ? "16px" : "12px",
+                    padding: L ? "12px 16px 10px" : "8px 10px 6px",
+                    boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
+                    border: `1px solid #eef0f3`,
+                    display: "flex",
+                    alignItems: "flex-end",
+                    gap: L ? "14px" : "8px",
+                  }}
+                >
+                  {reciterStampUrl && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <img
+                        src={reciterStampUrl}
+                        alt="ختم"
+                        style={{
+                          height: L ? "62px" : "38px",
+                          width: L ? "62px" : "38px",
+                          objectFit: "contain",
+                          opacity: 0.9,
+                        }}
+                      />
+                      <div style={{ width: L ? "54px" : "34px", height: "1px", background: gold, marginTop: "4px" }} />
+                      <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "3px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
+                        الـخـتـم
                       </p>
                     </div>
-                    <p
-                      style={{
-                        fontSize: L ? "8px" : "6px",
-                        marginTop: "8px",
-                        letterSpacing: "3px",
-                        color: muted,
-                        fontFamily: "'JetBrains Mono', monospace",
-                        fontWeight: 700,
-                      }}
-                    >
-                      رقم الشهادة · {cert.id.slice(0, 8).toUpperCase()}
-                    </p>
-                  </div>
-
-                  {/* Signature & Stamp */}
-                  <div style={{ display: "flex", alignItems: "flex-end", gap: L ? "18px" : "10px", flexShrink: 0 }}>
-                    {reciterStampUrl && (
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                        <img
-                          src={reciterStampUrl}
-                          alt="ختم"
-                          style={{
-                            height: L ? "70px" : "42px",
-                            width: L ? "70px" : "42px",
-                            objectFit: "contain",
-                            opacity: 0.9,
-                          }}
-                        />
-                        <div style={{ width: L ? "60px" : "38px", height: "1px", background: gold, marginTop: "4px" }} />
-                        <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "4px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
-                          الـخـتـم
-                        </p>
-                      </div>
-                    )}
-                    {reciterSignatureUrl && (
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                        <img
-                          src={reciterSignatureUrl}
-                          alt="توقيع"
-                          style={{
-                            height: L ? "60px" : "36px",
-                            width: "auto",
-                            maxWidth: L ? "140px" : "84px",
-                            objectFit: "contain",
-                            opacity: 0.92,
-                          }}
-                        />
-                        <div style={{ width: L ? "80px" : "52px", height: "1px", background: gold, marginTop: "4px" }} />
-                        <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "4px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
-                          الـتـوقـيـع
-                        </p>
-                      </div>
-                    )}
-                    {!reciterSignatureUrl && !reciterStampUrl && (
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                        <div style={{ width: L ? "100px" : "60px", height: L ? "50px" : "30px" }} />
-                        <div style={{ width: L ? "100px" : "60px", height: "1px", background: gold, marginTop: "4px" }} />
-                        <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "4px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
-                          التوقيع والختم
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  )}
+                  {reciterSignatureUrl && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <img
+                        src={reciterSignatureUrl}
+                        alt="توقيع"
+                        style={{
+                          height: L ? "54px" : "32px",
+                          width: "auto",
+                          maxWidth: L ? "130px" : "76px",
+                          objectFit: "contain",
+                          opacity: 0.92,
+                        }}
+                      />
+                      <div style={{ width: L ? "72px" : "48px", height: "1px", background: gold, marginTop: "4px" }} />
+                      <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "3px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
+                        الـتـوقـيـع
+                      </p>
+                    </div>
+                  )}
+                  {!reciterSignatureUrl && !reciterStampUrl && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <div style={{ width: L ? "100px" : "60px", height: L ? "46px" : "28px" }} />
+                      <div style={{ width: L ? "100px" : "60px", height: "1px", background: gold, marginTop: "4px" }} />
+                      <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "3px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
+                        التوقيع والختم
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
