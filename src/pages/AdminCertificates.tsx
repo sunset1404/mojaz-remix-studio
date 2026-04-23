@@ -616,6 +616,12 @@ const AdminCertificates = () => {
                                 ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                                 : <Download className="w-3.5 h-3.5" />}
                             </Button>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                              onClick={() => handleSendWhatsApp(cert)} disabled={preparingWaId === cert.id} title="إرسال عبر واتساب">
+                              {preparingWaId === cert.id
+                                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                : <MessageCircle className="w-3.5 h-3.5" />}
+                            </Button>
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                               onClick={() => handleDelete(cert.id)} title="حذف">
                               <Trash2 className="w-3.5 h-3.5" />
