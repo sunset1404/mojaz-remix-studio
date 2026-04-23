@@ -430,6 +430,8 @@ const AdminCertificates = () => {
       setPreparingWaId(null);
     }
   };
+
+  const stats = useMemo(() => ({
     total: certificates.length,
     ijazat: certificates.filter(c => c.type === "ijaza").length,
     certs: certificates.filter(c => c.type === "certificate").length,
