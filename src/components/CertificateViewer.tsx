@@ -29,16 +29,27 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
     const isIjaza = cert.type === "ijaza";
     const verificationUrl = `${window.location.origin}/verify/${cert.id}`;
 
-    const primaryColor = "#0d7377";
-    const primaryDark = "#0a5c5f";
-    const goldColor = "#b8860b";
-    const accentDark = isIjaza ? "#8B6914" : primaryDark;
-    const accentColor = isIjaza ? goldColor : primaryColor;
+    // Refined luxury palette
+    const ink = "#1a1d2e";          // near-black for body
+    const inkSoft = "#3a3f55";      // soft body
+    const muted = "#8b8fa3";        // labels / meta
+    const cream = "#fbf8f1";        // warm paper
+    const creamDeep = "#f3ecdc";    // border bg
+    const teal = "#0d7377";         // brand teal
+    const tealDeep = "#0a5c5f";
+    const gold = "#b89556";         // refined antique gold
+    const goldDeep = "#8a6d36";
+    const goldLight = "#d4b87a";
 
-    // For PDF landscape mode: scale everything up
+    const accent = isIjaza ? gold : teal;
+    const accentDeep = isIjaza ? goldDeep : tealDeep;
+
+    // L = landscape PDF mode
     const L = !!renderHeight;
-    // Scale factor relative to base 920px
-    const s = renderWidth / 920;
+    const W = renderWidth;
+    const H = renderHeight || 0;
+    // Outer frame insets
+    const pad = L ? 28 : 16;
 
     return (
       <div className="w-full overflow-x-auto" dir="rtl">
@@ -47,171 +58,394 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
             ref={ref}
             className="relative overflow-hidden"
             style={{
-              width: `${renderWidth}px`,
-              height: renderHeight ? `${renderHeight}px` : "auto",
-              background: "linear-gradient(145deg, #fefefe, #f8fafa)",
-              boxShadow: L ? "none" : "0 25px 60px -15px rgba(13,115,119,0.15), 0 10px 30px -10px rgba(0,0,0,0.1)",
+              width: `${W}px`,
+              height: H ? `${H}px` : "auto",
+              background: `
+                radial-gradient(ellipse at top right, ${gold}08, transparent 50%),
+                radial-gradient(ellipse at bottom left, ${teal}08, transparent 50%),
+                linear-gradient(135deg, ${cream}, #fdfbf5 50%, ${cream})
+              `,
+              boxShadow: L ? "none" : "0 30px 80px -20px rgba(13,115,119,0.18), 0 12px 32px -12px rgba(0,0,0,0.12)",
+              fontFamily: "'Cairo', sans-serif",
             }}
           >
-            {/* Top accent bar */}
-            <div style={{ height: `${L ? 6 : 4}px`, width: "100%", background: `linear-gradient(90deg, ${primaryColor}, ${goldColor}, ${primaryColor})` }} />
+            {/* === Subtle paper texture === */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `
+                  radial-gradient(circle at 20% 30%, ${gold}06 0%, transparent 8%),
+                  radial-gradient(circle at 80% 70%, ${teal}06 0%, transparent 8%),
+                  repeating-linear-gradient(45deg, transparent 0, transparent 2px, ${ink}03 2px, ${ink}03 3px)
+                `,
+                opacity: 0.6,
+              }}
+            />
 
-            {/* Right decorative stripe */}
-            <div className="absolute top-0 right-0 h-full" style={{ width: `${L ? 4 : 3}px`, background: `linear-gradient(180deg, ${primaryColor}, ${goldColor})` }} />
-            {/* Left decorative stripe */}
-            <div className="absolute top-0 left-0 h-full" style={{ width: `${L ? 4 : 3}px`, background: `linear-gradient(180deg, ${goldColor}, ${primaryColor})` }} />
+            {/* === Outer luxe double border === */}
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                top: pad,
+                left: pad,
+                right: pad,
+                bottom: pad,
+                border: `1px solid ${gold}80`,
+                borderRadius: "2px",
+              }}
+            />
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                top: pad + 6,
+                left: pad + 6,
+                right: pad + 6,
+                bottom: pad + 6,
+                border: `1px solid ${gold}40`,
+                borderRadius: "1px",
+              }}
+            />
 
-            {/* Corner ornaments */}
+            {/* === Corner ornaments (refined arabesque) === */}
             {[
-              { pos: "top-3 left-3", rotate: "" },
-              { pos: "top-3 right-3", rotate: "scale-x-[-1]" },
-              { pos: "bottom-3 left-3", rotate: "scale-y-[-1]" },
-              { pos: "bottom-3 right-3", rotate: "scale-[-1]" },
+              { pos: { top: pad - 4, right: pad - 4 }, transform: "" },
+              { pos: { top: pad - 4, left: pad - 4 }, transform: "scaleX(-1)" },
+              { pos: { bottom: pad - 4, right: pad - 4 }, transform: "scaleY(-1)" },
+              { pos: { bottom: pad - 4, left: pad - 4 }, transform: "scale(-1)" },
             ].map((c, i) => (
-              <div key={i} className={`absolute ${c.pos} ${c.rotate}`}>
-                <svg width={L ? 60 : 36} height={L ? 60 : 36} viewBox="0 0 50 50" fill="none">
-                  <path d="M0 0 L0 22 Q0 0 22 0 Z" fill={primaryColor} opacity="0.12" />
-                  <path d="M0 0 L0 35 Q0 0 35 0" stroke={goldColor} strokeWidth="1.5" fill="none" opacity="0.3" />
-                  <path d="M0 0 L0 15 Q0 0 15 0" stroke={primaryColor} strokeWidth="1" fill="none" opacity="0.2" />
-                  <circle cx="3" cy="3" r="2.5" fill={goldColor} opacity="0.4" />
+              <div key={i} className="absolute pointer-events-none" style={{ ...c.pos, transform: c.transform }}>
+                <svg width={L ? 70 : 42} height={L ? 70 : 42} viewBox="0 0 70 70" fill="none">
+                  {/* Arabesque flourish */}
+                  <path d="M0 0 L22 0 Q12 2 8 8 Q2 12 0 22 Z" fill={gold} opacity="0.18" />
+                  <path d="M0 0 L35 0" stroke={gold} strokeWidth="1" opacity="0.7" />
+                  <path d="M0 0 L0 35" stroke={gold} strokeWidth="1" opacity="0.7" />
+                  <path d="M6 6 Q14 6 14 14 Q14 22 22 22" stroke={goldDeep} strokeWidth="0.8" fill="none" opacity="0.6" />
+                  <path d="M10 10 Q16 10 16 16 Q16 22 22 22 M10 10 Q10 16 16 16" stroke={gold} strokeWidth="0.6" fill="none" opacity="0.5" />
+                  <circle cx="6" cy="6" r="2" fill={goldDeep} opacity="0.7" />
+                  <circle cx="14" cy="14" r="1.5" fill={gold} opacity="0.6" />
+                  <circle cx="22" cy="22" r="1" fill={goldDeep} opacity="0.5" />
                 </svg>
               </div>
             ))}
 
-            {/* Watermark */}
-            <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: `radial-gradient(circle, ${primaryColor} 1px, transparent 1px)`, backgroundSize: "30px 30px" }} />
+            {/* === Top center ornamental crest === */}
+            <div
+              className="absolute"
+              style={{ top: pad - (L ? 14 : 8), left: "50%", transform: "translateX(-50%)" }}
+            >
+              <svg width={L ? 180 : 110} height={L ? 28 : 18} viewBox="0 0 180 28" fill="none">
+                <path d="M0 14 L70 14" stroke={gold} strokeWidth="0.8" />
+                <path d="M110 14 L180 14" stroke={gold} strokeWidth="0.8" />
+                <path d="M75 14 Q90 4 105 14 Q90 24 75 14 Z" fill={cream} stroke={gold} strokeWidth="1" />
+                <circle cx="90" cy="14" r="3" fill={gold} />
+                <circle cx="90" cy="14" r="1" fill={cream} />
+                <circle cx="70" cy="14" r="1.5" fill={gold} />
+                <circle cx="110" cy="14" r="1.5" fill={gold} />
+              </svg>
+            </div>
 
-            {/* Inner border */}
-            {L && (
-              <div className="absolute" style={{ top: "14px", left: "14px", right: "14px", bottom: "14px", border: `1px solid ${goldColor}30`, borderRadius: "4px", pointerEvents: "none" }} />
-            )}
-
-            {/* Content */}
+            {/* === Content === */}
             <div
               className="relative z-10 flex flex-col"
               style={{
-                padding: L ? "16px 28px 12px 28px" : "12px 16px",
-                height: renderHeight ? `${renderHeight - 10}px` : "auto",
+                padding: L ? `${pad + 28}px ${pad + 32}px ${pad + 20}px` : `${pad + 12}px ${pad + 14}px`,
+                height: H ? `${H}px` : "auto",
+                boxSizing: "border-box",
               }}
             >
-              {/* Header: Logo centered */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: L ? "6px" : "8px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: L ? "10px" : "6px" }}>
-                  <img src={logoMojaz} alt="مجاز" style={{ height: L ? "52px" : "36px", width: L ? "52px" : "36px", borderRadius: L ? "14px" : "8px", objectFit: "cover" }} />
-                  <div style={{ textAlign: "right" }}>
-                    <p style={{ fontSize: L ? "16px" : "11px", fontWeight: 700, color: primaryDark, margin: 0, lineHeight: 1.3 }}>منصة مجاز</p>
-                    <p style={{ fontSize: L ? "11px" : "8px", color: primaryColor, margin: 0, lineHeight: 1.3 }}>لإقراء القرآن الكريم</p>
-                  </div>
+              {/* === Header: Brand === */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: L ? "14px" : "10px", marginBottom: L ? "14px" : "10px" }}>
+                <img
+                  src={logoMojaz}
+                  alt="مجاز"
+                  style={{
+                    height: L ? "56px" : "40px",
+                    width: L ? "56px" : "40px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: `2px solid ${gold}`,
+                    boxShadow: `0 0 0 3px ${cream}, 0 4px 12px ${teal}25`,
+                  }}
+                />
+                <div style={{ textAlign: "center" }}>
+                  <p style={{ fontSize: L ? "20px" : "14px", fontWeight: 800, color: tealDeep, margin: 0, lineHeight: 1.1, letterSpacing: "0.5px" }}>
+                    منصة مجاز
+                  </p>
+                  <p style={{ fontSize: L ? "11px" : "8px", color: gold, margin: "2px 0 0", lineHeight: 1, letterSpacing: "2px", textTransform: "uppercase" }}>
+                    لإقراء القرآن الكريم
+                  </p>
                 </div>
               </div>
 
-              {/* Divider */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: L ? "4px" : "6px" }}>
-                <div style={{ flex: 1, maxWidth: L ? "100px" : "60px", height: "1px", background: `linear-gradient(90deg, transparent, ${goldColor})` }} />
-                <svg width={L ? "14" : "10"} height={L ? "14" : "10"} viewBox="0 0 16 16" fill="none">
-                  <path d="M8 0 L10 6 L16 8 L10 10 L8 16 L6 10 L0 8 L6 6 Z" fill={goldColor} opacity="0.5" />
-                </svg>
-                <div style={{ flex: 1, maxWidth: L ? "100px" : "60px", height: "1px", background: `linear-gradient(90deg, ${goldColor}, transparent)` }} />
+              {/* === Title section === */}
+              <div style={{ textAlign: "center", marginBottom: L ? "16px" : "12px" }}>
+                <p
+                  style={{
+                    fontSize: L ? "11px" : "8px",
+                    color: muted,
+                    letterSpacing: L ? "8px" : "5px",
+                    margin: "0 0 6px 0",
+                    fontWeight: 500,
+                  }}
+                >
+                  {isIjaza ? "إجــازة قــرآنيــة" : "شهــادة تقديــر"}
+                </p>
+                <h1
+                  style={{
+                    fontSize: L ? "42px" : "26px",
+                    fontWeight: 700,
+                    color: ink,
+                    margin: 0,
+                    lineHeight: 1.2,
+                    fontFamily: "'Amiri', 'Cairo', serif",
+                    letterSpacing: "-0.5px",
+                  }}
+                >
+                  {cert.title}
+                </h1>
+                {/* Decorative underline */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: L ? "10px" : "6px" }}>
+                  <div style={{ width: L ? "70px" : "40px", height: "1px", background: `linear-gradient(90deg, transparent, ${gold})` }} />
+                  <svg width={L ? 16 : 10} height={L ? 16 : 10} viewBox="0 0 16 16" fill="none">
+                    <path d="M8 0 L9.5 6.5 L16 8 L9.5 9.5 L8 16 L6.5 9.5 L0 8 L6.5 6.5 Z" fill={gold} />
+                  </svg>
+                  <div style={{ width: L ? "70px" : "40px", height: "1px", background: `linear-gradient(90deg, ${gold}, transparent)` }} />
+                </div>
               </div>
 
-              {/* Title */}
-              <h1 style={{
-                fontSize: L ? "32px" : "24px",
-                fontWeight: 900,
-                color: accentDark,
-                textAlign: "center",
-                margin: `0 0 ${L ? "4px" : "4px"} 0`,
-                textShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                lineHeight: 1.3,
-                fontFamily: "'Cairo', sans-serif",
-              }}>
-                {cert.title}
-              </h1>
-
-              {/* Underline */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginBottom: L ? "10px" : "8px" }}>
-                <div style={{ width: L ? "50px" : "30px", height: "2px", borderRadius: "2px", background: `linear-gradient(90deg, transparent, ${accentColor})` }} />
-                <div style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: goldColor, opacity: 0.5 }} />
-                <div style={{ width: L ? "50px" : "30px", height: "2px", borderRadius: "2px", background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
-              </div>
-
-              {/* Details - single row full width */}
-              <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: L ? "12px" : "8px", flexWrap: "wrap", gap: "4px 12px" }}>
+              {/* === Details row (luxe pills) === */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: L ? "32px" : "14px",
+                  marginBottom: L ? "18px" : "10px",
+                  flexWrap: "wrap",
+                  paddingBottom: L ? "16px" : "8px",
+                  borderBottom: `1px dashed ${gold}40`,
+                }}
+              >
                 {[
                   { label: "الطالب/ة", value: cert.student_name },
                   { label: "المقرئ/ة", value: cert.reciter_name || cert.sheikh_name },
                   { label: "الرواية", value: cert.riwaya },
                   { label: "التاريخ", value: cert.date },
-                ].filter((item) => item.value).map((item) => (
-                  <div key={item.label} style={{ display: "flex", alignItems: "baseline", gap: L ? "6px" : "4px" }}>
-                    <span style={{ fontSize: L ? "15px" : "10px", fontWeight: 700, color: primaryColor }}>{item.label}:</span>
-                    <span style={{ fontSize: L ? "16px" : "11px", fontWeight: 600, color: "#333" }}>{item.value}</span>
-                  </div>
-                ))}
+                ]
+                  .filter((item) => item.value)
+                  .map((item, idx, arr) => (
+                    <div key={item.label} style={{ display: "flex", alignItems: "center", gap: L ? "20px" : "10px" }}>
+                      <div style={{ textAlign: "center" }}>
+                        <p
+                          style={{
+                            fontSize: L ? "10px" : "7px",
+                            color: muted,
+                            margin: "0 0 4px 0",
+                            letterSpacing: "1.5px",
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {item.label}
+                        </p>
+                        <p style={{ fontSize: L ? "16px" : "11px", fontWeight: 700, color: ink, margin: 0, lineHeight: 1.2 }}>
+                          {item.value}
+                        </p>
+                      </div>
+                      {idx < arr.length - 1 && (
+                        <div style={{ width: "1px", height: L ? "28px" : "20px", background: `${gold}50` }} />
+                      )}
+                    </div>
+                  ))}
               </div>
 
-              {/* Certificate Text - fills remaining space */}
+              {/* === Certificate body text === */}
               {cert.certificate_text && (
-                <div style={{ width: "100%", flex: L ? 1 : undefined, overflow: L ? "hidden" : undefined, marginBottom: L ? "8px" : "8px" }}>
-                  <p style={{
-                    fontSize: L ? "16px" : "13px",
-                    lineHeight: L ? 1.95 : 2,
-                    textAlign: "justify",
-                    fontWeight: 500,
-                    color: "#222",
-                    fontFamily: "'Amiri', serif",
-                    margin: 0,
-                  }}>
+                <div
+                  style={{
+                    flex: L ? 1 : undefined,
+                    overflow: L ? "hidden" : undefined,
+                    display: "flex",
+                    alignItems: "center",
+                    position: "relative",
+                    padding: L ? "8px 24px" : "6px 12px",
+                  }}
+                >
+                  {/* Decorative quote marks */}
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: L ? "-8px" : "-4px",
+                      right: L ? "8px" : "4px",
+                      fontSize: L ? "60px" : "36px",
+                      lineHeight: 1,
+                      color: `${gold}30`,
+                      fontFamily: "'Amiri', serif",
+                      fontWeight: 700,
+                      pointerEvents: "none",
+                    }}
+                  >
+                    ❝
+                  </span>
+                  <span
+                    style={{
+                      position: "absolute",
+                      bottom: L ? "-20px" : "-12px",
+                      left: L ? "8px" : "4px",
+                      fontSize: L ? "60px" : "36px",
+                      lineHeight: 1,
+                      color: `${gold}30`,
+                      fontFamily: "'Amiri', serif",
+                      fontWeight: 700,
+                      pointerEvents: "none",
+                    }}
+                  >
+                    ❞
+                  </span>
+
+                  <p
+                    style={{
+                      fontSize: L ? "16.5px" : "12px",
+                      lineHeight: L ? 2.1 : 1.95,
+                      textAlign: "justify",
+                      fontWeight: 400,
+                      color: inkSoft,
+                      fontFamily: "'Amiri', 'Cairo', serif",
+                      margin: 0,
+                      width: "100%",
+                      letterSpacing: "0.2px",
+                    }}
+                  >
                     {cert.certificate_text}
                   </p>
                 </div>
               )}
 
-              {/* Footer */}
-              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", marginTop: "auto", paddingTop: L ? "6px" : "6px" }}>
-                {/* QR Code - left side */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
-                  <div style={{ padding: L ? "6px" : "3px", borderRadius: L ? "10px" : "6px", background: "white", border: `2px solid ${primaryColor}30`, boxShadow: `0 4px 14px ${primaryColor}15` }}>
-                    <QRCodeSVG value={verificationUrl} size={L ? 80 : 50} level="M" fgColor={primaryDark} bgColor="transparent" />
+              {/* === Footer === */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-end",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  marginTop: "auto",
+                  paddingTop: L ? "16px" : "10px",
+                  borderTop: `1px solid ${gold}30`,
+                  gap: L ? "20px" : "10px",
+                }}
+              >
+                {/* === QR (left) === */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+                  <div
+                    style={{
+                      padding: L ? "8px" : "4px",
+                      borderRadius: L ? "6px" : "4px",
+                      background: cream,
+                      border: `1px solid ${gold}50`,
+                      boxShadow: `0 4px 12px ${ink}10`,
+                    }}
+                  >
+                    <QRCodeSVG value={verificationUrl} size={L ? 78 : 48} level="M" fgColor={ink} bgColor="transparent" />
                   </div>
-                  <p style={{ fontSize: L ? "9px" : "6px", color: primaryColor }}>للتحقق من صحة الشهادة</p>
+                  <p style={{ fontSize: L ? "8px" : "6px", color: muted, margin: 0, letterSpacing: "1px", fontWeight: 600 }}>
+                    للتحقق من الشهادة
+                  </p>
                 </div>
 
-                {/* Issuer - center */}
-                <div style={{ textAlign: "center", flex: 1, padding: "0 16px" }}>
-                  <div style={{ display: "inline-block", padding: L ? "6px 16px" : "3px 10px", borderRadius: L ? "10px" : "6px", background: `linear-gradient(135deg, rgba(13,115,119,0.06), rgba(184,134,11,0.06))` }}>
-                    <p style={{ fontSize: L ? "10px" : "7px", marginBottom: "2px", color: "#999" }}>صادرة من</p>
-                    <p style={{ fontSize: L ? "15px" : "10px", fontWeight: 700, color: primaryDark, margin: 0 }}>منصة مجاز لإقراء القرآن الكريم</p>
+                {/* === Issuer seal (center) === */}
+                <div style={{ textAlign: "center", flex: 1, padding: "0 8px" }}>
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      padding: L ? "10px 28px" : "6px 14px",
+                      borderRadius: "2px",
+                      background: `linear-gradient(180deg, ${cream}, ${creamDeep})`,
+                      border: `1px solid ${gold}50`,
+                      borderTop: `2px solid ${gold}`,
+                      borderBottom: `2px solid ${gold}`,
+                    }}
+                  >
+                    <p style={{ fontSize: L ? "9px" : "6.5px", margin: 0, color: muted, letterSpacing: "2px", fontWeight: 600 }}>
+                      صــــادرة من
+                    </p>
+                    <p
+                      style={{
+                        fontSize: L ? "14px" : "10px",
+                        fontWeight: 800,
+                        color: tealDeep,
+                        margin: "3px 0 0",
+                        letterSpacing: "0.3px",
+                      }}
+                    >
+                      منصة مجاز لإقراء القرآن الكريم
+                    </p>
                   </div>
-                  <p style={{ fontSize: L ? "8px" : "6px", marginTop: "3px", letterSpacing: "0.15em", color: "#bbb" }}>رقم الشهادة: {cert.id.slice(0, 8).toUpperCase()}</p>
+                  <p
+                    style={{
+                      fontSize: L ? "8px" : "6px",
+                      marginTop: "8px",
+                      letterSpacing: "3px",
+                      color: muted,
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontWeight: 600,
+                    }}
+                  >
+                    رقم الشهادة · {cert.id.slice(0, 8).toUpperCase()}
+                  </p>
                 </div>
 
-                {/* Stamp + Signature - right side */}
-                <div style={{ display: "flex", alignItems: "flex-end", gap: L ? "14px" : "8px" }}>
+                {/* === Signature & Stamp (right) === */}
+                <div style={{ display: "flex", alignItems: "flex-end", gap: L ? "18px" : "10px", flexShrink: 0 }}>
                   {reciterStampUrl && (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <img src={reciterStampUrl} alt="ختم" style={{ height: L ? "60px" : "34px", width: L ? "60px" : "34px", objectFit: "contain", opacity: 0.8 }} />
-                      <p style={{ fontSize: L ? "10px" : "7px", marginTop: "2px", color: primaryColor }}>الختم</p>
+                      <img
+                        src={reciterStampUrl}
+                        alt="ختم"
+                        style={{
+                          height: L ? "70px" : "40px",
+                          width: L ? "70px" : "40px",
+                          objectFit: "contain",
+                          opacity: 0.85,
+                        }}
+                      />
+                      <div style={{ width: L ? "60px" : "36px", height: "1px", background: gold, marginTop: "4px" }} />
+                      <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "4px", color: muted, letterSpacing: "1.5px", fontWeight: 600 }}>
+                        الـخـتـم
+                      </p>
                     </div>
                   )}
                   {reciterSignatureUrl && (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <img src={reciterSignatureUrl} alt="توقيع" style={{ height: L ? "50px" : "30px", width: "auto", objectFit: "contain", opacity: 0.8 }} />
-                      <p style={{ fontSize: L ? "10px" : "7px", marginTop: "2px", color: primaryColor }}>التوقيع</p>
+                      <img
+                        src={reciterSignatureUrl}
+                        alt="توقيع"
+                        style={{
+                          height: L ? "60px" : "34px",
+                          width: "auto",
+                          maxWidth: L ? "140px" : "80px",
+                          objectFit: "contain",
+                          opacity: 0.9,
+                        }}
+                      />
+                      <div style={{ width: L ? "80px" : "50px", height: "1px", background: gold, marginTop: "4px" }} />
+                      <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "4px", color: muted, letterSpacing: "1.5px", fontWeight: 600 }}>
+                        الـتـوقـيـع
+                      </p>
                     </div>
                   )}
                   {!reciterSignatureUrl && !reciterStampUrl && (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <div style={{ width: L ? "80px" : "50px", height: L ? "40px" : "24px", borderBottom: `2px dashed ${primaryColor}40` }} />
-                      <p style={{ fontSize: L ? "10px" : "7px", marginTop: "3px", color: `${primaryColor}80` }}>التوقيع والختم</p>
+                      <div style={{ width: L ? "100px" : "60px", height: L ? "50px" : "30px" }} />
+                      <div style={{ width: L ? "100px" : "60px", height: "1px", background: gold, marginTop: "4px" }} />
+                      <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "4px", color: muted, letterSpacing: "1.5px", fontWeight: 600 }}>
+                        التوقيع والختم
+                      </p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-
-            {/* Bottom accent bar */}
-            <div className="absolute bottom-0 left-0 right-0" style={{ height: `${L ? 6 : 3}px`, background: `linear-gradient(90deg, ${primaryColor}, ${goldColor}, ${primaryColor})` }} />
           </div>
         </div>
       </div>
