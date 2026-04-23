@@ -99,7 +99,16 @@ Deno.serve(async (req) => {
           );
           const sessData = await sessRes.json();
           if (!sessRes.ok || !sessData.id) {
-            return json({ error: "Upload session failed", details: sessData.error || sessData }, 500);
+            const metaError = sessData?.error || sessData;
+            const isInvalidAppId = metaError?.code === 100 && metaError?.error_subcode === 33;
+            return json({
+              error: isInvalidAppId
+                ? "تعذر رفع ملف المثال. تحقق من META_WHATSAPP_APP_ID وأن تطبيق Meta يملك صلاحية WhatsApp Business."
+                : "Upload session failed",
+              details: metaError,
+              fallback: true,
+              reason: isInvalidAppId ? "INVALID_META_APP_ID_OR_PERMISSIONS" : "META_UPLOAD_SESSION_FAILED",
+            }, 200);
           }
 
           const upRes = await fetch(`${META_API}/${sessData.id}`, {
@@ -109,7 +118,12 @@ Deno.serve(async (req) => {
           });
           const upData = await upRes.json();
           if (!upRes.ok || !upData.h) {
-            return json({ error: "Upload failed", details: upData.error || upData }, 500);
+            return json({
+              error: "Upload failed",
+              details: upData.error || upData,
+              fallback: true,
+              reason: "META_UPLOAD_FAILED",
+            }, 200);
           }
           comp.example = { header_handle: [upData.h] };
         }
@@ -124,7 +138,14 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ name, category, language, components, allow_category_change: true }),
       });
       const data = await r.json();
-      if (!r.ok) return json({ error: data.error?.message || "Failed", details: data.error }, r.status);
+      if (!r.ok) {
+        return json({
+          error: data.error?.message || "Failed",
+          details: data.error,
+          fallback: true,
+          reason: "META_TEMPLATE_CREATE_FAILED",
+        }, 200);
+      }
       return json({ success: true, template: data });
     }
 

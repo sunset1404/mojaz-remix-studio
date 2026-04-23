@@ -77,39 +77,49 @@ export default function AdminWhatsAppTemplates() {
   const [buttonText, setButtonText] = useState("معاينة الشهادة");
 
   const callFunction = async (action: string, opts: { method?: string; body?: any; query?: string } = {}) => {
-    const { method = "GET", body, query = "" } = opts;
-    const { data: { session } } = await supabase.auth.getSession();
-    const url = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/whatsapp-templates?action=${action}${query}`;
-    const res = await fetch(url, {
-      method,
-      headers: {
-        "Authorization": `Bearer ${session?.access_token}`,
-        "Content-Type": "application/json",
-        "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      },
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    return res.json();
-  };
+    try {
+      const { method = "GET", body, query = "" } = opts;
+      const { data: { session } } = await supabase.auth.getSession();
 
-  const loadAll = async () => {
-    setLoading(true);
-    const [conn, tpls] = await Promise.all([
-      callFunction("verify"),
-      callFunction("list"),
-    ]);
-    setConnection(conn);
-    if (tpls.error) {
-      toast.error("خطأ في جلب القوالب: " + tpls.error);
-      setTemplates([]);
-    } else {
-      setTemplates(tpls.templates || []);
+      if (!session?.access_token) {
+        return { error: "انتهت الجلسة. سجّل الدخول مرة أخرى." };
+      }
+
+      const url = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/whatsapp-templates?action=${action}${query}`;
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+
+      if (!res.ok && !data.error) {
+        return { error: `Request failed (${res.status})` };
+      }
+
+      return data;
+    } catch (error) {
+      console.error("whatsapp-templates call failed", error);
+      return {
+        error: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+      };
     }
-    setLoading(false);
   };
 
-  useEffect(() => { loadAll(); }, []);
+  const getCreateErrorMessage = (result: { error?: string; reason?: string }) => {
+    if (result.reason === "INVALID_META_APP_ID_OR_PERMISSIONS") {
+      return "فشل إنشاء القالب: App ID في Meta غير صحيح أو لا يملك صلاحية WhatsApp Business.";
+    }
 
+    return "فشل إنشاء القالب: " + (result.error || "حدث خطأ غير متوقع");
+  };
+...
   const handleCreate = async () => {
     if (!name.match(/^[a-z0-9_]+$/)) {
       toast.error("اسم القالب يجب أن يكون حروف صغيرة وأرقام و _ فقط");
@@ -144,18 +154,21 @@ export default function AdminWhatsAppTemplates() {
     }
 
     setCreating(true);
-    const result = await callFunction("create", { method: "POST", body: { name, category, language, components } });
-    setCreating(false);
+    try {
+      const result = await callFunction("create", { method: "POST", body: { name, category, language, components } });
 
-    if (result.error) {
-      toast.error("فشل إنشاء القالب: " + result.error);
-      return;
+      if (result.error) {
+        toast.error(getCreateErrorMessage(result));
+        return;
+      }
+
+      toast.success("تم إرسال القالب لاعتماد ميتا. الحالة: قيد المراجعة");
+      setDialogOpen(false);
+      setName("");
+      loadAll();
+    } finally {
+      setCreating(false);
     }
-
-    toast.success("تم إرسال القالب لاعتماد ميتا. الحالة: قيد المراجعة");
-    setDialogOpen(false);
-    setName("");
-    loadAll();
   };
 
   const handleDelete = async (templateName: string) => {
@@ -184,18 +197,24 @@ export default function AdminWhatsAppTemplates() {
       },
       { type: "FOOTER", text: "منصة مجاز للقرآن الكريم" },
     ];
+
     setCreating(true);
-    const result = await callFunction("create", {
-      method: "POST",
-      body: { name: presetName, category: "UTILITY", language: "ar", components },
-    });
-    setCreating(false);
-    if (result.error) {
-      toast.error("فشل إنشاء القالب: " + result.error);
-      return;
+    try {
+      const result = await callFunction("create", {
+        method: "POST",
+        body: { name: presetName, category: "UTILITY", language: "ar", components },
+      });
+
+      if (result.error) {
+        toast.error(getCreateErrorMessage(result));
+        return;
+      }
+
+      toast.success("تم إرسال قالب الشهادات لاعتماد ميتا. الحالة: قيد المراجعة");
+      loadAll();
+    } finally {
+      setCreating(false);
     }
-    toast.success("تم إرسال قالب الشهادات لاعتماد ميتا. الحالة: قيد المراجعة");
-    loadAll();
   };
 
   return (
