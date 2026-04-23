@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -530,11 +530,17 @@ const AdminCertificates = () => {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
-                              onClick={() => setViewCert(cert)}>
+                              onClick={() => setViewCert(cert)} title="معاينة">
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                              onClick={() => handleDownload(cert)} disabled={downloadingId === cert.id} title="تحميل PDF">
+                              {downloadingId === cert.id
+                                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                : <Download className="w-3.5 h-3.5" />}
+                            </Button>
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDelete(cert.id)}>
+                              onClick={() => handleDelete(cert.id)} title="حذف">
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </div>
@@ -724,11 +730,20 @@ const AdminCertificates = () => {
             <DialogDescription>معاينة الشهادة بالتصميم الرسمي</DialogDescription>
           </DialogHeader>
           {viewCert && (
-            <CertificateViewer
-              cert={viewCert}
-              reciterSignatureUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.signature_url : null}
-              reciterStampUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.stamp_url : null}
-            />
+            <>
+              <CertificateViewer
+                cert={viewCert}
+                reciterSignatureUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.signature_url : null}
+                reciterStampUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.stamp_url : null}
+              />
+              <div className="flex justify-center mt-4">
+                <Button onClick={() => handleDownload(viewCert)} disabled={downloadingId === viewCert.id} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl">
+                  {downloadingId === viewCert.id
+                    ? <><RefreshCw className="w-4 h-4 animate-spin" /> جارٍ التحميل...</>
+                    : <><Download className="w-4 h-4" /> تحميل PDF</>}
+                </Button>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
