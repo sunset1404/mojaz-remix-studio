@@ -34,13 +34,14 @@ import {
 import {
   Search, Award, GraduationCap, Plus, RefreshCw,
   ArrowRight, Download, Eye, Trash2, BookOpen,
-  FileText, Users
+  FileText, Users, MessageCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import CertificateViewer from "@/components/CertificateViewer";
+import SendCertificateWhatsAppDialog from "@/components/SendCertificateWhatsAppDialog";
 
 interface CertificateRow {
   id: string;
