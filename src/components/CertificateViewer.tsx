@@ -219,13 +219,13 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
             <div
               style={{
                 position: "relative",
-                padding: L ? "28px 40px 28px" : "18px 18px 16px",
+                padding: L ? "16px 32px 16px" : "18px 18px 16px",
                 height: H ? `${H - headerH}px` : "auto",
                 boxSizing: "border-box",
                 display: "flex",
                 flexDirection: "column",
                 background: "#f6f8fa",
-                gap: L ? "18px" : "12px",
+                gap: L ? "10px" : "12px",
               }}
             >
               {/* Soft ambient background tints */}
@@ -271,7 +271,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       zIndex: 2,
                       background: "#ffffff",
                       borderRadius: L ? "18px" : "14px",
-                      padding: L ? "18px 24px 14px" : "12px 14px 10px",
+                      padding: L ? "12px 22px 10px" : "12px 14px 10px",
                       boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
                       border: `1px solid #eef0f3`,
                     }}
@@ -291,13 +291,13 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     />
 
                     {/* Title block */}
-                    <div style={{ textAlign: "center", marginBottom: L ? "12px" : "8px" }}>
+                    <div style={{ textAlign: "center", marginBottom: L ? "8px" : "8px" }}>
                       <p
                         style={{
-                          fontSize: L ? "9px" : "7px",
+                          fontSize: L ? "8px" : "7px",
                           color: gold,
-                          letterSpacing: L ? "6px" : "4px",
-                          margin: "0 0 4px 0",
+                          letterSpacing: L ? "5px" : "4px",
+                          margin: "0 0 3px 0",
                           fontWeight: 700,
                         }}
                       >
@@ -305,7 +305,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       </p>
                       <h2
                         style={{
-                          fontSize: L ? "26px" : "18px",
+                          fontSize: L ? "22px" : "18px",
                           fontWeight: 700,
                           color: tealDark,
                           margin: 0,
@@ -316,24 +316,24 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       >
                         {cert.title}
                       </h2>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: L ? "6px" : "4px" }}>
-                        <div style={{ width: L ? "50px" : "28px", height: "1px", background: `linear-gradient(90deg, transparent, ${gold})` }} />
-                        <svg width={L ? 11 : 8} height={L ? 11 : 8} viewBox="0 0 18 18" fill="none">
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: L ? "4px" : "4px" }}>
+                        <div style={{ width: L ? "42px" : "28px", height: "1px", background: `linear-gradient(90deg, transparent, ${gold})` }} />
+                        <svg width={L ? 9 : 8} height={L ? 9 : 8} viewBox="0 0 18 18" fill="none">
                           <path d="M9 0 L11 7 L18 9 L11 11 L9 18 L7 11 L0 9 L7 7 Z" fill={gold} />
                         </svg>
-                        <div style={{ width: L ? "50px" : "28px", height: "1px", background: `linear-gradient(90deg, ${gold}, transparent)` }} />
+                        <div style={{ width: L ? "42px" : "28px", height: "1px", background: `linear-gradient(90deg, ${gold}, transparent)` }} />
                       </div>
                     </div>
 
                     {/* Divider */}
-                    <div style={{ height: "1px", background: `linear-gradient(90deg, transparent, ${gold}25, transparent)`, marginBottom: L ? "12px" : "8px" }} />
+                    <div style={{ height: "1px", background: `linear-gradient(90deg, transparent, ${gold}25, transparent)`, marginBottom: L ? "8px" : "8px" }} />
 
                     {/* Details grid */}
                     <div
                       style={{
                         display: "grid",
                         gridTemplateColumns: `repeat(${items.length}, 1fr)`,
-                        gap: L ? "12px" : "6px",
+                        gap: L ? "10px" : "6px",
                       }}
                     >
                     {items.map((item, idx) => (
@@ -341,16 +341,16 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         key={item.label}
                         style={{
                           textAlign: "center",
-                          padding: L ? "6px 8px" : "4px 4px",
+                          padding: L ? "2px 8px" : "4px 4px",
                           borderRight: idx < items.length - 1 ? `1px dashed ${gold}30` : "none",
                         }}
                       >
                         <p
                           style={{
-                            fontSize: L ? "10px" : "7px",
+                            fontSize: L ? "9px" : "7px",
                             color: muted,
-                            margin: "0 0 6px 0",
-                            letterSpacing: "1.5px",
+                            margin: "0 0 3px 0",
+                            letterSpacing: "1.2px",
                             fontWeight: 700,
                           }}
                         >
@@ -358,11 +358,11 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         </p>
                         <p
                           style={{
-                            fontSize: L ? "15px" : "11px",
+                            fontSize: L ? "13px" : "11px",
                             fontWeight: 700,
                             color: tealDark,
                             margin: 0,
-                            lineHeight: 1.3,
+                            lineHeight: 1.25,
                           }}
                         >
                           {item.value}
