@@ -315,7 +315,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
             <div
               style={{
                 position: "relative",
-                padding: L ? "16px 32px 16px" : "18px 18px 16px",
+                padding: L ? "10px 32px 16px" : "10px 14px 14px",
                 height: H ? `${H - headerH}px` : "auto",
                 boxSizing: "border-box",
                 display: "flex",
