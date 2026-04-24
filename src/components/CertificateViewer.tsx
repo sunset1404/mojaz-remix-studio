@@ -119,8 +119,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
       if (!box || !el) return;
 
       // Binary-search the largest font-size where text fits inside its container
-      const minSize = L ? 9 : 7;
-      const maxSize = L ? 22 : 16;
+      const minSize = (L || forcePortraitFill) ? 9 : 7;
+      const maxSize = (L || forcePortraitFill) ? 24 : 16;
 
       let lo = minSize;
       let hi = maxSize;
@@ -477,7 +477,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   style={{
                     position: "relative",
                     zIndex: 2,
-                    flex: L ? 1 : undefined,
+                    flex: (L || forcePortraitFill) ? 1 : undefined,
                     background: "#ffffff",
                     borderRadius: L ? "18px" : "14px",
                     padding: L ? "16px 26px 18px" : "14px 16px 16px",
