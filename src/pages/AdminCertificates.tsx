@@ -333,7 +333,6 @@ const AdminCertificates = () => {
 
       const certEl = iframeDoc.createElement("div");
       certEl.style.width = `${downloadWidth}px`;
-      certEl.style.height = `${downloadHeight}px`;
       certEl.style.overflow = "hidden";
       iframeDoc.body.appendChild(certEl);
 
@@ -344,7 +343,6 @@ const AdminCertificates = () => {
           reciterSignatureUrl={reciter?.signature_url || null}
           reciterStampUrl={reciter?.stamp_url || null}
           renderWidth={downloadWidth}
-          renderHeight={downloadHeight}
         />
       );
 
@@ -364,6 +362,8 @@ const AdminCertificates = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 800));
 
+      const renderedHeight = certEl.scrollHeight;
+
       const canvas = await (html2canvas as any)(certEl, {
         scale: 2,
         useCORS: true,
@@ -372,17 +372,29 @@ const AdminCertificates = () => {
         backgroundColor: "#ffffff",
         windowWidth: downloadWidth,
         width: downloadWidth,
-        height: downloadHeight,
+        height: renderedHeight,
         foreignObjectRendering: true,
         window: iframe.contentWindow!,
       });
 
       root.unmount();
 
-      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-      const pdfW = pdf.internal.pageSize.getWidth();
-      const pdfH = pdf.internal.pageSize.getHeight();
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pdfW, pdfH);
+      // A3 portrait: 297 x 420 mm
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a3" });
+      const pdfW = pdf.internal.pageSize.getWidth();   // 297
+      const pdfH = pdf.internal.pageSize.getHeight();  // 420
+
+      // Fit the rendered certificate by width, keep aspect ratio, center vertically.
+      const imgRatio = renderedHeight / downloadWidth;
+      let drawW = pdfW;
+      let drawH = pdfW * imgRatio;
+      if (drawH > pdfH) {
+        drawH = pdfH;
+        drawW = pdfH / imgRatio;
+      }
+      const offsetX = (pdfW - drawW) / 2;
+      const offsetY = (pdfH - drawH) / 2;
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", offsetX, offsetY, drawW, drawH);
 
       return pdf.output("blob");
     } finally {
