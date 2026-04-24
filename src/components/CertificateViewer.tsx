@@ -360,6 +360,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   { label: "التاريخ", value: cert.date, icon: "calendar" },
                 ].filter((i) => i.value);
 
+                return (
                   <div
                     style={{
                       position: "relative",
