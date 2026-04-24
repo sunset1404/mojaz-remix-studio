@@ -301,56 +301,111 @@ const AdminCertificates = () => {
 
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const handleDownload = async (cert: CertificateRow) => {
-    setDownloadingId(cert.id);
+  const renderCertificatePdfBlob = async (cert: CertificateRow) => {
+    const downloadWidth = 1754;
+    const downloadHeight = 1240;
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:${downloadHeight + 40}px;visibility:hidden;pointer-events:none;border:none;`;
+    document.body.appendChild(iframe);
+
     try {
-      const reciter = cert.reciter_id ? reciters.find(r => r.user_id === cert.reciter_id) : null;
-      const W = 1754; // A4 landscape ~150dpi
-      const H = 1240;
-
-      const container = document.createElement("div");
-      container.style.position = "fixed";
-      container.style.top = "-10000px";
-      container.style.left = "0";
-      container.style.width = `${W}px`;
-      container.style.height = `${H}px`;
-      container.style.background = "#ffffff";
-      document.body.appendChild(container);
-
-      const root = createRoot(container);
       await new Promise<void>((resolve) => {
-        root.render(
-          <CertificateViewer
-            cert={cert}
-            reciterSignatureUrl={reciter?.signature_url || null}
-            reciterStampUrl={reciter?.stamp_url || null}
-            renderWidth={W}
-            renderHeight={H}
-          />
-        );
-        setTimeout(resolve, 700);
+        iframe.onload = () => resolve();
+        iframe.src = "about:blank";
       });
 
-      const target = (container.querySelector('[dir="rtl"] > div > div') as HTMLElement) || container;
-      const canvas = await html2canvas(target, {
+      const iframeDoc = iframe.contentDocument!;
+      const iframeWin = iframe.contentWindow! as Window & {
+        document: Document & {
+          fonts?: FontFaceSet;
+        };
+      };
+      const reciter = cert.reciter_id ? reciters.find(r => r.user_id === cert.reciter_id) : null;
+
+      const fontStyle = iframeDoc.createElement("style");
+      fontStyle.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;500;600;700;800&display=swap');
+        html, body { margin: 0; padding: 0; background: #ffffff; }
+        body { font-family: 'Cairo', 'Amiri', sans-serif; direction: rtl; }
+      `;
+      iframeDoc.head.appendChild(fontStyle);
+
+      const certEl = iframeDoc.createElement("div");
+      certEl.style.width = `${downloadWidth}px`;
+      certEl.style.height = `${downloadHeight}px`;
+      certEl.style.overflow = "hidden";
+      iframeDoc.body.appendChild(certEl);
+
+      const root = createRoot(certEl);
+      root.render(
+        <CertificateViewer
+          cert={cert}
+          reciterSignatureUrl={reciter?.signature_url || null}
+          reciterStampUrl={reciter?.stamp_url || null}
+          renderWidth={downloadWidth}
+          renderHeight={downloadHeight}
+        />
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      try {
+        if (iframeWin.document.fonts?.ready) {
+          await iframeWin.document.fonts.ready;
+          await Promise.all([
+            iframeWin.document.fonts.load("700 32px Amiri"),
+            iframeWin.document.fonts.load("400 17px Amiri"),
+            iframeWin.document.fonts.load("700 16px Cairo"),
+            iframeWin.document.fonts.load("400 14px Cairo"),
+          ]);
+        }
+      } catch {}
+
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const canvas = await (html2canvas as any)(certEl, {
         scale: 2,
         useCORS: true,
-        backgroundColor: "#ffffff",
+        allowTaint: true,
         logging: false,
+        backgroundColor: "#ffffff",
+        windowWidth: downloadWidth,
+        width: downloadWidth,
+        height: downloadHeight,
+        foreignObjectRendering: true,
+        window: iframe.contentWindow!,
       });
+
+      root.unmount();
 
       const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      pdf.addImage(imgData, "JPEG", 0, 0, pdfW, pdfH);
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pdfW, pdfH);
+
+      return pdf.output("blob");
+    } finally {
+      document.body.removeChild(iframe);
+    }
+  };
+
+  const handleDownload = async (cert: CertificateRow) => {
+    setDownloadingId(cert.id);
+    try {
+      const blob = await renderCertificatePdfBlob(cert);
+      const pdfUrl = URL.createObjectURL(blob);
 
       const safeName = (cert.student_name || "certificate").replace(/[^\p{L}\p{N}\s_-]/gu, "").trim() || "certificate";
       const typeLabel = cert.type === "ijaza" ? "إجازة" : "شهادة";
-      pdf.save(`${typeLabel}-${safeName}.pdf`);
 
-      root.unmount();
-      document.body.removeChild(container);
+      const link = document.createElement("a");
+      link.href = pdfUrl;
+      link.download = `${typeLabel}-${safeName}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(pdfUrl);
+
       toast({ title: "تم تحميل الشهادة بنجاح ✅" });
     } catch (e: any) {
       console.error(e);
@@ -362,45 +417,7 @@ const AdminCertificates = () => {
 
   // Render the certificate as PDF, upload to storage, and return public URL
   const renderAndUploadPdf = async (cert: CertificateRow): Promise<{ url: string; filename: string }> => {
-    const reciter = cert.reciter_id ? reciters.find(r => r.user_id === cert.reciter_id) : null;
-    const W = 1754;
-    const H = 1240;
-
-    const container = document.createElement("div");
-    container.style.position = "fixed";
-    container.style.top = "-10000px";
-    container.style.left = "0";
-    container.style.width = `${W}px`;
-    container.style.height = `${H}px`;
-    container.style.background = "#ffffff";
-    document.body.appendChild(container);
-
-    const root = createRoot(container);
-    await new Promise<void>((resolve) => {
-      root.render(
-        <CertificateViewer
-          cert={cert}
-          reciterSignatureUrl={reciter?.signature_url || null}
-          reciterStampUrl={reciter?.stamp_url || null}
-          renderWidth={W}
-          renderHeight={H}
-        />
-      );
-      setTimeout(resolve, 700);
-    });
-
-    const target = (container.querySelector('[dir="rtl"] > div > div') as HTMLElement) || container;
-    const canvas = await html2canvas(target, {
-      scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false,
-    });
-    const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-    const pdfW = pdf.internal.pageSize.getWidth();
-    const pdfH = pdf.internal.pageSize.getHeight();
-    pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, pdfW, pdfH);
-    const blob = pdf.output("blob");
-
-    root.unmount();
-    document.body.removeChild(container);
+    const blob = await renderCertificatePdfBlob(cert);
 
     const typeLabel = cert.type === "ijaza" ? "ijaza" : "khatm";
     const filename = `${typeLabel}-${cert.id}.pdf`;
