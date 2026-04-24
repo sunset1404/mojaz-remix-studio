@@ -744,6 +744,21 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       borderRadius: "0 0 4px 4px",
                     }}
                   />
+                  {resolvedAssociationLogoSrc ? (
+                    <img
+                      src={resolvedAssociationLogoSrc}
+                      alt="جمعية إقراء القرآن الكريم"
+                      crossOrigin="anonymous"
+                      style={{
+                        height: L ? "70px" : "56px",
+                        width: "auto",
+                        objectFit: "contain",
+                        marginTop: "4px",
+                        marginBottom: "2px",
+                        display: "block",
+                      }}
+                    />
+                  ) : null}
                   <p
                     style={{
                       fontSize: L ? "18px" : "15px",
