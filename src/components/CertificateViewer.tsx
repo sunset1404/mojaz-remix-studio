@@ -574,8 +574,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     gap: L ? "4px" : "4px",
                   }}
                 >
-                  <QRCodeSVG value={verificationUrl} size={L ? 60 : 50} level="M" fgColor={tealDark} bgColor="transparent" />
-                  <p style={{ fontSize: L ? "10px" : "8px", color: muted, margin: 0, letterSpacing: "1px", fontWeight: 700 }}>
+                  <QRCodeSVG value={verificationUrl} size={L ? 88 : 72} level="M" fgColor={tealDark} bgColor="transparent" />
+                  <p style={{ fontSize: L ? "14px" : "12px", color: muted, margin: 0, letterSpacing: "1px", fontWeight: 700 }}>
                     للتحقق
                   </p>
                 </div>
@@ -585,7 +585,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   style={{
                     background: "#ffffff",
                     borderRadius: L ? "16px" : "12px",
-                    padding: L ? "8px 16px" : "8px 10px",
+                    padding: L ? "10px 18px" : "10px 12px",
                     boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
                     border: `1px solid #eef0f3`,
                     textAlign: "center",
@@ -611,8 +611,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   />
                   <p
                     style={{
-                      fontSize: L ? "10px" : "8.5px",
-                      margin: "2px 0 3px",
+                      fontSize: L ? "14px" : "12px",
+                      margin: "4px 0 5px",
                       color: muted,
                       letterSpacing: "2px",
                       fontWeight: 700,
@@ -622,7 +622,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   </p>
                   <p
                     style={{
-                      fontSize: L ? "15px" : "13px",
+                      fontSize: L ? "22px" : "18px",
                       fontWeight: 800,
                       color: tealDark,
                       margin: 0,
@@ -634,8 +634,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   </p>
                   <p
                     style={{
-                      fontSize: L ? "9px" : "8px",
-                      marginTop: L ? "3px" : "4px",
+                      fontSize: L ? "13px" : "11px",
+                      marginTop: L ? "5px" : "5px",
                       letterSpacing: "3px",
                       color: muted,
                       fontFamily: "'JetBrains Mono', monospace",
@@ -651,12 +651,12 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   style={{
                     background: "#ffffff",
                     borderRadius: L ? "16px" : "12px",
-                    padding: L ? "8px 14px 6px" : "8px 10px 6px",
+                    padding: L ? "10px 16px 8px" : "10px 12px 8px",
                     boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
                     border: `1px solid #eef0f3`,
                     display: "flex",
                     alignItems: "flex-end",
-                    gap: L ? "12px" : "8px",
+                    gap: L ? "14px" : "12px",
                   }}
                 >
                   {resolvedStampUrl && (
@@ -666,14 +666,14 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         alt="ختم"
                         crossOrigin="anonymous"
                         style={{
-                          height: L ? "48px" : "38px",
-                          width: L ? "48px" : "38px",
+                          height: L ? "70px" : "58px",
+                          width: L ? "70px" : "58px",
                           objectFit: "contain",
                           opacity: 0.9,
                         }}
                       />
-                      <div style={{ width: L ? "54px" : "34px", height: "1px", background: gold, marginTop: "4px" }} />
-                      <p style={{ fontSize: L ? "10px" : "8.5px", marginTop: "2px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
+                      <div style={{ width: L ? "70px" : "54px", height: "1px", background: gold, marginTop: "4px" }} />
+                      <p style={{ fontSize: L ? "13px" : "11px", marginTop: "3px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
                         الـخـتـم
                       </p>
                     </div>
@@ -685,24 +685,24 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         alt="توقيع"
                         crossOrigin="anonymous"
                         style={{
-                          height: L ? "44px" : "32px",
+                          height: L ? "62px" : "50px",
                           width: "auto",
-                          maxWidth: L ? "110px" : "76px",
+                          maxWidth: L ? "150px" : "120px",
                           objectFit: "contain",
                           opacity: 0.92,
                         }}
                       />
-                      <div style={{ width: L ? "72px" : "48px", height: "1px", background: gold, marginTop: "4px" }} />
-                      <p style={{ fontSize: L ? "10px" : "8.5px", marginTop: "2px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
+                      <div style={{ width: L ? "90px" : "70px", height: "1px", background: gold, marginTop: "4px" }} />
+                      <p style={{ fontSize: L ? "13px" : "11px", marginTop: "3px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
                         الـتـوقـيـع
                       </p>
                     </div>
                   )}
                   {!resolvedSignatureUrl && !resolvedStampUrl && (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <div style={{ width: L ? "80px" : "60px", height: L ? "36px" : "28px" }} />
-                      <div style={{ width: L ? "100px" : "60px", height: "1px", background: gold, marginTop: "4px" }} />
-                      <p style={{ fontSize: L ? "10px" : "8.5px", marginTop: "2px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
+                      <div style={{ width: L ? "100px" : "80px", height: L ? "50px" : "40px" }} />
+                      <div style={{ width: L ? "120px" : "80px", height: "1px", background: gold, marginTop: "4px" }} />
+                      <p style={{ fontSize: L ? "13px" : "11px", marginTop: "3px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
                         التوقيع والختم
                       </p>
                     </div>
