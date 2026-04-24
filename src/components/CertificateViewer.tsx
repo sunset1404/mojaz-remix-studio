@@ -97,12 +97,14 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
     const goldDeep = "#9a7a30";
     const goldLight = "#e8d09a";
 
-    // L = landscape PDF mode
-    const L = !!renderHeight;
+    // L = "landscape-style" PDF mode (kept for backward-compat).
+    // forcePortraitFill = portrait PDF where we just stretch the preview design to fill height.
+    const L = !!renderHeight && (renderHeight < renderWidth);
+    const forcePortraitFill = !!renderHeight && !L;
     const W = renderWidth;
     const H = renderHeight || 0;
 
-    // Header band height — أصغر في وضع الـ PDF لإفساح مساحة لنص الإجازة
+    // Header band height
     const headerH = L ? 200 : 170;
 
     // ===== Auto-fit certificate text to fill its card without overflow =====
@@ -117,8 +119,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
       if (!box || !el) return;
 
       // Binary-search the largest font-size where text fits inside its container
-      const minSize = L ? 9 : 7;
-      const maxSize = L ? 22 : 16;
+      const minSize = (L || forcePortraitFill) ? 9 : 7;
+      const maxSize = (L || forcePortraitFill) ? 24 : 16;
 
       let lo = minSize;
       let hi = maxSize;
@@ -475,7 +477,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   style={{
                     position: "relative",
                     zIndex: 2,
-                    flex: L ? 1 : undefined,
+                    flex: (L || forcePortraitFill) ? 1 : undefined,
                     background: "#ffffff",
                     borderRadius: L ? "18px" : "14px",
                     padding: L ? "16px 26px 18px" : "14px 16px 16px",

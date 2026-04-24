@@ -110,10 +110,11 @@ const Certificates = () => {
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
 
-      // A4 portrait at 150 DPI = 1240 x 1754 px.
+      // A4 portrait at 150 DPI = 1240 x 1754 px (exact aspect).
       const downloadWidth = 1240;
+      const downloadHeight = 1754;
       const iframe = document.createElement("iframe");
-      iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:2400px;visibility:hidden;pointer-events:none;border:none;`;
+      iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:${downloadHeight + 40}px;visibility:hidden;pointer-events:none;border:none;`;
       document.body.appendChild(iframe);
 
       await new Promise<void>((resolve) => {
@@ -134,6 +135,7 @@ const Certificates = () => {
 
       const certEl = iframeDoc.createElement("div");
       certEl.style.width = `${downloadWidth}px`;
+      certEl.style.height = `${downloadHeight}px`;
       certEl.style.overflow = "hidden";
       iframeDoc.body.appendChild(certEl);
 
@@ -144,6 +146,7 @@ const Certificates = () => {
           reciterSignatureUrl={cert.reciter_signature_url}
           reciterStampUrl={cert.reciter_stamp_url}
           renderWidth={downloadWidth}
+          renderHeight={downloadHeight}
         />
       );
 
@@ -161,8 +164,6 @@ const Certificates = () => {
       } catch {}
       await new Promise(r => setTimeout(r, 800));
 
-      const renderedHeight = certEl.scrollHeight;
-
       const canvas = await (html2canvas as any)(certEl, {
         scale: 2,
         useCORS: true,
@@ -171,7 +172,7 @@ const Certificates = () => {
         backgroundColor: "#ffffff",
         windowWidth: downloadWidth,
         width: downloadWidth,
-        height: renderedHeight,
+        height: downloadHeight,
         foreignObjectRendering: true,
         window: iframe.contentWindow!,
       });
@@ -182,14 +183,7 @@ const Certificates = () => {
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
-      const imgRatio = renderedHeight / downloadWidth;
-      let drawW = pdfW;
-      let drawH = pdfW * imgRatio;
-      if (drawH > pdfH) {
-        drawH = pdfH;
-        drawW = pdfH / imgRatio;
-      }
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, drawW, drawH);
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pdfW, pdfH);
 
       pdf.save(`${cert.title}.pdf`);
       toast.success("تم تحميل الشهادة بنجاح");
