@@ -383,7 +383,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     flex: L ? 1 : undefined,
                     background: "#ffffff",
                     borderRadius: L ? "18px" : "14px",
-                    padding: L ? "22px 30px 26px" : "14px 16px 16px",
+                    padding: L ? "16px 26px 18px" : "14px 16px 16px",
                     boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
                     border: `1px solid #eef0f3`,
                     display: "flex",
@@ -394,9 +394,9 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   <span
                     style={{
                       position: "absolute",
-                      top: L ? "8px" : "4px",
-                      right: L ? "16px" : "10px",
-                      fontSize: L ? "56px" : "34px",
+                      top: L ? "4px" : "4px",
+                      right: L ? "12px" : "10px",
+                      fontSize: L ? "40px" : "34px",
                       lineHeight: 1,
                       color: `${gold}30`,
                       fontFamily: "'Amiri', serif",
@@ -409,9 +409,9 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   <span
                     style={{
                       position: "absolute",
-                      bottom: L ? "0px" : "-4px",
-                      left: L ? "16px" : "10px",
-                      fontSize: L ? "56px" : "34px",
+                      bottom: L ? "-4px" : "-4px",
+                      left: L ? "12px" : "10px",
+                      fontSize: L ? "40px" : "34px",
                       lineHeight: 1,
                       color: `${gold}30`,
                       fontFamily: "'Amiri', serif",
@@ -424,15 +424,15 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
 
                   <p
                     style={{
-                      fontSize: L ? "16.5px" : "12px",
-                      lineHeight: L ? 2.1 : 1.95,
+                      fontSize: L ? "12.5px" : "12px",
+                      lineHeight: L ? 1.85 : 1.95,
                       textAlign: "justify",
                       fontWeight: 400,
                       color: inkSoft,
                       fontFamily: "'Amiri', 'Cairo', serif",
                       margin: 0,
                       width: "100%",
-                      letterSpacing: "0.2px",
+                      letterSpacing: "0.1px",
                     }}
                   >
                     {cert.certificate_text}
@@ -447,7 +447,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   zIndex: 2,
                   display: "grid",
                   gridTemplateColumns: "auto 1fr auto",
-                  gap: L ? "14px" : "8px",
+                  gap: L ? "10px" : "8px",
                   alignItems: "stretch",
                 }}
               >
@@ -456,16 +456,16 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   style={{
                     background: "#ffffff",
                     borderRadius: L ? "16px" : "12px",
-                    padding: L ? "12px 14px 10px" : "8px 8px 6px",
+                    padding: L ? "8px 12px 6px" : "8px 8px 6px",
                     boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
                     border: `1px solid #eef0f3`,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    gap: L ? "6px" : "4px",
+                    gap: L ? "4px" : "4px",
                   }}
                 >
-                  <QRCodeSVG value={verificationUrl} size={L ? 76 : 50} level="M" fgColor={tealDark} bgColor="transparent" />
+                  <QRCodeSVG value={verificationUrl} size={L ? 60 : 50} level="M" fgColor={tealDark} bgColor="transparent" />
                   <p style={{ fontSize: L ? "8px" : "6px", color: muted, margin: 0, letterSpacing: "1px", fontWeight: 700 }}>
                     للتحقق
                   </p>
@@ -476,7 +476,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   style={{
                     background: "#ffffff",
                     borderRadius: L ? "16px" : "12px",
-                    padding: L ? "14px 18px" : "8px 10px",
+                    padding: L ? "8px 16px" : "8px 10px",
                     boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
                     border: `1px solid #eef0f3`,
                     textAlign: "center",
@@ -502,8 +502,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   />
                   <p
                     style={{
-                      fontSize: L ? "9px" : "6.5px",
-                      margin: "4px 0 4px",
+                      fontSize: L ? "8px" : "6.5px",
+                      margin: "2px 0 3px",
                       color: muted,
                       letterSpacing: "2px",
                       fontWeight: 700,
@@ -513,20 +513,20 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   </p>
                   <p
                     style={{
-                      fontSize: L ? "15px" : "11px",
+                      fontSize: L ? "13px" : "11px",
                       fontWeight: 800,
                       color: tealDark,
                       margin: 0,
                       letterSpacing: "0.3px",
-                      lineHeight: 1.3,
+                      lineHeight: 1.2,
                     }}
                   >
                     منصة مجاز لإقراء القرآن الكريم
                   </p>
                   <p
                     style={{
-                      fontSize: L ? "8px" : "6px",
-                      marginTop: L ? "6px" : "4px",
+                      fontSize: L ? "7px" : "6px",
+                      marginTop: L ? "3px" : "4px",
                       letterSpacing: "3px",
                       color: muted,
                       fontFamily: "'JetBrains Mono', monospace",
@@ -542,12 +542,12 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   style={{
                     background: "#ffffff",
                     borderRadius: L ? "16px" : "12px",
-                    padding: L ? "12px 16px 10px" : "8px 10px 6px",
+                    padding: L ? "8px 14px 6px" : "8px 10px 6px",
                     boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
                     border: `1px solid #eef0f3`,
                     display: "flex",
                     alignItems: "flex-end",
-                    gap: L ? "14px" : "8px",
+                    gap: L ? "12px" : "8px",
                   }}
                 >
                   {reciterStampUrl && (
@@ -556,14 +556,14 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         src={reciterStampUrl}
                         alt="ختم"
                         style={{
-                          height: L ? "62px" : "38px",
-                          width: L ? "62px" : "38px",
+                          height: L ? "48px" : "38px",
+                          width: L ? "48px" : "38px",
                           objectFit: "contain",
                           opacity: 0.9,
                         }}
                       />
                       <div style={{ width: L ? "54px" : "34px", height: "1px", background: gold, marginTop: "4px" }} />
-                      <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "3px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
+                      <p style={{ fontSize: L ? "8px" : "6.5px", marginTop: "2px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
                         الـخـتـم
                       </p>
                     </div>
@@ -574,24 +574,24 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         src={reciterSignatureUrl}
                         alt="توقيع"
                         style={{
-                          height: L ? "54px" : "32px",
+                          height: L ? "44px" : "32px",
                           width: "auto",
-                          maxWidth: L ? "130px" : "76px",
+                          maxWidth: L ? "110px" : "76px",
                           objectFit: "contain",
                           opacity: 0.92,
                         }}
                       />
                       <div style={{ width: L ? "72px" : "48px", height: "1px", background: gold, marginTop: "4px" }} />
-                      <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "3px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
+                      <p style={{ fontSize: L ? "8px" : "6.5px", marginTop: "2px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
                         الـتـوقـيـع
                       </p>
                     </div>
                   )}
                   {!reciterSignatureUrl && !reciterStampUrl && (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <div style={{ width: L ? "100px" : "60px", height: L ? "46px" : "28px" }} />
+                      <div style={{ width: L ? "80px" : "60px", height: L ? "36px" : "28px" }} />
                       <div style={{ width: L ? "100px" : "60px", height: "1px", background: gold, marginTop: "4px" }} />
-                      <p style={{ fontSize: L ? "9px" : "6.5px", marginTop: "3px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
+                      <p style={{ fontSize: L ? "8px" : "6.5px", marginTop: "2px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
                         التوقيع والختم
                       </p>
                     </div>
