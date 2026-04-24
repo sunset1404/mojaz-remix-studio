@@ -1,7 +1,7 @@
 import { QRCodeSVG } from "qrcode.react";
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import logoMojazAlpha from "@/assets/logo-mojaz-alpha.png?inline";
+import logoEqraaHeader from "@/assets/logo-eqraa-header.png?inline";
 
 interface CertificateViewerProps {
   cert: {
