@@ -360,123 +360,118 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   { label: "التاريخ", value: cert.date, icon: "calendar" },
                 ].filter((i) => i.value);
 
-                return (
                   <div
                     style={{
                       position: "relative",
                       zIndex: 2,
-                      background: "#ffffff",
-                      borderRadius: L ? "18px" : "14px",
-                      padding: L ? "12px 22px 10px" : "12px 14px 10px",
-                      boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
-                      border: `1px solid #eef0f3`,
+                      display: "grid",
+                      gridTemplateColumns: `1.6fr ${items.map(() => "1fr").join(" ")}`,
+                      gap: L ? "12px" : "10px",
+                      alignItems: "stretch",
                     }}
                   >
-                    {/* Top gold thin accent */}
+                    {/* Title card */}
                     <div
                       style={{
-                        position: "absolute",
-                        top: 0,
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        width: L ? "60px" : "40px",
-                        height: "3px",
-                        background: `linear-gradient(90deg, ${gold}, ${goldLight}, ${gold})`,
-                        borderRadius: "0 0 4px 4px",
+                        position: "relative",
+                        background: "#ffffff",
+                        borderRadius: L ? "16px" : "12px",
+                        padding: L ? "14px 18px" : "12px 14px",
+                        boxShadow: `0 1px 2px rgba(13,75,72,0.05), 0 10px 24px -12px rgba(13,148,136,0.18)`,
+                        border: `1px solid #eef0f3`,
+                        textAlign: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        overflow: "hidden",
                       }}
-                    />
-
-                    {/* Compact label above row */}
-                    <div style={{ textAlign: "center", marginBottom: L ? "8px" : "6px" }}>
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: "3px",
+                          background: `linear-gradient(90deg, ${teal}, ${gold})`,
+                        }}
+                      />
                       <p
                         style={{
-                          fontSize: L ? "14px" : "11px",
-                          color: gold,
-                          letterSpacing: L ? "6px" : "4px",
-                          margin: 0,
+                          fontSize: L ? "18px" : "13px",
+                          color: muted,
+                          margin: "0 0 8px 0",
+                          letterSpacing: "1.4px",
                           fontWeight: 700,
                         }}
                       >
-                        {isIjaza ? "إجــازة قــرآنيــة" : "شهــادة تقديــر"}
+                        العنوان
                       </p>
-                    </div>
-
-                    {/* Single-row details: title + items together */}
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: `1.6fr ${items.map(() => "1fr").join(" ")}`,
-                        gap: L ? "12px" : "8px",
-                        alignItems: "center",
-                      }}
-                    >
-                      {/* Title cell */}
-                      <div
+                      <h2
                         style={{
-                          textAlign: "center",
-                          padding: L ? "4px 10px" : "4px 6px",
-                          borderRight: `1px dashed ${gold}30`,
+                          fontSize: L ? "36px" : "26px",
+                          fontWeight: 800,
+                          color: tealDark,
+                          margin: 0,
+                          lineHeight: 1.2,
+                          fontFamily: "'Amiri', 'Cairo', serif",
+                          letterSpacing: "-0.3px",
                         }}
                       >
+                        {cert.title}
+                      </h2>
+                    </div>
+                    {items.map((item) => (
+                      <div
+                        key={item.label}
+                        style={{
+                          position: "relative",
+                          background: "#ffffff",
+                          borderRadius: L ? "16px" : "12px",
+                          padding: L ? "14px 12px" : "12px 8px",
+                          boxShadow: `0 1px 2px rgba(13,75,72,0.05), 0 10px 24px -12px rgba(13,148,136,0.18)`,
+                          border: `1px solid #eef0f3`,
+                          textAlign: "center",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: "3px",
+                            background: `linear-gradient(90deg, ${gold}, ${goldLight}, ${gold})`,
+                          }}
+                        />
                         <p
                           style={{
-                            fontSize: L ? "20px" : "15px",
+                            fontSize: L ? "18px" : "13px",
                             color: muted,
                             margin: "0 0 8px 0",
                             letterSpacing: "1.4px",
                             fontWeight: 700,
                           }}
                         >
-                          العنوان
+                          {item.label}
                         </p>
-                        <h2
+                        <p
                           style={{
-                            fontSize: L ? "38px" : "28px",
+                            fontSize: L ? "26px" : "20px",
                             fontWeight: 800,
                             color: tealDark,
                             margin: 0,
-                            lineHeight: 1.2,
-                            fontFamily: "'Amiri', 'Cairo', serif",
-                            letterSpacing: "-0.3px",
+                            lineHeight: 1.25,
                           }}
                         >
-                          {cert.title}
-                        </h2>
+                          {item.value}
+                        </p>
                       </div>
-                      {items.map((item, idx) => (
-                        <div
-                          key={item.label}
-                          style={{
-                            textAlign: "center",
-                            padding: L ? "4px 8px" : "4px 4px",
-                            borderRight: idx < items.length - 1 ? `1px dashed ${gold}30` : "none",
-                          }}
-                        >
-                          <p
-                            style={{
-                              fontSize: L ? "20px" : "15px",
-                              color: muted,
-                              margin: "0 0 8px 0",
-                              letterSpacing: "1.4px",
-                              fontWeight: 700,
-                            }}
-                          >
-                            {item.label}
-                          </p>
-                          <p
-                            style={{
-                              fontSize: L ? "30px" : "23px",
-                              fontWeight: 800,
-                              color: tealDark,
-                              margin: 0,
-                              lineHeight: 1.25,
-                            }}
-                          >
-                            {item.value}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                    ))}
                   </div>
                 );
               })()}
