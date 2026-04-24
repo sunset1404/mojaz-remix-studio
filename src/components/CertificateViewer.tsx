@@ -37,6 +37,23 @@ const resolveStorageImageUrl = (value?: string | null) => {
   return data.publicUrl;
 };
 
+const fetchImageAsDataUrl = async (url: string) => {
+  const targetUrl = url.startsWith("/") ? new URL(url, window.location.origin).toString() : url;
+  const response = await fetch(targetUrl, { mode: "cors", cache: "force-cache" });
+  if (!response.ok) throw new Error(`Failed to load image: ${response.status}`);
+
+  const blob = await response.blob();
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("Failed to convert image to data URL"));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Failed to read image blob"));
+    reader.readAsDataURL(blob);
+  });
+};
+
 const useRenderableImageSrc = (value?: string | null) => {
   const [src, setSrc] = useState<string | null>(null);
 
@@ -49,21 +66,17 @@ const useRenderableImageSrc = (value?: string | null) => {
       return;
     }
 
-    if (/^(data:|blob:|\/)/i.test(resolved) || resolved.startsWith(window.location.origin)) {
+    if (/^(data:|blob:)/i.test(resolved)) {
       setSrc(resolved);
       return;
     }
 
+    setSrc(resolved);
+
     (async () => {
       try {
-        const response = await fetch(resolved, { mode: "cors", cache: "force-cache" });
-        if (!response.ok) throw new Error(`Failed to load image: ${response.status}`);
-        const blob = await response.blob();
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (!cancelled) setSrc(typeof reader.result === "string" ? reader.result : resolved);
-        };
-        reader.readAsDataURL(blob);
+        const dataUrl = await fetchImageAsDataUrl(resolved);
+        if (!cancelled) setSrc(dataUrl);
       } catch {
         if (!cancelled) setSrc(resolved);
       }
@@ -83,6 +96,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
   ({ cert, reciterSignatureUrl, reciterStampUrl, renderWidth = 920, renderHeight }, ref) => {
     const isIjaza = cert.type === "ijaza";
     const verificationUrl = `${window.location.origin}/verify/${cert.id}`;
+    const resolvedHeaderLogoSrc = useRenderableImageSrc(HEADER_LOGO_SRC);
     const resolvedSignatureUrl = useRenderableImageSrc(reciterSignatureUrl);
     const resolvedStampUrl = useRenderableImageSrc(reciterStampUrl);
 
@@ -403,19 +417,22 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                 </div>
 
                 {/* Header logo */}
-                <img
-                  src={HEADER_LOGO_SRC}
-                  alt="إقراء"
-                  style={{
-                    flexShrink: 0,
-                    height: L ? "170px" : "146px",
-                    maxWidth: L ? "170px" : "146px",
-                    width: "auto",
-                    objectFit: "contain",
-                    objectPosition: "center",
-                    display: "block",
-                  }}
-                />
+                {resolvedHeaderLogoSrc ? (
+                  <img
+                    src={resolvedHeaderLogoSrc}
+                    alt="إقراء"
+                    crossOrigin="anonymous"
+                    style={{
+                      flexShrink: 0,
+                      height: L ? "170px" : "146px",
+                      maxWidth: L ? "170px" : "146px",
+                      width: "auto",
+                      objectFit: "contain",
+                      objectPosition: "center",
+                      display: "block",
+                    }}
+                  />
+                ) : null}
               </div>
 
               {/* Bottom curved accent (gold thin line) */}
