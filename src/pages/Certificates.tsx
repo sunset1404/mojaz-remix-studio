@@ -110,10 +110,10 @@ const Certificates = () => {
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
 
-      // A3 portrait at 150 DPI = 1754 x 2480 px width-anchored.
-      const downloadWidth = 1754;
+      // A4 portrait at 150 DPI = 1240 x 1754 px.
+      const downloadWidth = 1240;
       const iframe = document.createElement("iframe");
-      iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:3000px;visibility:hidden;pointer-events:none;border:none;`;
+      iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:2400px;visibility:hidden;pointer-events:none;border:none;`;
       document.body.appendChild(iframe);
 
       await new Promise<void>((resolve) => {
@@ -124,8 +124,6 @@ const Certificates = () => {
       const iframeDoc = iframe.contentDocument!;
       const iframeWin = iframe.contentWindow! as any;
 
-      // Inject Google Fonts (Amiri + Cairo) directly via @import in a style tag
-      // so that document.fonts.ready can reliably await them inside the iframe.
       const fontStyle = iframeDoc.createElement("style");
       fontStyle.textContent = `
         @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;500;600;700;800&display=swap');
@@ -149,7 +147,6 @@ const Certificates = () => {
         />
       );
 
-      // Wait for React render + fonts to fully load inside the iframe.
       await new Promise(r => setTimeout(r, 300));
       try {
         if (iframeWin.document?.fonts?.ready) {
@@ -182,8 +179,7 @@ const Certificates = () => {
       root.unmount();
       document.body.removeChild(iframe);
 
-      // A3 portrait: 297 x 420 mm
-      const pdf = new jsPDF("p", "mm", "a3");
+      const pdf = new jsPDF("p", "mm", "a4");
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
       const imgRatio = renderedHeight / downloadWidth;
@@ -193,9 +189,7 @@ const Certificates = () => {
         drawH = pdfH;
         drawW = pdfH / imgRatio;
       }
-      const offsetX = (pdfW - drawW) / 2;
-      const offsetY = (pdfH - drawH) / 2;
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", offsetX, offsetY, drawW, drawH);
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, drawW, drawH);
 
       pdf.save(`${cert.title}.pdf`);
       toast.success("تم تحميل الشهادة بنجاح");
