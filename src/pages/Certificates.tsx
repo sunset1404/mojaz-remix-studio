@@ -110,10 +110,10 @@ const Certificates = () => {
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
 
-      const downloadWidth = 1414;
-      const downloadHeight = 1000;
+      // A3 portrait at 150 DPI = 1754 x 2480 px width-anchored.
+      const downloadWidth = 1754;
       const iframe = document.createElement("iframe");
-      iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:${downloadHeight + 40}px;visibility:hidden;pointer-events:none;border:none;`;
+      iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:3000px;visibility:hidden;pointer-events:none;border:none;`;
       document.body.appendChild(iframe);
 
       await new Promise<void>((resolve) => {
@@ -136,7 +136,6 @@ const Certificates = () => {
 
       const certEl = iframeDoc.createElement("div");
       certEl.style.width = `${downloadWidth}px`;
-      certEl.style.height = `${downloadHeight}px`;
       certEl.style.overflow = "hidden";
       iframeDoc.body.appendChild(certEl);
 
@@ -147,7 +146,6 @@ const Certificates = () => {
           reciterSignatureUrl={cert.reciter_signature_url}
           reciterStampUrl={cert.reciter_stamp_url}
           renderWidth={downloadWidth}
-          renderHeight={downloadHeight}
         />
       );
 
@@ -156,7 +154,6 @@ const Certificates = () => {
       try {
         if (iframeWin.document?.fonts?.ready) {
           await iframeWin.document.fonts.ready;
-          // Force-load the specific Arabic faces we use to avoid swap glitches.
           await Promise.all([
             iframeWin.document.fonts.load("700 32px Amiri"),
             iframeWin.document.fonts.load("400 17px Amiri"),
@@ -165,12 +162,10 @@ const Certificates = () => {
           ]);
         }
       } catch {}
-      // Extra settle time for layout reflow with newly-loaded Arabic glyphs.
       await new Promise(r => setTimeout(r, 800));
 
-      // foreignObjectRendering preserves native browser text shaping (critical
-      // for Arabic — without it, html2canvas paints letters individually and
-      // they appear disconnected and overlapping).
+      const renderedHeight = certEl.scrollHeight;
+
       const canvas = await (html2canvas as any)(certEl, {
         scale: 2,
         useCORS: true,
@@ -179,7 +174,7 @@ const Certificates = () => {
         backgroundColor: "#ffffff",
         windowWidth: downloadWidth,
         width: downloadWidth,
-        height: downloadHeight,
+        height: renderedHeight,
         foreignObjectRendering: true,
         window: iframe.contentWindow!,
       });
@@ -187,8 +182,20 @@ const Certificates = () => {
       root.unmount();
       document.body.removeChild(iframe);
 
-      const pdf = new jsPDF("l", "mm", "a4");
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, 297, 210);
+      // A3 portrait: 297 x 420 mm
+      const pdf = new jsPDF("p", "mm", "a3");
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const imgRatio = renderedHeight / downloadWidth;
+      let drawW = pdfW;
+      let drawH = pdfW * imgRatio;
+      if (drawH > pdfH) {
+        drawH = pdfH;
+        drawW = pdfH / imgRatio;
+      }
+      const offsetX = (pdfW - drawW) / 2;
+      const offsetY = (pdfH - drawH) / 2;
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", offsetX, offsetY, drawW, drawH);
 
       pdf.save(`${cert.title}.pdf`);
       toast.success("تم تحميل الشهادة بنجاح");
