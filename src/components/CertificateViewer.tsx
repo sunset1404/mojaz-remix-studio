@@ -97,12 +97,14 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
     const goldDeep = "#9a7a30";
     const goldLight = "#e8d09a";
 
-    // L = landscape PDF mode
-    const L = !!renderHeight;
+    // L = "landscape-style" PDF mode (kept for backward-compat).
+    // forcePortraitFill = portrait PDF where we just stretch the preview design to fill height.
+    const L = !!renderHeight && (renderHeight < renderWidth);
+    const forcePortraitFill = !!renderHeight && !L;
     const W = renderWidth;
     const H = renderHeight || 0;
 
-    // Header band height — أصغر في وضع الـ PDF لإفساح مساحة لنص الإجازة
+    // Header band height
     const headerH = L ? 200 : 170;
 
     // ===== Auto-fit certificate text to fill its card without overflow =====
