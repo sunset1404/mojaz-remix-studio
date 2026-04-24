@@ -193,31 +193,34 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
 
             {/* ============== ORNAMENTAL CORNER FLOURISHES ============== */}
             {[
-              { top: L ? 6 : 4, right: L ? 6 : 4, rotate: 0 },
-              { top: L ? 6 : 4, left: L ? 6 : 4, rotate: 90 },
-              { bottom: L ? 6 : 4, right: L ? 6 : 4, rotate: -90 },
-              { bottom: L ? 6 : 4, left: L ? 6 : 4, rotate: 180 },
-            ].map((c, i) => (
-              <div
-                key={`corner-${i}`}
-                style={{
-                  position: "absolute",
-                  ...c,
-                  pointerEvents: "none",
-                  zIndex: 6,
-                  transform: `rotate(${c.rotate}deg)`,
-                }}
-              >
-                <svg width={L ? 60 : 46} height={L ? 60 : 46} viewBox="0 0 60 60" fill="none">
-                  <path d="M2 2 L20 2 M2 2 L2 20" stroke={gold} strokeWidth="1.5" strokeLinecap="round" />
-                  <path d="M8 8 Q22 8 22 22" stroke={goldDeep} strokeWidth="0.8" fill="none" opacity="0.7" />
-                  <circle cx="2" cy="2" r="2.5" fill={gold} />
-                  <circle cx="14" cy="2" r="1" fill={goldDeep} opacity="0.6" />
-                  <circle cx="2" cy="14" r="1" fill={goldDeep} opacity="0.6" />
-                  <path d="M22 22 L28 22 M22 22 L22 28" stroke={gold} strokeWidth="0.6" opacity="0.5" />
-                </svg>
-              </div>
-            ))}
+              { top: L ? 6 : 4, right: L ? 6 : 4, deg: 0 },
+              { top: L ? 6 : 4, left: L ? 6 : 4, deg: 90 },
+              { bottom: L ? 6 : 4, right: L ? 6 : 4, deg: -90 },
+              { bottom: L ? 6 : 4, left: L ? 6 : 4, deg: 180 },
+            ].map((c, i) => {
+              const { deg, ...pos } = c;
+              return (
+                <div
+                  key={`corner-${i}`}
+                  style={{
+                    position: "absolute",
+                    ...pos,
+                    pointerEvents: "none",
+                    zIndex: 6,
+                    transform: `rotate(${deg}deg)`,
+                  }}
+                >
+                  <svg width={L ? 60 : 46} height={L ? 60 : 46} viewBox="0 0 60 60" fill="none">
+                    <path d="M2 2 L20 2 M2 2 L2 20" stroke={gold} strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M8 8 Q22 8 22 22" stroke={goldDeep} strokeWidth="0.8" fill="none" opacity="0.7" />
+                    <circle cx="2" cy="2" r="2.5" fill={gold} />
+                    <circle cx="14" cy="2" r="1" fill={goldDeep} opacity="0.6" />
+                    <circle cx="2" cy="14" r="1" fill={goldDeep} opacity="0.6" />
+                    <path d="M22 22 L28 22 M22 22 L22 28" stroke={gold} strokeWidth="0.6" opacity="0.5" />
+                  </svg>
+                </div>
+              );
+            })}
 
             {/* ============== CENTRAL WATERMARK (very subtle) ============== */}
             <div
