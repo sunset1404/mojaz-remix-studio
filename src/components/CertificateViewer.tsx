@@ -225,16 +225,27 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   </p>
                 </div>
 
-                {/* Mojaz logo (large, no circle/border) */}
-                <div style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
+                {/* Mojaz logo on white card */}
+                <div
+                  style={{
+                    flexShrink: 0,
+                    background: "#ffffff",
+                    padding: L ? "10px 14px" : "8px 10px",
+                    borderRadius: L ? "12px" : "10px",
+                    boxShadow: "0 6px 18px rgba(0,0,0,0.22)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <img
                     src={logoMojaz}
                     alt="مجاز"
                     style={{
-                      height: L ? "115px" : "95px",
+                      height: L ? "120px" : "100px",
                       width: "auto",
                       objectFit: "contain",
-                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))",
+                      display: "block",
                     }}
                   />
                 </div>
