@@ -302,11 +302,10 @@ const AdminCertificates = () => {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const renderCertificatePdfBlob = async (cert: CertificateRow) => {
-    // A3 portrait at 150 DPI = 1754 x 2480 px. We render at the same width
-    // and let height be automatic (matches the on-screen preview design exactly).
-    const downloadWidth = 1754;
+    // A4 portrait at 150 DPI = 1240 x 1754 px.
+    const downloadWidth = 1240;
     const iframe = document.createElement("iframe");
-    iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:3000px;visibility:hidden;pointer-events:none;border:none;`;
+    iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:2400px;visibility:hidden;pointer-events:none;border:none;`;
     document.body.appendChild(iframe);
 
     try {
@@ -379,12 +378,9 @@ const AdminCertificates = () => {
 
       root.unmount();
 
-      // A3 portrait: 297 x 420 mm
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a3" });
-      const pdfW = pdf.internal.pageSize.getWidth();   // 297
-      const pdfH = pdf.internal.pageSize.getHeight();  // 420
-
-      // Fit the rendered certificate by width, keep aspect ratio, center vertically.
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
       const imgRatio = renderedHeight / downloadWidth;
       let drawW = pdfW;
       let drawH = pdfW * imgRatio;
@@ -392,9 +388,7 @@ const AdminCertificates = () => {
         drawH = pdfH;
         drawW = pdfH / imgRatio;
       }
-      const offsetX = (pdfW - drawW) / 2;
-      const offsetY = (pdfH - drawH) / 2;
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", offsetX, offsetY, drawW, drawH);
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, drawW, drawH);
 
       return pdf.output("blob");
     } finally {
