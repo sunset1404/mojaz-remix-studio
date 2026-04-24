@@ -302,10 +302,11 @@ const AdminCertificates = () => {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const renderCertificatePdfBlob = async (cert: CertificateRow) => {
-    // A4 portrait at 150 DPI = 1240 x 1754 px.
+    // A4 portrait at 150 DPI = 1240 x 1754 px (exact aspect).
     const downloadWidth = 1240;
+    const downloadHeight = 1754;
     const iframe = document.createElement("iframe");
-    iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:2400px;visibility:hidden;pointer-events:none;border:none;`;
+    iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${downloadWidth + 40}px;height:${downloadHeight + 40}px;visibility:hidden;pointer-events:none;border:none;`;
     document.body.appendChild(iframe);
 
     try {
