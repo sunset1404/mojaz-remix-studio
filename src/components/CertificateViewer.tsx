@@ -48,7 +48,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
     const H = renderHeight || 0;
 
     // Header band height — أصغر في وضع الـ PDF لإفساح مساحة لنص الإجازة
-    const headerH = L ? 140 : 130;
+    const headerH = L ? 200 : 170;
 
     // ===== Auto-fit certificate text to fill its card without overflow =====
     const textBoxRef = useRef<HTMLDivElement>(null);
@@ -225,16 +225,27 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   </p>
                 </div>
 
-                {/* Mojaz logo (large, no circle/border) */}
-                <div style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
+                {/* Mojaz logo on white card (prominent) */}
+                <div
+                  style={{
+                    flexShrink: 0,
+                    background: "#ffffff",
+                    padding: L ? "10px 14px" : "8px 10px",
+                    borderRadius: L ? "14px" : "10px",
+                    boxShadow: "0 8px 22px rgba(0,0,0,0.25)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <img
                     src={logoMojaz}
                     alt="مجاز"
                     style={{
-                      height: L ? "115px" : "95px",
+                      height: L ? "170px" : "140px",
                       width: "auto",
                       objectFit: "contain",
-                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))",
+                      display: "block",
                     }}
                   />
                 </div>
