@@ -1,6 +1,6 @@
 import { QRCodeSVG } from "qrcode.react";
 import { forwardRef, useLayoutEffect, useRef, useState } from "react";
-import logoMojaz from "@/assets/logo-mojaz.webp";
+import logoMojaz from "@/assets/logo-mojaz-full.png";
 
 interface CertificateViewerProps {
   cert: {
@@ -199,13 +199,13 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                 <div style={{ textAlign: "right", flex: 1, minWidth: 0 }}>
                   <h1
                     style={{
-                      fontSize: L ? "32px" : "26px",
-                      fontWeight: 800,
+                      fontSize: L ? "44px" : "34px",
+                      fontWeight: 900,
                       color: "#fff",
                       margin: 0,
-                      lineHeight: 1.15,
+                      lineHeight: 1.1,
                       letterSpacing: "-0.5px",
-                      textShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                      textShadow: "0 2px 8px rgba(0,0,0,0.18)",
                     }}
                   >
                     {isIjaza ? "الإجازة القرآنية" : "شهادة الختم"}
