@@ -333,6 +333,7 @@ const AdminCertificates = () => {
 
       const certEl = iframeDoc.createElement("div");
       certEl.style.width = `${downloadWidth}px`;
+      certEl.style.height = `${downloadHeight}px`;
       certEl.style.overflow = "hidden";
       iframeDoc.body.appendChild(certEl);
 
@@ -343,6 +344,7 @@ const AdminCertificates = () => {
           reciterSignatureUrl={reciter?.signature_url || null}
           reciterStampUrl={reciter?.stamp_url || null}
           renderWidth={downloadWidth}
+          renderHeight={downloadHeight}
         />
       );
 
@@ -362,8 +364,6 @@ const AdminCertificates = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      const renderedHeight = certEl.scrollHeight;
-
       const canvas = await (html2canvas as any)(certEl, {
         scale: 2,
         useCORS: true,
@@ -372,7 +372,7 @@ const AdminCertificates = () => {
         backgroundColor: "#ffffff",
         windowWidth: downloadWidth,
         width: downloadWidth,
-        height: renderedHeight,
+        height: downloadHeight,
         foreignObjectRendering: true,
         window: iframe.contentWindow!,
       });
@@ -382,14 +382,7 @@ const AdminCertificates = () => {
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
-      const imgRatio = renderedHeight / downloadWidth;
-      let drawW = pdfW;
-      let drawH = pdfW * imgRatio;
-      if (drawH > pdfH) {
-        drawH = pdfH;
-        drawW = pdfH / imgRatio;
-      }
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, drawW, drawH);
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pdfW, pdfH);
 
       return pdf.output("blob");
     } finally {
