@@ -47,8 +47,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
     const W = renderWidth;
     const H = renderHeight || 0;
 
-    // Header band height
-    const headerH = L ? 200 : 130;
+    // Header band height — أصغر في وضع الـ PDF لإفساح مساحة لنص الإجازة
+    const headerH = L ? 140 : 130;
 
     return (
       <div className="w-full overflow-x-auto" dir="rtl">
