@@ -1,7 +1,6 @@
 import { QRCodeSVG } from "qrcode.react";
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import logoEqraaHeader from "@/assets/logo-eqraa-header.png?inline";
 
 interface CertificateViewerProps {
   cert: {
@@ -77,6 +76,8 @@ const useRenderableImageSrc = (value?: string | null) => {
 
   return src;
 };
+
+const HEADER_LOGO_SRC = "/eqraa-header-logo-transparent-v5.png?v=5";
 
 const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
   ({ cert, reciterSignatureUrl, reciterStampUrl, renderWidth = 920, renderHeight }, ref) => {
@@ -281,14 +282,15 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
 
                 {/* Header logo */}
                 <img
-                  src={logoEqraaHeader}
+                  src={HEADER_LOGO_SRC}
                   alt="إقراء"
                   style={{
                     flexShrink: 0,
-                    height: L ? "170px" : "138px",
-                    maxWidth: L ? "170px" : "138px",
+                    height: L ? "170px" : "146px",
+                    maxWidth: L ? "170px" : "146px",
                     width: "auto",
                     objectFit: "contain",
+                    objectPosition: "center",
                     display: "block",
                   }}
                 />
