@@ -82,8 +82,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
   ({ cert, reciterSignatureUrl, reciterStampUrl, renderWidth = 920, renderHeight }, ref) => {
     const isIjaza = cert.type === "ijaza";
     const verificationUrl = `${window.location.origin}/verify/${cert.id}`;
-    const resolvedSignatureUrl = useMemo(() => resolveStorageImageUrl(reciterSignatureUrl), [reciterSignatureUrl]);
-    const resolvedStampUrl = useMemo(() => resolveStorageImageUrl(reciterStampUrl), [reciterStampUrl]);
+    const resolvedSignatureUrl = useRenderableImageSrc(reciterSignatureUrl);
+    const resolvedStampUrl = useRenderableImageSrc(reciterStampUrl);
 
     // === Mojaz brand palette (matches admin header) ===
     const inkSoft = "#3a3f55";
@@ -293,7 +293,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   }}
                 >
                   <img
-                    src="/logo-mojaz-alpha.png"
+                    src={logoMojazAlpha}
                     alt="مجاز"
                     style={{
                       height: L ? "170px" : "140px",
