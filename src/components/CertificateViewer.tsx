@@ -48,7 +48,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
     const H = renderHeight || 0;
 
     // Header band height — أصغر في وضع الـ PDF لإفساح مساحة لنص الإجازة
-    const headerH = L ? 140 : 130;
+    const headerH = L ? 200 : 170;
 
     // ===== Auto-fit certificate text to fill its card without overflow =====
     const textBoxRef = useRef<HTMLDivElement>(null);
