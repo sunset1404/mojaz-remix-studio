@@ -418,6 +418,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
               {/* ===== Body text card (white) ===== */}
               {cert.certificate_text && (
                 <div
+                  ref={textBoxRef}
                   style={{
                     position: "relative",
                     zIndex: 2,
@@ -429,7 +430,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     border: `1px solid #eef0f3`,
                     display: "flex",
                     alignItems: "center",
-                    overflow: L ? "hidden" : undefined,
+                    overflow: "hidden",
                   }}
                 >
                   <span
@@ -464,9 +465,10 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   </span>
 
                   <p
+                    ref={textRef}
                     style={{
-                      fontSize: L ? "12.5px" : "12px",
-                      lineHeight: L ? 1.85 : 1.95,
+                      fontSize: `${autoFontSize}px`,
+                      lineHeight: L ? 1.75 : 1.85,
                       textAlign: "justify",
                       fontWeight: 400,
                       color: inkSoft,
