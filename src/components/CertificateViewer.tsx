@@ -98,6 +98,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
     const isIjaza = cert.type === "ijaza";
     const verificationUrl = `${window.location.origin}/verify/${cert.id}`;
     const resolvedHeaderLogoSrc = useRenderableImageSrc(HEADER_LOGO_SRC);
+    const resolvedAssociationLogoSrc = useRenderableImageSrc(ASSOCIATION_LOGO_SRC);
     const resolvedSignatureUrl = useRenderableImageSrc(reciterSignatureUrl);
     const resolvedStampUrl = useRenderableImageSrc(reciterStampUrl);
 
