@@ -708,8 +708,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   }}
                 >
                   <QRCodeSVG value={verificationUrl} size={L ? 130 : 110} level="M" fgColor={tealDark} bgColor="transparent" />
-                  <p style={{ fontSize: L ? "17px" : "15px", color: muted, margin: 0, letterSpacing: "1px", fontWeight: 700 }}>
-                    للتحقق
+                  <p style={{ fontSize: L ? "17px" : "15px", color: muted, margin: 0, letterSpacing: "1px", fontWeight: 700, textAlign: "center" }}>
+                    للتحقق من صحة الإجازة
                   </p>
                 </div>
 
