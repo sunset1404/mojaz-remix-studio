@@ -91,12 +91,14 @@ const useRenderableImageSrc = (value?: string | null) => {
 };
 
 const HEADER_LOGO_SRC = "/eqraa-header-logo-transparent-v5.png?v=5";
+const ASSOCIATION_LOGO_SRC = "/iqra-association-logo.jpg";
 
 const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
   ({ cert, reciterSignatureUrl, reciterStampUrl, renderWidth = 920, renderHeight }, ref) => {
     const isIjaza = cert.type === "ijaza";
     const verificationUrl = `${window.location.origin}/verify/${cert.id}`;
     const resolvedHeaderLogoSrc = useRenderableImageSrc(HEADER_LOGO_SRC);
+    const resolvedAssociationLogoSrc = useRenderableImageSrc(ASSOCIATION_LOGO_SRC);
     const resolvedSignatureUrl = useRenderableImageSrc(reciterSignatureUrl);
     const resolvedStampUrl = useRenderableImageSrc(reciterStampUrl);
 
@@ -742,6 +744,21 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       borderRadius: "0 0 4px 4px",
                     }}
                   />
+                  {resolvedAssociationLogoSrc ? (
+                    <img
+                      src={resolvedAssociationLogoSrc}
+                      alt="جمعية إقراء القرآن الكريم"
+                      crossOrigin="anonymous"
+                      style={{
+                        height: L ? "70px" : "56px",
+                        width: "auto",
+                        objectFit: "contain",
+                        marginTop: "4px",
+                        marginBottom: "2px",
+                        display: "block",
+                      }}
+                    />
+                  ) : null}
                   <p
                     style={{
                       fontSize: L ? "18px" : "15px",
