@@ -417,19 +417,22 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                 </div>
 
                 {/* Header logo */}
-                <img
-                  src={HEADER_LOGO_SRC}
-                  alt="إقراء"
-                  style={{
-                    flexShrink: 0,
-                    height: L ? "170px" : "146px",
-                    maxWidth: L ? "170px" : "146px",
-                    width: "auto",
-                    objectFit: "contain",
-                    objectPosition: "center",
-                    display: "block",
-                  }}
-                />
+                {resolvedHeaderLogoSrc ? (
+                  <img
+                    src={resolvedHeaderLogoSrc}
+                    alt="إقراء"
+                    crossOrigin="anonymous"
+                    style={{
+                      flexShrink: 0,
+                      height: L ? "170px" : "146px",
+                      maxWidth: L ? "170px" : "146px",
+                      width: "auto",
+                      objectFit: "contain",
+                      objectPosition: "center",
+                      display: "block",
+                    }}
+                  />
+                ) : null}
               </div>
 
               {/* Bottom curved accent (gold thin line) */}
