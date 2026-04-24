@@ -807,7 +807,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       />
                       <div style={{ width: L ? "100px" : "82px", height: "1px", background: gold, marginTop: "5px" }} />
                       <p style={{ fontSize: L ? "16px" : "14px", marginTop: "4px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
-                        ختم المقرئ
+                        ختم المقرئ/ة
                       </p>
                     </div>
                   )}
@@ -827,7 +827,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       />
                       <div style={{ width: L ? "140px" : "110px", height: "1px", background: gold, marginTop: "5px" }} />
                       <p style={{ fontSize: L ? "16px" : "14px", marginTop: "4px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
-                        توقيع المقرئ
+                        توقيع المقرئ/ة
                       </p>
                     </div>
                   )}
