@@ -1,7 +1,8 @@
 import { QRCodeSVG } from "qrcode.react";
-import { forwardRef, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import logoMojazAlpha from "@/assets/logo-mojaz-alpha.png";
+import logoMojazAlpha from "@/assets/logo-mojaz-alpha.png?inline";
+
 interface CertificateViewerProps {
   cert: {
     id: string;
@@ -26,7 +27,7 @@ interface CertificateViewerProps {
 
 const resolveStorageImageUrl = (value?: string | null) => {
   if (!value) return null;
-  if (/^(https?:|data:|blob:)/i.test(value)) return value;
+  if (/^(https?:|data:|blob:|\/)/i.test(value)) return value;
 
   const normalized = value
     .replace(/^\/storage\/v1\/object\/public\/reciter-assets\//, "")
@@ -35,6 +36,46 @@ const resolveStorageImageUrl = (value?: string | null) => {
 
   const { data } = supabase.storage.from("reciter-assets").getPublicUrl(normalized);
   return data.publicUrl;
+};
+
+const useRenderableImageSrc = (value?: string | null) => {
+  const [src, setSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const resolved = resolveStorageImageUrl(value);
+
+    if (!resolved) {
+      setSrc(null);
+      return;
+    }
+
+    if (/^(data:|blob:|\/)/i.test(resolved) || resolved.startsWith(window.location.origin)) {
+      setSrc(resolved);
+      return;
+    }
+
+    (async () => {
+      try {
+        const response = await fetch(resolved, { mode: "cors", cache: "force-cache" });
+        if (!response.ok) throw new Error(`Failed to load image: ${response.status}`);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (!cancelled) setSrc(typeof reader.result === "string" ? reader.result : resolved);
+        };
+        reader.readAsDataURL(blob);
+      } catch {
+        if (!cancelled) setSrc(resolved);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [value]);
+
+  return src;
 };
 
 const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
