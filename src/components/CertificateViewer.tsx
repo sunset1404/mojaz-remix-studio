@@ -420,9 +420,9 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       >
                         <p
                           style={{
-                            fontSize: L ? "16px" : "12px",
+                            fontSize: L ? "20px" : "15px",
                             color: muted,
-                            margin: "0 0 6px 0",
+                            margin: "0 0 8px 0",
                             letterSpacing: "1.4px",
                             fontWeight: 700,
                           }}
@@ -431,7 +431,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         </p>
                         <h2
                           style={{
-                            fontSize: L ? "30px" : "22px",
+                            fontSize: L ? "38px" : "28px",
                             fontWeight: 800,
                             color: tealDark,
                             margin: 0,
@@ -454,9 +454,9 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         >
                           <p
                             style={{
-                              fontSize: L ? "16px" : "12px",
+                              fontSize: L ? "20px" : "15px",
                               color: muted,
-                              margin: "0 0 6px 0",
+                              margin: "0 0 8px 0",
                               letterSpacing: "1.4px",
                               fontWeight: 700,
                             }}
@@ -465,7 +465,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                           </p>
                           <p
                             style={{
-                              fontSize: L ? "24px" : "18px",
+                              fontSize: L ? "30px" : "23px",
                               fontWeight: 800,
                               color: tealDark,
                               margin: 0,
