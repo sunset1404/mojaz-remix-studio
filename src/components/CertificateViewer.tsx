@@ -50,6 +50,47 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
     // Header band height — أصغر في وضع الـ PDF لإفساح مساحة لنص الإجازة
     const headerH = L ? 140 : 130;
 
+    // ===== Auto-fit certificate text to fill its card without overflow =====
+    const textBoxRef = useRef<HTMLDivElement>(null);
+    const textRef = useRef<HTMLParagraphElement>(null);
+    const [autoFontSize, setAutoFontSize] = useState<number>(L ? 16 : 13);
+
+    useLayoutEffect(() => {
+      if (!cert.certificate_text) return;
+      const box = textBoxRef.current;
+      const el = textRef.current;
+      if (!box || !el) return;
+
+      // Binary-search the largest font-size where text fits inside its container
+      const minSize = L ? 9 : 7;
+      const maxSize = L ? 22 : 16;
+
+      let lo = minSize;
+      let hi = maxSize;
+      let best = lo;
+
+      const fits = (size: number) => {
+        el.style.fontSize = `${size}px`;
+        // Allow layout to settle for this size
+        return el.scrollHeight <= box.clientHeight && el.scrollWidth <= box.clientWidth;
+      };
+
+      // 12 iterations is more than enough for ~0.003px precision
+      for (let i = 0; i < 14; i++) {
+        const mid = (lo + hi) / 2;
+        if (fits(mid)) {
+          best = mid;
+          lo = mid;
+        } else {
+          hi = mid;
+        }
+        if (hi - lo < 0.25) break;
+      }
+
+      el.style.fontSize = `${best}px`;
+      setAutoFontSize(best);
+    }, [cert.certificate_text, L, W, H]);
+
     return (
       <div className="w-full overflow-x-auto" dir="rtl">
         <div className="w-full flex justify-center">
