@@ -1,6 +1,6 @@
 import { QRCodeSVG } from "qrcode.react";
 import { forwardRef, useLayoutEffect, useRef, useState } from "react";
-import logoMojaz from "@/assets/logo-mojaz.webp";
+import logoMojaz from "@/assets/logo-mojaz-full.png";
 
 interface CertificateViewerProps {
   cert: {
