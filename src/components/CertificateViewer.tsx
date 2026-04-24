@@ -1,6 +1,6 @@
 import { QRCodeSVG } from "qrcode.react";
-import { forwardRef, useLayoutEffect, useRef, useState } from "react";
-import logoMojaz from "@/assets/logo-mojaz-full.png";
+import { forwardRef, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CertificateViewerProps {
   cert: {
@@ -24,10 +24,26 @@ interface CertificateViewerProps {
   renderHeight?: number;
 }
 
+const resolveStorageImageUrl = (value?: string | null) => {
+  if (!value) return null;
+  if (/^(https?:|data:|blob:)/i.test(value)) return value;
+
+  const normalized = value
+    .replace(/^\/storage\/v1\/object\/public\/reciter-assets\//, "")
+    .replace(/^reciter-assets\//, "")
+    .replace(/^\//, "");
+
+  const { data } = supabase.storage.from("reciter-assets").getPublicUrl(normalized);
+  return data.publicUrl;
+};
+
 const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
   ({ cert, reciterSignatureUrl, reciterStampUrl, renderWidth = 920, renderHeight }, ref) => {
     const isIjaza = cert.type === "ijaza";
     const verificationUrl = `${window.location.origin}/verify/${cert.id}`;
+    const logoUrl = `${window.location.origin}/logo-mojaz-full.png`;
+    const resolvedSignatureUrl = useMemo(() => resolveStorageImageUrl(reciterSignatureUrl), [reciterSignatureUrl]);
+    const resolvedStampUrl = useMemo(() => resolveStorageImageUrl(reciterStampUrl), [reciterStampUrl]);
 
     // === Mojaz brand palette (matches admin header) ===
     const ink = "#1a1d2e";
