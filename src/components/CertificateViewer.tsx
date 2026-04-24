@@ -388,10 +388,10 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       >
                         <p
                           style={{
-                            fontSize: L ? "9px" : "7px",
+                            fontSize: L ? "12px" : "9px",
                             color: muted,
-                            margin: "0 0 3px 0",
-                            letterSpacing: "1.2px",
+                            margin: "0 0 5px 0",
+                            letterSpacing: "1.4px",
                             fontWeight: 700,
                           }}
                         >
@@ -399,8 +399,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         </p>
                         <p
                           style={{
-                            fontSize: L ? "13px" : "11px",
-                            fontWeight: 700,
+                            fontSize: L ? "18px" : "13px",
+                            fontWeight: 800,
                             color: tealDark,
                             margin: 0,
                             lineHeight: 1.25,
