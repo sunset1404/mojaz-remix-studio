@@ -212,11 +212,11 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   </h1>
                   <p
                     style={{
-                      fontSize: L ? "12px" : "11px",
-                      color: "rgba(255,255,255,0.85)",
-                      margin: L ? "8px 0 0" : "5px 0 0",
+                      fontSize: L ? "17px" : "14px",
+                      color: "rgba(255,255,255,0.92)",
+                      margin: L ? "10px 0 0" : "6px 0 0",
                       lineHeight: 1.5,
-                      fontWeight: 400,
+                      fontWeight: 600,
                     }}
                   >
                     {isIjaza
@@ -225,19 +225,16 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   </p>
                 </div>
 
-                {/* Mojaz logo (small, top-left in RTL means absolute left) */}
-                <div style={{ flexShrink: 0 }}>
+                {/* Mojaz logo (large, no circle/border) */}
+                <div style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
                   <img
                     src={logoMojaz}
                     alt="مجاز"
                     style={{
-                      height: L ? "48px" : "42px",
-                      width: L ? "48px" : "42px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: `2px solid ${goldLight}`,
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                      background: "#fff",
+                      height: L ? "115px" : "95px",
+                      width: "auto",
+                      objectFit: "contain",
+                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))",
                     }}
                   />
                 </div>
