@@ -255,67 +255,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                 </div>
               ))}
 
-              {/* ===== Title card (white) ===== */}
-              <div
-                style={{
-                  position: "relative",
-                  zIndex: 2,
-                  background: "#ffffff",
-                  borderRadius: L ? "18px" : "14px",
-                  padding: L ? "22px 24px 20px" : "14px 16px 12px",
-                  boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
-                  border: `1px solid #eef0f3`,
-                  textAlign: "center",
-                }}
-              >
-                {/* Top gold thin accent */}
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: L ? "60px" : "40px",
-                    height: "3px",
-                    background: `linear-gradient(90deg, ${gold}, ${goldLight}, ${gold})`,
-                    borderRadius: "0 0 4px 4px",
-                  }}
-                />
-
-                <p
-                  style={{
-                    fontSize: L ? "10px" : "7.5px",
-                    color: gold,
-                    letterSpacing: L ? "7px" : "4px",
-                    margin: "0 0 6px 0",
-                    fontWeight: 700,
-                  }}
-                >
-                  {isIjaza ? "إجــازة قــرآنيــة" : "شهــادة تقديــر"}
-                </p>
-                <h2
-                  style={{
-                    fontSize: L ? "32px" : "20px",
-                    fontWeight: 700,
-                    color: tealDark,
-                    margin: 0,
-                    lineHeight: 1.25,
-                    fontFamily: "'Amiri', 'Cairo', serif",
-                    letterSpacing: "-0.3px",
-                  }}
-                >
-                  {cert.title}
-                </h2>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginTop: L ? "8px" : "5px" }}>
-                  <div style={{ width: L ? "60px" : "32px", height: "1px", background: `linear-gradient(90deg, transparent, ${gold})` }} />
-                  <svg width={L ? 14 : 10} height={L ? 14 : 10} viewBox="0 0 18 18" fill="none">
-                    <path d="M9 0 L11 7 L18 9 L11 11 L9 18 L7 11 L0 9 L7 7 Z" fill={gold} />
-                  </svg>
-                  <div style={{ width: L ? "60px" : "32px", height: "1px", background: `linear-gradient(90deg, ${gold}, transparent)` }} />
-                </div>
-              </div>
-
-              {/* ===== Details card (white grid) ===== */}
+              {/* ===== Combined Title + Details card (white) ===== */}
               {(() => {
                 const items = [
                   { label: "الطالب/ة", value: cert.student_name, icon: "user" },
@@ -331,14 +271,71 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       zIndex: 2,
                       background: "#ffffff",
                       borderRadius: L ? "18px" : "14px",
-                      padding: L ? "16px 20px" : "10px 12px",
+                      padding: L ? "18px 24px 14px" : "12px 14px 10px",
                       boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
                       border: `1px solid #eef0f3`,
-                      display: "grid",
-                      gridTemplateColumns: `repeat(${items.length}, 1fr)`,
-                      gap: L ? "12px" : "6px",
                     }}
                   >
+                    {/* Top gold thin accent */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        width: L ? "60px" : "40px",
+                        height: "3px",
+                        background: `linear-gradient(90deg, ${gold}, ${goldLight}, ${gold})`,
+                        borderRadius: "0 0 4px 4px",
+                      }}
+                    />
+
+                    {/* Title block */}
+                    <div style={{ textAlign: "center", marginBottom: L ? "12px" : "8px" }}>
+                      <p
+                        style={{
+                          fontSize: L ? "9px" : "7px",
+                          color: gold,
+                          letterSpacing: L ? "6px" : "4px",
+                          margin: "0 0 4px 0",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {isIjaza ? "إجــازة قــرآنيــة" : "شهــادة تقديــر"}
+                      </p>
+                      <h2
+                        style={{
+                          fontSize: L ? "26px" : "18px",
+                          fontWeight: 700,
+                          color: tealDark,
+                          margin: 0,
+                          lineHeight: 1.2,
+                          fontFamily: "'Amiri', 'Cairo', serif",
+                          letterSpacing: "-0.3px",
+                        }}
+                      >
+                        {cert.title}
+                      </h2>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: L ? "6px" : "4px" }}>
+                        <div style={{ width: L ? "50px" : "28px", height: "1px", background: `linear-gradient(90deg, transparent, ${gold})` }} />
+                        <svg width={L ? 11 : 8} height={L ? 11 : 8} viewBox="0 0 18 18" fill="none">
+                          <path d="M9 0 L11 7 L18 9 L11 11 L9 18 L7 11 L0 9 L7 7 Z" fill={gold} />
+                        </svg>
+                        <div style={{ width: L ? "50px" : "28px", height: "1px", background: `linear-gradient(90deg, ${gold}, transparent)` }} />
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div style={{ height: "1px", background: `linear-gradient(90deg, transparent, ${gold}25, transparent)`, marginBottom: L ? "12px" : "8px" }} />
+
+                    {/* Details grid */}
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: `repeat(${items.length}, 1fr)`,
+                        gap: L ? "12px" : "6px",
+                      }}
+                    >
                     {items.map((item, idx) => (
                       <div
                         key={item.label}
@@ -361,7 +358,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         </p>
                         <p
                           style={{
-                            fontSize: L ? "16px" : "11px",
+                            fontSize: L ? "15px" : "11px",
                             fontWeight: 700,
                             color: tealDark,
                             margin: 0,
@@ -372,6 +369,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         </p>
                       </div>
                     ))}
+                    </div>
                   </div>
                 );
               })()}
