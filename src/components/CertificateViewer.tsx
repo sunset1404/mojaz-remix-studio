@@ -255,7 +255,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   }}
                 >
                   <img
-                    src={logoMojaz}
+                    src={`${window.location.origin}/src/assets/logo-mojaz-alpha.png`}
                     alt="مجاز"
                     style={{
                       height: L ? "170px" : "140px",
