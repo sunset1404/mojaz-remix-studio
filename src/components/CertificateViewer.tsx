@@ -526,7 +526,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                           fontWeight: 700,
                         }}
                       >
-                        العنوان
+                        القراءة
                       </p>
                       <h2
                         style={{
