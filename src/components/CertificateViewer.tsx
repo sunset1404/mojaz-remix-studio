@@ -126,8 +126,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                 {/* Gold icon badge */}
                 <div
                   style={{
-                    width: L ? "72px" : "50px",
-                    height: L ? "72px" : "50px",
+                    width: L ? "56px" : "50px",
+                    height: L ? "56px" : "50px",
                     borderRadius: "50%",
                     background: `linear-gradient(135deg, ${goldLight}, ${gold})`,
                     display: "flex",
@@ -137,7 +137,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     flexShrink: 0,
                   }}
                 >
-                  <svg width={L ? 38 : 26} height={L ? 38 : 26} viewBox="0 0 24 24" fill="none">
+                  <svg width={L ? 30 : 26} height={L ? 30 : 26} viewBox="0 0 24 24" fill="none">
                     {isIjaza ? (
                       <>
                         <path d="M12 2 L2 7 L12 12 L22 7 Z" fill="#fff" />
@@ -158,7 +158,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                 <div style={{ textAlign: "right", flex: 1, minWidth: 0 }}>
                   <h1
                     style={{
-                      fontSize: L ? "44px" : "26px",
+                      fontSize: L ? "32px" : "26px",
                       fontWeight: 800,
                       color: "#fff",
                       margin: 0,
@@ -171,7 +171,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   </h1>
                   <p
                     style={{
-                      fontSize: L ? "15px" : "11px",
+                      fontSize: L ? "12px" : "11px",
                       color: "rgba(255,255,255,0.85)",
                       margin: L ? "8px 0 0" : "5px 0 0",
                       lineHeight: 1.5,
@@ -190,8 +190,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     src={logoMojaz}
                     alt="مجاز"
                     style={{
-                      height: L ? "60px" : "42px",
-                      width: L ? "60px" : "42px",
+                      height: L ? "48px" : "42px",
+                      width: L ? "48px" : "42px",
                       borderRadius: "50%",
                       objectFit: "cover",
                       border: `2px solid ${goldLight}`,
