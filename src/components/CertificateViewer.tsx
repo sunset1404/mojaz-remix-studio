@@ -91,6 +91,7 @@ const useRenderableImageSrc = (value?: string | null) => {
 };
 
 const HEADER_LOGO_SRC = "/eqraa-header-logo-transparent-v5.png?v=5";
+const ASSOCIATION_LOGO_SRC = "/iqra-association-logo.jpg";
 
 const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
   ({ cert, reciterSignatureUrl, reciterStampUrl, renderWidth = 920, renderHeight }, ref) => {
