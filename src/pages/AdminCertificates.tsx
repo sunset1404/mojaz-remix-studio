@@ -390,14 +390,26 @@ const AdminCertificates = () => {
     }
   };
 
+  // Always pull the freshest certification text from reciter_certifications
+  // so edits made in the reciters page are reflected immediately on download/preview.
+  const withFreshText = (cert: CertificateRow): CertificateRow => {
+    if (!cert.reciter_id) return cert;
+    const fresh = findCertText(cert.reciter_id, cert.type, cert.riwaya || "");
+    if (fresh && fresh !== cert.certificate_text) {
+      return { ...cert, certificate_text: fresh };
+    }
+    return cert;
+  };
+
   const handleDownload = async (cert: CertificateRow) => {
     setDownloadingId(cert.id);
     try {
-      const blob = await renderCertificatePdfBlob(cert);
+      const liveCert = withFreshText(cert);
+      const blob = await renderCertificatePdfBlob(liveCert);
       const pdfUrl = URL.createObjectURL(blob);
 
-      const safeName = (cert.student_name || "certificate").replace(/[^\p{L}\p{N}\s_-]/gu, "").trim() || "certificate";
-      const typeLabel = cert.type === "ijaza" ? "إجازة" : "شهادة";
+      const safeName = (liveCert.student_name || "certificate").replace(/[^\p{L}\p{N}\s_-]/gu, "").trim() || "certificate";
+      const typeLabel = liveCert.type === "ijaza" ? "إجازة" : "شهادة";
 
       const link = document.createElement("a");
       link.href = pdfUrl;
@@ -418,18 +430,19 @@ const AdminCertificates = () => {
 
   // Render the certificate as PDF, upload to storage, and return public URL
   const renderAndUploadPdf = async (cert: CertificateRow): Promise<{ url: string; filename: string }> => {
-    const blob = await renderCertificatePdfBlob(cert);
+    const liveCert = withFreshText(cert);
+    const blob = await renderCertificatePdfBlob(liveCert);
 
-    const typeLabel = cert.type === "ijaza" ? "ijaza" : "khatm";
-    const filename = `${typeLabel}-${cert.id}.pdf`;
-    const path = `${cert.user_id}/${filename}`;
+    const typeLabel = liveCert.type === "ijaza" ? "ijaza" : "khatm";
+    const filename = `${typeLabel}-${liveCert.id}.pdf`;
+    const path = `${liveCert.user_id}/${filename}`;
     const { error: upErr } = await supabase.storage.from("certificates").upload(path, blob, {
       contentType: "application/pdf",
       upsert: true,
     });
     if (upErr) throw upErr;
     const { data: pub } = supabase.storage.from("certificates").getPublicUrl(path);
-    const arabicFilename = (cert.type === "ijaza" ? "إجازة" : "شهادة") + `-${cert.student_name || ""}.pdf`;
+    const arabicFilename = (liveCert.type === "ijaza" ? "إجازة" : "شهادة") + `-${liveCert.student_name || ""}.pdf`;
     return { url: pub.publicUrl, filename: arabicFilename };
   };
 
@@ -437,7 +450,7 @@ const AdminCertificates = () => {
     setPreparingWaId(cert.id);
     try {
       const { url, filename } = await renderAndUploadPdf(cert);
-      setWaCert(cert);
+      setWaCert(withFreshText(cert));
       setWaPdfUrl(url);
       setWaPdfFilename(filename);
       setWaOpen(true);
@@ -833,7 +846,7 @@ const AdminCertificates = () => {
           {viewCert && (
             <>
               <CertificateViewer
-                cert={viewCert}
+                cert={withFreshText(viewCert)}
                 reciterSignatureUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.signature_url : null}
                 reciterStampUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.stamp_url : null}
               />
