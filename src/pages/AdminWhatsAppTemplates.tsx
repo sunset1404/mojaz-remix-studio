@@ -11,7 +11,84 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Clock, RefreshCw, Plus, Trash2, MessageCircle, Phone } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, RefreshCw, Plus, Trash2, MessageCircle, Phone, Sparkles } from "lucide-react";
+
+// قوالب جاهزة معتمدة لحالات الطلاب الأربعة
+// ملاحظة: نستخدم تصنيف UTILITY لأنها رسائل خدمية مرتبطة بحالة الطالب (مسموح بها من Meta)
+const PRESET_TEMPLATES: Array<{
+  key: string;
+  name: string;
+  category: string;
+  language: string;
+  description: string;
+  components: any[];
+  sampleVars: string[];
+}> = [
+  {
+    key: "student_pending_admission_test",
+    name: "student_pending_admission_test",
+    category: "UTILITY",
+    language: "ar",
+    description: "بانتظار اختبار القبول — إشعار الطالب بموعد الاختبار",
+    sampleVars: ["محمد أحمد", "الأحد 5 مايو 2025", "الساعة 8 مساءً"],
+    components: [
+      { type: "HEADER", format: "TEXT", text: "اختبار القبول" },
+      {
+        type: "BODY",
+        text: "السلام عليكم {{1}}،\nنود إعلامك بأنه تم تحديد موعد اختبار القبول الخاص بك في منصة مجاز.\n\n📅 التاريخ: {{2}}\n⏰ الوقت: {{3}}\n\nنرجو منك الالتزام بالموعد والاستعداد جيداً. وفقك الله.",
+      },
+      { type: "FOOTER", text: "منصة مجاز للقرآن الكريم" },
+    ],
+  },
+  {
+    key: "student_assigned_to_reciter",
+    name: "student_assigned_to_reciter",
+    category: "UTILITY",
+    language: "ar",
+    description: "تم التحويل لمقرئ — بيانات المقرئ وجدول المواعيد",
+    sampleVars: ["محمد أحمد", "الشيخ عبدالله السالم", "+966500000000", "الأحد والثلاثاء", "بعد المغرب"],
+    components: [
+      { type: "HEADER", format: "TEXT", text: "تم تعيين مقرئك" },
+      {
+        type: "BODY",
+        text: "مبارك عليك يا {{1}} 🌿\nتم تحويلك إلى المقرئ التالي:\n\n👤 المقرئ: {{2}}\n📞 رقم التواصل: {{3}}\n📅 أيام الإقراء: {{4}}\n⏰ وقت الجلسة: {{5}}\n\nنرجو التواصل مع المقرئ لتأكيد الموعد الأول. وفقك الله.",
+      },
+      { type: "FOOTER", text: "منصة مجاز للقرآن الكريم" },
+    ],
+  },
+  {
+    key: "student_recitation_completed",
+    name: "student_recitation_completed",
+    category: "UTILITY",
+    language: "ar",
+    description: "انتهاء الإقراء — تهنئة بإنهاء جلسات الإقراء",
+    sampleVars: ["محمد أحمد", "حفص عن عاصم", "30"],
+    components: [
+      { type: "HEADER", format: "TEXT", text: "أتممتَ الإقراء بحمد الله" },
+      {
+        type: "BODY",
+        text: "تهانينا يا {{1}} 🎉\nبفضل الله، أتممت جلسات الإقراء بنجاح برواية {{2}}، وأنهيت {{3}} جزءاً.\n\nالخطوة التالية: التقدّم لاختبار الاستحقاق للحصول على الإجازة بإذن الله.\nسنوافيك بموعد الاختبار قريباً.",
+      },
+      { type: "FOOTER", text: "منصة مجاز للقرآن الكريم" },
+    ],
+  },
+  {
+    key: "student_eligibility_exam",
+    name: "student_eligibility_exam",
+    category: "UTILITY",
+    language: "ar",
+    description: "اختبار الاستحقاق — موعد ولجنة الاختبار المقترح",
+    sampleVars: ["محمد أحمد", "الجمعة 10 مايو 2025", "الساعة 9 صباحاً", "د. أحمد المقرئ، د. سالم القارئ"],
+    components: [
+      { type: "HEADER", format: "TEXT", text: "اختبار الاستحقاق" },
+      {
+        type: "BODY",
+        text: "السلام عليكم {{1}}،\nتم اقتراح موعد لاختبار الاستحقاق الخاص بك:\n\n📅 التاريخ: {{2}}\n⏰ الوقت: {{3}}\n👥 لجنة الاختبار: {{4}}\n\nنرجو تأكيد الحضور والاستعداد للاختبار. نسأل الله لك التوفيق.",
+      },
+      { type: "FOOTER", text: "منصة مجاز للقرآن الكريم" },
+    ],
+  },
+];
 
 interface MetaTemplate {
   id: string;
@@ -64,6 +141,7 @@ export default function AdminWhatsAppTemplates() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [presetCreating, setPresetCreating] = useState(false);
 
   // Create form
   const [name, setName] = useState("");
@@ -209,6 +287,51 @@ export default function AdminWhatsAppTemplates() {
     loadAll();
   };
 
+  const handleCreatePresets = async () => {
+    setPresetCreating(true);
+    const existing = new Set(templates.map(t => t.name));
+    let created = 0;
+    let skipped = 0;
+    const failed: string[] = [];
+
+    for (const preset of PRESET_TEMPLATES) {
+      if (existing.has(preset.name)) {
+        skipped++;
+        continue;
+      }
+      // أضف example للمتغيرات في BODY
+      const components = preset.components.map((c) => {
+        if (c.type === "BODY") {
+          const varCount = (c.text.match(/\{\{(\d+)\}\}/g) || []).length
+            ? new Set((c.text.match(/\{\{(\d+)\}\}/g) || []).map((v: string) => v.replace(/[^0-9]/g, ""))).size
+            : 0;
+          if (varCount > 0) {
+            return {
+              ...c,
+              example: { body_text: [preset.sampleVars.slice(0, varCount)] },
+            };
+          }
+        }
+        return c;
+      });
+
+      const result = await callFunction("create", {
+        method: "POST",
+        body: { name: preset.name, category: preset.category, language: preset.language, components },
+      });
+      if (result.error) {
+        failed.push(`${preset.description}: ${result.error}`);
+      } else {
+        created++;
+      }
+    }
+
+    setPresetCreating(false);
+    if (created > 0) toast.success(`تم إرسال ${created} قالب لاعتماد ميتا`);
+    if (skipped > 0) toast.info(`تم تخطي ${skipped} قالب موجود مسبقاً`);
+    if (failed.length > 0) toast.error(`فشل ${failed.length} قالب: ${failed[0]}`);
+    loadAll();
+  };
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -270,6 +393,10 @@ export default function AdminWhatsAppTemplates() {
             <p className="text-xs text-muted-foreground">القوالب المسجلة في حسابك على Meta</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCreatePresets} disabled={presetCreating || loading}>
+              <Sparkles className="w-4 h-4" />
+              {presetCreating ? "جاري الإنشاء..." : "إنشاء قوالب حالات الطلاب (4)"}
+            </Button>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
