@@ -209,40 +209,6 @@ export default function AdminWhatsAppTemplates() {
     loadAll();
   };
 
-  const handleCreatePreset = async () => {
-    const presetName = "certificate_notification";
-    const exists = templates.find(t => t.name === presetName);
-    if (exists) {
-      toast.info(`القالب "${presetName}" موجود بالفعل (الحالة: ${STATUS_CONFIG[exists.status]?.label || exists.status})`);
-      return;
-    }
-    const components = [
-      { type: "HEADER", format: "DOCUMENT" },
-      {
-        type: "BODY",
-        text: "إشعار إصدار إجازة قرآنية 🎓📖\n\nالمجاز الكريم: {{1}}\nتحية طيبة وبعد،\n\nيسعدنا في منصة مُجاز لإقراء القرآن الكريم أن نبارك لك تتويج مسيرتك مع كتاب الله، حيث تم بحمد الله وتوفيقه إصدار إجازتك القرآنية برواية {{2}} باسمكم.\n\nهنيئاً لك هذا الحصاد المبارك واتصال سندك. نسأل الله العلي القدير أن ينفع بك، ويزيدك علماً وفضلاً، وأن يرزقك التوفيق والسداد في الدارين. 🌟\n\nمع أطيب الأمنيات بدوام التميز،\nفريق منصة مُجاز\nإحدى منصات وتطبيقات جمعية اقرأ للقرآن الكريم بمكة المكرمة",
-        example: { body_text: [["محمد أحمد", "حفص عن عاصم"]] },
-      },
-    ];
-
-    setCreating(true);
-    try {
-      const result = await callFunction("create", {
-        method: "POST",
-        body: { name: presetName, category: "UTILITY", language: "ar", components },
-      });
-
-      if (result.error) {
-        toast.error(getCreateErrorMessage(result));
-        return;
-      }
-
-      toast.success("تم إرسال قالب الشهادات لاعتماد ميتا. الحالة: قيد المراجعة");
-      loadAll();
-    } finally {
-      setCreating(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
