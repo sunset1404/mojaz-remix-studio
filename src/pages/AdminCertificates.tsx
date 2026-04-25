@@ -390,15 +390,23 @@ const AdminCertificates = () => {
     }
   };
 
+  // Replace dotted-line placeholders (e.g. "........." or "_______") with the student's full name.
+  // Matches Arabic dot leaders, ASCII dots, underscores, and tatweel chains of 3+ characters.
+  const fillPlaceholders = (text: string, studentName: string | null | undefined): string => {
+    if (!text) return text;
+    const name = (studentName || "").trim();
+    if (!name) return text;
+    // Matches sequences of 3+ of: . ، · • ـ _ – — or Arabic ellipsis, optionally with spaces between them
+    return text.replace(/[.\u2024\u2025\u2026·•_\u0640\-–—]{3,}|(?:[.\u2024\u2025\u2026·•_\u0640\-–—]\s?){3,}/g, name);
+  };
+
   // Always pull the freshest certification text from reciter_certifications
   // so edits made in the reciters page are reflected immediately on download/preview.
   const withFreshText = (cert: CertificateRow): CertificateRow => {
-    if (!cert.reciter_id) return cert;
+    if (!cert.reciter_id) return { ...cert, certificate_text: fillPlaceholders(cert.certificate_text || "", cert.student_name) };
     const fresh = findCertText(cert.reciter_id, cert.type, cert.riwaya || "");
-    if (fresh && fresh !== cert.certificate_text) {
-      return { ...cert, certificate_text: fresh };
-    }
-    return cert;
+    const base = fresh || cert.certificate_text || "";
+    return { ...cert, certificate_text: fillPlaceholders(base, cert.student_name) };
   };
 
   const handleDownload = async (cert: CertificateRow) => {
