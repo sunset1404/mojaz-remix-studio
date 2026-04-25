@@ -846,7 +846,7 @@ const AdminCertificates = () => {
           {viewCert && (
             <>
               <CertificateViewer
-                cert={viewCert}
+                cert={withFreshText(viewCert)}
                 reciterSignatureUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.signature_url : null}
                 reciterStampUrl={viewCert.reciter_id ? reciters.find(r => r.user_id === viewCert.reciter_id)?.stamp_url : null}
               />
