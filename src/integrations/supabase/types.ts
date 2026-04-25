@@ -1375,6 +1375,86 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_message_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          phone: string | null
+          wamid: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          phone?: string | null
+          wamid?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          phone?: string | null
+          wamid?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_message_recipients: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          log_id: string | null
+          phone: string
+          read_at: string | null
+          replied_at: string | null
+          sent_at: string
+          status: string
+          wamid: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          log_id?: string | null
+          phone: string
+          read_at?: string | null
+          replied_at?: string | null
+          sent_at?: string
+          status?: string
+          wamid?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          log_id?: string | null
+          phone?: string
+          read_at?: string | null
+          replied_at?: string | null
+          sent_at?: string
+          status?: string
+          wamid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_message_recipients_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_manual_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
