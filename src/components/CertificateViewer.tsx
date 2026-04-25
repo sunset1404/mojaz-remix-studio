@@ -1,6 +1,7 @@
 import { QRCodeSVG } from "qrcode.react";
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import eqraaAssociationLogo from "@/assets/eqraa-association-logo.jpg";
 
 interface CertificateViewerProps {
   cert: {
@@ -97,6 +98,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
     const isIjaza = cert.type === "ijaza";
     const verificationUrl = `${window.location.origin}/verify/${cert.id}`;
     const resolvedHeaderLogoSrc = useRenderableImageSrc(HEADER_LOGO_SRC);
+    const resolvedAssociationLogo = useRenderableImageSrc(eqraaAssociationLogo);
     const resolvedSignatureUrl = useRenderableImageSrc(reciterSignatureUrl);
     const resolvedStampUrl = useRenderableImageSrc(reciterStampUrl);
 
@@ -749,19 +751,21 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     }}
                   />
 
-                  {/* Association logo (right side in RTL) */}
-                  <img
-                    src="/eqraa-association-logo.jpg"
-                    alt="جمعية إقراء"
-                    crossOrigin="anonymous"
-                    style={{
-                      height: L ? "90px" : "72px",
-                      width: L ? "90px" : "72px",
-                      objectFit: "contain",
-                      flexShrink: 0,
-                    }}
-                  />
-
+                  {/* Association logo (right side in RTL — first child appears on the right) */}
+                  {resolvedAssociationLogo && (
+                    <img
+                      src={resolvedAssociationLogo}
+                      alt="جمعية إقراء"
+                      crossOrigin="anonymous"
+                      style={{
+                        height: L ? "110px" : "88px",
+                        width: L ? "110px" : "88px",
+                        objectFit: "contain",
+                        flexShrink: 0,
+                        display: "block",
+                      }}
+                    />
+                  )}
                   {/* Text block */}
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, minWidth: 0 }}>
                     <p
