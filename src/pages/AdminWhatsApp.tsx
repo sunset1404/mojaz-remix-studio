@@ -157,8 +157,24 @@ const AdminWhatsApp = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [templateVars, setTemplateVars] = useState<string[]>([]);
 
-  useEffect(() => { fetchAutoMessages(); fetchMetaTemplates(); }, []);
+  // Sent messages history
+  const [sentLogs, setSentLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
+
+  useEffect(() => { fetchAutoMessages(); fetchMetaTemplates(); fetchSentLogs(); }, []);
   useEffect(() => { computeTargets(); }, [targetGroup, filters]);
+
+  const fetchSentLogs = async () => {
+    setLoadingLogs(true);
+    const { data } = await (supabase as any)
+      .from("whatsapp_manual_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setSentLogs(data || []);
+    setLoadingLogs(false);
+  };
 
   // ── Meta Templates ──
   const fetchMetaTemplates = async () => {
