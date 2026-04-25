@@ -628,7 +628,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
                     border: `1px solid #eef0f3`,
                     display: "flex",
-                    alignItems: "center",
+                    alignItems: "flex-start",
                     overflow: "hidden",
                   }}
                 >
