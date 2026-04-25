@@ -728,12 +728,11 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     padding: L ? "14px 22px" : "12px 14px",
                     boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
                     border: `1px solid #eef0f3`,
-                    textAlign: "center",
                     display: "flex",
                     flexDirection: "row",
                     justifyContent: "center",
                     alignItems: "center",
-                    gap: L ? "16px" : "12px",
+                    gap: L ? "22px" : "16px",
                     position: "relative",
                   }}
                 >
@@ -751,23 +750,24 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     }}
                   />
 
-                  {/* Association logo (right side in RTL — first child appears on the right) */}
+                  {/* Association logo (RTL: first DOM child appears on the right) */}
                   {resolvedAssociationLogo && (
                     <img
                       src={resolvedAssociationLogo}
                       alt="جمعية إقراء"
                       crossOrigin="anonymous"
                       style={{
-                        height: L ? "110px" : "88px",
-                        width: L ? "110px" : "88px",
+                        height: L ? "165px" : "130px",
+                        width: L ? "165px" : "130px",
                         objectFit: "contain",
                         flexShrink: 0,
                         display: "block",
                       }}
                     />
                   )}
+
                   {/* Text block */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", flex: 1, minWidth: 0 }}>
                     <p
                       style={{
                         fontSize: L ? "18px" : "15px",
@@ -781,7 +781,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     </p>
                     <p
                       style={{
-                        fontSize: L ? "24px" : "18px",
+                        fontSize: L ? "26px" : "19px",
                         fontWeight: 800,
                         color: tealDark,
                         margin: 0,
