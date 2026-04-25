@@ -132,35 +132,50 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
       const el = textRef.current;
       if (!box || !el) return;
 
-      // Binary-search the largest font-size where text fits inside its container
       const minSize = (L || forcePortraitFill) ? 9 : 7;
       const maxSize = (L || forcePortraitFill) ? 36 : 24;
 
-      let lo = minSize;
-      let hi = maxSize;
-      let best = lo;
+      const recompute = () => {
+        let lo = minSize;
+        let hi = maxSize;
+        let best = lo;
 
-      const fits = (size: number) => {
-        el.style.fontSize = `${size}px`;
-        // Allow layout to settle for this size
-        return el.scrollHeight <= box.clientHeight && el.scrollWidth <= box.clientWidth;
+        const fits = (size: number) => {
+          el.style.fontSize = `${size}px`;
+          // small tolerance to avoid sub-pixel overflow
+          return el.scrollHeight <= box.clientHeight - 1 && el.scrollWidth <= box.clientWidth - 1;
+        };
+
+        // First, ensure min fits — if not, use min anyway
+        if (!fits(minSize)) {
+          el.style.fontSize = `${minSize}px`;
+          setAutoFontSize(minSize);
+          return;
+        }
+
+        for (let i = 0; i < 16; i++) {
+          const mid = (lo + hi) / 2;
+          if (fits(mid)) {
+            best = mid;
+            lo = mid;
+          } else {
+            hi = mid;
+          }
+          if (hi - lo < 0.2) break;
+        }
+
+        // Floor slightly to guarantee no overflow from sub-pixel rounding
+        const safe = Math.floor(best * 10) / 10;
+        el.style.fontSize = `${safe}px`;
+        setAutoFontSize(safe);
       };
 
-      // 12 iterations is more than enough for ~0.003px precision
-      for (let i = 0; i < 14; i++) {
-        const mid = (lo + hi) / 2;
-        if (fits(mid)) {
-          best = mid;
-          lo = mid;
-        } else {
-          hi = mid;
-        }
-        if (hi - lo < 0.25) break;
-      }
+      recompute();
 
-      el.style.fontSize = `${best}px`;
-      setAutoFontSize(best);
-    }, [cert.certificate_text, L, W, H]);
+      const ro = new ResizeObserver(() => recompute());
+      ro.observe(box);
+      return () => ro.disconnect();
+    }, [cert.certificate_text, L, forcePortraitFill, W, H]);
 
     return (
       <div className="w-full overflow-x-auto" dir="rtl">
