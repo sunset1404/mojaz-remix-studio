@@ -732,7 +732,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     flexDirection: "row",
                     justifyContent: "center",
                     alignItems: "center",
-                    gap: L ? "22px" : "16px",
+                    gap: L ? "4px" : "2px",
                     position: "relative",
                   }}
                 >
