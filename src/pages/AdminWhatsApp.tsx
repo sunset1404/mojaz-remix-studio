@@ -8,7 +8,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   MessageCircle, Send, Users, GraduationCap, Globe, Filter,
   CheckCircle2, ChevronDown, ChevronUp, X, BookOpen, Plus,
-  Loader2, Zap, Edit3, Trash2, Check, Phone, Bot, Hand
+  Loader2, Zap, Edit3, Trash2, Check, Phone, Bot, Hand,
+  BarChart3, Smartphone, Monitor, MessageSquare, Eye, Clock, Info
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
