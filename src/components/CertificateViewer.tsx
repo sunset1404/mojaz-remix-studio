@@ -671,7 +671,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     ref={textRef}
                     style={{
                       fontSize: `${autoFontSize}px`,
-                      lineHeight: L ? 1.75 : 1.85,
+                      lineHeight: L ? 1.7 : 1.8,
                       textAlign: "justify",
                       fontWeight: 400,
                       color: inkSoft,
@@ -679,6 +679,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       margin: 0,
                       width: "100%",
                       letterSpacing: "0.1px",
+                      paddingBottom: "2px",
                     }}
                   >
                     {cert.certificate_text}
