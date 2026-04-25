@@ -862,11 +862,11 @@ const AdminWhatsApp = () => {
 
                   <Button
                     onClick={handleSendManual}
-                    disabled={sending || !message.trim() || loadingTargets || targetedUsers.length === 0}
+                    disabled={sending || !selectedTemplate || templateVars.some((v) => !v.trim()) || loadingTargets || targetedUsers.length === 0}
                     className="w-full bg-green-500 hover:bg-green-600 text-white rounded-xl h-11 font-bold gap-2"
                   >
                     {sending ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" />جاري التسجيل...</>
+                      <><Loader2 className="w-4 h-4 animate-spin" />جاري الإرسال...</>
                     ) : (
                       <><Send className="w-4 h-4" />إرسال عبر واتساب</>
                     )}
