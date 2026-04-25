@@ -728,9 +728,10 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     border: `1px solid #eef0f3`,
                     textAlign: "center",
                     display: "flex",
-                    flexDirection: "column",
+                    flexDirection: "row",
                     justifyContent: "center",
                     alignItems: "center",
+                    gap: L ? "16px" : "12px",
                     position: "relative",
                   }}
                 >
@@ -747,41 +748,58 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       borderRadius: "0 0 4px 4px",
                     }}
                   />
-                  <p
+
+                  {/* Association logo (right side in RTL) */}
+                  <img
+                    src="/eqraa-association-logo.jpg"
+                    alt="جمعية إقراء"
+                    crossOrigin="anonymous"
                     style={{
-                      fontSize: L ? "18px" : "15px",
-                      margin: "6px 0 8px",
-                      color: muted,
-                      letterSpacing: "2px",
-                      fontWeight: 700,
+                      height: L ? "90px" : "72px",
+                      width: L ? "90px" : "72px",
+                      objectFit: "contain",
+                      flexShrink: 0,
                     }}
-                  >
-                    صــــادرة من
-                  </p>
-                  <p
-                    style={{
-                      fontSize: L ? "28px" : "22px",
-                      fontWeight: 800,
-                      color: tealDark,
-                      margin: 0,
-                      letterSpacing: "0.3px",
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    منصة مجاز لإقراء القرآن الكريم
-                  </p>
-                  <p
-                    style={{
-                      fontSize: L ? "17px" : "14px",
-                      marginTop: L ? "8px" : "7px",
-                      letterSpacing: "3px",
-                      color: muted,
-                      fontFamily: "'JetBrains Mono', monospace",
-                      fontWeight: 700,
-                    }}
-                  >
-                    رقم · {cert.id.slice(0, 8).toUpperCase()}
-                  </p>
+                  />
+
+                  {/* Text block */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, minWidth: 0 }}>
+                    <p
+                      style={{
+                        fontSize: L ? "18px" : "15px",
+                        margin: "6px 0 8px",
+                        color: muted,
+                        letterSpacing: "2px",
+                        fontWeight: 700,
+                      }}
+                    >
+                      صــــادرة من
+                    </p>
+                    <p
+                      style={{
+                        fontSize: L ? "24px" : "18px",
+                        fontWeight: 800,
+                        color: tealDark,
+                        margin: 0,
+                        letterSpacing: "0.3px",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      منصة مجاز التابعة لجمعية إقراء القرآن الكريم
+                    </p>
+                    <p
+                      style={{
+                        fontSize: L ? "17px" : "14px",
+                        marginTop: L ? "8px" : "7px",
+                        letterSpacing: "3px",
+                        color: muted,
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontWeight: 700,
+                      }}
+                    >
+                      رقم · {cert.id.slice(0, 8).toUpperCase()}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Signature & stamp card */}
