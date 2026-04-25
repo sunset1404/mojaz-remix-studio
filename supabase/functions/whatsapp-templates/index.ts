@@ -153,12 +153,23 @@ Deno.serve(async (req) => {
     if (action === "delete" && req.method === "DELETE") {
       const name = url.searchParams.get("name");
       if (!name) return json({ error: "name required" }, 400);
+      if (name === "hello_world") {
+        return json({
+          error: "قالب hello_world هو قالب افتراضي من Meta ولا يمكن حذفه عبر الـ API. يمكنك حذفه فقط من لوحة تحكم Meta Business Manager.",
+          reason: "META_SAMPLE_TEMPLATE_PROTECTED",
+        }, 400);
+      }
       const r = await fetch(
         `${META_API}/${WABA_ID}/message_templates?name=${encodeURIComponent(name)}`,
         { method: "DELETE", headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } }
       );
       const data = await r.json();
-      if (!r.ok) return json({ error: data.error?.message || "Failed" }, r.status);
+      if (!r.ok) {
+        return json({
+          error: data.error?.message || "فشل الحذف",
+          details: data.error,
+        }, 200);
+      }
       return json({ success: true });
     }
 
