@@ -751,19 +751,21 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     }}
                   />
 
-                  {/* Association logo (right side in RTL) */}
-                  <img
-                    src="/eqraa-association-logo.jpg"
-                    alt="جمعية إقراء"
-                    crossOrigin="anonymous"
-                    style={{
-                      height: L ? "90px" : "72px",
-                      width: L ? "90px" : "72px",
-                      objectFit: "contain",
-                      flexShrink: 0,
-                    }}
-                  />
-
+                  {/* Association logo (right side in RTL — first child appears on the right) */}
+                  {resolvedAssociationLogo && (
+                    <img
+                      src={resolvedAssociationLogo}
+                      alt="جمعية إقراء"
+                      crossOrigin="anonymous"
+                      style={{
+                        height: L ? "110px" : "88px",
+                        width: L ? "110px" : "88px",
+                        objectFit: "contain",
+                        flexShrink: 0,
+                        display: "block",
+                      }}
+                    />
+                  )}
                   {/* Text block */}
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, minWidth: 0 }}>
                     <p
