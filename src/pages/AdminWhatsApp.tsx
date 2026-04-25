@@ -140,10 +140,9 @@ const AdminWhatsApp = () => {
 
   // --- Manual Messages State ---
   const [targetGroup, setTargetGroup] = useState<TargetGroup>("all");
-  const [message, setMessage] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [sending, setSending] = useState(false);
-  const [sentResult, setSentResult] = useState<{ count: number } | null>(null);
+  const [sentResult, setSentResult] = useState<{ count: number; success: number; failed: number } | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     studentType: "all", countries: [], ijazahStatus: "all",
     gender: "all", riwaya: "all", reciterStatus: "all", reciterGender: "all",
@@ -151,8 +150,46 @@ const AdminWhatsApp = () => {
   const [targetedUsers, setTargetedUsers] = useState<{ user_id: string; phone: string }[]>([]);
   const [loadingTargets, setLoadingTargets] = useState(false);
 
-  useEffect(() => { fetchAutoMessages(); }, []);
+  // Meta templates
+  const [metaTemplates, setMetaTemplates] = useState<MetaTemplate[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [templateVars, setTemplateVars] = useState<string[]>([]);
+
+  useEffect(() => { fetchAutoMessages(); fetchMetaTemplates(); }, []);
   useEffect(() => { computeTargets(); }, [targetGroup, filters]);
+
+  // ── Meta Templates ──
+  const fetchMetaTemplates = async () => {
+    setLoadingTemplates(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("whatsapp-templates", {
+        method: "GET",
+      });
+      if (error) throw error;
+      const approved = ((data as any)?.templates || []).filter((t: MetaTemplate) => t.status === "APPROVED");
+      setMetaTemplates(approved);
+    } catch (err: any) {
+      toast.error("تعذر تحميل قوالب ميتا");
+    } finally {
+      setLoadingTemplates(false);
+    }
+  };
+
+  const currentTemplate = metaTemplates.find((t) => t.name === selectedTemplate);
+  const templateBody = currentTemplate?.components.find((c) => c.type === "BODY")?.text || "";
+  const templateHeader = currentTemplate?.components.find((c) => c.type === "HEADER");
+  const templateFooter = currentTemplate?.components.find((c) => c.type === "FOOTER")?.text || "";
+  const variableCount = (templateBody.match(/\{\{\d+\}\}/g) || []).length;
+
+  useEffect(() => {
+    setTemplateVars(Array(variableCount).fill(""));
+  }, [variableCount, selectedTemplate]);
+
+  const renderedBody = templateBody.replace(/\{\{(\d+)\}\}/g, (_, i) => {
+    const idx = Number(i) - 1;
+    return templateVars[idx] || `{{${i}}}`;
+  });
 
   // ── Auto Messages ──
   const fetchAutoMessages = async () => {
