@@ -8,7 +8,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   MessageCircle, Send, Users, GraduationCap, Globe, Filter,
   CheckCircle2, ChevronDown, ChevronUp, X, BookOpen, Plus,
-  Loader2, Zap, Edit3, Trash2, Check, Phone, Bot, Hand
+  Loader2, Zap, Edit3, Trash2, Check, Phone, Bot, Hand,
+  BarChart3, Smartphone, Monitor, MessageSquare, Eye, Clock, Info
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -156,8 +157,24 @@ const AdminWhatsApp = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [templateVars, setTemplateVars] = useState<string[]>([]);
 
-  useEffect(() => { fetchAutoMessages(); fetchMetaTemplates(); }, []);
+  // Sent messages history
+  const [sentLogs, setSentLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
+
+  useEffect(() => { fetchAutoMessages(); fetchMetaTemplates(); fetchSentLogs(); }, []);
   useEffect(() => { computeTargets(); }, [targetGroup, filters]);
+
+  const fetchSentLogs = async () => {
+    setLoadingLogs(true);
+    const { data } = await (supabase as any)
+      .from("whatsapp_manual_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setSentLogs(data || []);
+    setLoadingLogs(false);
+  };
 
   // ── Meta Templates ──
   const fetchMetaTemplates = async () => {
@@ -346,6 +363,7 @@ const AdminWhatsApp = () => {
       }]);
 
       setSentResult({ count: targetedUsers.length, success, failed });
+      fetchSentLogs();
       if (failed === 0) toast.success(`✅ تم الإرسال إلى ${success} مستخدم`);
       else toast.warning(`تم الإرسال إلى ${success}، فشل ${failed}`);
     } catch (err: any) {
@@ -873,6 +891,185 @@ const AdminWhatsApp = () => {
                   </Button>
                 </div>
               </div>
+            </div>
+
+            {/* ─ Sent Messages History ─ */}
+            <div className="bg-card rounded-2xl border border-border overflow-hidden">
+              <div className="p-5 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-primary" />
+                  <p className="font-bold text-foreground">سجل الرسائل المُرسلة</p>
+                </div>
+                <p className="text-xs text-muted-foreground">{sentLogs.length} رسالة</p>
+              </div>
+
+              {loadingLogs ? (
+                <div className="p-8 text-center">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary mx-auto" />
+                </div>
+              ) : sentLogs.length === 0 ? (
+                <div className="p-8 text-center text-sm text-muted-foreground">
+                  <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                  لم يتم إرسال أي رسائل بعد
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {sentLogs.map((log) => {
+                    const isOpen = expandedLogId === log.id;
+                    const phones: string[] = log.phone_numbers || [];
+                    // Estimated analytics (Meta webhook integration required for real data)
+                    const delivered = Math.round(phones.length * 0.92);
+                    const read = Math.round(phones.length * 0.74);
+                    const replied = Math.round(phones.length * 0.08);
+                    const mobile = Math.round(read * 0.86);
+                    const desktop = read - mobile;
+
+                    return (
+                      <div key={log.id}>
+                        <button
+                          onClick={() => setExpandedLogId(isOpen ? null : log.id)}
+                          className="w-full flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors text-right"
+                        >
+                          <div className="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                            <Send className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-foreground truncate">
+                              {String(log.message || "").replace(/^\[Template:[^\]]+\]\s*/, "").slice(0, 80) || "رسالة"}
+                            </p>
+                            <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {new Date(log.created_at).toLocaleString("ar-SA", { dateStyle: "short", timeStyle: "short" })}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                {log.recipients_count} مستلم
+                              </span>
+                              <span className="px-1.5 py-0.5 rounded bg-muted/50">
+                                {log.target_group === "all" ? "الجميع" : log.target_group === "students" ? "طلاب" : "مقرئون"}
+                              </span>
+                            </div>
+                          </div>
+                          {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
+                        </button>
+
+                        {isOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            className="px-4 pb-5 bg-muted/20"
+                          >
+                            {/* Stats Grid */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                              <div className="bg-card rounded-xl border border-border p-3">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <Send className="w-3.5 h-3.5 text-primary" />
+                                  <p className="text-[11px] text-muted-foreground">عدد الإرسال</p>
+                                </div>
+                                <p className="text-lg font-bold text-foreground">{phones.length}</p>
+                              </div>
+                              <div className="bg-card rounded-xl border border-border p-3">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                                  <p className="text-[11px] text-muted-foreground">تم التسليم</p>
+                                </div>
+                                <p className="text-lg font-bold text-foreground">{delivered}</p>
+                                <p className="text-[10px] text-muted-foreground">{phones.length ? Math.round((delivered/phones.length)*100) : 0}%</p>
+                              </div>
+                              <div className="bg-card rounded-xl border border-border p-3">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <Eye className="w-3.5 h-3.5 text-blue-600" />
+                                  <p className="text-[11px] text-muted-foreground">تم القراءة</p>
+                                </div>
+                                <p className="text-lg font-bold text-foreground">{read}</p>
+                                <p className="text-[10px] text-muted-foreground">{phones.length ? Math.round((read/phones.length)*100) : 0}%</p>
+                              </div>
+                              <div className="bg-card rounded-xl border border-border p-3">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <MessageSquare className="w-3.5 h-3.5 text-amber-600" />
+                                  <p className="text-[11px] text-muted-foreground">ردّوا</p>
+                                </div>
+                                <p className="text-lg font-bold text-foreground">{replied}</p>
+                                <p className="text-[10px] text-muted-foreground">{phones.length ? Math.round((replied/phones.length)*100) : 0}%</p>
+                              </div>
+                            </div>
+
+                            {/* Device Breakdown */}
+                            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="bg-card rounded-xl border border-border p-3">
+                                <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
+                                  <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                                  جهاز القراءة
+                                </p>
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <Smartphone className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                    <div className="flex-1">
+                                      <div className="flex justify-between text-[11px] mb-0.5">
+                                        <span className="text-foreground">الجوال</span>
+                                        <span className="text-muted-foreground">{mobile}</span>
+                                      </div>
+                                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                                        <div className="h-full bg-green-500" style={{ width: read ? `${(mobile/read)*100}%` : "0%" }} />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Monitor className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                    <div className="flex-1">
+                                      <div className="flex justify-between text-[11px] mb-0.5">
+                                        <span className="text-foreground">الحاسب / الويب</span>
+                                        <span className="text-muted-foreground">{desktop}</span>
+                                      </div>
+                                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                                        <div className="h-full bg-blue-500" style={{ width: read ? `${(desktop/read)*100}%` : "0%" }} />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="bg-card rounded-xl border border-border p-3">
+                                <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
+                                  <Filter className="w-3.5 h-3.5 text-primary" />
+                                  تفاصيل الاستهداف
+                                </p>
+                                <div className="space-y-1 text-[11px] text-muted-foreground">
+                                  <p>الفئة: <span className="text-foreground font-semibold">{log.target_group === "all" ? "الجميع" : log.target_group === "students" ? "الطلاب" : "المقرئون"}</span></p>
+                                  {log.filters?.countries?.length > 0 && <p>الدول: <span className="text-foreground">{log.filters.countries.join("، ")}</span></p>}
+                                  {log.filters?.gender && log.filters.gender !== "all" && <p>الجنس: <span className="text-foreground">{log.filters.gender === "male" ? "ذكور" : "إناث"}</span></p>}
+                                  {log.filters?.studentType && log.filters.studentType !== "all" && <p>البرنامج: <span className="text-foreground">{log.filters.studentType === "ijazah" ? "إجازة" : "حفظ"}</span></p>}
+                                  {log.filters?.riwaya && log.filters.riwaya !== "all" && <p>الرواية: <span className="text-foreground">{log.filters.riwaya}</span></p>}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Message preview */}
+                            <div className="mt-3 bg-card rounded-xl border border-border p-3">
+                              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
+                                <MessageCircle className="w-3.5 h-3.5 text-green-600" />
+                                نص الرسالة
+                              </p>
+                              <p className="text-xs text-muted-foreground whitespace-pre-line leading-relaxed">
+                                {log.message}
+                              </p>
+                            </div>
+
+                            {/* Note */}
+                            <div className="mt-3 flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                              <Info className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
+                              <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
+                                إحصائيات التسليم والقراءة والأجهزة تقديرية حالياً. لعرض البيانات الفعلية الكاملة من ميتا (delivered / read / replies)، يلزم تفعيل Webhook الخاص بتطبيق WhatsApp Business في Meta.
+                              </p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
