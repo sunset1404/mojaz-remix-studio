@@ -615,57 +615,98 @@ const AdminWhatsApp = () => {
               {/* ─ Compose ─ */}
               <div className="lg:col-span-3 space-y-4">
 
-                {/* Quick Templates */}
-                <div className="bg-card rounded-2xl border border-border p-5">
-                  <p className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                {/* Template Selector */}
+                <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
+                  <p className="text-sm font-bold text-foreground flex items-center gap-2">
                     <Zap className="w-4 h-4 text-primary" />
-                    قوالب سريعة
+                    اختر قالباً معتمداً من ميتا
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    {QUICK_TEMPLATES.map((t) => (
-                      <button
-                        key={t.label}
-                        onClick={() => setMessage(t.text)}
-                        className="text-xs px-3 py-1.5 rounded-full bg-green-500/8 text-green-700 dark:text-green-400 border border-green-500/20 hover:bg-green-500/15 transition-all"
-                      >
-                        {t.label}
-                      </button>
-                    ))}
-                  </div>
+                  {loadingTemplates ? (
+                    <p className="text-xs text-muted-foreground">جاري تحميل القوالب...</p>
+                  ) : metaTemplates.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      لا توجد قوالب معتمدة. يجب إنشاء قالب واعتماده من ميتا أولاً عبر صفحة "قوالب واتساب".
+                    </p>
+                  ) : (
+                    <select
+                      value={selectedTemplate}
+                      onChange={(e) => setSelectedTemplate(e.target.value)}
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="">-- اختر قالب --</option>
+                      {metaTemplates.map((t) => (
+                        <option key={t.name} value={t.name}>
+                          {t.name} ({t.language}) — {t.category}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
-                {/* Message Compose */}
-                <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
-                  <p className="text-sm font-bold text-foreground flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4 text-green-600" />
-                    نص الرسالة
-                  </p>
-                  <Textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder={"السلام عليكم،\nاكتب رسالتك هنا..."}
-                    className="rounded-xl min-h-[140px] resize-none font-sans"
-                    maxLength={500}
-                  />
-                  <p className="text-[11px] text-muted-foreground/60 text-left">{message.length}/500</p>
+                {/* Variables */}
+                {currentTemplate && variableCount > 0 && (
+                  <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
+                    <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <Edit3 className="w-4 h-4 text-primary" />
+                      متغيرات القالب
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      ملاحظة: عند الإرسال الجماعي، ستُرسل نفس القيم لجميع المستلمين.
+                    </p>
+                    {Array.from({ length: variableCount }).map((_, i) => (
+                      <div key={i}>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          {`{{${i + 1}}}`}
+                        </label>
+                        <Input
+                          value={templateVars[i] || ""}
+                          onChange={(e) => {
+                            const next = [...templateVars];
+                            next[i] = e.target.value;
+                            setTemplateVars(next);
+                          }}
+                          placeholder={`القيمة ${i + 1}`}
+                          className="rounded-xl"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-                  {/* WhatsApp Preview */}
-                  {message && (
+                {/* WhatsApp Preview */}
+                {currentTemplate && (
+                  <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
+                    <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4 text-green-600" />
+                      معاينة الرسالة قبل الإرسال
+                    </p>
                     <motion.div
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="rounded-2xl bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800/40 p-4"
                     >
-                      <p className="text-[10px] text-green-600 dark:text-green-400 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1">
-                        <MessageCircle className="w-3 h-3" /> معاينة واتساب
-                      </p>
-                      <div className="bg-white dark:bg-card rounded-xl p-3 shadow-sm max-w-xs">
-                        <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{message}</p>
+                      <div className="bg-white dark:bg-card rounded-xl p-3 shadow-sm max-w-md">
+                        {templateHeader?.format === "TEXT" && templateHeader.text && (
+                          <p className="text-sm font-bold text-foreground mb-2">{templateHeader.text}</p>
+                        )}
+                        {templateHeader?.format && templateHeader.format !== "TEXT" && (
+                          <div className="text-[10px] text-muted-foreground mb-2 px-2 py-1 bg-muted/50 rounded">
+                            📎 مرفق: {templateHeader.format}
+                          </div>
+                        )}
+                        <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">
+                          {renderedBody}
+                        </p>
+                        {templateFooter && (
+                          <p className="text-[11px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
+                            {templateFooter}
+                          </p>
+                        )}
                         <p className="text-[10px] text-muted-foreground/50 mt-1.5 text-left">الآن ✓✓</p>
                       </div>
                     </motion.div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* ─ Targeting ─ */}
