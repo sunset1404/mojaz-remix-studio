@@ -407,11 +407,11 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   </h1>
                   <p
                     style={{
-                      fontSize: L ? "20px" : "17px",
-                      color: "rgba(255,255,255,0.92)",
-                      margin: L ? "10px 0 0" : "6px 0 0",
+                      fontSize: L ? "26px" : "17px",
+                      color: "rgba(255,255,255,0.95)",
+                      margin: L ? "12px 0 0" : "6px 0 0",
                       lineHeight: 1.5,
-                      fontWeight: 600,
+                      fontWeight: 700,
                     }}
                   >
                     {isIjaza
