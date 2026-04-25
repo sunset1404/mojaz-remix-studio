@@ -363,6 +363,7 @@ const AdminWhatsApp = () => {
       }]);
 
       setSentResult({ count: targetedUsers.length, success, failed });
+      fetchSentLogs();
       if (failed === 0) toast.success(`✅ تم الإرسال إلى ${success} مستخدم`);
       else toast.warning(`تم الإرسال إلى ${success}، فشل ${failed}`);
     } catch (err: any) {
