@@ -767,7 +767,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                   )}
 
                   {/* Text block */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", minWidth: 0 }}>
                     <p
                       style={{
                         fontSize: L ? "18px" : "15px",
