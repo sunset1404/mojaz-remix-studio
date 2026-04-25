@@ -1054,38 +1054,33 @@ const AdminWhatsApp = () => {
                               </div>
                             </div>
 
-                            {/* Device Breakdown */}
+                            {/* Performance Rates + Targeting */}
                             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                               <div className="bg-card rounded-xl border border-border p-3">
                                 <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
                                   <BarChart3 className="w-3.5 h-3.5 text-primary" />
-                                  جهاز القراءة
+                                  معدلات الأداء
                                 </p>
                                 <div className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <Smartphone className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                                    <div className="flex-1">
-                                      <div className="flex justify-between text-[11px] mb-0.5">
-                                        <span className="text-foreground">الجوال</span>
-                                        <span className="text-muted-foreground">{mobile}</span>
+                                  {[
+                                    { label: "معدل التسليم", value: delivered, color: "bg-green-500" },
+                                    { label: "معدل القراءة", value: read, color: "bg-blue-500" },
+                                    { label: "معدل الردود", value: replied, color: "bg-amber-500" },
+                                    { label: "الفشل", value: failed, color: "bg-destructive" },
+                                  ].map((row) => {
+                                    const pct = phones.length ? Math.round((row.value / phones.length) * 100) : 0;
+                                    return (
+                                      <div key={row.label}>
+                                        <div className="flex justify-between text-[11px] mb-0.5">
+                                          <span className="text-foreground">{row.label}</span>
+                                          <span className="text-muted-foreground">{row.value} ({pct}%)</span>
+                                        </div>
+                                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                                          <div className={`h-full ${row.color}`} style={{ width: `${pct}%` }} />
+                                        </div>
                                       </div>
-                                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                                        <div className="h-full bg-green-500" style={{ width: read ? `${(mobile/read)*100}%` : "0%" }} />
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Monitor className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                                    <div className="flex-1">
-                                      <div className="flex justify-between text-[11px] mb-0.5">
-                                        <span className="text-foreground">الحاسب / الويب</span>
-                                        <span className="text-muted-foreground">{desktop}</span>
-                                      </div>
-                                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                                        <div className="h-full bg-blue-500" style={{ width: read ? `${(desktop/read)*100}%` : "0%" }} />
-                                      </div>
-                                    </div>
-                                  </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
 
@@ -1115,13 +1110,14 @@ const AdminWhatsApp = () => {
                               </p>
                             </div>
 
-                            {/* Note */}
-                            <div className="mt-3 flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                              <Info className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
-                              <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
-                                إحصائيات التسليم والقراءة والأجهزة تقديرية حالياً. لعرض البيانات الفعلية الكاملة من ميتا (delivered / read / replies)، يلزم تفعيل Webhook الخاص بتطبيق WhatsApp Business في Meta.
-                              </p>
-                            </div>
+                            {!hasRealData && (
+                              <div className="mt-3 flex items-start gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                                <Info className="w-3.5 h-3.5 text-blue-600 mt-0.5 shrink-0" />
+                                <p className="text-[11px] text-blue-700 dark:text-blue-400 leading-relaxed">
+                                  بانتظار وصول أحداث التسليم والقراءة من ميتا. ستُحدَّث الإحصائيات تلقائياً خلال دقائق بعد ربط Webhook في Meta Developer Console.
+                                </p>
+                              </div>
+                            )}
                           </motion.div>
                         )}
                       </div>
