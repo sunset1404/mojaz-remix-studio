@@ -458,8 +458,8 @@ const AdminWhatsApp = () => {
       </div>
 
       <div className="p-6 max-w-6xl mx-auto">
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="w-full max-w-sm mb-6 bg-muted/50 p-1 rounded-2xl h-auto">
+        <Tabs value={tab} onValueChange={setTab} dir="rtl">
+          <TabsList dir="rtl" className="w-full max-w-sm mb-6 bg-muted/50 p-1 rounded-2xl h-auto">
             <TabsTrigger value="auto" className="flex-1 flex items-center gap-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-sm py-2.5">
               <Bot className="w-4 h-4" />
               <span className="font-semibold text-sm">رسائل تلقائية</span>
