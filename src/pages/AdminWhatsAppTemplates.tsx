@@ -286,6 +286,52 @@ export default function AdminWhatsAppTemplates() {
     loadAll();
   };
 
+  const [presetCreating, setPresetCreating] = useState(false);
+  const handleCreatePresets = async () => {
+    setPresetCreating(true);
+    const existing = new Set(templates.map(t => t.name));
+    let created = 0;
+    let skipped = 0;
+    const failed: string[] = [];
+
+    for (const preset of PRESET_TEMPLATES) {
+      if (existing.has(preset.name)) {
+        skipped++;
+        continue;
+      }
+      // أضف example للمتغيرات في BODY
+      const components = preset.components.map((c) => {
+        if (c.type === "BODY") {
+          const varCount = (c.text.match(/\{\{(\d+)\}\}/g) || []).length
+            ? new Set((c.text.match(/\{\{(\d+)\}\}/g) || []).map((v: string) => v.replace(/[^0-9]/g, ""))).size
+            : 0;
+          if (varCount > 0) {
+            return {
+              ...c,
+              example: { body_text: [preset.sampleVars.slice(0, varCount)] },
+            };
+          }
+        }
+        return c;
+      });
+
+      const result = await callFunction("create", {
+        method: "POST",
+        body: { name: preset.name, category: preset.category, language: preset.language, components },
+      });
+      if (result.error) {
+        failed.push(`${preset.description}: ${result.error}`);
+      } else {
+        created++;
+      }
+    }
+
+    setPresetCreating(false);
+    if (created > 0) toast.success(`تم إرسال ${created} قالب لاعتماد ميتا`);
+    if (skipped > 0) toast.info(`تم تخطي ${skipped} قالب موجود مسبقاً`);
+    if (failed.length > 0) toast.error(`فشل ${failed.length} قالب: ${failed[0]}`);
+    loadAll();
+  };
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
