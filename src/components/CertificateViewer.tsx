@@ -630,7 +630,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     flex: (L || forcePortraitFill) ? 1 : undefined,
                     background: "#ffffff",
                     borderRadius: L ? "18px" : "14px",
-                    padding: L ? "16px 44px 18px" : "14px 28px 16px",
+                    padding: L ? "18px 44px 32px" : "16px 28px 26px",
                     boxShadow: `0 1px 2px rgba(13,75,72,0.04), 0 8px 20px -8px rgba(13,148,136,0.08)`,
                     border: `1px solid #eef0f3`,
                     display: "flex",
