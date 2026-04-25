@@ -430,18 +430,19 @@ const AdminCertificates = () => {
 
   // Render the certificate as PDF, upload to storage, and return public URL
   const renderAndUploadPdf = async (cert: CertificateRow): Promise<{ url: string; filename: string }> => {
-    const blob = await renderCertificatePdfBlob(cert);
+    const liveCert = withFreshText(cert);
+    const blob = await renderCertificatePdfBlob(liveCert);
 
-    const typeLabel = cert.type === "ijaza" ? "ijaza" : "khatm";
-    const filename = `${typeLabel}-${cert.id}.pdf`;
-    const path = `${cert.user_id}/${filename}`;
+    const typeLabel = liveCert.type === "ijaza" ? "ijaza" : "khatm";
+    const filename = `${typeLabel}-${liveCert.id}.pdf`;
+    const path = `${liveCert.user_id}/${filename}`;
     const { error: upErr } = await supabase.storage.from("certificates").upload(path, blob, {
       contentType: "application/pdf",
       upsert: true,
     });
     if (upErr) throw upErr;
     const { data: pub } = supabase.storage.from("certificates").getPublicUrl(path);
-    const arabicFilename = (cert.type === "ijaza" ? "إجازة" : "شهادة") + `-${cert.student_name || ""}.pdf`;
+    const arabicFilename = (liveCert.type === "ijaza" ? "إجازة" : "شهادة") + `-${liveCert.student_name || ""}.pdf`;
     return { url: pub.publicUrl, filename: arabicFilename };
   };
 
@@ -449,7 +450,7 @@ const AdminCertificates = () => {
     setPreparingWaId(cert.id);
     try {
       const { url, filename } = await renderAndUploadPdf(cert);
-      setWaCert(cert);
+      setWaCert(withFreshText(cert));
       setWaPdfUrl(url);
       setWaPdfFilename(filename);
       setWaOpen(true);
