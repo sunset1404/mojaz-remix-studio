@@ -37,17 +37,25 @@ interface AutoMessage {
   created_at: string;
 }
 
+interface MetaTemplateComponent {
+  type: string;
+  format?: string;
+  text?: string;
+  example?: { body_text?: string[][] };
+}
+interface MetaTemplate {
+  name: string;
+  status: string;
+  category: string;
+  language: string;
+  components: MetaTemplateComponent[];
+  id: string;
+}
+
 const COUNTRIES = [
   "السعودية", "مصر", "الإمارات", "الكويت", "البحرين", "قطر",
   "عُمان", "الأردن", "المغرب", "الجزائر", "تونس", "ليبيا",
   "السودان", "اليمن", "العراق", "سوريا", "لبنان", "فلسطين"
-];
-
-const QUICK_TEMPLATES = [
-  { label: "تذكير بالجلسة", text: "السلام عليكم 🌟\nتذكيرٌ بموعد جلستك القادمة على منصة مجاز. تأكد من الاستعداد الجيد والحضور في الوقت المحدد." },
-  { label: "تشجيع المراجعة", text: "السلام عليكم 📖\nوقت المراجعة! خصص 15 دقيقة اليوم لمراجعة ما حفظته. المداومة هي أساس الإتقان. وفقك الله!" },
-  { label: "تهنئة بإنجاز", text: "السلام عليكم 🎉\nمبارك لك هذا الإنجاز الرائع! نسأل الله أن يبارك في مسيرتك القرآنية ويزيدك توفيقاً." },
-  { label: "تجديد الاشتراك", text: "السلام عليكم 💫\nاشتراكك في منصة مجاز قارب على الانتهاء. جدّده الآن لتواصل رحلتك القرآنية بلا انقطاع." },
 ];
 
 const TRIGGER_EVENT_GROUPS = [
@@ -132,10 +140,9 @@ const AdminWhatsApp = () => {
 
   // --- Manual Messages State ---
   const [targetGroup, setTargetGroup] = useState<TargetGroup>("all");
-  const [message, setMessage] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [sending, setSending] = useState(false);
-  const [sentResult, setSentResult] = useState<{ count: number } | null>(null);
+  const [sentResult, setSentResult] = useState<{ count: number; success: number; failed: number } | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     studentType: "all", countries: [], ijazahStatus: "all",
     gender: "all", riwaya: "all", reciterStatus: "all", reciterGender: "all",
@@ -143,8 +150,46 @@ const AdminWhatsApp = () => {
   const [targetedUsers, setTargetedUsers] = useState<{ user_id: string; phone: string }[]>([]);
   const [loadingTargets, setLoadingTargets] = useState(false);
 
-  useEffect(() => { fetchAutoMessages(); }, []);
+  // Meta templates
+  const [metaTemplates, setMetaTemplates] = useState<MetaTemplate[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [templateVars, setTemplateVars] = useState<string[]>([]);
+
+  useEffect(() => { fetchAutoMessages(); fetchMetaTemplates(); }, []);
   useEffect(() => { computeTargets(); }, [targetGroup, filters]);
+
+  // ── Meta Templates ──
+  const fetchMetaTemplates = async () => {
+    setLoadingTemplates(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("whatsapp-templates", {
+        method: "GET",
+      });
+      if (error) throw error;
+      const approved = ((data as any)?.templates || []).filter((t: MetaTemplate) => t.status === "APPROVED");
+      setMetaTemplates(approved);
+    } catch (err: any) {
+      toast.error("تعذر تحميل قوالب ميتا");
+    } finally {
+      setLoadingTemplates(false);
+    }
+  };
+
+  const currentTemplate = metaTemplates.find((t) => t.name === selectedTemplate);
+  const templateBody = currentTemplate?.components.find((c) => c.type === "BODY")?.text || "";
+  const templateHeader = currentTemplate?.components.find((c) => c.type === "HEADER");
+  const templateFooter = currentTemplate?.components.find((c) => c.type === "FOOTER")?.text || "";
+  const variableCount = (templateBody.match(/\{\{\d+\}\}/g) || []).length;
+
+  useEffect(() => {
+    setTemplateVars(Array(variableCount).fill(""));
+  }, [variableCount, selectedTemplate]);
+
+  const renderedBody = templateBody.replace(/\{\{(\d+)\}\}/g, (_, i) => {
+    const idx = Number(i) - 1;
+    return templateVars[idx] || `{{${i}}}`;
+  });
 
   // ── Auto Messages ──
   const fetchAutoMessages = async () => {
@@ -261,25 +306,48 @@ const AdminWhatsApp = () => {
     }));
 
   const handleSendManual = async () => {
-    if (!message.trim()) { toast.error("يرجى كتابة نص الرسالة"); return; }
+    if (!selectedTemplate) { toast.error("يرجى اختيار قالب معتمد"); return; }
+    if (templateVars.some((v) => !v.trim())) { toast.error("يرجى تعبئة جميع متغيرات القالب"); return; }
     if (targetedUsers.length === 0) { toast.error("لا يوجد مستخدمون يطابقون الفلاتر"); return; }
+
     setSending(true);
     setSentResult(null);
+    let success = 0;
+    let failed = 0;
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      // Insert into whatsapp_manual_logs for tracking (cast to any to bypass type mismatch until types regenerate)
-      const { error } = await (supabase as any).from("whatsapp_manual_logs").insert([{
-        message: message.trim(),
+      const phones = targetedUsers.map((u) => u.phone).filter(Boolean);
+
+      // Send to each recipient via Meta API
+      for (const phone of phones) {
+        try {
+          const { error } = await supabase.functions.invoke("send-whatsapp-template", {
+            body: {
+              to: phone,
+              template_name: selectedTemplate,
+              language: currentTemplate?.language || "ar",
+              variables: templateVars,
+            },
+          });
+          if (error) failed++; else success++;
+        } catch {
+          failed++;
+        }
+      }
+
+      // Log
+      await (supabase as any).from("whatsapp_manual_logs").insert([{
+        message: `[Template: ${selectedTemplate}] ${renderedBody}`,
         target_group: targetGroup,
         filters: filters as unknown as Record<string, unknown>,
         recipients_count: targetedUsers.length,
-        phone_numbers: targetedUsers.map((u) => u.phone).filter(Boolean),
+        phone_numbers: phones,
         sent_by: user?.id,
       }]);
-      if (error) throw error;
-      setSentResult({ count: targetedUsers.length });
-      toast.success(`✅ تم تسجيل الرسالة لـ ${targetedUsers.length} مستخدم`);
-      setMessage("");
+
+      setSentResult({ count: targetedUsers.length, success, failed });
+      if (failed === 0) toast.success(`✅ تم الإرسال إلى ${success} مستخدم`);
+      else toast.warning(`تم الإرسال إلى ${success}، فشل ${failed}`);
     } catch (err: any) {
       toast.error(err.message || "حدث خطأ أثناء الإرسال");
     } finally {
@@ -547,57 +615,98 @@ const AdminWhatsApp = () => {
               {/* ─ Compose ─ */}
               <div className="lg:col-span-3 space-y-4">
 
-                {/* Quick Templates */}
-                <div className="bg-card rounded-2xl border border-border p-5">
-                  <p className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                {/* Template Selector */}
+                <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
+                  <p className="text-sm font-bold text-foreground flex items-center gap-2">
                     <Zap className="w-4 h-4 text-primary" />
-                    قوالب سريعة
+                    اختر قالباً معتمداً من ميتا
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    {QUICK_TEMPLATES.map((t) => (
-                      <button
-                        key={t.label}
-                        onClick={() => setMessage(t.text)}
-                        className="text-xs px-3 py-1.5 rounded-full bg-green-500/8 text-green-700 dark:text-green-400 border border-green-500/20 hover:bg-green-500/15 transition-all"
-                      >
-                        {t.label}
-                      </button>
-                    ))}
-                  </div>
+                  {loadingTemplates ? (
+                    <p className="text-xs text-muted-foreground">جاري تحميل القوالب...</p>
+                  ) : metaTemplates.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      لا توجد قوالب معتمدة. يجب إنشاء قالب واعتماده من ميتا أولاً عبر صفحة "قوالب واتساب".
+                    </p>
+                  ) : (
+                    <select
+                      value={selectedTemplate}
+                      onChange={(e) => setSelectedTemplate(e.target.value)}
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="">-- اختر قالب --</option>
+                      {metaTemplates.map((t) => (
+                        <option key={t.name} value={t.name}>
+                          {t.name} ({t.language}) — {t.category}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
-                {/* Message Compose */}
-                <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
-                  <p className="text-sm font-bold text-foreground flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4 text-green-600" />
-                    نص الرسالة
-                  </p>
-                  <Textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder={"السلام عليكم،\nاكتب رسالتك هنا..."}
-                    className="rounded-xl min-h-[140px] resize-none font-sans"
-                    maxLength={500}
-                  />
-                  <p className="text-[11px] text-muted-foreground/60 text-left">{message.length}/500</p>
+                {/* Variables */}
+                {currentTemplate && variableCount > 0 && (
+                  <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
+                    <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <Edit3 className="w-4 h-4 text-primary" />
+                      متغيرات القالب
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      ملاحظة: عند الإرسال الجماعي، ستُرسل نفس القيم لجميع المستلمين.
+                    </p>
+                    {Array.from({ length: variableCount }).map((_, i) => (
+                      <div key={i}>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          {`{{${i + 1}}}`}
+                        </label>
+                        <Input
+                          value={templateVars[i] || ""}
+                          onChange={(e) => {
+                            const next = [...templateVars];
+                            next[i] = e.target.value;
+                            setTemplateVars(next);
+                          }}
+                          placeholder={`القيمة ${i + 1}`}
+                          className="rounded-xl"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-                  {/* WhatsApp Preview */}
-                  {message && (
+                {/* WhatsApp Preview */}
+                {currentTemplate && (
+                  <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
+                    <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4 text-green-600" />
+                      معاينة الرسالة قبل الإرسال
+                    </p>
                     <motion.div
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="rounded-2xl bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800/40 p-4"
                     >
-                      <p className="text-[10px] text-green-600 dark:text-green-400 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1">
-                        <MessageCircle className="w-3 h-3" /> معاينة واتساب
-                      </p>
-                      <div className="bg-white dark:bg-card rounded-xl p-3 shadow-sm max-w-xs">
-                        <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{message}</p>
+                      <div className="bg-white dark:bg-card rounded-xl p-3 shadow-sm max-w-md">
+                        {templateHeader?.format === "TEXT" && templateHeader.text && (
+                          <p className="text-sm font-bold text-foreground mb-2">{templateHeader.text}</p>
+                        )}
+                        {templateHeader?.format && templateHeader.format !== "TEXT" && (
+                          <div className="text-[10px] text-muted-foreground mb-2 px-2 py-1 bg-muted/50 rounded">
+                            📎 مرفق: {templateHeader.format}
+                          </div>
+                        )}
+                        <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">
+                          {renderedBody}
+                        </p>
+                        {templateFooter && (
+                          <p className="text-[11px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
+                            {templateFooter}
+                          </p>
+                        )}
                         <p className="text-[10px] text-muted-foreground/50 mt-1.5 text-left">الآن ✓✓</p>
                       </div>
                     </motion.div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* ─ Targeting ─ */}
@@ -753,11 +862,11 @@ const AdminWhatsApp = () => {
 
                   <Button
                     onClick={handleSendManual}
-                    disabled={sending || !message.trim() || loadingTargets || targetedUsers.length === 0}
+                    disabled={sending || !selectedTemplate || templateVars.some((v) => !v.trim()) || loadingTargets || targetedUsers.length === 0}
                     className="w-full bg-green-500 hover:bg-green-600 text-white rounded-xl h-11 font-bold gap-2"
                   >
                     {sending ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" />جاري التسجيل...</>
+                      <><Loader2 className="w-4 h-4 animate-spin" />جاري الإرسال...</>
                     ) : (
                       <><Send className="w-4 h-4" />إرسال عبر واتساب</>
                     )}
