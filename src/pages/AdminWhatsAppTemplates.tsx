@@ -393,6 +393,10 @@ export default function AdminWhatsAppTemplates() {
             <p className="text-xs text-muted-foreground">القوالب المسجلة في حسابك على Meta</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCreatePresets} disabled={presetCreating || loading}>
+              <Sparkles className="w-4 h-4" />
+              {presetCreating ? "جاري الإنشاء..." : "إنشاء قوالب حالات الطلاب (4)"}
+            </Button>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
