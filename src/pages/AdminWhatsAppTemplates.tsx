@@ -286,7 +286,6 @@ export default function AdminWhatsAppTemplates() {
     loadAll();
   };
 
-  const [presetCreating, setPresetCreating] = useState(false);
   const handleCreatePresets = async () => {
     setPresetCreating(true);
     const existing = new Set(templates.map(t => t.name));
