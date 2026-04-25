@@ -304,10 +304,6 @@ export default function AdminWhatsAppTemplates() {
             <p className="text-xs text-muted-foreground">القوالب المسجلة في حسابك على Meta</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCreatePreset} disabled={creating || !connection?.connected}>
-              <Award className="w-4 h-4" />
-              قالب الشهادات والإجازات الجاهز
-            </Button>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
