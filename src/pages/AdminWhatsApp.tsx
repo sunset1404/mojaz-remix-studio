@@ -975,12 +975,13 @@ const AdminWhatsApp = () => {
                   {sentLogs.map((log) => {
                     const isOpen = expandedLogId === log.id;
                     const phones: string[] = log.phone_numbers || [];
-                    // Estimated analytics (Meta webhook integration required for real data)
-                    const delivered = Math.round(phones.length * 0.92);
-                    const read = Math.round(phones.length * 0.74);
-                    const replied = Math.round(phones.length * 0.08);
-                    const mobile = Math.round(read * 0.86);
-                    const desktop = read - mobile;
+                    const stats = log.stats || { total: phones.length, sent: 0, delivered: 0, read: 0, replied: 0, failed: 0 };
+                    const sentCount = stats.sent ?? phones.length;
+                    const delivered = stats.delivered ?? 0;
+                    const read = stats.read ?? 0;
+                    const replied = stats.replied ?? 0;
+                    const failed = stats.failed ?? 0;
+                    const hasRealData = (delivered + read + replied + failed) > 0;
 
                     return (
                       <div key={log.id}>
