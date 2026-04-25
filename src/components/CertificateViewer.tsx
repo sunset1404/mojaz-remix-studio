@@ -134,7 +134,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
 
       // Binary-search the largest font-size where text fits inside its container
       const minSize = (L || forcePortraitFill) ? 9 : 7;
-      const maxSize = (L || forcePortraitFill) ? 24 : 16;
+      const maxSize = (L || forcePortraitFill) ? 36 : 24;
 
       let lo = minSize;
       let hi = maxSize;
