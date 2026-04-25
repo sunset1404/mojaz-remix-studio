@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Clock, RefreshCw, Plus, Trash2, MessageCircle, Phone, Award } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, RefreshCw, Plus, Trash2, MessageCircle, Phone } from "lucide-react";
 
 interface MetaTemplate {
   id: string;
