@@ -306,25 +306,48 @@ const AdminWhatsApp = () => {
     }));
 
   const handleSendManual = async () => {
-    if (!message.trim()) { toast.error("يرجى كتابة نص الرسالة"); return; }
+    if (!selectedTemplate) { toast.error("يرجى اختيار قالب معتمد"); return; }
+    if (templateVars.some((v) => !v.trim())) { toast.error("يرجى تعبئة جميع متغيرات القالب"); return; }
     if (targetedUsers.length === 0) { toast.error("لا يوجد مستخدمون يطابقون الفلاتر"); return; }
+
     setSending(true);
     setSentResult(null);
+    let success = 0;
+    let failed = 0;
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      // Insert into whatsapp_manual_logs for tracking (cast to any to bypass type mismatch until types regenerate)
-      const { error } = await (supabase as any).from("whatsapp_manual_logs").insert([{
-        message: message.trim(),
+      const phones = targetedUsers.map((u) => u.phone).filter(Boolean);
+
+      // Send to each recipient via Meta API
+      for (const phone of phones) {
+        try {
+          const { error } = await supabase.functions.invoke("send-whatsapp-template", {
+            body: {
+              to: phone,
+              template_name: selectedTemplate,
+              language: currentTemplate?.language || "ar",
+              variables: templateVars,
+            },
+          });
+          if (error) failed++; else success++;
+        } catch {
+          failed++;
+        }
+      }
+
+      // Log
+      await (supabase as any).from("whatsapp_manual_logs").insert([{
+        message: `[Template: ${selectedTemplate}] ${renderedBody}`,
         target_group: targetGroup,
         filters: filters as unknown as Record<string, unknown>,
         recipients_count: targetedUsers.length,
-        phone_numbers: targetedUsers.map((u) => u.phone).filter(Boolean),
+        phone_numbers: phones,
         sent_by: user?.id,
       }]);
-      if (error) throw error;
-      setSentResult({ count: targetedUsers.length });
-      toast.success(`✅ تم تسجيل الرسالة لـ ${targetedUsers.length} مستخدم`);
-      setMessage("");
+
+      setSentResult({ count: targetedUsers.length, success, failed });
+      if (failed === 0) toast.success(`✅ تم الإرسال إلى ${success} مستخدم`);
+      else toast.warning(`تم الإرسال إلى ${success}، فشل ${failed}`);
     } catch (err: any) {
       toast.error(err.message || "حدث خطأ أثناء الإرسال");
     } finally {
