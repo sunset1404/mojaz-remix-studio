@@ -826,13 +826,13 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         alt="ختم"
                         crossOrigin="anonymous"
                         style={{
-                          height: L ? "115px" : "95px",
-                          width: L ? "115px" : "95px",
+                          height: L ? "110px" : "90px",
+                          width: L ? "200px" : "160px",
                           objectFit: "contain",
                           opacity: 0.92,
                         }}
                       />
-                      <div style={{ width: L ? "100px" : "82px", height: "1px", background: gold, marginTop: "5px" }} />
+                      <div style={{ width: L ? "140px" : "110px", height: "1px", background: gold, marginTop: "5px" }} />
                       <p style={{ fontSize: L ? "16px" : "14px", marginTop: "4px", color: muted, letterSpacing: "1.5px", fontWeight: 700 }}>
                         ختم المقرئ/ة
                       </p>
@@ -845,9 +845,8 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                         alt="توقيع"
                         crossOrigin="anonymous"
                         style={{
-                          height: L ? "100px" : "82px",
-                          width: "auto",
-                          maxWidth: L ? "220px" : "180px",
+                          height: L ? "110px" : "90px",
+                          width: L ? "200px" : "160px",
                           objectFit: "contain",
                           opacity: 0.95,
                         }}
