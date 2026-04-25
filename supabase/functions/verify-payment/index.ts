@@ -64,7 +64,7 @@ async function handler(req: Request): Promise<Response> {
         const result = await processMoyasarPayment({
             payment_id,
             payment_ref,
-            expected_user_id: claimsData.claims.sub as string,
+            expected_user_id: userData.user.id,
         });
 
         if (!result?.success) {
