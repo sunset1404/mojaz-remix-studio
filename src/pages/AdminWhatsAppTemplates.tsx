@@ -141,6 +141,7 @@ export default function AdminWhatsAppTemplates() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [presetCreating, setPresetCreating] = useState(false);
 
   // Create form
   const [name, setName] = useState("");
