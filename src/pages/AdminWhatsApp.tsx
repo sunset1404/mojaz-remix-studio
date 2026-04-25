@@ -335,10 +335,27 @@ const AdminWhatsApp = () => {
       const { data: { user } } = await supabase.auth.getUser();
       const phones = targetedUsers.map((u) => u.phone).filter(Boolean);
 
-      // Send to each recipient via Meta API
+      // 1) Insert the campaign log first to get its ID
+      const { data: logRow, error: logErr } = await (supabase as any)
+        .from("whatsapp_manual_logs")
+        .insert([{
+          message: `[Template: ${selectedTemplate}] ${renderedBody}`,
+          target_group: targetGroup,
+          filters: filters as unknown as Record<string, unknown>,
+          recipients_count: targetedUsers.length,
+          phone_numbers: phones,
+          sent_by: user?.id,
+        }])
+        .select("id")
+        .single();
+      if (logErr) throw logErr;
+      const logId = logRow.id;
+
+      // 2) Send to each recipient and record wamid per recipient
+      const recipientRows: any[] = [];
       for (const phone of phones) {
         try {
-          const { error } = await supabase.functions.invoke("send-whatsapp-template", {
+          const { data, error } = await supabase.functions.invoke("send-whatsapp-template", {
             body: {
               to: phone,
               template_name: selectedTemplate,
@@ -346,21 +363,39 @@ const AdminWhatsApp = () => {
               variables: templateVars,
             },
           });
-          if (error) failed++; else success++;
-        } catch {
+          if (error || !(data as any)?.success) {
+            failed++;
+            recipientRows.push({
+              log_id: logId,
+              phone,
+              status: "failed",
+              error_message: (data as any)?.error || error?.message || "Unknown error",
+              failed_at: new Date().toISOString(),
+            });
+          } else {
+            success++;
+            recipientRows.push({
+              log_id: logId,
+              phone,
+              wamid: (data as any).message_id,
+              status: "sent",
+            });
+          }
+        } catch (e: any) {
           failed++;
+          recipientRows.push({
+            log_id: logId,
+            phone,
+            status: "failed",
+            error_message: e?.message || "Network error",
+            failed_at: new Date().toISOString(),
+          });
         }
       }
 
-      // Log
-      await (supabase as any).from("whatsapp_manual_logs").insert([{
-        message: `[Template: ${selectedTemplate}] ${renderedBody}`,
-        target_group: targetGroup,
-        filters: filters as unknown as Record<string, unknown>,
-        recipients_count: targetedUsers.length,
-        phone_numbers: phones,
-        sent_by: user?.id,
-      }]);
+      if (recipientRows.length > 0) {
+        await (supabase as any).from("whatsapp_message_recipients").insert(recipientRows);
+      }
 
       setSentResult({ count: targetedUsers.length, success, failed });
       fetchSentLogs();
