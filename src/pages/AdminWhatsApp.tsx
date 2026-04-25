@@ -37,17 +37,25 @@ interface AutoMessage {
   created_at: string;
 }
 
+interface MetaTemplateComponent {
+  type: string;
+  format?: string;
+  text?: string;
+  example?: { body_text?: string[][] };
+}
+interface MetaTemplate {
+  name: string;
+  status: string;
+  category: string;
+  language: string;
+  components: MetaTemplateComponent[];
+  id: string;
+}
+
 const COUNTRIES = [
   "السعودية", "مصر", "الإمارات", "الكويت", "البحرين", "قطر",
   "عُمان", "الأردن", "المغرب", "الجزائر", "تونس", "ليبيا",
   "السودان", "اليمن", "العراق", "سوريا", "لبنان", "فلسطين"
-];
-
-const QUICK_TEMPLATES = [
-  { label: "تذكير بالجلسة", text: "السلام عليكم 🌟\nتذكيرٌ بموعد جلستك القادمة على منصة مجاز. تأكد من الاستعداد الجيد والحضور في الوقت المحدد." },
-  { label: "تشجيع المراجعة", text: "السلام عليكم 📖\nوقت المراجعة! خصص 15 دقيقة اليوم لمراجعة ما حفظته. المداومة هي أساس الإتقان. وفقك الله!" },
-  { label: "تهنئة بإنجاز", text: "السلام عليكم 🎉\nمبارك لك هذا الإنجاز الرائع! نسأل الله أن يبارك في مسيرتك القرآنية ويزيدك توفيقاً." },
-  { label: "تجديد الاشتراك", text: "السلام عليكم 💫\nاشتراكك في منصة مجاز قارب على الانتهاء. جدّده الآن لتواصل رحلتك القرآنية بلا انقطاع." },
 ];
 
 const TRIGGER_EVENT_GROUPS = [
