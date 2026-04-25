@@ -73,6 +73,7 @@ import StudentDetail from "./pages/StudentDetail";
 import PaymentCallback from "./pages/PaymentCallback";
 import VideoCallPage from "./pages/VideoCallPage";
 import PublicVideoCall from "./pages/PublicVideoCall";
+import VerifyCertificate from "./pages/VerifyCertificate";
 import { IncomingCallListener } from "./components/video-call/IncomingCallListener";
 import { StudentIncomingCallListener } from "./components/video-call/StudentIncomingCallListener";
 import { ReciterPresenceTracker } from "./components/ReciterPresenceTracker";
@@ -96,6 +97,7 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => (
   <Routes>
+    <Route path="/verify/:id" element={<VerifyCertificate />} />
     <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
     <Route path="/signup" element={<AuthRoute><Signup /></AuthRoute>} />
     <Route path="/signup/reciter" element={<AuthRoute><ReciterSignup /></AuthRoute>} />
