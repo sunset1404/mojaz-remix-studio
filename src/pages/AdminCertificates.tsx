@@ -390,14 +390,26 @@ const AdminCertificates = () => {
     }
   };
 
+  // Always pull the freshest certification text from reciter_certifications
+  // so edits made in the reciters page are reflected immediately on download/preview.
+  const withFreshText = (cert: CertificateRow): CertificateRow => {
+    if (!cert.reciter_id) return cert;
+    const fresh = findCertText(cert.reciter_id, cert.type, cert.riwaya || "");
+    if (fresh && fresh !== cert.certificate_text) {
+      return { ...cert, certificate_text: fresh };
+    }
+    return cert;
+  };
+
   const handleDownload = async (cert: CertificateRow) => {
     setDownloadingId(cert.id);
     try {
-      const blob = await renderCertificatePdfBlob(cert);
+      const liveCert = withFreshText(cert);
+      const blob = await renderCertificatePdfBlob(liveCert);
       const pdfUrl = URL.createObjectURL(blob);
 
-      const safeName = (cert.student_name || "certificate").replace(/[^\p{L}\p{N}\s_-]/gu, "").trim() || "certificate";
-      const typeLabel = cert.type === "ijaza" ? "إجازة" : "شهادة";
+      const safeName = (liveCert.student_name || "certificate").replace(/[^\p{L}\p{N}\s_-]/gu, "").trim() || "certificate";
+      const typeLabel = liveCert.type === "ijaza" ? "إجازة" : "شهادة";
 
       const link = document.createElement("a");
       link.href = pdfUrl;
