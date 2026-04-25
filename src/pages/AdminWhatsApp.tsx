@@ -157,7 +157,7 @@ const AdminWhatsApp = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [templateVars, setTemplateVars] = useState<string[]>([]);
 
-  // Sent messages history
+  // Sent messages history (with real per-recipient stats from Meta webhook)
   const [sentLogs, setSentLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
@@ -167,14 +167,37 @@ const AdminWhatsApp = () => {
 
   const fetchSentLogs = async () => {
     setLoadingLogs(true);
-    const { data } = await (supabase as any)
+    const { data: logs } = await (supabase as any)
       .from("whatsapp_manual_logs")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
-    setSentLogs(data || []);
+
+    // Fetch real recipient stats per log
+    const ids = (logs || []).map((l: any) => l.id);
+    let statsByLog: Record<string, any> = {};
+    if (ids.length > 0) {
+      const { data: recs } = await (supabase as any)
+        .from("whatsapp_message_recipients")
+        .select("log_id, status, delivered_at, read_at, replied_at, failed_at")
+        .in("log_id", ids);
+      (recs || []).forEach((r: any) => {
+        if (!statsByLog[r.log_id]) {
+          statsByLog[r.log_id] = { total: 0, sent: 0, delivered: 0, read: 0, replied: 0, failed: 0 };
+        }
+        const s = statsByLog[r.log_id];
+        s.total++;
+        if (r.status === "failed" || r.failed_at) s.failed++;
+        else s.sent++;
+        if (r.delivered_at) s.delivered++;
+        if (r.read_at) s.read++;
+        if (r.replied_at) s.replied++;
+      });
+    }
+    setSentLogs((logs || []).map((l: any) => ({ ...l, stats: statsByLog[l.id] })));
     setLoadingLogs(false);
   };
+
 
   // ── Meta Templates ──
   const fetchMetaTemplates = async () => {
