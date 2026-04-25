@@ -140,10 +140,14 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
       let hi = maxSize;
       let best = lo;
 
+      // Safety margin to avoid the last line being clipped due to descenders/line-height rounding
+      const SAFETY = 6;
       const fits = (size: number) => {
         el.style.fontSize = `${size}px`;
-        // Allow layout to settle for this size
-        return el.scrollHeight <= box.clientHeight && el.scrollWidth <= box.clientWidth;
+        return (
+          el.scrollHeight <= box.clientHeight - SAFETY &&
+          el.scrollWidth <= box.clientWidth
+        );
       };
 
       // 12 iterations is more than enough for ~0.003px precision
@@ -667,7 +671,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                     ref={textRef}
                     style={{
                       fontSize: `${autoFontSize}px`,
-                      lineHeight: L ? 1.75 : 1.85,
+                      lineHeight: L ? 1.7 : 1.8,
                       textAlign: "justify",
                       fontWeight: 400,
                       color: inkSoft,
@@ -675,6 +679,7 @@ const CertificateViewer = forwardRef<HTMLDivElement, CertificateViewerProps>(
                       margin: 0,
                       width: "100%",
                       letterSpacing: "0.1px",
+                      paddingBottom: "2px",
                     }}
                   >
                     {cert.certificate_text}
