@@ -177,16 +177,12 @@ const GhuyufRahmanSurvey = () => {
                 </Select>
               </div>
               <div>
-                <Label>الدولة</Label>
-                <Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} placeholder="السعودية" />
+                <Label>عدد الجنسيات</Label>
+                <Input type="number" min={0} value={form.nationalities_count} onChange={(e) => setForm({ ...form, nationalities_count: +e.target.value })} />
               </div>
               <div>
-                <Label>الجنسية</Label>
-                <Input value={form.nationality} onChange={(e) => setForm({ ...form, nationality: e.target.value })} placeholder="مصر، إندونيسيا..." />
-              </div>
-              <div>
-                <Label>الرواية</Label>
-                <Input value={form.riwaya} onChange={(e) => setForm({ ...form, riwaya: e.target.value })} placeholder="حفص عن عاصم" />
+                <Label>عدد الروايات / القراءات</Label>
+                <Input type="number" min={0} value={form.riwayat_count} onChange={(e) => setForm({ ...form, riwayat_count: +e.target.value })} />
               </div>
               <div>
                 <Label>عدد الطلاب</Label>
