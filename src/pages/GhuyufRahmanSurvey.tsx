@@ -1,21 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Send, CheckCircle2, Loader2 } from "lucide-react";
+import { Sparkles, Send, CheckCircle2, Loader2, LogIn } from "lucide-react";
 import logoMojaz from "@/assets/logo-mojaz.webp";
 
-const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-const FN_URL = `https://${PROJECT_ID}.supabase.co/functions/v1/submit-ghuyuf-entry`;
+type Location = { id: string; name: string };
+
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const GhuyufRahmanSurvey = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [form, setForm] = useState({
     reciter_name: "",
+    entry_date: todayISO(),
+    location: "",
     country: "",
     nationality: "",
     riwaya: "",
@@ -26,35 +38,55 @@ const GhuyufRahmanSurvey = () => {
     notes: "",
   });
 
+  // Prefill name from profile + load locations once authed
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [{ data: rp }, { data: sp }, { data: locs }] = await Promise.all([
+        supabase.from("reciter_profiles").select("full_name").eq("user_id", user.id).maybeSingle(),
+        supabase.from("student_profiles").select("full_name").eq("user_id", user.id).maybeSingle(),
+        supabase.from("ghuyuf_rahman_locations").select("id, name").order("name"),
+      ]);
+      const name = rp?.full_name || sp?.full_name || "";
+      setForm((f) => ({ ...f, reciter_name: name || f.reciter_name }));
+      setLocations((locs as Location[]) || []);
+    })();
+  }, [user]);
+
   const submit = async () => {
     if (!form.reciter_name.trim()) {
       toast({ title: "اسم المقرئ مطلوب", variant: "destructive" });
       return;
     }
     setSaving(true);
-    try {
-      const res = await fetch(FN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "فشل الإرسال");
-      setSubmitted(true);
-    } catch (e) {
-      toast({
-        title: "خطأ في الإرسال",
-        description: e instanceof Error ? e.message : "حاول مجدداً",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
+    const payload = {
+      reciter_name: form.reciter_name.trim(),
+      entry_date: form.entry_date || todayISO(),
+      location: form.location || null,
+      country: form.country || null,
+      nationality: form.nationality || null,
+      riwaya: form.riwaya || null,
+      students_count: Number(form.students_count) || 0,
+      pages: Number(form.pages) || 0,
+      juz: Number(form.juz) || 0,
+      hours: Number(form.hours) || 0,
+      notes: form.notes || null,
+      source: "survey",
+    };
+    const { error } = await supabase.from("ghuyuf_rahman_entries").insert(payload);
+    setSaving(false);
+    if (error) {
+      toast({ title: "خطأ في الإرسال", description: error.message, variant: "destructive" });
+      return;
     }
+    setSubmitted(true);
   };
 
   const resetForm = () => {
-    setForm({
-      reciter_name: "",
+    setForm((f) => ({
+      ...f,
+      entry_date: todayISO(),
+      location: "",
       country: "",
       nationality: "",
       riwaya: "",
@@ -63,26 +95,51 @@ const GhuyufRahmanSurvey = () => {
       juz: 0,
       hours: 0,
       notes: "",
-    });
+    }));
     setSubmitted(false);
   };
+
+  // Auth gate
+  if (authLoading) {
+    return (
+      <div dir="rtl" className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div dir="rtl" className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-gold/5 px-4">
+        <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center shadow-lg">
+          <img src={logoMojaz} alt="مجاز" className="h-16 w-16 rounded-2xl mx-auto mb-3 shadow-md" />
+          <h1 className="text-xl font-extrabold mb-1">إقراء ضيوف الرحمن</h1>
+          <p className="text-sm text-muted-foreground mb-5">
+            للوصول إلى الاستبانة يلزم تسجيل الدخول باسم المستخدم وكلمة المرور.
+          </p>
+          <Button
+            onClick={() => navigate(`/login?redirect=${encodeURIComponent("/ghuyuf-rahman/survey")}`)}
+            className="w-full gap-2 h-11"
+          >
+            <LogIn className="w-4 h-4" />
+            تسجيل الدخول
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-gold/5 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
           <img src={logoMojaz} alt="مجاز" className="h-16 w-16 rounded-2xl mx-auto mb-3 shadow-md" />
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-2">
             <Sparkles className="w-3.5 h-3.5" />
             استبانة منجزات
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-1">
-            إقراء ضيوف الرحمن
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            عبّئ منجزاتك في إقراء حجاج ومعتمري بيت الله الحرام
-          </p>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-1">إقراء ضيوف الرحمن</h1>
+          <p className="text-sm text-muted-foreground">عبّئ منجزاتك في إقراء حجاج ومعتمري بيت الله الحرام</p>
         </div>
 
         {submitted ? (
@@ -96,13 +153,34 @@ const GhuyufRahmanSurvey = () => {
           </div>
         ) : (
           <div className="bg-card border border-border rounded-2xl p-6 shadow-lg space-y-4">
-            <div>
-              <Label>اسم المقرئ *</Label>
-              <Input value={form.reciter_name} onChange={(e) => setForm({ ...form, reciter_name: e.target.value })} placeholder="الاسم الكامل" />
-            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="md:col-span-2">
+                <Label>اسم المقرئ *</Label>
+                <Input value={form.reciter_name} onChange={(e) => setForm({ ...form, reciter_name: e.target.value })} placeholder="الاسم الكامل" />
+              </div>
               <div>
-                <Label>الدولة (مكان الإقراء)</Label>
+                <Label>التاريخ</Label>
+                <Input type="date" value={form.entry_date} onChange={(e) => setForm({ ...form, entry_date: e.target.value })} />
+              </div>
+              <div>
+                <Label>موقع الإقراء</Label>
+                <Select value={form.location} onValueChange={(v) => setForm({ ...form, location: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر الموقع" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">لا توجد مواقع</div>
+                    ) : (
+                      locations.map((l) => (
+                        <SelectItem key={l.id} value={l.name}>{l.name}</SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>الدولة</Label>
                 <Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} placeholder="السعودية" />
               </div>
               <div>

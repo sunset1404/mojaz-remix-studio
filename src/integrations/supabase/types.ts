@@ -321,9 +321,11 @@ export type Database = {
         Row: {
           country: string | null
           created_at: string
+          entry_date: string
           hours: number
           id: string
           juz: number
+          location: string | null
           nationality: string | null
           notes: string | null
           pages: number
@@ -336,9 +338,11 @@ export type Database = {
         Insert: {
           country?: string | null
           created_at?: string
+          entry_date?: string
           hours?: number
           id?: string
           juz?: number
+          location?: string | null
           nationality?: string | null
           notes?: string | null
           pages?: number
@@ -351,9 +355,11 @@ export type Database = {
         Update: {
           country?: string | null
           created_at?: string
+          entry_date?: string
           hours?: number
           id?: string
           juz?: number
+          location?: string | null
           nationality?: string | null
           notes?: string | null
           pages?: number
@@ -362,6 +368,24 @@ export type Database = {
           source?: string
           students_count?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ghuyuf_rahman_locations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }

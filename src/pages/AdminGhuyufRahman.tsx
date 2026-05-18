@@ -10,16 +10,21 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
   Sparkles, BookOpen, Clock, Globe2, Users, ScrollText, FileText,
-  ExternalLink, Plus, Pencil, Trash2, Save, Loader2, RefreshCw, Copy,
+  ExternalLink, Plus, Pencil, Trash2, Save, Loader2, RefreshCw, Copy, MapPin,
 } from "lucide-react";
 
 type Entry = {
   id: string;
   reciter_name: string;
+  entry_date: string;
+  location: string | null;
   country: string | null;
   nationality: string | null;
   riwaya: string | null;
@@ -32,10 +37,14 @@ type Entry = {
   created_at: string;
 };
 
+type Location = { id: string; name: string };
 
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const emptyForm: Omit<Entry, "id" | "created_at" | "source"> = {
   reciter_name: "",
+  entry_date: todayISO(),
+  location: "",
   country: "",
   nationality: "",
   riwaya: "",
@@ -49,37 +58,36 @@ const emptyForm: Omit<Entry, "id" | "created_at" | "source"> = {
 const AdminGhuyufRahman = () => {
   const { toast } = useToast();
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [surveyUrl, setSurveyUrl] = useState("");
   const [editing, setEditing] = useState<Entry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [locationsOpen, setLocationsOpen] = useState(false);
+  const [newLocation, setNewLocation] = useState("");
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const { data: rows } = await supabase
-      .from("ghuyuf_rahman_entries")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [{ data: rows }, { data: locs }] = await Promise.all([
+      supabase.from("ghuyuf_rahman_entries").select("*").order("entry_date", { ascending: false }),
+      supabase.from("ghuyuf_rahman_locations").select("id, name").order("name"),
+    ]);
     setEntries((rows as Entry[]) || []);
+    setLocations((locs as Location[]) || []);
     setSurveyUrl(`${window.location.origin}/ghuyuf-rahman/survey`);
     setLoading(false);
   }, []);
 
   useEffect(() => {
     fetchAll();
-    const channel = supabase
+    const ch = supabase
       .channel("ghuyuf_rahman_realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "ghuyuf_rahman_entries" },
-        () => fetchAll()
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "ghuyuf_rahman_entries" }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "ghuyuf_rahman_locations" }, () => fetchAll())
       .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(ch); };
   }, [fetchAll]);
 
   const stats = entries.reduce(
@@ -95,20 +103,15 @@ const AdminGhuyufRahman = () => {
       return acc;
     },
     {
-      pages: 0,
-      juz: 0,
-      hours: 0,
-      students: 0,
-      countries: new Set<string>(),
-      nationalities: new Set<string>(),
-      riwayat: new Set<string>(),
-      reciters: new Set<string>(),
+      pages: 0, juz: 0, hours: 0, students: 0,
+      countries: new Set<string>(), nationalities: new Set<string>(),
+      riwayat: new Set<string>(), reciters: new Set<string>(),
     }
   );
 
   const openCreate = () => {
     setEditing(null);
-    setForm(emptyForm);
+    setForm({ ...emptyForm, entry_date: todayISO() });
     setDialogOpen(true);
   };
 
@@ -116,6 +119,8 @@ const AdminGhuyufRahman = () => {
     setEditing(e);
     setForm({
       reciter_name: e.reciter_name,
+      entry_date: e.entry_date || todayISO(),
+      location: e.location || "",
       country: e.country || "",
       nationality: e.nationality || "",
       riwaya: e.riwaya || "",
@@ -136,6 +141,8 @@ const AdminGhuyufRahman = () => {
     setSaving(true);
     const payload = {
       reciter_name: form.reciter_name.trim(),
+      entry_date: form.entry_date || todayISO(),
+      location: form.location || null,
       country: form.country || null,
       nationality: form.nationality || null,
       riwaya: form.riwaya || null,
@@ -170,6 +177,29 @@ const AdminGhuyufRahman = () => {
     fetchAll();
   };
 
+  const addLocation = async () => {
+    const name = newLocation.trim();
+    if (!name) return;
+    const { error } = await supabase.from("ghuyuf_rahman_locations").insert({ name });
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      return;
+    }
+    setNewLocation("");
+    toast({ title: "تمت الإضافة" });
+    fetchAll();
+  };
+
+  const deleteLocation = async (id: string) => {
+    if (!confirm("حذف هذا الموقع؟")) return;
+    const { error } = await supabase.from("ghuyuf_rahman_locations").delete().eq("id", id);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      return;
+    }
+    fetchAll();
+  };
+
   const copySurvey = () => {
     if (!surveyUrl) return;
     navigator.clipboard.writeText(surveyUrl);
@@ -201,6 +231,10 @@ const AdminGhuyufRahman = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setLocationsOpen(true)} className="gap-2">
+            <MapPin className="w-4 h-4" />
+            المواقع ({locations.length})
+          </Button>
           <Button variant="outline" size="sm" onClick={fetchAll} disabled={loading} className="gap-2">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             تحديث
@@ -221,7 +255,7 @@ const AdminGhuyufRahman = () => {
           <div className="flex-1 min-w-0">
             <p className="font-bold text-foreground">رابط استبانة المقرئين</p>
             <p className="text-xs text-muted-foreground">
-              شارك هذا الرابط مع المقرئين — يفتحونه خارج المنصة ويعبئون منجزاتهم، وتظهر النتائج هنا لحظياً.
+              يلزم المقرئ تسجيل الدخول باسم المستخدم وكلمة المرور لتعبئة منجزاته.
             </p>
           </div>
         </div>
@@ -230,17 +264,13 @@ const AdminGhuyufRahman = () => {
           <Button size="sm" variant="ghost" onClick={copySurvey} className="gap-1 h-8 px-2">
             <Copy className="w-3.5 h-3.5" /> نسخ
           </Button>
-          <Button
-            size="sm"
-            onClick={() => window.open(surveyUrl, "_blank", "noopener,noreferrer")}
-            className="gap-1 h-8 px-3"
-          >
+          <Button size="sm" onClick={() => window.open(surveyUrl, "_blank", "noopener,noreferrer")} className="gap-1 h-8 px-3">
             <ExternalLink className="w-3.5 h-3.5" /> فتح
           </Button>
         </div>
       </div>
 
-      {/* Stats grid */}
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statCards.map((s) => (
           <div key={s.label} className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
@@ -255,15 +285,13 @@ const AdminGhuyufRahman = () => {
         ))}
       </div>
 
-      {/* Entries table */}
+      {/* Entries */}
       <div className="rounded-2xl border border-border bg-card overflow-auto">
         <div className="px-4 py-3 border-b border-border flex items-center justify-between">
           <h3 className="font-bold text-foreground">الإدخالات ({entries.length})</h3>
         </div>
         {loading ? (
-          <div className="flex justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
+          <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
         ) : entries.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground text-sm">
             لا توجد إدخالات بعد — أضف يدوياً أو شارك رابط الاستبانة مع المقرئين.
@@ -273,6 +301,8 @@ const AdminGhuyufRahman = () => {
             <TableHeader>
               <TableRow className="bg-muted/40">
                 <TableHead className="text-right font-bold">المقرئ</TableHead>
+                <TableHead className="text-center font-bold text-xs">التاريخ</TableHead>
+                <TableHead className="text-center font-bold text-xs">الموقع</TableHead>
                 <TableHead className="text-center font-bold text-xs">الدولة</TableHead>
                 <TableHead className="text-center font-bold text-xs">الجنسية</TableHead>
                 <TableHead className="text-center font-bold text-xs">الرواية</TableHead>
@@ -288,6 +318,8 @@ const AdminGhuyufRahman = () => {
               {entries.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="font-medium">{e.reciter_name}</TableCell>
+                  <TableCell className="text-center text-xs whitespace-nowrap">{e.entry_date}</TableCell>
+                  <TableCell className="text-center text-xs">{e.location || "—"}</TableCell>
                   <TableCell className="text-center text-xs">{e.country || "—"}</TableCell>
                   <TableCell className="text-center text-xs">{e.nationality || "—"}</TableCell>
                   <TableCell className="text-center text-xs">{e.riwaya || "—"}</TableCell>
@@ -329,6 +361,21 @@ const AdminGhuyufRahman = () => {
               <Input value={form.reciter_name} onChange={(e) => setForm({ ...form, reciter_name: e.target.value })} />
             </div>
             <div>
+              <Label>التاريخ</Label>
+              <Input type="date" value={form.entry_date} onChange={(e) => setForm({ ...form, entry_date: e.target.value })} />
+            </div>
+            <div>
+              <Label>موقع الإقراء</Label>
+              <Select value={form.location} onValueChange={(v) => setForm({ ...form, location: v })}>
+                <SelectTrigger><SelectValue placeholder="اختر الموقع" /></SelectTrigger>
+                <SelectContent>
+                  {locations.map((l) => (
+                    <SelectItem key={l.id} value={l.name}>{l.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label>الدولة</Label>
               <Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
             </div>
@@ -368,6 +415,44 @@ const AdminGhuyufRahman = () => {
               حفظ
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Locations dialog */}
+      <Dialog open={locationsOpen} onOpenChange={setLocationsOpen}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-primary" /> إدارة مواقع الإقراء
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                value={newLocation}
+                onChange={(e) => setNewLocation(e.target.value)}
+                placeholder="اسم الموقع الجديد"
+                onKeyDown={(e) => { if (e.key === "Enter") addLocation(); }}
+              />
+              <Button onClick={addLocation} className="gap-1 shrink-0">
+                <Plus className="w-4 h-4" /> إضافة
+              </Button>
+            </div>
+            <div className="max-h-80 overflow-auto border border-border rounded-xl divide-y divide-border">
+              {locations.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-6">لا توجد مواقع</p>
+              ) : (
+                locations.map((l) => (
+                  <div key={l.id} className="flex items-center justify-between px-3 py-2">
+                    <span className="text-sm">{l.name}</span>
+                    <Button size="sm" variant="ghost" onClick={() => deleteLocation(l.id)} className="h-7 w-7 p-0 text-destructive">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
