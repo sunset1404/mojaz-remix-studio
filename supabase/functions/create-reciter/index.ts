@@ -70,6 +70,7 @@ Deno.serve(async (req) => {
       );
     }
 
+    let userId: string;
     const { data: newUser, error: createError } = await serviceClient.auth.admin.createUser({
       email,
       password,
@@ -78,13 +79,38 @@ Deno.serve(async (req) => {
     });
 
     if (createError) {
-      return new Response(
-        JSON.stringify({ error: createError.message }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      const msg = createError.message || "";
+      if (!/already|exist|registered/i.test(msg)) {
+        return new Response(JSON.stringify({ error: msg }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Find existing user by email
+      const { data: list } = await serviceClient.auth.admin.listUsers({ page: 1, perPage: 200 });
+      const existing = list?.users?.find((u: any) => (u.email || "").toLowerCase() === email.toLowerCase());
+      if (!existing) {
+        return new Response(JSON.stringify({ error: "البريد مستخدم مسبقاً" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: existingRec } = await serviceClient
+        .from("reciter_profiles").select("id").eq("user_id", existing.id).maybeSingle();
+      if (existingRec) {
+        return new Response(JSON.stringify({ error: "هذا البريد مسجّل مسبقاً كمقرئ" }), {
+          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      await serviceClient.auth.admin.updateUserById(existing.id, { password, email_confirm: true });
+      userId = existing.id;
+    } else {
+      userId = newUser.user.id;
     }
 
-    const userId = newUser.user.id;
+    // Ensure reciter role (ignore duplicates)
+    await serviceClient.from("user_roles").upsert(
+      { user_id: userId, role: "reciter" },
+      { onConflict: "user_id,role", ignoreDuplicates: true } as any
+    );
 
     const { error: roleErr } = await serviceClient
       .from("user_roles")
