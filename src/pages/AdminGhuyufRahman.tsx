@@ -171,18 +171,6 @@ const AdminGhuyufRahman = () => {
     fetchAll();
   };
 
-  const saveSurveyUrl = async () => {
-    const { error } = await supabase
-      .from("app_settings")
-      .upsert({ key: SURVEY_KEY, value: surveyUrl, updated_at: new Date().toISOString() });
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-      return;
-    }
-    toast({ title: "✅ تم حفظ رابط الاستبانة" });
-    setSettingsOpen(false);
-  };
-
   const copySurvey = () => {
     if (!surveyUrl) return;
     navigator.clipboard.writeText(surveyUrl);
