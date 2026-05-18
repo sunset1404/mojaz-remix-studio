@@ -28,9 +28,8 @@ const GhuyufRahmanSurvey = () => {
     reciter_name: "",
     entry_date: todayISO(),
     location: "",
-    country: "",
-    nationality: "",
-    riwaya: "",
+    nationalities_count: 0,
+    riwayat_count: 0,
     students_count: 0,
     pages: 0,
     juz: 0,
@@ -63,9 +62,8 @@ const GhuyufRahmanSurvey = () => {
       reciter_name: form.reciter_name.trim(),
       entry_date: form.entry_date || todayISO(),
       location: form.location || null,
-      country: form.country || null,
-      nationality: form.nationality || null,
-      riwaya: form.riwaya || null,
+      nationalities_count: Number(form.nationalities_count) || 0,
+      riwayat_count: Number(form.riwayat_count) || 0,
       students_count: Number(form.students_count) || 0,
       pages: Number(form.pages) || 0,
       juz: Number(form.juz) || 0,
@@ -87,9 +85,8 @@ const GhuyufRahmanSurvey = () => {
       ...f,
       entry_date: todayISO(),
       location: "",
-      country: "",
-      nationality: "",
-      riwaya: "",
+      nationalities_count: 0,
+      riwayat_count: 0,
       students_count: 0,
       pages: 0,
       juz: 0,
@@ -180,16 +177,12 @@ const GhuyufRahmanSurvey = () => {
                 </Select>
               </div>
               <div>
-                <Label>الدولة</Label>
-                <Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} placeholder="السعودية" />
+                <Label>عدد الجنسيات</Label>
+                <Input type="number" min={0} value={form.nationalities_count} onChange={(e) => setForm({ ...form, nationalities_count: +e.target.value })} />
               </div>
               <div>
-                <Label>الجنسية</Label>
-                <Input value={form.nationality} onChange={(e) => setForm({ ...form, nationality: e.target.value })} placeholder="مصر، إندونيسيا..." />
-              </div>
-              <div>
-                <Label>الرواية</Label>
-                <Input value={form.riwaya} onChange={(e) => setForm({ ...form, riwaya: e.target.value })} placeholder="حفص عن عاصم" />
+                <Label>عدد الروايات / القراءات</Label>
+                <Input type="number" min={0} value={form.riwayat_count} onChange={(e) => setForm({ ...form, riwayat_count: +e.target.value })} />
               </div>
               <div>
                 <Label>عدد الطلاب</Label>

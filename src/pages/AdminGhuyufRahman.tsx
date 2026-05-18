@@ -25,9 +25,8 @@ type Entry = {
   reciter_name: string;
   entry_date: string;
   location: string | null;
-  country: string | null;
-  nationality: string | null;
-  riwaya: string | null;
+  nationalities_count: number;
+  riwayat_count: number;
   pages: number;
   juz: number;
   hours: number;
@@ -45,9 +44,8 @@ const emptyForm: Omit<Entry, "id" | "created_at" | "source"> = {
   reciter_name: "",
   entry_date: todayISO(),
   location: "",
-  country: "",
-  nationality: "",
-  riwaya: "",
+  nationalities_count: 0,
+  riwayat_count: 0,
   pages: 0,
   juz: 0,
   hours: 0,
@@ -96,16 +94,15 @@ const AdminGhuyufRahman = () => {
       acc.juz += e.juz || 0;
       acc.hours += Number(e.hours) || 0;
       acc.students += e.students_count || 0;
-      if (e.country) acc.countries.add(e.country.trim());
-      if (e.nationality) acc.nationalities.add(e.nationality.trim());
-      if (e.riwaya) acc.riwayat.add(e.riwaya.trim());
+      acc.nationalities += e.nationalities_count || 0;
+      acc.riwayat += e.riwayat_count || 0;
       acc.reciters.add(e.reciter_name.trim());
       return acc;
     },
     {
       pages: 0, juz: 0, hours: 0, students: 0,
-      countries: new Set<string>(), nationalities: new Set<string>(),
-      riwayat: new Set<string>(), reciters: new Set<string>(),
+      nationalities: 0, riwayat: 0,
+      reciters: new Set<string>(),
     }
   );
 
@@ -121,9 +118,8 @@ const AdminGhuyufRahman = () => {
       reciter_name: e.reciter_name,
       entry_date: e.entry_date || todayISO(),
       location: e.location || "",
-      country: e.country || "",
-      nationality: e.nationality || "",
-      riwaya: e.riwaya || "",
+      nationalities_count: e.nationalities_count || 0,
+      riwayat_count: e.riwayat_count || 0,
       pages: e.pages,
       juz: e.juz,
       hours: Number(e.hours),
@@ -143,9 +139,8 @@ const AdminGhuyufRahman = () => {
       reciter_name: form.reciter_name.trim(),
       entry_date: form.entry_date || todayISO(),
       location: form.location || null,
-      country: form.country || null,
-      nationality: form.nationality || null,
-      riwaya: form.riwaya || null,
+      nationalities_count: Number(form.nationalities_count) || 0,
+      riwayat_count: Number(form.riwayat_count) || 0,
       pages: Number(form.pages) || 0,
       juz: Number(form.juz) || 0,
       hours: Number(form.hours) || 0,
@@ -210,9 +205,8 @@ const AdminGhuyufRahman = () => {
     { label: "إجمالي الصفحات", value: stats.pages.toLocaleString("en-US"), icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "إجمالي الأجزاء", value: stats.juz.toLocaleString("en-US"), icon: BookOpen, color: "text-primary", bg: "bg-primary/10" },
     { label: "إجمالي الساعات", value: Math.round(stats.hours).toLocaleString("en-US"), icon: Clock, color: "text-gold", bg: "bg-gold/10" },
-    { label: "عدد الدول", value: stats.countries.size, icon: Globe2, color: "text-green-500", bg: "bg-green-500/10" },
-    { label: "عدد الجنسيات", value: stats.nationalities.size, icon: Users, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { label: "عدد الروايات", value: stats.riwayat.size, icon: ScrollText, color: "text-amber-600", bg: "bg-amber-500/10" },
+    { label: "عدد الجنسيات", value: stats.nationalities.toLocaleString("en-US"), icon: Users, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { label: "عدد الروايات / القراءات", value: stats.riwayat.toLocaleString("en-US"), icon: ScrollText, color: "text-amber-600", bg: "bg-amber-500/10" },
     { label: "عدد المقرئين", value: stats.reciters.size, icon: Sparkles, color: "text-pink-500", bg: "bg-pink-500/10" },
     { label: "عدد الطلاب", value: stats.students.toLocaleString("en-US"), icon: Users, color: "text-teal-500", bg: "bg-teal-500/10" },
   ];
@@ -303,9 +297,8 @@ const AdminGhuyufRahman = () => {
                 <TableHead className="text-right font-bold">المقرئ</TableHead>
                 <TableHead className="text-center font-bold text-xs">التاريخ</TableHead>
                 <TableHead className="text-center font-bold text-xs">الموقع</TableHead>
-                <TableHead className="text-center font-bold text-xs">الدولة</TableHead>
-                <TableHead className="text-center font-bold text-xs">الجنسية</TableHead>
-                <TableHead className="text-center font-bold text-xs">الرواية</TableHead>
+                <TableHead className="text-center font-bold text-xs">عدد الجنسيات</TableHead>
+                <TableHead className="text-center font-bold text-xs">عدد الروايات / القراءات</TableHead>
                 <TableHead className="text-center font-bold text-xs">الصفحات</TableHead>
                 <TableHead className="text-center font-bold text-xs">الأجزاء</TableHead>
                 <TableHead className="text-center font-bold text-xs">الساعات</TableHead>
@@ -320,9 +313,8 @@ const AdminGhuyufRahman = () => {
                   <TableCell className="font-medium">{e.reciter_name}</TableCell>
                   <TableCell className="text-center text-xs whitespace-nowrap">{e.entry_date}</TableCell>
                   <TableCell className="text-center text-xs">{e.location || "—"}</TableCell>
-                  <TableCell className="text-center text-xs">{e.country || "—"}</TableCell>
-                  <TableCell className="text-center text-xs">{e.nationality || "—"}</TableCell>
-                  <TableCell className="text-center text-xs">{e.riwaya || "—"}</TableCell>
+                  <TableCell className="text-center font-bold">{e.nationalities_count || 0}</TableCell>
+                  <TableCell className="text-center font-bold">{e.riwayat_count || 0}</TableCell>
                   <TableCell className="text-center font-bold">{e.pages}</TableCell>
                   <TableCell className="text-center font-bold">{e.juz}</TableCell>
                   <TableCell className="text-center font-bold">{Number(e.hours)}</TableCell>
@@ -376,16 +368,12 @@ const AdminGhuyufRahman = () => {
               </Select>
             </div>
             <div>
-              <Label>الدولة</Label>
-              <Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+              <Label>عدد الجنسيات</Label>
+              <Input type="number" min={0} value={form.nationalities_count} onChange={(e) => setForm({ ...form, nationalities_count: +e.target.value })} />
             </div>
             <div>
-              <Label>الجنسية</Label>
-              <Input value={form.nationality} onChange={(e) => setForm({ ...form, nationality: e.target.value })} />
-            </div>
-            <div>
-              <Label>الرواية</Label>
-              <Input value={form.riwaya} onChange={(e) => setForm({ ...form, riwaya: e.target.value })} placeholder="حفص عن عاصم..." />
+              <Label>عدد الروايات / القراءات</Label>
+              <Input type="number" min={0} value={form.riwayat_count} onChange={(e) => setForm({ ...form, riwayat_count: +e.target.value })} />
             </div>
             <div>
               <Label>عدد الطلاب</Label>
