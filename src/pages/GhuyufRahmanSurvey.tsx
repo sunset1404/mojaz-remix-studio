@@ -17,6 +17,49 @@ type Location = { id: string; name: string };
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+const InlineLogin = () => {
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    setLoading(false);
+    if (error) {
+      toast({ title: "فشل تسجيل الدخول", description: error.message, variant: "destructive" });
+    }
+  };
+
+  return (
+    <div dir="rtl" className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-gold/5 px-4">
+      <form onSubmit={handleLogin} className="max-w-md w-full bg-card border border-border rounded-2xl p-8 shadow-lg space-y-4">
+        <div className="text-center">
+          <img src={logoMojaz} alt="مجاز" className="h-16 w-16 rounded-2xl mx-auto mb-3 shadow-md" />
+          <h1 className="text-xl font-extrabold mb-1">إقراء ضيوف الرحمن</h1>
+          <p className="text-sm text-muted-foreground">
+            سجّل الدخول للوصول إلى الاستبانة
+          </p>
+        </div>
+        <div>
+          <Label>البريد الإلكتروني</Label>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+        </div>
+        <div>
+          <Label>كلمة المرور</Label>
+          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+        </div>
+        <Button type="submit" disabled={loading} className="w-full gap-2 h-11">
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
+          تسجيل الدخول
+        </Button>
+      </form>
+    </div>
+  );
+};
+
 const GhuyufRahmanSurvey = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
