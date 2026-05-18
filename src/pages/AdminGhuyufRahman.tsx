@@ -94,16 +94,15 @@ const AdminGhuyufRahman = () => {
       acc.juz += e.juz || 0;
       acc.hours += Number(e.hours) || 0;
       acc.students += e.students_count || 0;
-      if (e.country) acc.countries.add(e.country.trim());
-      if (e.nationality) acc.nationalities.add(e.nationality.trim());
-      if (e.riwaya) acc.riwayat.add(e.riwaya.trim());
+      acc.nationalities += e.nationalities_count || 0;
+      acc.riwayat += e.riwayat_count || 0;
       acc.reciters.add(e.reciter_name.trim());
       return acc;
     },
     {
       pages: 0, juz: 0, hours: 0, students: 0,
-      countries: new Set<string>(), nationalities: new Set<string>(),
-      riwayat: new Set<string>(), reciters: new Set<string>(),
+      nationalities: 0, riwayat: 0,
+      reciters: new Set<string>(),
     }
   );
 
