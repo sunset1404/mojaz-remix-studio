@@ -59,12 +59,12 @@ const AdminGhuyufRahman = () => {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [{ data: rows }, { data: settings }] = await Promise.all([
-      supabase.from("ghuyuf_rahman_entries").select("*").order("created_at", { ascending: false }),
-      supabase.from("app_settings").select("value").eq("key", SURVEY_KEY).maybeSingle(),
-    ]);
+    const { data: rows } = await supabase
+      .from("ghuyuf_rahman_entries")
+      .select("*")
+      .order("created_at", { ascending: false });
     setEntries((rows as Entry[]) || []);
-    setSurveyUrl((settings as any)?.value || "");
+    setSurveyUrl(`${window.location.origin}/ghuyuf-rahman/survey`);
     setLoading(false);
   }, []);
 
