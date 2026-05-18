@@ -41,13 +41,20 @@ const GhuyufRahmanSurvey = () => {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: rp }, { data: sp }, { data: locs }] = await Promise.all([
+      const [{ data: rp }, { data: sp }, { data: pr }, { data: locs }] = await Promise.all([
         supabase.from("reciter_profiles").select("full_name").eq("user_id", user.id).maybeSingle(),
         supabase.from("student_profiles").select("full_name").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle(),
         supabase.from("ghuyuf_rahman_locations").select("id, name").order("name"),
       ]);
-      const name = rp?.full_name || sp?.full_name || "";
-      setForm((f) => ({ ...f, reciter_name: name || f.reciter_name }));
+      const name =
+        rp?.full_name ||
+        sp?.full_name ||
+        pr?.full_name ||
+        (user.user_metadata as any)?.full_name ||
+        user.email ||
+        "";
+      setForm((f) => ({ ...f, reciter_name: name }));
       setLocations((locs as Location[]) || []);
     })();
   }, [user]);
