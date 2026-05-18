@@ -25,9 +25,8 @@ type Entry = {
   reciter_name: string;
   entry_date: string;
   location: string | null;
-  country: string | null;
-  nationality: string | null;
-  riwaya: string | null;
+  nationalities_count: number;
+  riwayat_count: number;
   pages: number;
   juz: number;
   hours: number;
@@ -45,9 +44,8 @@ const emptyForm: Omit<Entry, "id" | "created_at" | "source"> = {
   reciter_name: "",
   entry_date: todayISO(),
   location: "",
-  country: "",
-  nationality: "",
-  riwaya: "",
+  nationalities_count: 0,
+  riwayat_count: 0,
   pages: 0,
   juz: 0,
   hours: 0,
