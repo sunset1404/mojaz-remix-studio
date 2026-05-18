@@ -191,8 +191,15 @@ const AppRoutes = () => (
 
 const AppLayout = () => {
   const { role, loading } = useAuth();
+  const location = useLocation();
   const isNative = Capacitor.isNativePlatform();
   const isAdmin = !loading && role === "admin" && !isNative;
+
+  // Standalone public/full-width routes (no sidebar, no mobile frame)
+  const standalonePaths = ["/ghuyuf-rahman/survey"];
+  if (standalonePaths.some((p) => location.pathname.startsWith(p))) {
+    return <AppRoutes />;
+  }
 
   if (isAdmin) {
     return (
