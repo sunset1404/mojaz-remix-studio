@@ -297,9 +297,8 @@ const AdminGhuyufRahman = () => {
                 <TableHead className="text-right font-bold">المقرئ</TableHead>
                 <TableHead className="text-center font-bold text-xs">التاريخ</TableHead>
                 <TableHead className="text-center font-bold text-xs">الموقع</TableHead>
-                <TableHead className="text-center font-bold text-xs">الدولة</TableHead>
-                <TableHead className="text-center font-bold text-xs">الجنسية</TableHead>
-                <TableHead className="text-center font-bold text-xs">الرواية</TableHead>
+                <TableHead className="text-center font-bold text-xs">عدد الجنسيات</TableHead>
+                <TableHead className="text-center font-bold text-xs">عدد الروايات / القراءات</TableHead>
                 <TableHead className="text-center font-bold text-xs">الصفحات</TableHead>
                 <TableHead className="text-center font-bold text-xs">الأجزاء</TableHead>
                 <TableHead className="text-center font-bold text-xs">الساعات</TableHead>
