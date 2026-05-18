@@ -151,10 +151,12 @@ const GhuyufRahmanSurvey = () => {
         ) : (
           <div className="bg-card border border-border rounded-2xl p-6 shadow-lg space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="md:col-span-2">
-                <Label>اسم المقرئ *</Label>
-                <Input value={form.reciter_name} onChange={(e) => setForm({ ...form, reciter_name: e.target.value })} placeholder="الاسم الكامل" />
-              </div>
+              {form.reciter_name && (
+                <div className="md:col-span-2 rounded-xl bg-primary/5 border border-primary/20 px-4 py-2 text-sm">
+                  <span className="text-muted-foreground">المقرئ: </span>
+                  <span className="font-bold text-foreground">{form.reciter_name}</span>
+                </div>
+              )}
               <div>
                 <Label>التاريخ</Label>
                 <Input type="date" value={form.entry_date} onChange={(e) => setForm({ ...form, entry_date: e.target.value })} />
