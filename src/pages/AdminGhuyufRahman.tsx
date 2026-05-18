@@ -51,7 +51,6 @@ const AdminGhuyufRahman = () => {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [surveyUrl, setSurveyUrl] = useState("");
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [editing, setEditing] = useState<Entry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
