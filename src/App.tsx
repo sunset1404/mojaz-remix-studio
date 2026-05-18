@@ -57,6 +57,7 @@ import AdminExams from "./pages/AdminExams";
 import AdminSessions from "./pages/AdminSessions";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminAchievements from "./pages/AdminAchievements";
+import AdminGhuyufRahman from "./pages/AdminGhuyufRahman";
 import AdminRewards from "./pages/AdminRewards";
 import AdminPopupMessages from "./pages/AdminPopupMessages";
 import AdminWhatsApp from "./pages/AdminWhatsApp";
@@ -130,6 +131,7 @@ const AppRoutes = () => (
     <Route path="/admin/sessions" element={<ProtectedRoute><AdminSessions /></ProtectedRoute>} />
     <Route path="/admin/notifications" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
     <Route path="/admin/achievements" element={<ProtectedRoute><AdminAchievements /></ProtectedRoute>} />
+    <Route path="/admin/ghuyuf-rahman" element={<ProtectedRoute><AdminGhuyufRahman /></ProtectedRoute>} />
     <Route path="/admin/rewards" element={<ProtectedRoute><AdminRewards /></ProtectedRoute>} />
     <Route path="/admin/popup-messages" element={<ProtectedRoute><AdminPopupMessages /></ProtectedRoute>} />
     <Route path="/admin/whatsapp" element={<ProtectedRoute><AdminWhatsApp /></ProtectedRoute>} />

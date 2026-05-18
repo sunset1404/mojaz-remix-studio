@@ -41,6 +41,24 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       auto_notifications: {
         Row: {
           body: string
@@ -295,6 +313,54 @@ export type Database = {
           original_price?: number | null
           price?: number
           sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ghuyuf_rahman_entries: {
+        Row: {
+          country: string | null
+          created_at: string
+          hours: number
+          id: string
+          juz: number
+          nationality: string | null
+          notes: string | null
+          pages: number
+          reciter_name: string
+          riwaya: string | null
+          source: string
+          students_count: number
+          updated_at: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          hours?: number
+          id?: string
+          juz?: number
+          nationality?: string | null
+          notes?: string | null
+          pages?: number
+          reciter_name: string
+          riwaya?: string | null
+          source?: string
+          students_count?: number
+          updated_at?: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          hours?: number
+          id?: string
+          juz?: number
+          nationality?: string | null
+          notes?: string | null
+          pages?: number
+          reciter_name?: string
+          riwaya?: string | null
+          source?: string
+          students_count?: number
           updated_at?: string
         }
         Relationships: []
