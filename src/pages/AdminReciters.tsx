@@ -351,6 +351,10 @@ const AdminReciters = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Button size="sm" onClick={() => setAddOpen(true)} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+              <Plus className="w-4 h-4" />
+              إضافة مقرئ
+            </Button>
             <Button variant="ghost" size="sm" onClick={fetchData} disabled={loading} className="gap-2 text-muted-foreground hover:text-foreground">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
               تحديث
