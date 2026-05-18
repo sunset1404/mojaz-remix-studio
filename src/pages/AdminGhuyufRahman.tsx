@@ -313,9 +313,8 @@ const AdminGhuyufRahman = () => {
                   <TableCell className="font-medium">{e.reciter_name}</TableCell>
                   <TableCell className="text-center text-xs whitespace-nowrap">{e.entry_date}</TableCell>
                   <TableCell className="text-center text-xs">{e.location || "—"}</TableCell>
-                  <TableCell className="text-center text-xs">{e.country || "—"}</TableCell>
-                  <TableCell className="text-center text-xs">{e.nationality || "—"}</TableCell>
-                  <TableCell className="text-center text-xs">{e.riwaya || "—"}</TableCell>
+                  <TableCell className="text-center font-bold">{e.nationalities_count || 0}</TableCell>
+                  <TableCell className="text-center font-bold">{e.riwayat_count || 0}</TableCell>
                   <TableCell className="text-center font-bold">{e.pages}</TableCell>
                   <TableCell className="text-center font-bold">{e.juz}</TableCell>
                   <TableCell className="text-center font-bold">{Number(e.hours)}</TableCell>
