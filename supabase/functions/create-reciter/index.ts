@@ -112,15 +112,11 @@ Deno.serve(async (req) => {
       { onConflict: "user_id,role", ignoreDuplicates: true } as any
     );
 
-    const { error: roleErr } = await serviceClient
-      .from("user_roles")
-      .insert({ user_id: userId, role: "reciter" });
-    if (roleErr) console.error("Role insert error:", roleErr);
-
-    const { error: profileErr } = await serviceClient
-      .from("profiles")
-      .insert({ user_id: userId, full_name, phone });
-    if (profileErr) console.error("Profile insert error:", profileErr);
+    // Upsert profile (may already exist via handle_new_user trigger)
+    await serviceClient.from("profiles").upsert(
+      { user_id: userId, full_name, phone },
+      { onConflict: "user_id" } as any
+    );
 
     const { error: recErr } = await serviceClient
       .from("reciter_profiles")
