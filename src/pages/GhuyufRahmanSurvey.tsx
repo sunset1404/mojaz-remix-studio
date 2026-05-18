@@ -113,24 +113,7 @@ const GhuyufRahmanSurvey = () => {
   }
 
   if (!user) {
-    return (
-      <div dir="rtl" className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-gold/5 px-4">
-        <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center shadow-lg">
-          <img src={logoMojaz} alt="مجاز" className="h-16 w-16 rounded-2xl mx-auto mb-3 shadow-md" />
-          <h1 className="text-xl font-extrabold mb-1">إقراء ضيوف الرحمن</h1>
-          <p className="text-sm text-muted-foreground mb-5">
-            للوصول إلى الاستبانة يلزم تسجيل الدخول باسم المستخدم وكلمة المرور.
-          </p>
-          <Button
-            onClick={() => navigate(`/login?redirect=${encodeURIComponent("/ghuyuf-rahman/survey")}`)}
-            className="w-full gap-2 h-11"
-          >
-            <LogIn className="w-4 h-4" />
-            تسجيل الدخول
-          </Button>
-        </div>
-      </div>
-    );
+    return <InlineLogin />;
   }
 
   return (
