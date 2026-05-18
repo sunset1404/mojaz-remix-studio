@@ -57,6 +57,7 @@ import AdminExams from "./pages/AdminExams";
 import AdminSessions from "./pages/AdminSessions";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminAchievements from "./pages/AdminAchievements";
+import AdminGhuyufRahman from "./pages/AdminGhuyufRahman";
 import AdminRewards from "./pages/AdminRewards";
 import AdminPopupMessages from "./pages/AdminPopupMessages";
 import AdminWhatsApp from "./pages/AdminWhatsApp";
