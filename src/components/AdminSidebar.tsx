@@ -1,6 +1,6 @@
 import { 
   Users, GraduationCap, UserCheck, Clock, Award, Gift, 
-  LayoutDashboard, LogOut, ChevronRight, Palette, ClipboardList, Bell, Trophy, Star, MessageSquareText, MessageCircle, CreditCard, Package, Shield
+  LayoutDashboard, LogOut, ChevronRight, Palette, ClipboardList, Bell, Trophy, Star, MessageSquareText, MessageCircle, CreditCard, Package, Shield, Sparkles
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
