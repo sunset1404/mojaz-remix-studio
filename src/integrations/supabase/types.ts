@@ -326,11 +326,13 @@ export type Database = {
           id: string
           juz: number
           location: string | null
+          nationalities_count: number
           nationality: string | null
           notes: string | null
           pages: number
           reciter_name: string
           riwaya: string | null
+          riwayat_count: number
           source: string
           students_count: number
           updated_at: string
@@ -343,11 +345,13 @@ export type Database = {
           id?: string
           juz?: number
           location?: string | null
+          nationalities_count?: number
           nationality?: string | null
           notes?: string | null
           pages?: number
           reciter_name: string
           riwaya?: string | null
+          riwayat_count?: number
           source?: string
           students_count?: number
           updated_at?: string
@@ -360,11 +364,13 @@ export type Database = {
           id?: string
           juz?: number
           location?: string | null
+          nationalities_count?: number
           nationality?: string | null
           notes?: string | null
           pages?: number
           reciter_name?: string
           riwaya?: string | null
+          riwayat_count?: number
           source?: string
           students_count?: number
           updated_at?: string
