@@ -220,7 +220,7 @@ const GhuyufRahmanSurvey = () => {
                 <Input type="number" min={0} value={form.riwayat_count} onChange={(e) => setForm({ ...form, riwayat_count: +e.target.value })} />
               </div>
               <div>
-                <Label>عدد الطلاب</Label>
+                <Label>عدد المستفيدين</Label>
                 <Input type="number" value={form.students_count} onChange={(e) => setForm({ ...form, students_count: +e.target.value })} />
               </div>
               <div>
@@ -228,10 +228,6 @@ const GhuyufRahmanSurvey = () => {
                 <Input type="number" value={form.pages} onChange={(e) => setForm({ ...form, pages: +e.target.value })} />
               </div>
               <div>
-                <Label>عدد الأجزاء</Label>
-                <Input type="number" value={form.juz} onChange={(e) => setForm({ ...form, juz: +e.target.value })} />
-              </div>
-              <div className="md:col-span-2">
                 <Label>عدد الساعات</Label>
                 <Input type="number" step="0.5" value={form.hours} onChange={(e) => setForm({ ...form, hours: +e.target.value })} />
               </div>
