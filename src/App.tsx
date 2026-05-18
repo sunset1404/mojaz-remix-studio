@@ -4,7 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import RoleBasedRoute from "@/components/RoleBasedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -191,8 +191,15 @@ const AppRoutes = () => (
 
 const AppLayout = () => {
   const { role, loading } = useAuth();
+  const location = useLocation();
   const isNative = Capacitor.isNativePlatform();
   const isAdmin = !loading && role === "admin" && !isNative;
+
+  // Standalone public/full-width routes (no sidebar, no mobile frame)
+  const standalonePaths = ["/ghuyuf-rahman/survey"];
+  if (standalonePaths.some((p) => location.pathname.startsWith(p))) {
+    return <AppRoutes />;
+  }
 
   if (isAdmin) {
     return (
