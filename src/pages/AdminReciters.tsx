@@ -944,6 +944,102 @@ const AdminReciters = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add Reciter Dialog */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent dir="rtl" className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-primary" />
+              إضافة مقرئ جديد
+            </DialogTitle>
+            <DialogDescription>أنشئ حساب مقرئ مباشرة من داخل المنصة. سيتم تفعيل الحساب تلقائياً.</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+            <div>
+              <label className="text-xs font-medium">الاسم الكامل *</label>
+              <Input value={newReciter.full_name} onChange={(e) => setNewReciter({ ...newReciter, full_name: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-medium">رقم الجوال *</label>
+              <Input dir="ltr" value={newReciter.phone} onChange={(e) => setNewReciter({ ...newReciter, phone: e.target.value })} placeholder="+9665XXXXXXXX" />
+            </div>
+            <div>
+              <label className="text-xs font-medium">البريد الإلكتروني *</label>
+              <Input type="email" dir="ltr" value={newReciter.email} onChange={(e) => setNewReciter({ ...newReciter, email: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-medium">كلمة المرور *</label>
+              <Input type="text" dir="ltr" value={newReciter.password} onChange={(e) => setNewReciter({ ...newReciter, password: e.target.value })} placeholder="6 أحرف على الأقل" />
+            </div>
+            <div>
+              <label className="text-xs font-medium">الجنس *</label>
+              <Select value={newReciter.gender} onValueChange={(v) => setNewReciter({ ...newReciter, gender: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">ذكر</SelectItem>
+                  <SelectItem value="female">أنثى</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium">نوع المقرئ</label>
+              <Select value={newReciter.reciter_type} onValueChange={(v) => setNewReciter({ ...newReciter, reciter_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">مقرئ عام</SelectItem>
+                  <SelectItem value="ijazah">مقرئ إجازات</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium">الجنسية *</label>
+              <Input value={newReciter.nationality} onChange={(e) => setNewReciter({ ...newReciter, nationality: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-medium">المدينة *</label>
+              <Input value={newReciter.city} onChange={(e) => setNewReciter({ ...newReciter, city: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-medium">رقم الهوية *</label>
+              <Input value={newReciter.id_number} onChange={(e) => setNewReciter({ ...newReciter, id_number: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-medium">المهنة</label>
+              <Input value={newReciter.profession} onChange={(e) => setNewReciter({ ...newReciter, profession: e.target.value })} />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-xs font-medium">المؤهلات</label>
+              <Input value={newReciter.qualifications} onChange={(e) => setNewReciter({ ...newReciter, qualifications: e.target.value })} />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-xs font-medium">الإجازات القرآنية</label>
+              <Input value={newReciter.quran_certifications} onChange={(e) => setNewReciter({ ...newReciter, quran_certifications: e.target.value })} />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-xs font-medium">الخبرة في التدريس</label>
+              <Input value={newReciter.teaching_experience} onChange={(e) => setNewReciter({ ...newReciter, teaching_experience: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-medium">حالة الحساب</label>
+              <Select value={newReciter.status} onValueChange={(v) => setNewReciter({ ...newReciter, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="approved">معتمد</SelectItem>
+                  <SelectItem value="pending">بانتظار التفعيل</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={addSaving}>إلغاء</Button>
+            <Button onClick={createReciter} disabled={addSaving} className="gap-2">
+              {addSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              إنشاء الحساب
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
