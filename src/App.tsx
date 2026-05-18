@@ -58,6 +58,7 @@ import AdminSessions from "./pages/AdminSessions";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminAchievements from "./pages/AdminAchievements";
 import AdminGhuyufRahman from "./pages/AdminGhuyufRahman";
+import GhuyufRahmanSurvey from "./pages/GhuyufRahmanSurvey";
 import AdminRewards from "./pages/AdminRewards";
 import AdminPopupMessages from "./pages/AdminPopupMessages";
 import AdminWhatsApp from "./pages/AdminWhatsApp";
@@ -99,6 +100,7 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => (
   <Routes>
     <Route path="/verify/:id" element={<VerifyCertificate />} />
+    <Route path="/ghuyuf-rahman/survey" element={<GhuyufRahmanSurvey />} />
     <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
     <Route path="/signup" element={<AuthRoute><Signup /></AuthRoute>} />
     <Route path="/signup/reciter" element={<AuthRoute><ReciterSignup /></AuthRoute>} />

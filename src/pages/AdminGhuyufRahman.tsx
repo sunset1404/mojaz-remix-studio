@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Sparkles, BookOpen, Clock, Globe2, Users, ScrollText, FileText,
-  ExternalLink, Plus, Pencil, Trash2, Save, Loader2, RefreshCw, Settings, Copy,
+  ExternalLink, Plus, Pencil, Trash2, Save, Loader2, RefreshCw, Copy,
 } from "lucide-react";
 
 type Entry = {
@@ -32,7 +32,7 @@ type Entry = {
   created_at: string;
 };
 
-const SURVEY_KEY = "ghuyuf_rahman_survey_url";
+
 
 const emptyForm: Omit<Entry, "id" | "created_at" | "source"> = {
   reciter_name: "",
@@ -51,7 +51,6 @@ const AdminGhuyufRahman = () => {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [surveyUrl, setSurveyUrl] = useState("");
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [editing, setEditing] = useState<Entry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -59,12 +58,12 @@ const AdminGhuyufRahman = () => {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [{ data: rows }, { data: settings }] = await Promise.all([
-      supabase.from("ghuyuf_rahman_entries").select("*").order("created_at", { ascending: false }),
-      supabase.from("app_settings").select("value").eq("key", SURVEY_KEY).maybeSingle(),
-    ]);
+    const { data: rows } = await supabase
+      .from("ghuyuf_rahman_entries")
+      .select("*")
+      .order("created_at", { ascending: false });
     setEntries((rows as Entry[]) || []);
-    setSurveyUrl((settings as any)?.value || "");
+    setSurveyUrl(`${window.location.origin}/ghuyuf-rahman/survey`);
     setLoading(false);
   }, []);
 
@@ -171,18 +170,6 @@ const AdminGhuyufRahman = () => {
     fetchAll();
   };
 
-  const saveSurveyUrl = async () => {
-    const { error } = await supabase
-      .from("app_settings")
-      .upsert({ key: SURVEY_KEY, value: surveyUrl, updated_at: new Date().toISOString() });
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-      return;
-    }
-    toast({ title: "✅ تم حفظ رابط الاستبانة" });
-    setSettingsOpen(false);
-  };
-
   const copySurvey = () => {
     if (!surveyUrl) return;
     navigator.clipboard.writeText(surveyUrl);
@@ -218,36 +205,6 @@ const AdminGhuyufRahman = () => {
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             تحديث
           </Button>
-          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Settings className="w-4 h-4" />
-                إعدادات الاستبانة
-              </Button>
-            </DialogTrigger>
-            <DialogContent dir="rtl">
-              <DialogHeader>
-                <DialogTitle>رابط الاستبانة الخارجية</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3 py-2">
-                <Label>الرابط (Google Form أو غيره)</Label>
-                <Input
-                  placeholder="https://forms.gle/..."
-                  value={surveyUrl}
-                  onChange={(e) => setSurveyUrl(e.target.value)}
-                  dir="ltr"
-                />
-                <p className="text-xs text-muted-foreground">
-                  هذا الرابط يظهر للمقرئين عبر زر «فتح الاستبانة» في هذه الصفحة. أنشئ نموذجاً على Google Forms واربطه بـ Google Sheets، ثم استورد البيانات يدوياً أو عبر Zapier.
-                </p>
-              </div>
-              <DialogFooter>
-                <Button onClick={saveSurveyUrl} className="gap-2">
-                  <Save className="w-4 h-4" /> حفظ
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
           <Button size="sm" onClick={openCreate} className="gap-2">
             <Plus className="w-4 h-4" />
             إضافة إنجاز
@@ -255,36 +212,31 @@ const AdminGhuyufRahman = () => {
         </div>
       </div>
 
-      {/* Survey banner */}
-      <div className="rounded-2xl border border-primary/20 bg-gradient-to-l from-primary/5 via-gold/5 to-transparent p-5 flex flex-wrap items-center justify-between gap-4">
+      {/* Share survey banner */}
+      <div className="rounded-2xl border border-primary/20 bg-gradient-to-l from-primary/5 via-gold/5 to-transparent p-5 space-y-3">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
             <ExternalLink className="w-5 h-5 text-primary" />
           </div>
-          <div>
-            <p className="font-bold text-foreground">استبانة المقرئين الخارجية</p>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-foreground">رابط استبانة المقرئين</p>
             <p className="text-xs text-muted-foreground">
-              يدخل المقرئ من حسابه في المنصة، ثم يضغط الزر ليعبئ منجزاته في استبانة خارجية. تُحدَّث الإحصائيات لحظياً.
+              شارك هذا الرابط مع المقرئين — يفتحونه خارج المنصة ويعبئون منجزاتهم، وتظهر النتائج هنا لحظياً.
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {surveyUrl ? (
-            <>
-              <Button variant="outline" size="sm" onClick={copySurvey} className="gap-2">
-                <Copy className="w-4 h-4" /> نسخ الرابط
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => window.open(surveyUrl, "_blank", "noopener,noreferrer")}
-                className="gap-2 bg-gradient-to-l from-primary to-primary/80"
-              >
-                <ExternalLink className="w-4 h-4" /> فتح الاستبانة
-              </Button>
-            </>
-          ) : (
-            <Badge variant="secondary">لم يُضف رابط الاستبانة بعد</Badge>
-          )}
+        <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-2">
+          <code dir="ltr" className="flex-1 text-xs text-foreground truncate">{surveyUrl}</code>
+          <Button size="sm" variant="ghost" onClick={copySurvey} className="gap-1 h-8 px-2">
+            <Copy className="w-3.5 h-3.5" /> نسخ
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => window.open(surveyUrl, "_blank", "noopener,noreferrer")}
+            className="gap-1 h-8 px-3"
+          >
+            <ExternalLink className="w-3.5 h-3.5" /> فتح
+          </Button>
         </div>
       </div>
 
