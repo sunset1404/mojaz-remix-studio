@@ -32,7 +32,7 @@ type Entry = {
   created_at: string;
 };
 
-const SURVEY_KEY = "ghuyuf_rahman_survey_url";
+
 
 const emptyForm: Omit<Entry, "id" | "created_at" | "source"> = {
   reciter_name: "",
