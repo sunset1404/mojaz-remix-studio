@@ -89,6 +89,46 @@ const AdminReciters = () => {
   const navigate = useNavigate();
   const [uploadingAsset, setUploadingAsset] = useState<string | null>(null);
 
+  // Add Reciter dialog
+  const [addOpen, setAddOpen] = useState(false);
+  const [addSaving, setAddSaving] = useState(false);
+  const emptyNew = {
+    email: "", password: "", full_name: "", phone: "",
+    gender: "male", nationality: "السعودية", city: "",
+    id_number: "", reciter_type: "general", profession: "",
+    qualifications: "", quran_certifications: "", teaching_experience: "",
+    preferred_track: "", status: "approved",
+  };
+  const [newReciter, setNewReciter] = useState(emptyNew);
+
+  const createReciter = async () => {
+    const required = ["email","password","full_name","phone","gender","nationality","city","id_number"] as const;
+    for (const k of required) {
+      if (!String((newReciter as any)[k] || "").trim()) {
+        toast({ title: "يرجى تعبئة الحقول المطلوبة", variant: "destructive" });
+        return;
+      }
+    }
+    if (newReciter.password.length < 6) {
+      toast({ title: "كلمة المرور قصيرة (6 أحرف على الأقل)", variant: "destructive" });
+      return;
+    }
+    setAddSaving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-reciter", { body: newReciter });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: "تم إنشاء حساب المقرئ ✅" });
+      setAddOpen(false);
+      setNewReciter(emptyNew);
+      fetchData();
+    } catch (e: any) {
+      toast({ title: "تعذّر الإنشاء", description: e.message, variant: "destructive" });
+    } finally {
+      setAddSaving(false);
+    }
+  };
+
   const uploadReciterAsset = async (reciterId: string, reciterUserId: string, file: File, type: "stamp" | "signature") => {
     const key = `${reciterId}-${type}`;
     setUploadingAsset(key);
