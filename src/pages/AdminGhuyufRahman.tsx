@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Sparkles, BookOpen, Clock, Globe2, Users, ScrollText, FileText,
-  ExternalLink, Plus, Pencil, Trash2, Save, Loader2, RefreshCw, Settings, Copy,
+  ExternalLink, Plus, Pencil, Trash2, Save, Loader2, RefreshCw, Copy,
 } from "lucide-react";
 
 type Entry = {
