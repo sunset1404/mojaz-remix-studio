@@ -207,14 +207,14 @@ const AdminGhuyufRahman = () => {
   };
 
   const statCards = [
-    { label: "إجمالي الصفحات", value: stats.pages.toLocaleString("ar-EG"), icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "إجمالي الأجزاء", value: stats.juz.toLocaleString("ar-EG"), icon: BookOpen, color: "text-primary", bg: "bg-primary/10" },
-    { label: "إجمالي الساعات", value: Math.round(stats.hours).toLocaleString("ar-EG"), icon: Clock, color: "text-gold", bg: "bg-gold/10" },
+    { label: "إجمالي الصفحات", value: stats.pages.toLocaleString("en-US"), icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "إجمالي الأجزاء", value: stats.juz.toLocaleString("en-US"), icon: BookOpen, color: "text-primary", bg: "bg-primary/10" },
+    { label: "إجمالي الساعات", value: Math.round(stats.hours).toLocaleString("en-US"), icon: Clock, color: "text-gold", bg: "bg-gold/10" },
     { label: "عدد الدول", value: stats.countries.size, icon: Globe2, color: "text-green-500", bg: "bg-green-500/10" },
     { label: "عدد الجنسيات", value: stats.nationalities.size, icon: Users, color: "text-purple-500", bg: "bg-purple-500/10" },
     { label: "عدد الروايات", value: stats.riwayat.size, icon: ScrollText, color: "text-amber-600", bg: "bg-amber-500/10" },
     { label: "عدد المقرئين", value: stats.reciters.size, icon: Sparkles, color: "text-pink-500", bg: "bg-pink-500/10" },
-    { label: "عدد الطلاب", value: stats.students.toLocaleString("ar-EG"), icon: Users, color: "text-teal-500", bg: "bg-teal-500/10" },
+    { label: "عدد الطلاب", value: stats.students.toLocaleString("en-US"), icon: Users, color: "text-teal-500", bg: "bg-teal-500/10" },
   ];
 
   return (
