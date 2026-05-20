@@ -47,6 +47,15 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
+
+    // Mode: fetch current email by user_id
+    if (body?.action === "get_email" && body?.user_id) {
+      const { data: u } = await serviceClient.auth.admin.getUserById(body.user_id);
+      return new Response(JSON.stringify({ email: u?.user?.email || "" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const {
       reciter_id, user_id, email, password, full_name, phone, gender, nationality, city,
       id_number, reciter_type, profession, qualifications,
