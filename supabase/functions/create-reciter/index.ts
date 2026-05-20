@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
 
     if (recErr) {
       return new Response(
-        JSON.stringify({ error: recErr.message }),
+        JSON.stringify({ error: translateErr(recErr.message) }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
