@@ -792,6 +792,15 @@ const AdminReciters = () => {
                                         <Button
                                           size="sm"
                                           variant="outline"
+                                          className="gap-1.5 text-primary border-primary/30 hover:bg-primary/10 text-xs"
+                                          onClick={(e) => { e.stopPropagation(); openEditDialog(reciter); }}
+                                        >
+                                          <Pencil className="w-3.5 h-3.5" />
+                                          تعديل
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
                                           className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
                                           onClick={(e) => { e.stopPropagation(); setDeleteTarget(reciter); }}
                                         >
