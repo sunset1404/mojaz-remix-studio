@@ -71,15 +71,19 @@ Deno.serve(async (req) => {
     }
 
     // Duplicate checks excluding current reciter
-    const { data: dupPhone } = await serviceClient
-      .from("reciter_profiles").select("id").eq("phone", clean(phone)).neq("id", reciter_id).maybeSingle();
-    if (dupPhone) return new Response(JSON.stringify({ error: "رقم الجوال مكرر" }), {
+    const [{ data: dupReciterPhone }, { data: dupStudentPhone }] = await Promise.all([
+      serviceClient.from("reciter_profiles").select("id").eq("phone", clean(phone)).neq("id", reciter_id).maybeSingle(),
+      serviceClient.from("student_profiles").select("id").eq("phone", clean(phone)).maybeSingle(),
+    ]);
+    if (dupReciterPhone || dupStudentPhone) return new Response(JSON.stringify({ error: "رقم الجوال مكرر" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-    const { data: dupId } = await serviceClient
-      .from("reciter_profiles").select("id").eq("id_number", clean(id_number)).neq("id", reciter_id).maybeSingle();
-    if (dupId) return new Response(JSON.stringify({ error: "رقم الهوية مكرر" }), {
+    const [{ data: dupReciterId }, { data: dupStudentId }] = await Promise.all([
+      serviceClient.from("reciter_profiles").select("id").eq("id_number", clean(id_number)).neq("id", reciter_id).maybeSingle(),
+      serviceClient.from("student_profiles").select("id").eq("id_number", clean(id_number)).maybeSingle(),
+    ]);
+    if (dupReciterId || dupStudentId) return new Response(JSON.stringify({ error: "رقم الهوية مكرر" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
