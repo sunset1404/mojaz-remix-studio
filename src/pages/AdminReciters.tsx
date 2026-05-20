@@ -1190,15 +1190,23 @@ const AdminReciters = () => {
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
             <div>
-              <label className="text-xs font-medium">الاسم الكامل</label>
+              <label className="text-xs font-medium">الاسم الكامل *</label>
               <Input value={editForm.full_name || ""} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium">رقم الجوال</label>
-              <Input dir="ltr" value={editForm.phone || ""} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
+              <label className="text-xs font-medium">رقم الجوال *</label>
+              <Input dir="ltr" value={editForm.phone || ""} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} placeholder="+9665XXXXXXXX" />
             </div>
             <div>
-              <label className="text-xs font-medium">الجنس</label>
+              <label className="text-xs font-medium">البريد الإلكتروني *</label>
+              <Input type="email" dir="ltr" value={editForm.email || ""} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-medium">كلمة المرور</label>
+              <Input type="text" dir="ltr" value={editForm.password || ""} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} placeholder="اتركها فارغة للإبقاء على الحالية" />
+            </div>
+            <div>
+              <label className="text-xs font-medium">الجنس *</label>
               <Select value={editForm.gender} onValueChange={(v) => setEditForm({ ...editForm, gender: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -1218,15 +1226,15 @@ const AdminReciters = () => {
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium">الجنسية</label>
+              <label className="text-xs font-medium">الجنسية *</label>
               <Input value={editForm.nationality || ""} onChange={(e) => setEditForm({ ...editForm, nationality: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium">المدينة</label>
+              <label className="text-xs font-medium">المدينة *</label>
               <Input value={editForm.city || ""} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium">رقم الهوية</label>
+              <label className="text-xs font-medium">رقم الهوية *</label>
               <Input value={editForm.id_number || ""} onChange={(e) => setEditForm({ ...editForm, id_number: e.target.value })} />
             </div>
             <div>
@@ -1244,10 +1252,6 @@ const AdminReciters = () => {
             <div className="md:col-span-2">
               <label className="text-xs font-medium">الخبرة في التدريس</label>
               <Input value={editForm.teaching_experience || ""} onChange={(e) => setEditForm({ ...editForm, teaching_experience: e.target.value })} />
-            </div>
-            <div className="md:col-span-2">
-              <label className="text-xs font-medium">المسار المفضل</label>
-              <Input value={editForm.preferred_track || ""} onChange={(e) => setEditForm({ ...editForm, preferred_track: e.target.value })} />
             </div>
             <div>
               <label className="text-xs font-medium">حالة الحساب</label>
