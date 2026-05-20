@@ -123,41 +123,70 @@ const AdminReciters = () => {
   // Edit Reciter dialog
   const [editTarget, setEditTarget] = useState<ReciterProfile | null>(null);
   const [editSaving, setEditSaving] = useState(false);
-  const [editForm, setEditForm] = useState<Partial<ReciterProfile>>({});
+  const [editForm, setEditForm] = useState<any>({});
+  const [editEmail, setEditEmail] = useState("");
 
-  const openEditDialog = (r: ReciterProfile) => {
+  const openEditDialog = async (r: ReciterProfile) => {
     setEditTarget(r);
     setEditForm({
+      email: "",
+      password: "",
       full_name: r.full_name,
       phone: r.phone,
       gender: r.gender,
+      reciter_type: r.reciter_type,
       nationality: r.nationality,
       city: r.city,
       id_number: r.id_number,
-      profession: r.profession,
-      qualifications: r.qualifications,
-      quran_certifications: r.quran_certifications,
-      teaching_experience: r.teaching_experience,
-      preferred_track: r.preferred_track,
-      reciter_type: r.reciter_type,
+      profession: r.profession || "",
+      qualifications: r.qualifications || "",
+      quran_certifications: r.quran_certifications || "",
+      teaching_experience: r.teaching_experience || "",
       status: r.status,
     });
+    // Load current email via edge function
+    try {
+      const { data } = await supabase.functions.invoke("update-reciter", {
+        body: { action: "get_email", user_id: r.user_id },
+      });
+      const em = (data as any)?.email || "";
+      setEditEmail(em);
+      setEditForm((f: any) => ({ ...f, email: em }));
+    } catch {
+      setEditEmail("");
+    }
   };
 
   const saveEditReciter = async () => {
     if (!editTarget) return;
+    const required = ["email","full_name","phone","gender","nationality","city","id_number"];
+    for (const k of required) {
+      if (!String(editForm[k] || "").trim()) {
+        toast({ title: "يرجى تعبئة جميع الحقول المطلوبة", variant: "destructive" });
+        return;
+      }
+    }
+    if (editForm.password && editForm.password.length > 0 && editForm.password.length < 6) {
+      toast({ title: "كلمة المرور قصيرة (6 أحرف على الأقل)", variant: "destructive" });
+      return;
+    }
     setEditSaving(true);
     try {
-      const { error } = await supabase
-        .from("reciter_profiles")
-        .update(editForm)
-        .eq("id", editTarget.id);
-      if (error) throw error;
-      // Also sync profile name/phone
-      await supabase.from("profiles").update({
-        full_name: editForm.full_name,
-        phone: editForm.phone,
-      }).eq("user_id", editTarget.user_id);
+      const { data, error } = await supabase.functions.invoke("update-reciter", {
+        body: { reciter_id: editTarget.id, user_id: editTarget.user_id, ...editForm },
+      });
+      let serverMsg = "";
+      if (error) {
+        try {
+          const resp = (error as any)?.context?.response;
+          if (resp) {
+            const bodyJ = await resp.clone().json().catch(() => null);
+            serverMsg = bodyJ?.error || "";
+          }
+        } catch {}
+        throw new Error(serverMsg || error.message);
+      }
+      if ((data as any)?.error) throw new Error((data as any).error);
       setReciters(prev => prev.map(r => r.id === editTarget.id ? { ...r, ...editForm } as ReciterProfile : r));
       toast({ title: "تم تحديث بيانات المقرئ ✅" });
       setEditTarget(null);
@@ -1161,15 +1190,23 @@ const AdminReciters = () => {
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
             <div>
-              <label className="text-xs font-medium">الاسم الكامل</label>
+              <label className="text-xs font-medium">الاسم الكامل *</label>
               <Input value={editForm.full_name || ""} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium">رقم الجوال</label>
-              <Input dir="ltr" value={editForm.phone || ""} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
+              <label className="text-xs font-medium">رقم الجوال *</label>
+              <Input dir="ltr" value={editForm.phone || ""} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} placeholder="+9665XXXXXXXX" />
             </div>
             <div>
-              <label className="text-xs font-medium">الجنس</label>
+              <label className="text-xs font-medium">البريد الإلكتروني *</label>
+              <Input type="email" dir="ltr" value={editForm.email || ""} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-medium">كلمة المرور</label>
+              <Input type="text" dir="ltr" value={editForm.password || ""} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} placeholder="اتركها فارغة للإبقاء على الحالية" />
+            </div>
+            <div>
+              <label className="text-xs font-medium">الجنس *</label>
               <Select value={editForm.gender} onValueChange={(v) => setEditForm({ ...editForm, gender: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -1189,15 +1226,15 @@ const AdminReciters = () => {
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium">الجنسية</label>
+              <label className="text-xs font-medium">الجنسية *</label>
               <Input value={editForm.nationality || ""} onChange={(e) => setEditForm({ ...editForm, nationality: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium">المدينة</label>
+              <label className="text-xs font-medium">المدينة *</label>
               <Input value={editForm.city || ""} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium">رقم الهوية</label>
+              <label className="text-xs font-medium">رقم الهوية *</label>
               <Input value={editForm.id_number || ""} onChange={(e) => setEditForm({ ...editForm, id_number: e.target.value })} />
             </div>
             <div>
@@ -1215,10 +1252,6 @@ const AdminReciters = () => {
             <div className="md:col-span-2">
               <label className="text-xs font-medium">الخبرة في التدريس</label>
               <Input value={editForm.teaching_experience || ""} onChange={(e) => setEditForm({ ...editForm, teaching_experience: e.target.value })} />
-            </div>
-            <div className="md:col-span-2">
-              <label className="text-xs font-medium">المسار المفضل</label>
-              <Input value={editForm.preferred_track || ""} onChange={(e) => setEditForm({ ...editForm, preferred_track: e.target.value })} />
             </div>
             <div>
               <label className="text-xs font-medium">حالة الحساب</label>
