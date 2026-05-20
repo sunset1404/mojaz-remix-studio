@@ -120,6 +120,54 @@ const AdminReciters = () => {
     }
   };
 
+  // Edit Reciter dialog
+  const [editTarget, setEditTarget] = useState<ReciterProfile | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<ReciterProfile>>({});
+
+  const openEditDialog = (r: ReciterProfile) => {
+    setEditTarget(r);
+    setEditForm({
+      full_name: r.full_name,
+      phone: r.phone,
+      gender: r.gender,
+      nationality: r.nationality,
+      city: r.city,
+      id_number: r.id_number,
+      profession: r.profession,
+      qualifications: r.qualifications,
+      quran_certifications: r.quran_certifications,
+      teaching_experience: r.teaching_experience,
+      preferred_track: r.preferred_track,
+      reciter_type: r.reciter_type,
+      status: r.status,
+    });
+  };
+
+  const saveEditReciter = async () => {
+    if (!editTarget) return;
+    setEditSaving(true);
+    try {
+      const { error } = await supabase
+        .from("reciter_profiles")
+        .update(editForm)
+        .eq("id", editTarget.id);
+      if (error) throw error;
+      // Also sync profile name/phone
+      await supabase.from("profiles").update({
+        full_name: editForm.full_name,
+        phone: editForm.phone,
+      }).eq("user_id", editTarget.user_id);
+      setReciters(prev => prev.map(r => r.id === editTarget.id ? { ...r, ...editForm } as ReciterProfile : r));
+      toast({ title: "تم تحديث بيانات المقرئ ✅" });
+      setEditTarget(null);
+    } catch (e: any) {
+      toast({ title: "تعذّر التحديث", description: e.message, variant: "destructive" });
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   // Add Reciter dialog
   const [addOpen, setAddOpen] = useState(false);
   const [addSaving, setAddSaving] = useState(false);
