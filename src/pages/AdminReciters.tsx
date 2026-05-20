@@ -195,7 +195,17 @@ const AdminReciters = () => {
     setAddSaving(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-reciter", { body: newReciter });
-      if (error) throw error;
+      let serverMsg = "";
+      if (error) {
+        try {
+          const resp = (error as any)?.context?.response;
+          if (resp) {
+            const body = await resp.clone().json().catch(() => null);
+            serverMsg = body?.error || "";
+          }
+        } catch {}
+        throw new Error(serverMsg || error.message);
+      }
       if ((data as any)?.error) throw new Error((data as any).error);
       toast({ title: "تم إنشاء حساب المقرئ ✅" });
       setAddOpen(false);
