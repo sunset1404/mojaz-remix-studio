@@ -106,73 +106,16 @@ Deno.serve(async (req) => {
 
     if (createError) {
       const msg = createError.message || "";
-      if (!/already|exist|registered/i.test(msg)) {
-        return new Response(JSON.stringify({ error: msg }), {
+      if (/already|exist|registered/i.test(msg)) {
+        return new Response(JSON.stringify({ error: "البريد الإلكتروني مستخدم مسبقاً" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      // Find existing user by email
-      const { data: list } = await serviceClient.auth.admin.listUsers({ page: 1, perPage: 200 });
-      const existing = list?.users?.find((u: any) => (u.email || "").toLowerCase() === email.toLowerCase());
-      if (!existing) {
-        return new Response(JSON.stringify({ error: "البريد مستخدم مسبقاً" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const { data: existingRec } = await serviceClient
-        .from("reciter_profiles").select("id").eq("user_id", existing.id).maybeSingle();
-      if (!existingRec) {
-        return new Response(JSON.stringify({ error: "البريد الإلكتروني مستخدم مسبقاً لمستخدم آخر في النظام" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      await serviceClient.auth.admin.updateUserById(existing.id, { password, email_confirm: true });
-      userId = existing.id;
-
-      if (existingRec) {
-        await serviceClient.from("user_roles").upsert(
-          { user_id: userId, role: "reciter" },
-          { onConflict: "user_id,role", ignoreDuplicates: true } as any
-        );
-
-        await serviceClient.from("profiles").upsert(
-          { user_id: userId, full_name, phone },
-          { onConflict: "user_id" } as any
-        );
-
-        const { error: updateErr } = await serviceClient
-          .from("reciter_profiles")
-          .update({
-            full_name,
-            phone,
-            gender,
-            nationality,
-            city,
-            id_number,
-            reciter_type: reciter_type || "general",
-            profession: profession || "-",
-            qualifications: qualifications || "-",
-            quran_certifications: quran_certifications || "-",
-            teaching_experience: teaching_experience || "-",
-            preferred_track: preferred_track || "",
-            status: status || "approved",
-          })
-          .eq("id", existingRec.id);
-
-        if (updateErr) {
-          return new Response(JSON.stringify({ error: translateErr(updateErr.message) }), {
-            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-
-        return new Response(
-          JSON.stringify({ success: true, user_id: userId, email, updated: true, message: "تم تحديث حساب المقرئ بنجاح" }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    } else {
-      userId = newUser.user.id;
+      return new Response(JSON.stringify({ error: msg }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+    userId = newUser.user.id;
 
     // Ensure reciter role (ignore duplicates)
     await serviceClient.from("user_roles").upsert(
