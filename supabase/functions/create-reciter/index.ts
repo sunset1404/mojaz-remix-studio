@@ -73,16 +73,20 @@ Deno.serve(async (req) => {
     }
 
     // Pre-check duplicates with clear Arabic messages
-    const { data: dupPhone } = await serviceClient
-      .from("reciter_profiles").select("id").eq("phone", clean(phone)).maybeSingle();
-    if (dupPhone) {
+    const [{ data: dupReciterPhone }, { data: dupStudentPhone }] = await Promise.all([
+      serviceClient.from("reciter_profiles").select("id").eq("phone", clean(phone)).maybeSingle(),
+      serviceClient.from("student_profiles").select("id").eq("phone", clean(phone)).maybeSingle(),
+    ]);
+    if (dupReciterPhone || dupStudentPhone) {
       return new Response(JSON.stringify({ error: "رقم الجوال مكرر" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { data: dupId } = await serviceClient
-      .from("reciter_profiles").select("id").eq("id_number", clean(id_number)).maybeSingle();
-    if (dupId) {
+    const [{ data: dupReciterId }, { data: dupStudentId }] = await Promise.all([
+      serviceClient.from("reciter_profiles").select("id").eq("id_number", clean(id_number)).maybeSingle(),
+      serviceClient.from("student_profiles").select("id").eq("id_number", clean(id_number)).maybeSingle(),
+    ]);
+    if (dupReciterId || dupStudentId) {
       return new Response(JSON.stringify({ error: "رقم الهوية مكرر" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
