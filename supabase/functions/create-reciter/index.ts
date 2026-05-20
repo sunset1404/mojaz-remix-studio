@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
           .eq("id", existingRec.id);
 
         if (updateErr) {
-          return new Response(JSON.stringify({ error: updateErr.message }), {
+          return new Response(JSON.stringify({ error: translateErr(updateErr.message) }), {
             status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
