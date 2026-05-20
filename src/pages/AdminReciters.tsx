@@ -741,9 +741,19 @@ const AdminReciters = () => {
                                             تعليق
                                           </Button>
                                         )}
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
+                                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(reciter); }}
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                          حذف
+                                        </Button>
                                       </div>
                                     </div>
                                   </div>
+
 
                                   {/* Stamp & Signature */}
                                   <div className="mt-4 pt-3 border-t border-border/20">
