@@ -57,6 +57,8 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
+    const clean = (value: unknown) => String(value ?? "").trim();
+    const normalizeEmail = (value: unknown) => clean(value).toLowerCase();
     const {
       email, password, full_name, phone, gender, nationality, city,
       id_number, reciter_type, profession, qualifications,
@@ -71,17 +73,27 @@ Deno.serve(async (req) => {
     }
 
     // Pre-check duplicates with clear Arabic messages
-    const { data: dupPhone } = await serviceClient
-      .from("reciter_profiles").select("id").eq("phone", phone).maybeSingle();
-    if (dupPhone) {
-      return new Response(JSON.stringify({ error: "رقم الجوال مستخدم مسبقاً لمقرئ آخر" }), {
+    const [{ data: dupReciterPhone }, { data: dupStudentPhone }] = await Promise.all([
+      serviceClient.from("reciter_profiles").select("id").eq("phone", clean(phone)).maybeSingle(),
+      serviceClient.from("student_profiles").select("id").eq("phone", clean(phone)).maybeSingle(),
+    ]);
+    if (dupReciterPhone || dupStudentPhone) {
+      return new Response(JSON.stringify({ error: "رقم الجوال مكرر" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { data: dupId } = await serviceClient
-      .from("reciter_profiles").select("id").eq("id_number", id_number).maybeSingle();
-    if (dupId) {
-      return new Response(JSON.stringify({ error: "رقم الهوية مستخدم مسبقاً لمقرئ آخر" }), {
+    const [{ data: dupReciterId }, { data: dupStudentId }] = await Promise.all([
+      serviceClient.from("reciter_profiles").select("id").eq("id_number", clean(id_number)).maybeSingle(),
+      serviceClient.from("student_profiles").select("id").eq("id_number", clean(id_number)).maybeSingle(),
+    ]);
+    if (dupReciterId || dupStudentId) {
+      return new Response(JSON.stringify({ error: "رقم الهوية مكرر" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: dupEmail } = await serviceClient.rpc("check_email_exists", { p_email: normalizeEmail(email) });
+    if (dupEmail) {
+      return new Response(JSON.stringify({ error: "البريد الإلكتروني مكرر" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -107,7 +119,7 @@ Deno.serve(async (req) => {
     if (createError) {
       const msg = createError.message || "";
       if (/already|exist|registered/i.test(msg)) {
-        return new Response(JSON.stringify({ error: "البريد الإلكتروني مستخدم مسبقاً" }), {
+        return new Response(JSON.stringify({ error: "البريد الإلكتروني مكرر" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

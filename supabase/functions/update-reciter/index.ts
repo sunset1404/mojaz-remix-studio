@@ -47,6 +47,8 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
+    const clean = (value: unknown) => String(value ?? "").trim();
+    const normalizeEmail = (value: unknown) => clean(value).toLowerCase();
 
     // Mode: fetch current email by user_id
     if (body?.action === "get_email" && body?.user_id) {
@@ -69,23 +71,27 @@ Deno.serve(async (req) => {
     }
 
     // Duplicate checks excluding current reciter
-    const { data: dupPhone } = await serviceClient
-      .from("reciter_profiles").select("id").eq("phone", phone).neq("id", reciter_id).maybeSingle();
-    if (dupPhone) return new Response(JSON.stringify({ error: "رقم الجوال مستخدم مسبقاً لمقرئ آخر" }), {
+    const [{ data: dupReciterPhone }, { data: dupStudentPhone }] = await Promise.all([
+      serviceClient.from("reciter_profiles").select("id").eq("phone", clean(phone)).neq("id", reciter_id).maybeSingle(),
+      serviceClient.from("student_profiles").select("id").eq("phone", clean(phone)).maybeSingle(),
+    ]);
+    if (dupReciterPhone || dupStudentPhone) return new Response(JSON.stringify({ error: "رقم الجوال مكرر" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-    const { data: dupId } = await serviceClient
-      .from("reciter_profiles").select("id").eq("id_number", id_number).neq("id", reciter_id).maybeSingle();
-    if (dupId) return new Response(JSON.stringify({ error: "رقم الهوية مستخدم مسبقاً لمقرئ آخر" }), {
+    const [{ data: dupReciterId }, { data: dupStudentId }] = await Promise.all([
+      serviceClient.from("reciter_profiles").select("id").eq("id_number", clean(id_number)).neq("id", reciter_id).maybeSingle(),
+      serviceClient.from("student_profiles").select("id").eq("id_number", clean(id_number)).maybeSingle(),
+    ]);
+    if (dupReciterId || dupStudentId) return new Response(JSON.stringify({ error: "رقم الهوية مكرر" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
     // Email duplicate check (other auth user)
     const { data: list } = await serviceClient.auth.admin.listUsers({ page: 1, perPage: 500 });
-    const emailOwner = list?.users?.find((u: any) => (u.email || "").toLowerCase() === email.toLowerCase());
+    const emailOwner = list?.users?.find((u: any) => (u.email || "").toLowerCase() === normalizeEmail(email));
     if (emailOwner && emailOwner.id !== user_id) {
-      return new Response(JSON.stringify({ error: "البريد الإلكتروني مستخدم مسبقاً لمستخدم آخر" }), {
+      return new Response(JSON.stringify({ error: "البريد الإلكتروني مكرر" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -95,7 +101,8 @@ Deno.serve(async (req) => {
     if (password && String(password).length >= 6) authUpdate.password = password;
     const { error: authErr } = await serviceClient.auth.admin.updateUserById(user_id, authUpdate);
     if (authErr) {
-      return new Response(JSON.stringify({ error: authErr.message }), {
+      const msg = /already|exist|registered|email/i.test(authErr.message || "") ? "البريد الإلكتروني مكرر" : authErr.message;
+      return new Response(JSON.stringify({ error: msg }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

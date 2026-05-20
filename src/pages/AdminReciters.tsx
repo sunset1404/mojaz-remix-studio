@@ -101,6 +101,27 @@ const AdminReciters = () => {
   const [deleteTarget, setDeleteTarget] = useState<ReciterProfile | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const getFunctionErrorMessage = async (error: any) => {
+    const response = error?.context instanceof Response ? error.context : error?.context?.response;
+    if (response?.clone) {
+      const jsonBody = await response.clone().json().catch(() => null);
+      if (jsonBody?.error) return String(jsonBody.error);
+
+      const textBody = await response.clone().text().catch(() => "");
+      if (textBody) {
+        try {
+          const parsed = JSON.parse(textBody);
+          if (parsed?.error) return String(parsed.error);
+        } catch {}
+        return textBody;
+      }
+    }
+
+    const message = String(error?.message || "");
+    if (message.includes("non-2xx")) return "تعذّر تنفيذ العملية، الرجاء التحقق من البريد أو رقم الهوية أو رقم الجوال";
+    return message || "حدث خطأ غير متوقع";
+  };
+
   const deleteReciter = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -177,14 +198,8 @@ const AdminReciters = () => {
       });
       let serverMsg = "";
       if (error) {
-        try {
-          const resp = (error as any)?.context?.response;
-          if (resp) {
-            const bodyJ = await resp.clone().json().catch(() => null);
-            serverMsg = bodyJ?.error || "";
-          }
-        } catch {}
-        throw new Error(serverMsg || error.message);
+        serverMsg = await getFunctionErrorMessage(error);
+        throw new Error(serverMsg);
       }
       if ((data as any)?.error) throw new Error((data as any).error);
       setReciters(prev => prev.map(r => r.id === editTarget.id ? { ...r, ...editForm } as ReciterProfile : r));
@@ -226,14 +241,8 @@ const AdminReciters = () => {
       const { data, error } = await supabase.functions.invoke("create-reciter", { body: newReciter });
       let serverMsg = "";
       if (error) {
-        try {
-          const resp = (error as any)?.context?.response;
-          if (resp) {
-            const body = await resp.clone().json().catch(() => null);
-            serverMsg = body?.error || "";
-          }
-        } catch {}
-        throw new Error(serverMsg || error.message);
+        serverMsg = await getFunctionErrorMessage(error);
+        throw new Error(serverMsg);
       }
       if ((data as any)?.error) throw new Error((data as any).error);
       toast({ title: "تم إنشاء حساب المقرئ ✅" });
