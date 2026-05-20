@@ -121,7 +121,13 @@ Deno.serve(async (req) => {
       }
       const { data: existingRec } = await serviceClient
         .from("reciter_profiles").select("id").eq("user_id", existing.id).maybeSingle();
+      if (!existingRec) {
+        return new Response(JSON.stringify({ error: "البريد الإلكتروني مستخدم مسبقاً لمستخدم آخر في النظام" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       await serviceClient.auth.admin.updateUserById(existing.id, { password, email_confirm: true });
+      userId = existing.id;
       userId = existing.id;
 
       if (existingRec) {
