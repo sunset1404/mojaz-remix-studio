@@ -98,6 +98,27 @@ const AdminReciters = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [uploadingAsset, setUploadingAsset] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ReciterProfile | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteReciter = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-reciter", {
+        body: { reciter_id: deleteTarget.id, user_id: deleteTarget.user_id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setReciters(prev => prev.filter(r => r.id !== deleteTarget.id));
+      toast({ title: "تم حذف المقرئ بنجاح ✅" });
+      setDeleteTarget(null);
+    } catch (e: any) {
+      toast({ title: "تعذّر الحذف", description: e.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Add Reciter dialog
   const [addOpen, setAddOpen] = useState(false);
