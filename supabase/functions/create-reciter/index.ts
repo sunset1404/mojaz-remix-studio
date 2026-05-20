@@ -70,6 +70,32 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Pre-check duplicates with clear Arabic messages
+    const { data: dupPhone } = await serviceClient
+      .from("reciter_profiles").select("id").eq("phone", phone).maybeSingle();
+    if (dupPhone) {
+      return new Response(JSON.stringify({ error: "رقم الجوال مستخدم مسبقاً لمقرئ آخر" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: dupId } = await serviceClient
+      .from("reciter_profiles").select("id").eq("id_number", id_number).maybeSingle();
+    if (dupId) {
+      return new Response(JSON.stringify({ error: "رقم الهوية مستخدم مسبقاً لمقرئ آخر" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const translateErr = (m: string) => {
+      const s = (m || "").toLowerCase();
+      if (s.includes("phone")) return "رقم الجوال مستخدم مسبقاً";
+      if (s.includes("id_number")) return "رقم الهوية مستخدم مسبقاً";
+      if (s.includes("email")) return "البريد الإلكتروني مستخدم مسبقاً";
+      if (s.includes("user_id")) return "هذا المستخدم مسجّل مسبقاً كمقرئ";
+      if (s.includes("duplicate") || s.includes("unique")) return "هذه البيانات مكررة، الرجاء التحقق من الحقول";
+      return m;
+    };
+
     let userId: string;
     const { data: newUser, error: createError } = await serviceClient.auth.admin.createUser({
       email,
@@ -95,6 +121,11 @@ Deno.serve(async (req) => {
       }
       const { data: existingRec } = await serviceClient
         .from("reciter_profiles").select("id").eq("user_id", existing.id).maybeSingle();
+      if (!existingRec) {
+        return new Response(JSON.stringify({ error: "البريد الإلكتروني مستخدم مسبقاً لمستخدم آخر في النظام" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       await serviceClient.auth.admin.updateUserById(existing.id, { password, email_confirm: true });
       userId = existing.id;
 
@@ -129,7 +160,7 @@ Deno.serve(async (req) => {
           .eq("id", existingRec.id);
 
         if (updateErr) {
-          return new Response(JSON.stringify({ error: updateErr.message }), {
+          return new Response(JSON.stringify({ error: translateErr(updateErr.message) }), {
             status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
@@ -176,7 +207,7 @@ Deno.serve(async (req) => {
 
     if (recErr) {
       return new Response(
-        JSON.stringify({ error: recErr.message }),
+        JSON.stringify({ error: translateErr(recErr.message) }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
