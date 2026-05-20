@@ -1081,6 +1081,30 @@ const AdminReciters = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد حذف المقرئ</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف المقرئ <span className="font-bold text-foreground">{deleteTarget?.full_name}</span>؟
+              <br />
+              سيتم حذف الحساب وجميع البيانات المرتبطة به نهائيًا، ولا يمكن التراجع عن هذه العملية.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteReciter}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              تأكيد الحذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
