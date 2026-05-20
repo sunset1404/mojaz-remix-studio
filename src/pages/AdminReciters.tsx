@@ -144,12 +144,12 @@ const AdminReciters = () => {
       teaching_experience: r.teaching_experience || "",
       status: r.status,
     });
-    // Load current email from auth via a profiles join (fallback: leave blank)
+    // Load current email via edge function
     try {
-      const { data } = await supabase.auth.admin?.getUserById
-        ? await (supabase as any).auth.admin.getUserById(r.user_id)
-        : { data: null };
-      const em = (data as any)?.user?.email || "";
+      const { data } = await supabase.functions.invoke("update-reciter", {
+        body: { action: "get_email", user_id: r.user_id },
+      });
+      const em = (data as any)?.email || "";
       setEditEmail(em);
       setEditForm((f: any) => ({ ...f, email: em }));
     } catch {
