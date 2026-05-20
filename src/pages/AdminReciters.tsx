@@ -35,7 +35,7 @@ import {
   Globe, UserCheck, TrendingUp, BookOpen,
   RefreshCw, ChevronDown, ChevronUp, Filter,
   ArrowRight, Clock, CheckCircle, XCircle, ShieldCheck, Award, Plus,
-  Upload, Stamp, PenTool, Loader2, Trash2, Image
+  Upload, Stamp, PenTool, Loader2, Trash2, Image, Pencil
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
