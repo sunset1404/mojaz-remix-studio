@@ -19,6 +19,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   GraduationCap, Search, Phone, Mail, MessageCircle,
@@ -88,6 +98,27 @@ const AdminReciters = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [uploadingAsset, setUploadingAsset] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ReciterProfile | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteReciter = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-reciter", {
+        body: { reciter_id: deleteTarget.id, user_id: deleteTarget.user_id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setReciters(prev => prev.filter(r => r.id !== deleteTarget.id));
+      toast({ title: "تم حذف المقرئ بنجاح ✅" });
+      setDeleteTarget(null);
+    } catch (e: any) {
+      toast({ title: "تعذّر الحذف", description: e.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Add Reciter dialog
   const [addOpen, setAddOpen] = useState(false);
@@ -710,9 +741,19 @@ const AdminReciters = () => {
                                             تعليق
                                           </Button>
                                         )}
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
+                                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(reciter); }}
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                          حذف
+                                        </Button>
                                       </div>
                                     </div>
                                   </div>
+
 
                                   {/* Stamp & Signature */}
                                   <div className="mt-4 pt-3 border-t border-border/20">
@@ -1040,6 +1081,30 @@ const AdminReciters = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد حذف المقرئ</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف المقرئ <span className="font-bold text-foreground">{deleteTarget?.full_name}</span>؟
+              <br />
+              سيتم حذف الحساب وجميع البيانات المرتبطة به نهائيًا، ولا يمكن التراجع عن هذه العملية.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteReciter}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              تأكيد الحذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
