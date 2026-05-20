@@ -123,41 +123,70 @@ const AdminReciters = () => {
   // Edit Reciter dialog
   const [editTarget, setEditTarget] = useState<ReciterProfile | null>(null);
   const [editSaving, setEditSaving] = useState(false);
-  const [editForm, setEditForm] = useState<Partial<ReciterProfile>>({});
+  const [editForm, setEditForm] = useState<any>({});
+  const [editEmail, setEditEmail] = useState("");
 
-  const openEditDialog = (r: ReciterProfile) => {
+  const openEditDialog = async (r: ReciterProfile) => {
     setEditTarget(r);
     setEditForm({
+      email: "",
+      password: "",
       full_name: r.full_name,
       phone: r.phone,
       gender: r.gender,
+      reciter_type: r.reciter_type,
       nationality: r.nationality,
       city: r.city,
       id_number: r.id_number,
-      profession: r.profession,
-      qualifications: r.qualifications,
-      quran_certifications: r.quran_certifications,
-      teaching_experience: r.teaching_experience,
-      preferred_track: r.preferred_track,
-      reciter_type: r.reciter_type,
+      profession: r.profession || "",
+      qualifications: r.qualifications || "",
+      quran_certifications: r.quran_certifications || "",
+      teaching_experience: r.teaching_experience || "",
       status: r.status,
     });
+    // Load current email from auth via a profiles join (fallback: leave blank)
+    try {
+      const { data } = await supabase.auth.admin?.getUserById
+        ? await (supabase as any).auth.admin.getUserById(r.user_id)
+        : { data: null };
+      const em = (data as any)?.user?.email || "";
+      setEditEmail(em);
+      setEditForm((f: any) => ({ ...f, email: em }));
+    } catch {
+      setEditEmail("");
+    }
   };
 
   const saveEditReciter = async () => {
     if (!editTarget) return;
+    const required = ["email","full_name","phone","gender","nationality","city","id_number"];
+    for (const k of required) {
+      if (!String(editForm[k] || "").trim()) {
+        toast({ title: "يرجى تعبئة جميع الحقول المطلوبة", variant: "destructive" });
+        return;
+      }
+    }
+    if (editForm.password && editForm.password.length > 0 && editForm.password.length < 6) {
+      toast({ title: "كلمة المرور قصيرة (6 أحرف على الأقل)", variant: "destructive" });
+      return;
+    }
     setEditSaving(true);
     try {
-      const { error } = await supabase
-        .from("reciter_profiles")
-        .update(editForm)
-        .eq("id", editTarget.id);
-      if (error) throw error;
-      // Also sync profile name/phone
-      await supabase.from("profiles").update({
-        full_name: editForm.full_name,
-        phone: editForm.phone,
-      }).eq("user_id", editTarget.user_id);
+      const { data, error } = await supabase.functions.invoke("update-reciter", {
+        body: { reciter_id: editTarget.id, user_id: editTarget.user_id, ...editForm },
+      });
+      let serverMsg = "";
+      if (error) {
+        try {
+          const resp = (error as any)?.context?.response;
+          if (resp) {
+            const bodyJ = await resp.clone().json().catch(() => null);
+            serverMsg = bodyJ?.error || "";
+          }
+        } catch {}
+        throw new Error(serverMsg || error.message);
+      }
+      if ((data as any)?.error) throw new Error((data as any).error);
       setReciters(prev => prev.map(r => r.id === editTarget.id ? { ...r, ...editForm } as ReciterProfile : r));
       toast({ title: "تم تحديث بيانات المقرئ ✅" });
       setEditTarget(null);
