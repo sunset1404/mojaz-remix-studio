@@ -128,7 +128,6 @@ Deno.serve(async (req) => {
       }
       await serviceClient.auth.admin.updateUserById(existing.id, { password, email_confirm: true });
       userId = existing.id;
-      userId = existing.id;
 
       if (existingRec) {
         await serviceClient.from("user_roles").upsert(
