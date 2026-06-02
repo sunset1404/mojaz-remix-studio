@@ -1,28 +1,23 @@
 project_id = "cfihcvudcwujylipqngk"
 
-[functions.create-partner]
-verify_jwt = false
-
-[functions.request-call]
-verify_jwt = false
-
-[functions.verify-payment]
-verify_jwt = false
-
-[functions.create-payment]
-verify_jwt = false
-
-[functions.reciter-call]
-verify_jwt = true
-
-[functions.moyasar-webhook]
-verify_jwt = false
-
-[functions.verify-certificate]
-verify_jwt = false
-
-[functions.whatsapp-webhook]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = true
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.create-partner]
+    verify_jwt = false
+  [functions.create-payment]
+    verify_jwt = false
+  [functions.moyasar-webhook]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.reciter-call]
+    verify_jwt = true
+  [functions.request-call]
+    verify_jwt = false
+  [functions.verify-certificate]
+    verify_jwt = false
+  [functions.verify-payment]
+    verify_jwt = false
+  [functions.whatsapp-webhook]
+    verify_jwt = false
