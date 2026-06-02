@@ -9,55 +9,57 @@ import {
   Head,
   Heading,
   Html,
-  Link,
+  Img,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
 interface EmailChangeEmailProps {
   siteName: string
-  // oldEmail is the user's current address (HookData.OldEmail). For the
-  // NEW-recipient half of a secure email_change fanout, `email` equals the
-  // recipient (NEW), so the "from" line must render oldEmail to read
-  // "from OLD to NEW" instead of "from NEW to NEW".
   oldEmail: string
   email: string
   newEmail: string
   confirmationUrl: string
 }
 
+const LOGO_URL =
+  'https://cfihcvudcwujylipqngk.supabase.co/storage/v1/object/public/reciter-assets/email%2Flogo-mojaz.png'
+
 export const EmailChangeEmail = ({
-  siteName,
   oldEmail,
   newEmail,
   confirmationUrl,
 }: EmailChangeEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="ar" dir="rtl">
     <Head />
-    <Preview>Confirm your email change for {siteName}</Preview>
+    <Preview>تأكيد تغيير البريد الإلكتروني في مجاز</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email change</Heading>
-        <Text style={text}>
-          You requested to change your email address for {siteName} from{' '}
-          <Link href={`mailto:${oldEmail}`} style={link}>
-            {oldEmail}
-          </Link>{' '}
-          to{' '}
-          <Link href={`mailto:${newEmail}`} style={link}>
-            {newEmail}
-          </Link>
-          .
-        </Text>
-        <Text style={text}>
-          Click the button below to confirm this change:
-        </Text>
-        <Button style={button} href={confirmationUrl}>
-          Confirm Email Change
-        </Button>
+        <Section style={header}>
+          <Img src={LOGO_URL} alt="مجاز" width="96" height="96" style={logo} />
+          <Heading style={brand}>مجاز</Heading>
+        </Section>
+        <Section style={card}>
+          <Heading style={h1}>تأكيد تغيير البريد الإلكتروني</Heading>
+          <Text style={text}>
+            استلمنا طلباً لتغيير البريد الإلكتروني المرتبط بحسابك في تطبيق <strong>مجاز</strong> من{' '}
+            <strong>{oldEmail}</strong> إلى <strong>{newEmail}</strong>.
+          </Text>
+          <Text style={text}>
+            اضغط على الزر أدناه لتأكيد التغيير:
+          </Text>
+          <Section style={buttonWrap}>
+            <Button style={button} href={confirmationUrl}>
+              تأكيد التغيير
+            </Button>
+          </Section>
+          <Text style={hint}>
+            إذا لم تطلب هذا التغيير، يرجى تأمين حسابك فوراً.
+          </Text>
+        </Section>
         <Text style={footer}>
-          If you didn't request this change, please secure your account
-          immediately.
+          © {new Date().getFullYear()} تطبيق مجاز · جميع الحقوق محفوظة
         </Text>
       </Container>
     </Body>
@@ -66,27 +68,33 @@ export const EmailChangeEmail = ({
 
 export default EmailChangeEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
+const main = { backgroundColor: '#ffffff', fontFamily: '"Cairo", "Tahoma", Arial, sans-serif', padding: '24px 0' }
+const container = { maxWidth: '560px', margin: '0 auto', padding: '0 16px' }
+const header = { textAlign: 'center' as const, padding: '8px 0 16px' }
+const logo = { display: 'inline-block', borderRadius: '16px' }
+const brand = { fontSize: '20px', color: '#0f766e', margin: '8px 0 0', fontWeight: 'bold' as const }
+const card = {
+  backgroundColor: '#ffffff',
+  border: '1px solid #e5f3f1',
+  borderTop: '4px solid #14b8a6',
+  borderRadius: '16px',
+  padding: '28px 24px',
+  textAlign: 'right' as const,
+  boxShadow: '0 4px 12px rgba(20, 184, 166, 0.08)',
 }
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const link = { color: 'inherit', textDecoration: 'underline' }
+const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 16px' }
+const text = { fontSize: '15px', color: '#334155', lineHeight: '1.8', margin: '0 0 16px' }
+const buttonWrap = { textAlign: 'center' as const, margin: '24px 0 16px' }
 const button = {
-  backgroundColor: '#000000',
+  backgroundColor: '#14b8a6',
   color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
+  fontSize: '16px',
+  fontWeight: 'bold' as const,
+  borderRadius: '12px',
+  padding: '14px 36px',
   textDecoration: 'none',
+  display: 'inline-block',
+  borderBottom: '3px solid #d4af37',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const hint = { fontSize: '13px', color: '#64748b', lineHeight: '1.7', margin: '20px 0 0' }
+const footer = { fontSize: '12px', color: '#94a3b8', textAlign: 'center' as const, margin: '24px 0 0' }
