@@ -184,43 +184,28 @@ const StudentSignup = () => {
     if (!validateStep()) return;
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin }
-    });
-
-    if (error) {
-      toast({ title: "خطأ في التسجيل", description: error.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    if (data.user) {
-      const { error: roleError } = await supabase.from("user_roles").insert({ user_id: data.user.id, role: "student" as const });
-      if (roleError) console.error("Role insert error:", roleError);
-
-      const { error: profileError } = await (supabase as any).from("student_profiles").insert({
-        user_id: data.user.id,
+    const { data, error } = await supabase.functions.invoke("signup-student", {
+      body: {
+        email,
+        password,
         full_name: fullName,
         gender,
-        id_number: "",
-        email,
-        residence_country: "",
         nationality,
         phone: `${phoneCode}${phone}`,
-        profession: "",
         education_level: educationLevel,
         quran_certifications: hasPreviousCertifications === "yes" ? previousCertifications : "",
         preferred_riwaya: preferredRiwaya,
         preferred_track: preferredTrack,
         join_date: joinDate,
-        selected_exam_id: selectedExamId || null
-      });
-      if (profileError) {
-        toast({ title: "خطأ في حفظ البيانات", description: profileError.message, variant: "destructive" });
-        setLoading(false);
-        return;
-      }
+        selected_exam_id: selectedExamId || null,
+      },
+    });
+
+    if (error || (data as any)?.error) {
+      const msg = (data as any)?.message || error?.message || "حدث خطأ أثناء التسجيل";
+      toast({ title: "خطأ في التسجيل", description: msg, variant: "destructive" });
+      setLoading(false);
+      return;
     }
 
     toast({ title: "تم إنشاء الحساب بنجاح" });
