@@ -9,8 +9,12 @@ import {
   Users, Search, Phone, Mail, MessageCircle,
   Globe, UserCheck, TrendingUp, BookOpen,
   RefreshCw, ChevronDown, ChevronUp, Filter,
-  ArrowRight
+  ArrowRight, Trash2
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,9 +54,30 @@ const AdminStudents = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState<string>("all");
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<StudentProfile | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-student", {
+        body: { user_id: deleteTarget.user_id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setStudents(prev => prev.filter(s => s.id !== deleteTarget.id));
+      toast({ title: "تم حذف الطالب بنجاح" });
+      setDeleteTarget(null);
+    } catch (err: any) {
+      toast({ title: "فشل الحذف", description: err?.message || "حدث خطأ", variant: "destructive" });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
