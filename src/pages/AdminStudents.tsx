@@ -412,6 +412,15 @@ const AdminStudents = () => {
                                 >
                                   <Phone className="w-4 h-4" />
                                 </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(student); }}
+                                  title="حذف الطالب"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
                               </div>
                               <div className="text-left hidden sm:block">
                                 <span className="text-[11px] text-muted-foreground block">
@@ -526,6 +535,28 @@ const AdminStudents = () => {
           </Card>
         </motion.div>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد حذف الطالب</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف الطالب <span className="font-bold text-foreground">{deleteTarget?.full_name}</span>؟
+              سيتم حذف جميع بياناته نهائياً من قاعدة البيانات (الجلسات، الإنجازات، الشهادات، الاشتراكات، والحساب). لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "جاري الحذف..." : "حذف نهائي"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
