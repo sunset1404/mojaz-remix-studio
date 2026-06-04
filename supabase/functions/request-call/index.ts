@@ -88,7 +88,7 @@ serve(async (req: Request) => {
                 error: "no_credits",
                 message: "نفذ رصيد ساعاتك. يرجى تجديد الاشتراك أو شراء ساعات إضافية." 
             }), {
-                status: 403,
+                status: 200,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
