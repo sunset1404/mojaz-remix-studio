@@ -2,17 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, WifiOff, User } from 'lucide-react';
 import { useVideoCall } from '@/hooks/useVideoCall';
-import {
-    AlertDialog,
-    AlertDialogContent,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogAction,
-    AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
-
 
 interface VideoCallProps {
     roomId: string;
@@ -21,11 +10,9 @@ interface VideoCallProps {
     onEndCall?: () => void;
     onOtherPartyEnded?: () => void;
     autoStartCall?: boolean;
-    confirmEnd?: boolean;
-    endButtonAlign?: 'center' | 'start' | 'end';
 }
 
-export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false, confirmEnd = false, endButtonAlign = 'center' }: VideoCallProps) {
+export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false }: VideoCallProps) {
     const {
         localStream,
         remoteStream,
@@ -42,7 +29,6 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
     const mainVideoRef = useRef<HTMLVideoElement>(null);
     const [showEndedScreen, setShowEndedScreen] = useState(false);
     const [swapped, setSwapped] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
 
     // When the other side ends the call via DB, show ended screen
     useEffect(() => {
@@ -59,22 +45,10 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         if (pipVideoRef.current) pipVideoRef.current.srcObject = pipStream || null;
     }, [localStream, remoteStream, swapped]);
 
-    const doEndCall = () => {
-        endCall();
-        onEndCall?.();
-    };
 
     const handleEndCall = () => {
-        if (confirmEnd) {
-            setShowConfirm(true);
-        } else {
-            doEndCall();
-        }
-    };
-
-    const confirmEndCall = () => {
-        setShowConfirm(false);
-        doEndCall();
+        endCall();
+        onEndCall?.();
     };
 
     // Call ended by other party — notify parent
@@ -194,81 +168,43 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
             </div>
 
 
-            <div className={`shrink-0 px-6 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex items-center gap-6 bg-[linear-gradient(180deg,transparent,hsl(var(--background)/0.86)_35%,hsl(var(--background)))] backdrop-blur-sm ${endButtonAlign === 'center' ? 'justify-center' : endButtonAlign === 'start' ? 'justify-start' : 'justify-end'}`}>
-                {endButtonAlign !== 'start' && (
-                    <motion.button
-                        initial={{ y: 30, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        onClick={toggleMute}
-                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${callState.isMuted
-                            ? 'bg-destructive text-destructive-foreground border-destructive/60'
-                            : 'bg-card/80 text-foreground border-border hover:bg-card'
-                            }`}
-                    >
-                        {callState.isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                    </motion.button>
-                )}
+            <div className="shrink-0 px-6 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex items-center justify-center gap-6 bg-[linear-gradient(180deg,transparent,hsl(var(--background)/0.86)_35%,hsl(var(--background)))] backdrop-blur-sm">
+                <motion.button
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    onClick={toggleMute}
+                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${callState.isMuted
+                        ? 'bg-destructive text-destructive-foreground border-destructive/60'
+                        : 'bg-card/80 text-foreground border-border hover:bg-card'
+                        }`}
+                >
+                    {callState.isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                </motion.button>
 
-                {endButtonAlign === 'center' ? (
-                    <motion.button
-                        initial={{ y: 30, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        onClick={handleEndCall}
-                        className="w-20 h-20 rounded-full bg-destructive hover:brightness-95 text-destructive-foreground flex items-center justify-center transition-all shadow-xl shadow-destructive/30"
-                    >
-                        <PhoneOff className="w-8 h-8" />
-                    </motion.button>
-                ) : (
-                    <motion.button
-                        initial={{ y: 30, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        onClick={handleEndCall}
-                        className="w-14 h-14 rounded-full bg-destructive hover:brightness-95 text-destructive-foreground flex items-center justify-center transition-all shadow-lg shadow-destructive/30"
-                    >
-                        <PhoneOff className="w-6 h-6" />
-                    </motion.button>
-                )}
+                <motion.button
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    onClick={handleEndCall}
+                    className="w-16 h-16 rounded-full bg-destructive hover:brightness-95 text-destructive-foreground flex items-center justify-center transition-all shadow-lg shadow-destructive/30"
+                >
+                    <PhoneOff className="w-7 h-7" />
+                </motion.button>
 
-                {endButtonAlign !== 'end' && (
-                    <motion.button
-                        initial={{ y: 30, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                        onClick={toggleVideo}
-                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${!callState.isVideoEnabled
-                            ? 'bg-destructive text-destructive-foreground border-destructive/60'
-                            : 'bg-card/80 text-foreground border-border hover:bg-card'
-                            }`}
-                    >
-                        {callState.isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
-                    </motion.button>
-                )}
+                <motion.button
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    onClick={toggleVideo}
+                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${!callState.isVideoEnabled
+                        ? 'bg-destructive text-destructive-foreground border-destructive/60'
+                        : 'bg-card/80 text-foreground border-border hover:bg-card'
+                        }`}
+                >
+                    {callState.isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+                </motion.button>
             </div>
-
-            <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
-                <AlertDialogContent className="rounded-2xl max-w-sm mx-auto" dir="rtl">
-                    <AlertDialogHeader>
-                        <div className="flex justify-center mb-3">
-                            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
-                                <PhoneOff className="w-8 h-8 text-destructive" />
-                            </div>
-                        </div>
-                        <AlertDialogTitle className="text-center text-lg">إنهاء المكالمة</AlertDialogTitle>
-                        <AlertDialogDescription className="text-center text-sm">
-                            هل أنت متأكد أنك تريد إنهاء المكالمة؟
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
-                        <AlertDialogAction onClick={confirmEndCall} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
-                            نعم، إنهاء
-                        </AlertDialogAction>
-                        <AlertDialogCancel onClick={() => setShowConfirm(false)} className="rounded-xl">إلغاء</AlertDialogCancel>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
         </div>
     );
 }
