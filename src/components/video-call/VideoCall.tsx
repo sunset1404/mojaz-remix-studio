@@ -30,6 +30,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         callState,
         toggleMute,
         toggleVideo,
+        switchCamera,
         endCall,
         dbStatus,
     } = useVideoCall({ roomId, role, autoStart: true });
