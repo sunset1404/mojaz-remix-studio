@@ -224,7 +224,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
                     onClick={handleEndCallClick}
                     className="w-11 h-11 rounded-full bg-destructive hover:brightness-95 text-destructive-foreground flex items-center justify-center transition-all shadow-lg shadow-destructive/30 border border-destructive/60"
                 >
-                    <PhoneOff className="w-6 h-6" />
+                    <PhoneOff className="w-5 h-5" />
                 </motion.button>
             </div>
 
