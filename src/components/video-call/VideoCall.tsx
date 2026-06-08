@@ -37,19 +37,14 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         }
     }, [dbStatus]);
 
-    // Attach local stream to video element
+    // Attach streams based on swap state: main = remote by default, pip = local
     useEffect(() => {
-        if (localVideoRef.current && localStream) {
-            localVideoRef.current.srcObject = localStream;
-        }
-    }, [localStream]);
+        const mainStream = swapped ? localStream : remoteStream;
+        const pipStream = swapped ? remoteStream : localStream;
+        if (mainVideoRef.current) mainVideoRef.current.srcObject = mainStream || null;
+        if (pipVideoRef.current) pipVideoRef.current.srcObject = pipStream || null;
+    }, [localStream, remoteStream, swapped]);
 
-    // Attach remote stream to video element
-    useEffect(() => {
-        if (remoteVideoRef.current && remoteStream) {
-            remoteVideoRef.current.srcObject = remoteStream;
-        }
-    }, [remoteStream]);
 
     const handleEndCall = () => {
         endCall();
