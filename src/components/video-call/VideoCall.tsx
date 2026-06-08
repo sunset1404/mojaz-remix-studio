@@ -222,28 +222,28 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4 }}
                     onClick={handleEndCallClick}
-                    className="w-16 h-16 rounded-full bg-destructive hover:brightness-95 text-destructive-foreground flex items-center justify-center transition-all shadow-lg shadow-destructive/30"
+                    className="w-14 h-14 rounded-full bg-destructive hover:brightness-95 text-destructive-foreground flex items-center justify-center transition-all shadow-lg shadow-destructive/30 border border-destructive/60"
                 >
-                    <PhoneOff className="w-7 h-7" />
+                    <PhoneOff className="w-6 h-6" />
                 </motion.button>
             </div>
 
             <AlertDialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
-                <AlertDialogContent dir="rtl">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>إنهاء المكالمة</AlertDialogTitle>
-                        <AlertDialogDescription>
+                <AlertDialogContent dir="rtl" className="text-right">
+                    <AlertDialogHeader className="text-right sm:text-right">
+                        <AlertDialogTitle className="text-right">إنهاء المكالمة</AlertDialogTitle>
+                        <AlertDialogDescription className="text-right">
                             هل أنت متأكد من إنهاء المكالمة الآن؟
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>تراجع</AlertDialogCancel>
+                    <AlertDialogFooter className="flex-row-reverse sm:flex-row-reverse sm:justify-start gap-2">
                         <AlertDialogAction
                             onClick={() => { setShowEndConfirm(false); handleEndCall(); }}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                             نعم، إنهاء
                         </AlertDialogAction>
+                        <AlertDialogCancel className="mt-0">تراجع</AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
