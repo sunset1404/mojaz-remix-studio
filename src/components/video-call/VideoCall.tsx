@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, WifiOff, User } from 'lucide-react';
 import { useVideoCall } from '@/hooks/useVideoCall';
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogAction,
+    AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 interface VideoCallProps {
     roomId: string;
@@ -10,9 +20,10 @@ interface VideoCallProps {
     onEndCall?: () => void;
     onOtherPartyEnded?: () => void;
     autoStartCall?: boolean;
+    confirmOnEnd?: boolean;
 }
 
-export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false }: VideoCallProps) {
+export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false, confirmOnEnd = false }: VideoCallProps) {
     const {
         localStream,
         remoteStream,
