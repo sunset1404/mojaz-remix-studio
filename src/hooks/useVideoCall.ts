@@ -350,6 +350,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         startCall,
         toggleMute,
         toggleVideo,
+        switchCamera,
         endCall,
         initialize,
         dbStatus,
