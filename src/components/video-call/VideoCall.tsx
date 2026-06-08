@@ -42,6 +42,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
     const mainVideoRef = useRef<HTMLVideoElement>(null);
     const [showEndedScreen, setShowEndedScreen] = useState(false);
     const [swapped, setSwapped] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     // When the other side ends the call via DB, show ended screen
     useEffect(() => {
@@ -58,10 +59,22 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         if (pipVideoRef.current) pipVideoRef.current.srcObject = pipStream || null;
     }, [localStream, remoteStream, swapped]);
 
-
-    const handleEndCall = () => {
+    const doEndCall = () => {
         endCall();
         onEndCall?.();
+    };
+
+    const handleEndCall = () => {
+        if (confirmEnd) {
+            setShowConfirm(true);
+        } else {
+            doEndCall();
+        }
+    };
+
+    const confirmEndCall = () => {
+        setShowConfirm(false);
+        doEndCall();
     };
 
     // Call ended by other party — notify parent
