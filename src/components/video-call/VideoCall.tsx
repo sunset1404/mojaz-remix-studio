@@ -114,12 +114,14 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
             {renderStatusBadge()}
 
             <div className="flex-1 relative overflow-hidden">
-                {remoteStream ? (
+                {(swapped ? localStream : remoteStream) ? (
                     <video
-                        ref={remoteVideoRef}
+                        ref={mainVideoRef}
                         autoPlay
                         playsInline
+                        muted={swapped}
                         className="w-full h-full object-cover"
+                        style={swapped ? { transform: 'scaleX(-1)' } : undefined}
                     />
                 ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-[linear-gradient(180deg,hsl(var(--primary)/0.18),hsl(var(--background)))]">
@@ -138,28 +140,33 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
                     </div>
                 )}
 
-                {localStream && (
-                    <motion.div
+                {(swapped ? remoteStream : localStream) && (
+                    <motion.button
+                        type="button"
+                        onClick={() => setSwapped((s) => !s)}
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="absolute top-6 right-4 w-28 h-40 rounded-2xl overflow-hidden shadow-2xl border border-primary/30 bg-card/40 z-20"
+                        whileTap={{ scale: 0.95 }}
+                        aria-label="تبديل الكاميرا"
+                        className="absolute top-6 right-4 w-28 h-40 rounded-2xl overflow-hidden shadow-2xl border border-primary/30 bg-card/40 z-20 cursor-pointer"
                     >
                         <video
-                            ref={localVideoRef}
+                            ref={pipVideoRef}
                             autoPlay
                             playsInline
                             muted
-                            className="w-full h-full object-cover mirror"
-                            style={{ transform: 'scaleX(-1)' }}
+                            className="w-full h-full object-cover"
+                            style={!swapped ? { transform: 'scaleX(-1)' } : undefined}
                         />
-                        {!callState.isVideoEnabled && (
+                        {!swapped && !callState.isVideoEnabled && (
                             <div className="absolute inset-0 bg-card/90 flex items-center justify-center">
                                 <VideoOff className="w-6 h-6 text-muted-foreground" />
                             </div>
                         )}
-                    </motion.div>
+                    </motion.button>
                 )}
             </div>
+
 
             <div className="shrink-0 px-6 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex items-center justify-center gap-6 bg-[linear-gradient(180deg,transparent,hsl(var(--background)/0.86)_35%,hsl(var(--background)))] backdrop-blur-sm">
                 <motion.button
