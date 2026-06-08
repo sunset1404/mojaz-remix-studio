@@ -128,13 +128,10 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
     };
 
     return (
-        <div
-            className="absolute inset-0 z-50 flex flex-col"
-            style={{ background: "radial-gradient(circle at 50% 12%, hsl(var(--primary) / 0.25), hsl(var(--background)) 58%)" }}
-        >
+        <div className="absolute inset-0 z-50 bg-black">
             {renderStatusBadge()}
 
-            <div className="flex-1 relative overflow-hidden">
+            <div className="absolute inset-0 overflow-hidden">
                 {(swapped ? localStream : remoteStream) ? (
                     <video
                         ref={mainVideoRef}
@@ -189,7 +186,11 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
             </div>
 
 
-            <div className="shrink-0 px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-4 bg-transparent" dir="rtl">
+            <div
+                className="absolute bottom-0 left-0 right-0 z-30 px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-4"
+                style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }}
+                dir="rtl"
+            >
                 <div className="flex items-center gap-3">
                     <motion.button
                         initial={{ y: 30, opacity: 0 }}
