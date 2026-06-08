@@ -188,43 +188,65 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
             </div>
 
 
-            <div className="shrink-0 px-6 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex items-center justify-center gap-6 bg-[linear-gradient(180deg,transparent,hsl(var(--background)/0.86)_35%,hsl(var(--background)))] backdrop-blur-sm">
-                <motion.button
-                    initial={{ y: 30, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    onClick={toggleMute}
-                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${callState.isMuted
-                        ? 'bg-destructive text-destructive-foreground border-destructive/60'
-                        : 'bg-card/80 text-foreground border-border hover:bg-card'
-                        }`}
-                >
-                    {callState.isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                </motion.button>
+            <div className="shrink-0 px-6 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-4 bg-[linear-gradient(180deg,transparent,hsl(var(--background)/0.86)_35%,hsl(var(--background)))] backdrop-blur-sm" dir="rtl">
+                <div className="flex items-center gap-4">
+                    <motion.button
+                        initial={{ y: 30, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        onClick={toggleMute}
+                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${callState.isMuted
+                            ? 'bg-destructive text-destructive-foreground border-destructive/60'
+                            : 'bg-card/80 text-foreground border-border hover:bg-card'
+                            }`}
+                    >
+                        {callState.isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                    </motion.button>
 
-                <motion.button
-                    initial={{ y: 30, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    onClick={handleEndCall}
-                    className="w-16 h-16 rounded-full bg-destructive hover:brightness-95 text-destructive-foreground flex items-center justify-center transition-all shadow-lg shadow-destructive/30"
-                >
-                    <PhoneOff className="w-7 h-7" />
-                </motion.button>
+                    <motion.button
+                        initial={{ y: 30, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        onClick={toggleVideo}
+                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${!callState.isVideoEnabled
+                            ? 'bg-destructive text-destructive-foreground border-destructive/60'
+                            : 'bg-card/80 text-foreground border-border hover:bg-card'
+                            }`}
+                    >
+                        {callState.isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+                    </motion.button>
+                </div>
 
                 <motion.button
                     initial={{ y: 30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4 }}
-                    onClick={toggleVideo}
-                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${!callState.isVideoEnabled
-                        ? 'bg-destructive text-destructive-foreground border-destructive/60'
-                        : 'bg-card/80 text-foreground border-border hover:bg-card'
-                        }`}
+                    onClick={handleEndCallClick}
+                    className="w-16 h-16 rounded-full bg-destructive hover:brightness-95 text-destructive-foreground flex items-center justify-center transition-all shadow-lg shadow-destructive/30"
                 >
-                    {callState.isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+                    <PhoneOff className="w-7 h-7" />
                 </motion.button>
             </div>
+
+            <AlertDialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
+                <AlertDialogContent dir="rtl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>إنهاء المكالمة</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            هل أنت متأكد من إنهاء المكالمة الآن؟
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>تراجع</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => { setShowEndConfirm(false); handleEndCall(); }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            نعم، إنهاء
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
