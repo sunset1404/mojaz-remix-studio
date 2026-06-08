@@ -25,7 +25,10 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
 
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
+    const pipVideoRef = useRef<HTMLVideoElement>(null);
+    const mainVideoRef = useRef<HTMLVideoElement>(null);
     const [showEndedScreen, setShowEndedScreen] = useState(false);
+    const [swapped, setSwapped] = useState(false);
 
     // When the other side ends the call via DB, show ended screen
     useEffect(() => {
