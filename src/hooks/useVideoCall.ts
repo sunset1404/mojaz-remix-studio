@@ -290,6 +290,15 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         }
     }, []);
 
+    // Switch camera (front/back)
+    const switchCamera = useCallback(async () => {
+        if (webrtcManager.current) {
+            await webrtcManager.current.switchCamera();
+            const stream = (webrtcManager.current as any).localStream as MediaStream | null;
+            if (stream) setLocalStream(new MediaStream(stream.getTracks()));
+        }
+    }, []);
+
     // End call
     const endCall = useCallback(async () => {
         webrtcManager.current?.cleanup();
