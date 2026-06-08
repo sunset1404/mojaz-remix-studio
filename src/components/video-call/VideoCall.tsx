@@ -63,6 +63,14 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         onEndCall?.();
     };
 
+    const handleEndCallClick = () => {
+        if (confirmOnEnd) {
+            setShowEndConfirm(true);
+        } else {
+            handleEndCall();
+        }
+    };
+
     // Call ended by other party — notify parent
     useEffect(() => {
         if (showEndedScreen) {
