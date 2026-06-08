@@ -34,6 +34,7 @@ export function StudentSessionPopup({ rating, notes, onClose }: StudentSessionPo
         transition={{ type: "spring", damping: 20, stiffness: 300 }}
         className="fixed inset-0 z-[999] flex items-center justify-center px-5"
         dir="rtl"
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
         <div
           className="p-0.5 rounded-3xl shadow-2xl w-full max-w-sm"
