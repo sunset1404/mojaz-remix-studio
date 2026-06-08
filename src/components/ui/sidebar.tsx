@@ -51,6 +51,12 @@ const SidebarProvider = React.forwardRef<
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
 
+  // Safety: auto-close mobile sidebar when switching to desktop to avoid
+  // a stuck dark overlay covering the admin layout.
+  React.useEffect(() => {
+    if (!isMobile && openMobile) setOpenMobile(false);
+  }, [isMobile, openMobile]);
+
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen);
