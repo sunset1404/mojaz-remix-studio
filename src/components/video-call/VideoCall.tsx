@@ -188,19 +188,19 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
             </div>
 
 
-            <div className="shrink-0 px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-4 bg-background/30 backdrop-blur-md" dir="rtl">
-                <div className="flex items-center gap-4">
+            <div className="shrink-0 px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-4 bg-transparent" dir="rtl">
+                <div className="flex items-center gap-3">
                     <motion.button
                         initial={{ y: 30, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.2 }}
                         onClick={toggleMute}
-                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${callState.isMuted
+                        className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border ${callState.isMuted
                             ? 'bg-destructive text-destructive-foreground border-destructive/60'
                             : 'bg-card/80 text-foreground border-border hover:bg-card'
                             }`}
                     >
-                        {callState.isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                        {callState.isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                     </motion.button>
 
                     <motion.button
@@ -208,12 +208,12 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.3 }}
                         onClick={toggleVideo}
-                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all border ${!callState.isVideoEnabled
+                        className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border ${!callState.isVideoEnabled
                             ? 'bg-destructive text-destructive-foreground border-destructive/60'
                             : 'bg-card/80 text-foreground border-border hover:bg-card'
                             }`}
                     >
-                        {callState.isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+                        {callState.isVideoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
                     </motion.button>
                 </div>
 
@@ -222,9 +222,9 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4 }}
                     onClick={handleEndCallClick}
-                    className="w-14 h-14 rounded-full bg-destructive hover:brightness-95 text-destructive-foreground flex items-center justify-center transition-all shadow-lg shadow-destructive/30 border border-destructive/60"
+                    className="w-11 h-11 rounded-full bg-destructive hover:brightness-95 text-destructive-foreground flex items-center justify-center transition-all shadow-lg shadow-destructive/30 border border-destructive/60"
                 >
-                    <PhoneOff className="w-6 h-6" />
+                    <PhoneOff className="w-5 h-5" />
                 </motion.button>
             </div>
 
