@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, WifiOff, User } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, WifiOff, User, SwitchCamera } from 'lucide-react';
 import { useVideoCall } from '@/hooks/useVideoCall';
 import {
     AlertDialog,
