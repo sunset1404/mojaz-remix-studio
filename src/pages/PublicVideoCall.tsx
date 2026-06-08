@@ -179,6 +179,7 @@ const PublicVideoCall = () => {
                 roomId={session!.room_id}
                 role="caller"
                 onEndCall={handleEndCall}
+                confirmOnEnd
             />
         </div>
     );
