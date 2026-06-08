@@ -393,6 +393,7 @@ const VideoCallPage = () => {
                 onEndCall={handleEndCall}
                 onOtherPartyEnded={handleOtherPartyEnded}
                 autoStartCall={callRole === "caller"}
+                confirmOnEnd={!isReciter}
             />
             {isReciter && (
                 <ReciterSessionPanel onDataChange={(data) => { sessionNoteRef.current = data; }} />
