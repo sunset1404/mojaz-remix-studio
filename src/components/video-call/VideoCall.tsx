@@ -21,9 +21,11 @@ interface VideoCallProps {
     onEndCall?: () => void;
     onOtherPartyEnded?: () => void;
     autoStartCall?: boolean;
+    confirmEnd?: boolean;
+    endButtonAlign?: 'center' | 'start' | 'end';
 }
 
-export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false }: VideoCallProps) {
+export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false, confirmEnd = false, endButtonAlign = 'center' }: VideoCallProps) {
     const {
         localStream,
         remoteStream,
