@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, WifiOff, User } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, WifiOff, User, SwitchCamera } from 'lucide-react';
 import { useVideoCall } from '@/hooks/useVideoCall';
 import {
     AlertDialog,
@@ -30,6 +30,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         callState,
         toggleMute,
         toggleVideo,
+        switchCamera,
         endCall,
         dbStatus,
     } = useVideoCall({ roomId, role, autoStart: true });
@@ -214,6 +215,17 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
                             }`}
                     >
                         {callState.isVideoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+                    </motion.button>
+
+                    <motion.button
+                        initial={{ y: 30, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.35 }}
+                        onClick={switchCamera}
+                        aria-label="تبديل الكاميرا"
+                        className="w-11 h-11 rounded-full flex items-center justify-center transition-all border bg-card/80 text-foreground border-border hover:bg-card"
+                    >
+                        <SwitchCamera className="w-5 h-5" />
                     </motion.button>
                 </div>
 

@@ -281,6 +281,36 @@ export class WebRTCManager {
         return false;
     }
 
+    async switchCamera(): Promise<'user' | 'environment' | null> {
+        if (!this.localStream || !this.peerConnection) return null;
+        const oldTrack = this.localStream.getVideoTracks()[0];
+        const currentFacing = (oldTrack?.getSettings?.().facingMode as string) || 'user';
+        const newFacing: 'user' | 'environment' = currentFacing === 'user' ? 'environment' : 'user';
+
+        try {
+            const newStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: { ideal: newFacing } },
+                audio: false,
+            });
+            const newTrack = newStream.getVideoTracks()[0];
+            if (!newTrack) return null;
+            newTrack.enabled = oldTrack?.enabled ?? true;
+
+            const sender = this.peerConnection.getSenders().find((s) => s.track?.kind === 'video');
+            if (sender) await sender.replaceTrack(newTrack);
+
+            if (oldTrack) {
+                this.localStream.removeTrack(oldTrack);
+                oldTrack.stop();
+            }
+            this.localStream.addTrack(newTrack);
+            return newFacing;
+        } catch (e) {
+            console.error('switchCamera failed:', e);
+            return null;
+        }
+    }
+
     cleanup(): void {
         this.stopKeepalive();
         this.clearReconnectTimer();
