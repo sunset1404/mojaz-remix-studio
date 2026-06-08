@@ -188,7 +188,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
             </div>
 
 
-            <div className="shrink-0 px-6 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-4 bg-[linear-gradient(180deg,transparent,hsl(var(--background)/0.86)_35%,hsl(var(--background)))] backdrop-blur-sm" dir="rtl">
+            <div className="shrink-0 px-6 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-4 bg-[linear-gradient(180deg,transparent,hsl(var(--background)/0.35)_35%,hsl(var(--background)/0.55))] backdrop-blur-md" dir="rtl">
                 <div className="flex items-center gap-4">
                     <motion.button
                         initial={{ y: 30, opacity: 0 }}
