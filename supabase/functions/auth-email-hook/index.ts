@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+  signup: 'تفعيل حسابك - مجاز',
+  invite: 'دعوة للانضمام إلى مجاز',
+  magiclink: 'رابط الدخول إلى مجاز',
+  recovery: 'إعادة تعيين كلمة المرور - مجاز',
+  email_change: 'تأكيد تغيير البريد الإلكتروني - مجاز',
+  reauthentication: 'رمز التحقق - مجاز',
 }
 
 // Template mapping
@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "mojaz-remix-studio"
+const SITE_NAME = "مجاز"
 const SENDER_DOMAIN = "notify.mojaz.org.sa"
 const ROOT_DOMAIN = "mojaz.org.sa"
 const FROM_DOMAIN = "notify.mojaz.org.sa" // Domain shown in From address (may be root or sender subdomain)
