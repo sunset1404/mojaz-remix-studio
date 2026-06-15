@@ -19,6 +19,10 @@ project_id = "cfihcvudcwujylipqngk"
     verify_jwt = false
   [functions.signup-reciter]
     verify_jwt = false
+  [functions.list-reciter-accounts]
+    verify_jwt = true
+  [functions.activate-reciter]
+    verify_jwt = true
   [functions.verify-certificate]
     verify_jwt = false
   [functions.verify-payment]

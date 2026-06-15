@@ -43,7 +43,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 interface ReciterProfile {
-  id: string;
+  id: string | null;
   user_id: string;
   full_name: string;
   gender: string;
@@ -63,6 +63,10 @@ interface ReciterProfile {
   created_at: string;
   stamp_url: string | null;
   signature_url: string | null;
+  email?: string | null;
+  email_confirmed_at?: string | null;
+  account_state?: string; // approved | pending | rejected | unconfirmed | incomplete
+  is_orphan?: boolean;
 }
 
 interface ReciterCertification {
@@ -305,17 +309,46 @@ const AdminReciters = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [recRes, certRes] = await Promise.all([
-        supabase.from("reciter_profiles").select("*").order("created_at", { ascending: false }),
+      const [accRes, certRes] = await Promise.all([
+        supabase.functions.invoke("list-reciter-accounts"),
         supabase.from("reciter_certifications").select("*"),
       ]);
-      if (recRes.error) throw recRes.error;
-      setReciters(recRes.data || []);
+      if (accRes.error) throw accRes.error;
+      const accounts = (accRes.data as any)?.accounts || [];
+      setReciters(accounts);
       setCertifications(certRes.data || []);
     } catch (error: any) {
-      toast({ title: "خطأ في تحميل البيانات", description: error.message, variant: "destructive" });
+      // Fallback to direct query if edge function unavailable
+      try {
+        const { data, error: e2 } = await supabase
+          .from("reciter_profiles").select("*").order("created_at", { ascending: false });
+        if (e2) throw e2;
+        setReciters((data || []).map((p: any) => ({
+          ...p,
+          account_state: p.status === "approved" ? "approved" : p.status === "rejected" ? "rejected" : "pending",
+        })));
+      } catch (e: any) {
+        toast({ title: "خطأ في تحميل البيانات", description: e.message, variant: "destructive" });
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const activateAccount = async (r: ReciterProfile) => {
+    try {
+      setUpdatingId(r.id || r.user_id);
+      const { data, error } = await supabase.functions.invoke("activate-reciter", {
+        body: { user_id: r.user_id, reciter_id: r.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: "تم تفعيل الحساب ✅", description: "تم تأكيد البريد واعتماد الحساب" });
+      fetchData();
+    } catch (e: any) {
+      toast({ title: "تعذّر التفعيل", description: e.message, variant: "destructive" });
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -403,15 +436,17 @@ const AdminReciters = () => {
 
   const stats = useMemo(() => {
     const total = reciters.length;
-    const approved = reciters.filter(r => r.status === "approved").length;
-    const pending = reciters.filter(r => r.status === "pending").length;
-    const rejected = reciters.filter(r => r.status === "rejected").length;
+    const approved = reciters.filter(r => (r.account_state || r.status) === "approved").length;
+    const pending = reciters.filter(r => (r.account_state || r.status) === "pending").length;
+    const rejected = reciters.filter(r => (r.account_state || r.status) === "rejected").length;
+    const unconfirmed = reciters.filter(r => r.account_state === "unconfirmed").length;
+    const incomplete = reciters.filter(r => r.account_state === "incomplete").length;
     const males = reciters.filter(r => r.gender === "male").length;
     const females = reciters.filter(r => r.gender === "female").length;
 
     const nationalityMap: Record<string, number> = {};
     reciters.forEach(r => {
-      nationalityMap[r.nationality] = (nationalityMap[r.nationality] || 0) + 1;
+      if (r.nationality) nationalityMap[r.nationality] = (nationalityMap[r.nationality] || 0) + 1;
     });
     const topNationalities = Object.entries(nationalityMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
@@ -421,17 +456,19 @@ const AdminReciters = () => {
     });
     const topCities = Object.entries(cityMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-    return { total, approved, pending, rejected, males, females, topNationalities, topCities };
+    return { total, approved, pending, rejected, unconfirmed, incomplete, males, females, topNationalities, topCities };
   }, [reciters]);
 
   const filteredReciters = useMemo(() => {
     return reciters.filter(r => {
       const matchesSearch = !searchQuery ||
-        r.full_name.includes(searchQuery) ||
-        r.phone.includes(searchQuery) ||
-        r.nationality.includes(searchQuery) ||
-        r.city.includes(searchQuery);
-      const matchesStatus = statusFilter === "all" || r.status === statusFilter;
+        (r.full_name || "").includes(searchQuery) ||
+        (r.phone || "").includes(searchQuery) ||
+        (r.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (r.nationality || "").includes(searchQuery) ||
+        (r.city || "").includes(searchQuery);
+      const state = r.account_state || r.status;
+      const matchesStatus = statusFilter === "all" || state === statusFilter;
       const matchesGender = genderFilter === "all" || r.gender === genderFilter;
       return matchesSearch && matchesStatus && matchesGender;
     });
@@ -442,24 +479,28 @@ const AdminReciters = () => {
     window.open(`https://wa.me/${cleaned.replace("+", "")}`, "_blank");
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (state: string) => {
+    switch (state) {
       case "approved":
         return <Badge className="bg-green-100 text-green-700 border-green-200 text-xs gap-1"><CheckCircle className="w-3 h-3" />معتمد</Badge>;
       case "rejected":
         return <Badge className="bg-red-100 text-red-700 border-red-200 text-xs gap-1"><XCircle className="w-3 h-3" />مرفوض</Badge>;
+      case "unconfirmed":
+        return <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-xs gap-1"><Mail className="w-3 h-3" />بريد غير مفعل</Badge>;
+      case "incomplete":
+        return <Badge className="bg-zinc-100 text-zinc-700 border-zinc-200 text-xs gap-1"><Clock className="w-3 h-3" />بيانات ناقصة</Badge>;
       default:
-        return <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs gap-1"><Clock className="w-3 h-3" />بانتظار التفعيل</Badge>;
+        return <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs gap-1"><Clock className="w-3 h-3" />بانتظار الاعتماد</Badge>;
     }
   };
 
   const statCards = [
-    { label: "إجمالي المقرئين", value: stats.total, icon: GraduationCap, color: "primary", desc: "مقرئ مسجل" },
+    { label: "إجمالي الحسابات", value: stats.total, icon: GraduationCap, color: "primary", desc: "حساب مسجل" },
     { label: "معتمدون", value: stats.approved, icon: CheckCircle, color: "primary", desc: "مقرئ فعّال" },
-    { label: "بانتظار التفعيل", value: stats.pending, icon: Clock, color: "gold", desc: "طلب جديد" },
+    { label: "بانتظار الاعتماد", value: stats.pending, icon: Clock, color: "gold", desc: "طلب جديد" },
+    { label: "بريد غير مفعل", value: stats.unconfirmed, icon: Mail, color: "gold", desc: "بحاجة تأكيد" },
+    { label: "بيانات ناقصة", value: stats.incomplete, icon: Clock, color: "destructive", desc: "تسجيل غير مكتمل" },
     { label: "مرفوضون", value: stats.rejected, icon: XCircle, color: "destructive", desc: "طلب مرفوض" },
-    { label: "الذكور", value: stats.males, icon: UserCheck, color: "primary", desc: "مقرئ" },
-    { label: "الإناث", value: stats.females, icon: UserCheck, color: "gold", desc: "مقرئة" },
   ];
 
   return (
@@ -629,8 +670,10 @@ const AdminReciters = () => {
                     <Filter className="w-4 h-4 text-muted-foreground" />
                     {[
                       { key: "all", label: "الكل" },
-                      { key: "pending", label: "بانتظار" },
                       { key: "approved", label: "معتمد" },
+                      { key: "pending", label: "بانتظار الاعتماد" },
+                      { key: "unconfirmed", label: "بريد غير مفعل" },
+                      { key: "incomplete", label: "بيانات ناقصة" },
                       { key: "rejected", label: "مرفوض" },
                     ].map((s) => (
                       <Button
@@ -670,52 +713,72 @@ const AdminReciters = () => {
               ) : (
                 <div className="space-y-2">
                   {filteredReciters.map((reciter, i) => {
-                    const isExpanded = expandedReciter === reciter.id;
+                    const rowId = reciter.id || reciter.user_id;
+                    const state = reciter.account_state || reciter.status;
+                    const isExpanded = expandedReciter === rowId;
+                    const isOrphan = !!reciter.is_orphan;
                     return (
                       <motion.div
-                        key={reciter.id}
+                        key={rowId}
                         initial={{ x: -10, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: i * 0.03 }}
                       >
                         <div className={`rounded-xl border overflow-hidden transition-all duration-200 ${
-                          reciter.status === "pending"
+                          state === "pending"
                             ? "border-amber-200/60 bg-amber-50/30"
+                            : state === "unconfirmed"
+                            ? "border-orange-200/60 bg-orange-50/30"
+                            : state === "incomplete"
+                            ? "border-zinc-200/60 bg-zinc-50/40"
                             : "border-border/30 " + (isExpanded ? "bg-accent/30 shadow-sm" : "bg-accent/10 hover:bg-accent/20")
                         }`}>
                           {/* Main Row */}
                           <div
                             className="flex items-center justify-between p-3 cursor-pointer"
-                            onClick={() => setExpandedReciter(isExpanded ? null : reciter.id)}
+                            onClick={() => setExpandedReciter(isExpanded ? null : rowId)}
                           >
                             <div className="flex items-center gap-3 flex-1">
                               <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                                reciter.status === "approved" ? "bg-green-100" : reciter.status === "pending" ? "bg-amber-100" : "bg-red-100"
+                                state === "approved" ? "bg-green-100"
+                                  : state === "pending" ? "bg-amber-100"
+                                  : state === "unconfirmed" ? "bg-orange-100"
+                                  : state === "incomplete" ? "bg-zinc-100"
+                                  : "bg-red-100"
                               }`}>
                                 <GraduationCap className={`w-4 h-4 ${
-                                  reciter.status === "approved" ? "text-green-600" : reciter.status === "pending" ? "text-amber-600" : "text-red-600"
+                                  state === "approved" ? "text-green-600"
+                                    : state === "pending" ? "text-amber-600"
+                                    : state === "unconfirmed" ? "text-orange-600"
+                                    : state === "incomplete" ? "text-zinc-600"
+                                    : "text-red-600"
                                 }`} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-sm text-foreground">{reciter.full_name}</p>
+                                <p className="font-semibold text-sm text-foreground">{reciter.full_name || "(بدون اسم)"}</p>
                                 <p className="text-xs text-muted-foreground truncate">
-                                  {reciter.nationality} · {reciter.city} · {reciter.gender === "male" ? "ذكر" : "أنثى"}
+                                  {reciter.email && <span dir="ltr">{reciter.email}</span>}
+                                  {reciter.email && (reciter.nationality || reciter.city) && " · "}
+                                  {reciter.nationality}{reciter.city ? ` · ${reciter.city}` : ""}
+                                  {reciter.gender ? ` · ${reciter.gender === "male" ? "ذكر" : "أنثى"}` : ""}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
-                              {getStatusBadge(reciter.status)}
+                              {getStatusBadge(state)}
                               {/* Quick contact */}
-                              <div className="hidden md:flex items-center gap-1">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-green-600 hover:bg-green-50"
-                                  onClick={(e) => { e.stopPropagation(); openWhatsApp(reciter.phone); }} title="واتساب">
-                                  <MessageCircle className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
-                                  onClick={(e) => { e.stopPropagation(); window.open(`tel:${reciter.phone}`, "_self"); }} title="اتصال">
-                                  <Phone className="w-4 h-4" />
-                                </Button>
-                              </div>
+                              {reciter.phone && (
+                                <div className="hidden md:flex items-center gap-1">
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-green-600 hover:bg-green-50"
+                                    onClick={(e) => { e.stopPropagation(); openWhatsApp(reciter.phone); }} title="واتساب">
+                                    <MessageCircle className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
+                                    onClick={(e) => { e.stopPropagation(); window.open(`tel:${reciter.phone}`, "_self"); }} title="اتصال">
+                                    <Phone className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              )}
                               <span className="text-[11px] text-muted-foreground hidden sm:block">
                                 {new Date(reciter.created_at).toLocaleDateString("ar-SA")}
                               </span>
@@ -801,51 +864,53 @@ const AdminReciters = () => {
                                       </div>
 
                                       {/* Approval Actions */}
-                                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
-                                        {reciter.status !== "approved" && (
+                                      <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/20">
+                                        {(state === "unconfirmed" || state === "incomplete" || state === "pending") && (
                                           <Button
                                             size="sm"
-                                            className="flex-1 gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs"
-                                            onClick={(e) => { e.stopPropagation(); updateStatus(reciter.id, "approved"); }}
-                                            disabled={updatingId === reciter.id}
+                                            className="flex-1 gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs min-w-[120px]"
+                                            onClick={(e) => { e.stopPropagation(); activateAccount(reciter); }}
+                                            disabled={updatingId === (reciter.id || reciter.user_id)}
                                           >
                                             <ShieldCheck className="w-3.5 h-3.5" />
                                             تفعيل الحساب
                                           </Button>
                                         )}
-                                        {reciter.status !== "rejected" && (
+                                        {!isOrphan && state === "approved" && (
                                           <Button
                                             size="sm"
                                             variant="outline"
-                                            className="flex-1 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
-                                            onClick={(e) => { e.stopPropagation(); updateStatus(reciter.id, "rejected"); }}
-                                            disabled={updatingId === reciter.id}
-                                          >
-                                            <XCircle className="w-3.5 h-3.5" />
-                                            رفض
-                                          </Button>
-                                        )}
-                                        {reciter.status !== "pending" && (
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="flex-1 gap-1.5 text-amber-600 border-amber-200 hover:bg-amber-50 text-xs"
-                                            onClick={(e) => { e.stopPropagation(); updateStatus(reciter.id, "pending"); }}
+                                            className="flex-1 gap-1.5 text-amber-600 border-amber-200 hover:bg-amber-50 text-xs min-w-[100px]"
+                                            onClick={(e) => { e.stopPropagation(); updateStatus(reciter.id!, "pending"); }}
                                             disabled={updatingId === reciter.id}
                                           >
                                             <Clock className="w-3.5 h-3.5" />
                                             تعليق
                                           </Button>
                                         )}
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          className="gap-1.5 text-primary border-primary/30 hover:bg-primary/10 text-xs"
-                                          onClick={(e) => { e.stopPropagation(); openEditDialog(reciter); }}
-                                        >
-                                          <Pencil className="w-3.5 h-3.5" />
-                                          تعديل
-                                        </Button>
+                                        {!isOrphan && state !== "rejected" && (
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs min-w-[80px]"
+                                            onClick={(e) => { e.stopPropagation(); updateStatus(reciter.id!, "rejected"); }}
+                                            disabled={updatingId === reciter.id}
+                                          >
+                                            <XCircle className="w-3.5 h-3.5" />
+                                            رفض
+                                          </Button>
+                                        )}
+                                        {!isOrphan && (
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="gap-1.5 text-primary border-primary/30 hover:bg-primary/10 text-xs"
+                                            onClick={(e) => { e.stopPropagation(); openEditDialog(reciter); }}
+                                          >
+                                            <Pencil className="w-3.5 h-3.5" />
+                                            تعديل
+                                          </Button>
+                                        )}
                                         <Button
                                           size="sm"
                                           variant="outline"
