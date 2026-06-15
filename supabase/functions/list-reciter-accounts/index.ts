@@ -92,11 +92,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Orphans: have reciter role but no profile
-    for (const uid of reciterRoleIds) {
+    // Orphans: auth users with reciter role but no profile, OR no role at all (abandoned signup)
+    // Skip users that have a non-reciter role (student/partner/admin)
+    const NON_RECITER_ROLES = new Set(["student", "partner", "admin"]);
+    for (const [uid, u] of authMap) {
       if (seenIds.has(uid)) continue;
-      const u = authMap.get(uid);
-      if (!u) continue;
+      const roles = rolesByUser.get(uid);
+      // Skip if user has a confirmed non-reciter role (they belong to a different category)
+      if (roles && !roles.has("reciter")) {
+        const onlyOther = [...roles].every(r => NON_RECITER_ROLES.has(r));
+        if (onlyOther) continue;
+      }
       result.push({
         id: null,
         user_id: uid,
