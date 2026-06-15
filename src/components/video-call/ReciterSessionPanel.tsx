@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, ChevronDown, ChevronUp, FileText, BookOpen } from 'lucide-react';
 import { SurahSelect } from './SurahSelect';
+import { AyahSelect } from './AyahSelect';
 
 interface ReciterSessionPanelProps {
   onDataChange?: (data: SessionNoteData) => void;
@@ -114,18 +115,13 @@ export function ReciterSessionPanel({ onDataChange }: ReciterSessionPanelProps) 
                       updateData({ startSurah: name });
                     }}
                   />
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    min={1}
-                    max={startMaxAyahs || undefined}
-                    placeholder="الآية"
+                  <AyahSelect
                     value={startAyah}
-                    onChange={(e) => {
-                      setStartAyah(e.target.value);
-                      updateData({ startAyah: e.target.value });
+                    max={startMaxAyahs}
+                    onChange={(v) => {
+                      setStartAyah(v);
+                      updateData({ startAyah: v });
                     }}
-                    className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
               </div>
@@ -145,18 +141,13 @@ export function ReciterSessionPanel({ onDataChange }: ReciterSessionPanelProps) 
                       updateData({ endSurah: name });
                     }}
                   />
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    min={1}
-                    max={endMaxAyahs || undefined}
-                    placeholder="الآية"
+                  <AyahSelect
                     value={endAyah}
-                    onChange={(e) => {
-                      setEndAyah(e.target.value);
-                      updateData({ endAyah: e.target.value });
+                    max={endMaxAyahs}
+                    onChange={(v) => {
+                      setEndAyah(v);
+                      updateData({ endAyah: v });
                     }}
-                    className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
               </div>
