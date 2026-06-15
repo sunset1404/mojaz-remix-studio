@@ -28,6 +28,21 @@ export function ReciterSessionPanel({ onDataChange }: ReciterSessionPanelProps) 
   const [notes, setNotes] = useState('');
   const [startMaxAyahs, setStartMaxAyahs] = useState(0);
   const [endMaxAyahs, setEndMaxAyahs] = useState(0);
+  const { keyboardHeight, height: vvHeight } = useVisualViewport();
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll focused inputs into view when keyboard opens
+  useEffect(() => {
+    if (keyboardHeight > 0) {
+      const t = setTimeout(() => {
+        const el = document.activeElement as HTMLElement | null;
+        if (el && panelRef.current?.contains(el)) {
+          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+      }, 150);
+      return () => clearTimeout(t);
+    }
+  }, [keyboardHeight]);
 
   const updateData = (updates: Partial<SessionNoteData>) => {
     const data: SessionNoteData = {
