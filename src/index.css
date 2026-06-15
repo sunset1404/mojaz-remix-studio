@@ -190,3 +190,38 @@ body::-webkit-scrollbar {
 body {
   scrollbar-width: none;
 }
+
+/* ===== On-screen keyboard handling (mobile) =====
+ * --keyboard-inset is set by src/lib/keyboardInset.ts and equals the
+ * keyboard height in px (0 when closed). Use these utilities/rules to
+ * make sticky bottom UI lift above the keyboard everywhere in the app.
+ */
+:root {
+  --keyboard-inset: 0px;
+}
+
+/* Bottom nav / fixed bottom bars: shift up when keyboard opens */
+html[data-kb-open="true"] .fixed.bottom-0,
+html[data-kb-open="true"] [data-bottom-bar] {
+  transform: translateY(calc(var(--keyboard-inset) * -1));
+  transition: transform 0.2s ease;
+}
+
+/* Generic helper: add keyboard-safe padding to a scroll container */
+.kb-safe-padding {
+  padding-bottom: calc(var(--keyboard-inset) + env(safe-area-inset-bottom, 0px));
+  transition: padding-bottom 0.2s ease;
+}
+
+/* Dialogs/sheets that are vertically centered: keep them visible */
+html[data-kb-open="true"] [role="dialog"][data-state="open"] {
+  max-height: calc(100dvh - var(--keyboard-inset) - 16px);
+  overflow-y: auto;
+}
+
+/* Prevent iOS auto-zoom on focus (inputs must be >=16px) */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select {
+    font-size: max(16px, 1rem);
+  }
+}
