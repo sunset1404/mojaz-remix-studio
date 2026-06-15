@@ -83,7 +83,8 @@ export function ReciterSessionPanel({ onDataChange }: ReciterSessionPanelProps) 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.22 }}
-            className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-2xl max-h-[55vh] overflow-y-auto"
+            className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-2xl overflow-y-auto"
+            style={{ maxHeight: Math.max(220, vvHeight - 180) }}
           >
             {/* Top gradient bar */}
             <div
