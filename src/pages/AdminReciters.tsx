@@ -713,52 +713,72 @@ const AdminReciters = () => {
               ) : (
                 <div className="space-y-2">
                   {filteredReciters.map((reciter, i) => {
-                    const isExpanded = expandedReciter === reciter.id;
+                    const rowId = reciter.id || reciter.user_id;
+                    const state = reciter.account_state || reciter.status;
+                    const isExpanded = expandedReciter === rowId;
+                    const isOrphan = !!reciter.is_orphan;
                     return (
                       <motion.div
-                        key={reciter.id}
+                        key={rowId}
                         initial={{ x: -10, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: i * 0.03 }}
                       >
                         <div className={`rounded-xl border overflow-hidden transition-all duration-200 ${
-                          reciter.status === "pending"
+                          state === "pending"
                             ? "border-amber-200/60 bg-amber-50/30"
+                            : state === "unconfirmed"
+                            ? "border-orange-200/60 bg-orange-50/30"
+                            : state === "incomplete"
+                            ? "border-zinc-200/60 bg-zinc-50/40"
                             : "border-border/30 " + (isExpanded ? "bg-accent/30 shadow-sm" : "bg-accent/10 hover:bg-accent/20")
                         }`}>
                           {/* Main Row */}
                           <div
                             className="flex items-center justify-between p-3 cursor-pointer"
-                            onClick={() => setExpandedReciter(isExpanded ? null : reciter.id)}
+                            onClick={() => setExpandedReciter(isExpanded ? null : rowId)}
                           >
                             <div className="flex items-center gap-3 flex-1">
                               <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                                reciter.status === "approved" ? "bg-green-100" : reciter.status === "pending" ? "bg-amber-100" : "bg-red-100"
+                                state === "approved" ? "bg-green-100"
+                                  : state === "pending" ? "bg-amber-100"
+                                  : state === "unconfirmed" ? "bg-orange-100"
+                                  : state === "incomplete" ? "bg-zinc-100"
+                                  : "bg-red-100"
                               }`}>
                                 <GraduationCap className={`w-4 h-4 ${
-                                  reciter.status === "approved" ? "text-green-600" : reciter.status === "pending" ? "text-amber-600" : "text-red-600"
+                                  state === "approved" ? "text-green-600"
+                                    : state === "pending" ? "text-amber-600"
+                                    : state === "unconfirmed" ? "text-orange-600"
+                                    : state === "incomplete" ? "text-zinc-600"
+                                    : "text-red-600"
                                 }`} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-sm text-foreground">{reciter.full_name}</p>
+                                <p className="font-semibold text-sm text-foreground">{reciter.full_name || "(بدون اسم)"}</p>
                                 <p className="text-xs text-muted-foreground truncate">
-                                  {reciter.nationality} · {reciter.city} · {reciter.gender === "male" ? "ذكر" : "أنثى"}
+                                  {reciter.email && <span dir="ltr">{reciter.email}</span>}
+                                  {reciter.email && (reciter.nationality || reciter.city) && " · "}
+                                  {reciter.nationality}{reciter.city ? ` · ${reciter.city}` : ""}
+                                  {reciter.gender ? ` · ${reciter.gender === "male" ? "ذكر" : "أنثى"}` : ""}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
-                              {getStatusBadge(reciter.status)}
+                              {getStatusBadge(state)}
                               {/* Quick contact */}
-                              <div className="hidden md:flex items-center gap-1">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-green-600 hover:bg-green-50"
-                                  onClick={(e) => { e.stopPropagation(); openWhatsApp(reciter.phone); }} title="واتساب">
-                                  <MessageCircle className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
-                                  onClick={(e) => { e.stopPropagation(); window.open(`tel:${reciter.phone}`, "_self"); }} title="اتصال">
-                                  <Phone className="w-4 h-4" />
-                                </Button>
-                              </div>
+                              {reciter.phone && (
+                                <div className="hidden md:flex items-center gap-1">
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-green-600 hover:bg-green-50"
+                                    onClick={(e) => { e.stopPropagation(); openWhatsApp(reciter.phone); }} title="واتساب">
+                                    <MessageCircle className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
+                                    onClick={(e) => { e.stopPropagation(); window.open(`tel:${reciter.phone}`, "_self"); }} title="اتصال">
+                                    <Phone className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              )}
                               <span className="text-[11px] text-muted-foreground hidden sm:block">
                                 {new Date(reciter.created_at).toLocaleDateString("ar-SA")}
                               </span>
