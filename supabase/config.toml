@@ -17,6 +17,8 @@ project_id = "cfihcvudcwujylipqngk"
     verify_jwt = false
   [functions.signup-student]
     verify_jwt = false
+  [functions.signup-reciter]
+    verify_jwt = false
   [functions.verify-certificate]
     verify_jwt = false
   [functions.verify-payment]
