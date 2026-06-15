@@ -479,24 +479,28 @@ const AdminReciters = () => {
     window.open(`https://wa.me/${cleaned.replace("+", "")}`, "_blank");
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (state: string) => {
+    switch (state) {
       case "approved":
         return <Badge className="bg-green-100 text-green-700 border-green-200 text-xs gap-1"><CheckCircle className="w-3 h-3" />معتمد</Badge>;
       case "rejected":
         return <Badge className="bg-red-100 text-red-700 border-red-200 text-xs gap-1"><XCircle className="w-3 h-3" />مرفوض</Badge>;
+      case "unconfirmed":
+        return <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-xs gap-1"><Mail className="w-3 h-3" />بريد غير مفعل</Badge>;
+      case "incomplete":
+        return <Badge className="bg-zinc-100 text-zinc-700 border-zinc-200 text-xs gap-1"><Clock className="w-3 h-3" />بيانات ناقصة</Badge>;
       default:
-        return <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs gap-1"><Clock className="w-3 h-3" />بانتظار التفعيل</Badge>;
+        return <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs gap-1"><Clock className="w-3 h-3" />بانتظار الاعتماد</Badge>;
     }
   };
 
   const statCards = [
-    { label: "إجمالي المقرئين", value: stats.total, icon: GraduationCap, color: "primary", desc: "مقرئ مسجل" },
+    { label: "إجمالي الحسابات", value: stats.total, icon: GraduationCap, color: "primary", desc: "حساب مسجل" },
     { label: "معتمدون", value: stats.approved, icon: CheckCircle, color: "primary", desc: "مقرئ فعّال" },
-    { label: "بانتظار التفعيل", value: stats.pending, icon: Clock, color: "gold", desc: "طلب جديد" },
+    { label: "بانتظار الاعتماد", value: stats.pending, icon: Clock, color: "gold", desc: "طلب جديد" },
+    { label: "بريد غير مفعل", value: stats.unconfirmed, icon: Mail, color: "gold", desc: "بحاجة تأكيد" },
+    { label: "بيانات ناقصة", value: stats.incomplete, icon: Clock, color: "destructive", desc: "تسجيل غير مكتمل" },
     { label: "مرفوضون", value: stats.rejected, icon: XCircle, color: "destructive", desc: "طلب مرفوض" },
-    { label: "الذكور", value: stats.males, icon: UserCheck, color: "primary", desc: "مقرئ" },
-    { label: "الإناث", value: stats.females, icon: UserCheck, color: "gold", desc: "مقرئة" },
   ];
 
   return (
