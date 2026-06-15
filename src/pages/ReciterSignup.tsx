@@ -140,12 +140,17 @@ const ReciterSignup = () => {
 
   const validateStep = () => {
     if (step === 0) {
-      if (!email || !password || !confirmPassword) {toast({ title: "مطلوب", description: "أدخل البريد وكلمة المرور وتأكيدها", variant: "destructive" });return false;}
+      if (!email) { toast({ title: "مطلوب", description: "أدخل البريد الإلكتروني", variant: "destructive" }); return false; }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email.trim())) {setEmailError("صيغة البريد الإلكتروني غير صحيحة");return false;}
-      if (password.length < 6) {toast({ title: "كلمة المرور قصيرة", description: "يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });return false;}
-      if (password !== confirmPassword) {toast({ title: "عدم تطابق", description: "كلمة المرور وتأكيدها غير متطابقتين", variant: "destructive" });return false;}
+      if (!emailRegex.test(email.trim())) { setEmailError("صيغة البريد الإلكتروني غير صحيحة"); return false; }
+      const check = validatePassword(password);
+      if (!check.valid) { setPasswordError(check.message); return false; }
+      setPasswordError("");
+      if (!confirmPassword) { setConfirmError("يرجى تأكيد كلمة المرور"); return false; }
+      if (password !== confirmPassword) { setConfirmError("كلمة المرور وتأكيدها غير متطابقتين"); return false; }
+      setConfirmError("");
     }
+
     if (step === 1) {
       if (!fullName || !gender || !nationality || !idNumber || !phone || !city) {
         toast({ title: "مطلوب", description: "يرجى ملء جميع الحقول", variant: "destructive" });return false;
