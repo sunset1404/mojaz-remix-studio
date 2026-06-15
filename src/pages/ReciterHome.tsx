@@ -266,7 +266,12 @@ const ReciterHome = () => {
           transition={{ delay: 0.4 }}
           className="glass-card rounded-2xl p-4 grid grid-cols-4 gap-2"
         >
-          {quickStats.map((stat, i) => (
+          {[
+            { label: "عدد الطلاب", value: String(stats.students), icon: Users, color: "primary" },
+            { label: "جلسات اليوم", value: String(stats.todaySessions), icon: CalendarDays, color: "gold" },
+            { label: "ساعات الإقراء", value: String(stats.hours), icon: BookOpen, color: "primary" },
+            { label: "إنجازات", value: String(stats.certificates), icon: Trophy, color: "gold" },
+          ].map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ scale: 0.8, opacity: 0 }}
