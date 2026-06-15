@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, ChevronDown, ChevronUp, FileText, BookOpen } from 'lucide-react';
 import { SurahSelect } from './SurahSelect';
 import { AyahSelect } from './AyahSelect';
+import { useVisualViewport } from '@/hooks/useVisualViewport';
 
 interface ReciterSessionPanelProps {
   onDataChange?: (data: SessionNoteData) => void;
