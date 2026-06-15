@@ -43,7 +43,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 interface ReciterProfile {
-  id: string;
+  id: string | null;
   user_id: string;
   full_name: string;
   gender: string;
@@ -63,6 +63,10 @@ interface ReciterProfile {
   created_at: string;
   stamp_url: string | null;
   signature_url: string | null;
+  email?: string | null;
+  email_confirmed_at?: string | null;
+  account_state?: string; // approved | pending | rejected | unconfirmed | incomplete
+  is_orphan?: boolean;
 }
 
 interface ReciterCertification {
