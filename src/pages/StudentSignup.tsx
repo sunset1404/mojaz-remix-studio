@@ -221,11 +221,19 @@ const StudentSignup = () => {
     });
 
     if (error || (data as any)?.error) {
-      const msg = (data as any)?.message || error?.message || "حدث خطأ أثناء التسجيل";
-      toast({ title: "خطأ في التسجيل", description: msg, variant: "destructive" });
+      const raw = (data as any)?.message || error?.message || "حدث خطأ أثناء التسجيل";
+      const friendly = mapAuthError(raw);
+      if (isPasswordError(raw)) {
+        setPasswordError(friendly);
+        setStep(0);
+        toast({ title: "كلمة المرور غير مقبولة", description: friendly, variant: "destructive" });
+      } else {
+        toast({ title: "خطأ في التسجيل", description: friendly, variant: "destructive" });
+      }
       setLoading(false);
       return;
     }
+
 
     toast({ title: "تم إنشاء الحساب بنجاح" });
     navigate("/signup/success?role=student");
