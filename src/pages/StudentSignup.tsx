@@ -50,6 +50,16 @@ const EDUCATION_LEVELS = ["ثانوي", "دبلوم", "بكالوريوس", "م�
 const RIWAYAT = ["حفص عن عاصم", "ورش عن نافع", "قالون عن نافع", "شعبة عن عاصم", "الدوري عن أبي عمرو", "أخرى"];
 const TRACKS = ["حفظ القرآن الكريم", "التلاوة والتجويد", "الحصول على إجازة قرآنية", "المراجعة والتثبيت"];
 
+const getEmailStatusMessage = (status: string | null | undefined) => {
+  if (status === "active") {
+    return "هذا الحساب موجود ومفعل بالفعل، يمكنك تسجيل الدخول بهذا البريد.";
+  }
+  if (status === "needs_activation") {
+    return "هذا الحساب موجود لكنه يحتاج إلى تفعيل أو استكمال بياناته قبل استخدامه.";
+  }
+  return "هذا البريد الإلكتروني مسجل مسبقاً، يرجى تسجيل الدخول أو استخدام بريد آخر";
+};
+
 const StudentSignup = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
@@ -158,9 +168,9 @@ const StudentSignup = () => {
     if (!validateStep()) return;
 
     if (step === 0) {
-      const { data: emailExists } = await (supabase as any).rpc("check_email_exists", { p_email: email.trim().toLowerCase() });
-      if (emailExists) {
-        setEmailError("هذا البريد الإلكتروني مسجل مسبقاً، يرجى تسجيل الدخول أو استخدام بريد آخر");
+      const { data: emailStatus } = await (supabase as any).rpc("get_email_registration_status", { p_email: email.trim().toLowerCase() });
+      if (emailStatus && emailStatus !== "available") {
+        setEmailError(getEmailStatusMessage(emailStatus));
         return;
       }
       setEmailError("");
