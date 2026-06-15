@@ -116,7 +116,7 @@ const AppRoutes = () => (
     <Route path="/signup/success" element={<SignupSuccess />} />
     <Route path="/forgot-password" element={<AuthRoute><ForgotPassword /></AuthRoute>} />
     <Route path="/reset-password" element={<ResetPassword />} />
-    <Route path="/reciter-pending" element={<ProtectedRoute><ReciterPending /></ProtectedRoute>} />
+    <Route path="/reciter-pending" element={<ProtectedRoute allowPending><ReciterPending /></ProtectedRoute>} />
 
     {/* Role-based home */}
     <Route path="/" element={
