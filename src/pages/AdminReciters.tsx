@@ -436,15 +436,17 @@ const AdminReciters = () => {
 
   const stats = useMemo(() => {
     const total = reciters.length;
-    const approved = reciters.filter(r => r.status === "approved").length;
-    const pending = reciters.filter(r => r.status === "pending").length;
-    const rejected = reciters.filter(r => r.status === "rejected").length;
+    const approved = reciters.filter(r => (r.account_state || r.status) === "approved").length;
+    const pending = reciters.filter(r => (r.account_state || r.status) === "pending").length;
+    const rejected = reciters.filter(r => (r.account_state || r.status) === "rejected").length;
+    const unconfirmed = reciters.filter(r => r.account_state === "unconfirmed").length;
+    const incomplete = reciters.filter(r => r.account_state === "incomplete").length;
     const males = reciters.filter(r => r.gender === "male").length;
     const females = reciters.filter(r => r.gender === "female").length;
 
     const nationalityMap: Record<string, number> = {};
     reciters.forEach(r => {
-      nationalityMap[r.nationality] = (nationalityMap[r.nationality] || 0) + 1;
+      if (r.nationality) nationalityMap[r.nationality] = (nationalityMap[r.nationality] || 0) + 1;
     });
     const topNationalities = Object.entries(nationalityMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
@@ -454,17 +456,19 @@ const AdminReciters = () => {
     });
     const topCities = Object.entries(cityMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-    return { total, approved, pending, rejected, males, females, topNationalities, topCities };
+    return { total, approved, pending, rejected, unconfirmed, incomplete, males, females, topNationalities, topCities };
   }, [reciters]);
 
   const filteredReciters = useMemo(() => {
     return reciters.filter(r => {
       const matchesSearch = !searchQuery ||
-        r.full_name.includes(searchQuery) ||
-        r.phone.includes(searchQuery) ||
-        r.nationality.includes(searchQuery) ||
-        r.city.includes(searchQuery);
-      const matchesStatus = statusFilter === "all" || r.status === statusFilter;
+        (r.full_name || "").includes(searchQuery) ||
+        (r.phone || "").includes(searchQuery) ||
+        (r.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (r.nationality || "").includes(searchQuery) ||
+        (r.city || "").includes(searchQuery);
+      const state = r.account_state || r.status;
+      const matchesStatus = statusFilter === "all" || state === statusFilter;
       const matchesGender = genderFilter === "all" || r.gender === genderFilter;
       return matchesSearch && matchesStatus && matchesGender;
     });
