@@ -45,10 +45,19 @@ Deno.serve(async (req) => {
       .from("reciter_profiles").select("*").order("created_at", { ascending: false });
     if (pErr) throw pErr;
 
-    // 2) All user_roles for reciters
-    const { data: reciterRoles } = await admin
-      .from("user_roles").select("user_id").eq("role", "reciter");
-    const reciterRoleIds = new Set((reciterRoles || []).map((r: any) => r.user_id));
+    // 2) All user_roles (to identify orphans with no role and reciters)
+    const { data: allRoles } = await admin
+      .from("user_roles").select("user_id, role");
+    const rolesByUser = new Map<string, Set<string>>();
+    for (const r of allRoles || []) {
+      const s = rolesByUser.get((r as any).user_id) || new Set<string>();
+      s.add((r as any).role);
+      rolesByUser.set((r as any).user_id, s);
+    }
+    const reciterRoleIds = new Set<string>();
+    for (const [uid, roles] of rolesByUser) {
+      if (roles.has("reciter")) reciterRoleIds.add(uid);
+    }
 
     // 3) Load auth users (paginate up to 5000)
     const authMap = new Map<string, any>();
