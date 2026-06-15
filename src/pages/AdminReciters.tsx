@@ -309,17 +309,46 @@ const AdminReciters = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [recRes, certRes] = await Promise.all([
-        supabase.from("reciter_profiles").select("*").order("created_at", { ascending: false }),
+      const [accRes, certRes] = await Promise.all([
+        supabase.functions.invoke("list-reciter-accounts"),
         supabase.from("reciter_certifications").select("*"),
       ]);
-      if (recRes.error) throw recRes.error;
-      setReciters(recRes.data || []);
+      if (accRes.error) throw accRes.error;
+      const accounts = (accRes.data as any)?.accounts || [];
+      setReciters(accounts);
       setCertifications(certRes.data || []);
     } catch (error: any) {
-      toast({ title: "خطأ في تحميل البيانات", description: error.message, variant: "destructive" });
+      // Fallback to direct query if edge function unavailable
+      try {
+        const { data, error: e2 } = await supabase
+          .from("reciter_profiles").select("*").order("created_at", { ascending: false });
+        if (e2) throw e2;
+        setReciters((data || []).map((p: any) => ({
+          ...p,
+          account_state: p.status === "approved" ? "approved" : p.status === "rejected" ? "rejected" : "pending",
+        })));
+      } catch (e: any) {
+        toast({ title: "خطأ في تحميل البيانات", description: e.message, variant: "destructive" });
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const activateAccount = async (r: ReciterProfile) => {
+    try {
+      setUpdatingId(r.id || r.user_id);
+      const { data, error } = await supabase.functions.invoke("activate-reciter", {
+        body: { user_id: r.user_id, reciter_id: r.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: "تم تفعيل الحساب ✅", description: "تم تأكيد البريد واعتماد الحساب" });
+      fetchData();
+    } catch (e: any) {
+      toast({ title: "تعذّر التفعيل", description: e.message, variant: "destructive" });
+    } finally {
+      setUpdatingId(null);
     }
   };
 
