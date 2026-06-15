@@ -20,12 +20,8 @@ const promoSlides = [
   { title: "شهادات الطلاب", desc: "امنح طلابك شهادات معتمدة", icon: Award, bg: "gradient-primary", iconBg: "bg-gold/20", iconColor: "text-gold" },
 ];
 
-const quickStats = [
-  { label: "عدد الطلاب", value: "24", icon: Users, color: "primary" },
-  { label: "جلسات اليوم", value: "5", icon: CalendarDays, color: "gold" },
-  { label: "ساعات الإقراء", value: "320", icon: BookOpen, color: "primary" },
-  { label: "إنجازات", value: "12", icon: Trophy, color: "gold" },
-];
+// quickStats values are loaded from the DB per logged-in reciter
+
 
 const ReciterHome = () => {
   const { user, avatarUrl, reciterType } = useAuth();
