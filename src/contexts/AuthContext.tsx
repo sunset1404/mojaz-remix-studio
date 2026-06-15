@@ -11,6 +11,7 @@ interface AuthContextType {
   user: User | null;
   role: AppRole | null;
   reciterType: ReciterType;
+  reciterStatus: string | null;
   avatarUrl: string | null;
   loading: boolean;
   signOut: () => Promise<void>;
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   role: null,
   reciterType: null,
+  reciterStatus: null,
   avatarUrl: null,
   loading: true,
   signOut: async () => {},
