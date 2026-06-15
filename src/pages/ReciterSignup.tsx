@@ -311,9 +311,15 @@ const ReciterSignup = () => {
                   <Lock className="w-4 h-4 text-gold" />
                 </div>
                 <Input type={showPassword ? "text" : "password"} placeholder="أعد إدخال كلمة المرور"
-                value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`pr-14 text-left ${inputClass}`} dir="ltr" required />
+                value={confirmPassword} onChange={(e) => { setConfirmPassword(e.target.value); setConfirmError(""); }}
+                className={`pr-14 text-left ${inputClass} ${confirmError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
               </div>
+              {confirmError && (
+                <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
+                  <span>⚠</span> {confirmError}
+                </p>
+              )}
+
             </div>
           </div>);
 
