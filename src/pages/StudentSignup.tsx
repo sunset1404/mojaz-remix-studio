@@ -69,6 +69,9 @@ const StudentSignup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmError, setConfirmError] = useState("");
+
 
   // Step 0: Account
   const [email, setEmail] = useState("");
