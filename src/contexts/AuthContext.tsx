@@ -37,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [reciterType, setReciterType] = useState<ReciterType>(null);
+  const [reciterStatus, setReciterStatus] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,21 +51,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const r = data?.role ?? null;
         setRole(r);
         if (r === "reciter") {
-          fetchReciterType(userId);
+          fetchReciterProfile(userId);
         } else {
           setReciterType(null);
+          setReciterStatus(null);
         }
       });
   };
 
-  const fetchReciterType = (userId: string) => {
+  const fetchReciterProfile = (userId: string) => {
     supabase
       .from("reciter_profiles")
-      .select("reciter_type")
+      .select("reciter_type, status")
       .eq("user_id", userId)
       .maybeSingle()
       .then(({ data }) => {
         setReciterType((data as any)?.reciter_type ?? null);
+        setReciterStatus((data as any)?.status ?? null);
       });
   };
 
