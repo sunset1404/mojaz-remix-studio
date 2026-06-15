@@ -22,14 +22,17 @@ export function SurahSelect({ value, onChange, placeholder = "اختر السو�
     : SURAHS;
 
   useEffect(() => {
-    if (isOpen && btnRef.current) {
+    if (!isOpen) return;
+    const recompute = () => {
+      if (!btnRef.current) return;
       const r = btnRef.current.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const spaceBelow = vh - r.bottom - 12;
-      const spaceAbove = r.top - 12;
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      const vTop = window.visualViewport?.offsetTop ?? 0;
+      const spaceBelow = vh + vTop - r.bottom - 12;
+      const spaceAbove = r.top - vTop - 12;
       const desired = 320;
       const openUp = spaceBelow < 220 && spaceAbove > spaceBelow;
-      const maxHeight = Math.max(180, Math.min(desired, openUp ? spaceAbove : spaceBelow));
+      const maxHeight = Math.max(160, Math.min(desired, openUp ? spaceAbove : spaceBelow));
       setPos({
         top: openUp ? Math.max(8, r.top - maxHeight - 4) : r.bottom + 4,
         left: r.left,
@@ -37,8 +40,18 @@ export function SurahSelect({ value, onChange, placeholder = "اختر السو�
         maxHeight,
         openUp,
       });
-      setTimeout(() => searchRef.current?.focus(), 50);
-    }
+    };
+    recompute();
+    setTimeout(() => searchRef.current?.focus(), 50);
+    const vv = window.visualViewport;
+    vv?.addEventListener('resize', recompute);
+    vv?.addEventListener('scroll', recompute);
+    window.addEventListener('resize', recompute);
+    return () => {
+      vv?.removeEventListener('resize', recompute);
+      vv?.removeEventListener('scroll', recompute);
+      window.removeEventListener('resize', recompute);
+    };
   }, [isOpen]);
 
   useEffect(() => {
