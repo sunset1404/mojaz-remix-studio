@@ -670,8 +670,10 @@ const AdminReciters = () => {
                     <Filter className="w-4 h-4 text-muted-foreground" />
                     {[
                       { key: "all", label: "الكل" },
-                      { key: "pending", label: "بانتظار" },
                       { key: "approved", label: "معتمد" },
+                      { key: "pending", label: "بانتظار الاعتماد" },
+                      { key: "unconfirmed", label: "بريد غير مفعل" },
+                      { key: "incomplete", label: "بيانات ناقصة" },
                       { key: "rejected", label: "مرفوض" },
                     ].map((s) => (
                       <Button
