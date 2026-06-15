@@ -33,6 +33,20 @@ Deno.serve(async (req) => {
 
     const siteUrl = req.headers.get("origin") || Deno.env.get("SUPABASE_URL")!;
 
+    const { data: emailStatus } = await admin.rpc("get_email_registration_status", {
+      p_email: String(email).trim().toLowerCase(),
+    });
+
+    if (emailStatus && emailStatus !== "available") {
+      const message = emailStatus === "active"
+        ? "هذا الحساب موجود ومفعل بالفعل، يمكنك تسجيل الدخول بهذا البريد."
+        : "هذا الحساب موجود لكنه يحتاج إلى تفعيل أو استكمال بياناته قبل استخدامه.";
+
+      return new Response(JSON.stringify({ error: emailStatus, message }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Create user (email confirmation required by default settings)
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
       email,
@@ -44,7 +58,7 @@ Deno.serve(async (req) => {
     if (createErr || !created?.user) {
       const msg = (createErr?.message || "").toLowerCase();
       if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
-        return new Response(JSON.stringify({ error: "email_exists", message: "هذا البريد الإلكتروني مسجل مسبقاً" }), {
+        return new Response(JSON.stringify({ error: "email_exists", message: "هذا الحساب موجود بالفعل. إذا لم تتمكن من الدخول فقد يحتاج إلى تفعيل أو استكمال بياناته." }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
