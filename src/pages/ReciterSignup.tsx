@@ -36,6 +36,16 @@ const STEPS = [
 const DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
 const TRACKS = ["حفظ القرآن الكريم", "التلاوة والتجويد", "الإجازة بالسند", "المراجعة والتثبيت"];
 
+const getEmailStatusMessage = (status: string | null | undefined) => {
+  if (status === "active") {
+    return "هذا الحساب موجود ومفعل بالفعل، يمكنك تسجيل الدخول بهذا البريد.";
+  }
+  if (status === "needs_activation") {
+    return "هذا الحساب موجود لكنه يحتاج إلى تفعيل أو استكمال بياناته قبل استخدامه.";
+  }
+  return "هذا البريد الإلكتروني مسجل مسبقاً، يرجى تسجيل الدخول أو استخدام بريد آخر";
+};
+
 const SAUDI_CITIES = [
 "الرياض", "جدة", "مكة المكرمة", "المدينة المنورة", "الدمام", "الطائف", "تبوك",
 "بريدة", "خميس مشيط", "حائل", "الهفوف", "الجبيل", "نجران", "ينبع", "أبها",
@@ -157,9 +167,9 @@ const ReciterSignup = () => {
 
     // Check email uniqueness on step 0 using SECURITY DEFINER function (bypasses RLS)
     if (step === 0) {
-      const { data: emailExists } = await (supabase as any).rpc("check_email_exists", { p_email: email.trim().toLowerCase() });
-      if (emailExists) {
-        setEmailError("هذا البريد الإلكتروني مسجل مسبقاً، يرجى تسجيل الدخول أو استخدام بريد آخر");
+      const { data: emailStatus } = await (supabase as any).rpc("get_email_registration_status", { p_email: email.trim().toLowerCase() });
+      if (emailStatus && emailStatus !== "available") {
+        setEmailError(getEmailStatusMessage(emailStatus));
         return;
       }
       setEmailError("");
@@ -191,7 +201,10 @@ const ReciterSignup = () => {
     });
 
     if (error) {
-      toast({ title: "خطأ في التسجيل", description: error.message, variant: "destructive" });
+      const message = /already|registered|exists|موجود|مسجل/i.test(error.message)
+        ? "هذا الحساب موجود بالفعل. إذا لم تتمكن من الدخول فقد يحتاج إلى تفعيل أو استكمال بياناته."
+        : error.message;
+      toast({ title: "خطأ في التسجيل", description: message, variant: "destructive" });
       setLoading(false);
       return;
     }
