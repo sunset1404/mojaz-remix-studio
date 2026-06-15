@@ -135,7 +135,11 @@ const AdminReciters = () => {
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      setReciters(prev => prev.filter(r => r.id !== deleteTarget.id));
+      setReciters(prev => prev.filter(r => {
+        if (deleteTarget.id) return r.id !== deleteTarget.id;
+        // Orphan (id is null) — match by user_id instead so we don't drop all orphans
+        return r.user_id !== deleteTarget.user_id;
+      }));
       toast({ title: "تم حذف المقرئ بنجاح ✅" });
       setDeleteTarget(null);
     } catch (e: any) {
