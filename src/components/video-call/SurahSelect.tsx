@@ -73,12 +73,12 @@ export function SurahSelect({ value, onChange, placeholder = "اختر السو�
       {isOpen && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed z-[9999] rounded-xl border border-border bg-card shadow-2xl overflow-hidden"
-          style={{ top: pos.top, left: pos.left, width: Math.max(pos.width, 220) }}
+          className="fixed z-[9999] rounded-xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col"
+          style={{ top: pos.top, left: pos.left, width: Math.max(pos.width, 220), maxHeight: pos.maxHeight }}
           dir="rtl"
         >
           {/* Search */}
-          <div className="p-2 border-b border-border">
+          <div className="p-2 border-b border-border shrink-0">
             <div className="relative">
               <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -93,7 +93,7 @@ export function SurahSelect({ value, onChange, placeholder = "اختر السو�
           </div>
 
           {/* List */}
-          <div className="max-h-52 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto">
             {filtered.length === 0 ? (
               <div className="p-4 text-center text-muted-foreground text-sm">لا توجد نتائج</div>
             ) : (
