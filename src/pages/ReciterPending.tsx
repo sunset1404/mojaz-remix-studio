@@ -59,7 +59,7 @@ const ReciterPending = () => {
 
             <div className="space-y-2">
               <h2 className="text-xl font-bold text-foreground font-cairo">
-                تم تفعيل حسابك بنجاح!
+                حسابك قيد المراجعة من قبل الإدارة
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 طلبك قيد المراجعة من قبل إدارة التطبيق
