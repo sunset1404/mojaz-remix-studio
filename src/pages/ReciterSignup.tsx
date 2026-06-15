@@ -10,6 +10,8 @@ import { ArrowRight, ArrowLeft, Check, User, Phone, MapPin, BookOpen, Clock, Eye
 import logoMojaz from "@/assets/logo-mojaz.webp";
 import CountrySelect from "@/components/CountrySelect";
 import CitySelect from "@/components/CitySelect";
+import { validatePassword, mapAuthError, isPasswordError } from "@/lib/passwordPolicy";
+
 
 const getPasswordStrength = (pwd: string): {level: number;label: string;color: string;} => {
   if (!pwd) return { level: 0, label: "", color: "" };
