@@ -274,14 +274,20 @@ const ReciterSignup = () => {
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-gold/15 flex items-center justify-center">
                   <Lock className="w-4 h-4 text-gold" />
                 </div>
-                <Input type={showPassword ? "text" : "password"} placeholder="6 أحرف على الأقل"
-                value={password} onChange={(e) => setPassword(e.target.value)}
-                className={`pr-14 pl-12 text-left ${inputClass}`} dir="ltr" required />
+                <Input type={showPassword ? "text" : "password"} placeholder="8 أحرف على الأقل، حرف ورقم"
+                value={password} onChange={(e) => { setPassword(e.target.value); setPasswordError(""); }}
+                className={`pr-14 pl-12 text-left ${inputClass} ${passwordError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
                 </button>
               </div>
+              {passwordError && (
+                <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
+                  <span>⚠</span> {passwordError}
+                </p>
+              )}
+
               {password && (() => {
                 const strength = getPasswordStrength(password);
                 return (
