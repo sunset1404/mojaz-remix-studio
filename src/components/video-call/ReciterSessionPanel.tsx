@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, ChevronDown, ChevronUp, FileText, BookOpen } from 'lucide-react';
 import { SurahSelect } from './SurahSelect';
 import { AyahSelect } from './AyahSelect';
+import { useVisualViewport } from '@/hooks/useVisualViewport';
 
 interface ReciterSessionPanelProps {
   onDataChange?: (data: SessionNoteData) => void;
@@ -27,6 +28,21 @@ export function ReciterSessionPanel({ onDataChange }: ReciterSessionPanelProps) 
   const [notes, setNotes] = useState('');
   const [startMaxAyahs, setStartMaxAyahs] = useState(0);
   const [endMaxAyahs, setEndMaxAyahs] = useState(0);
+  const { keyboardHeight, height: vvHeight } = useVisualViewport();
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll focused inputs into view when keyboard opens
+  useEffect(() => {
+    if (keyboardHeight > 0) {
+      const t = setTimeout(() => {
+        const el = document.activeElement as HTMLElement | null;
+        if (el && panelRef.current?.contains(el)) {
+          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+      }, 150);
+      return () => clearTimeout(t);
+    }
+  }, [keyboardHeight]);
 
   const updateData = (updates: Partial<SessionNoteData>) => {
     const data: SessionNoteData = {
@@ -41,7 +57,12 @@ export function ReciterSessionPanel({ onDataChange }: ReciterSessionPanelProps) 
   };
 
   return (
-    <div className="absolute bottom-28 left-3 right-3 z-[60]" dir="rtl">
+    <div
+      ref={panelRef}
+      className="absolute left-3 right-3 z-[60] transition-[bottom] duration-200"
+      style={{ bottom: `calc(7rem + ${keyboardHeight}px)` }}
+      dir="rtl"
+    >
       {/* Toggle */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
@@ -62,7 +83,8 @@ export function ReciterSessionPanel({ onDataChange }: ReciterSessionPanelProps) 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.22 }}
-            className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-2xl max-h-[55vh] overflow-y-auto"
+            className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-2xl overflow-y-auto"
+            style={{ maxHeight: Math.max(220, vvHeight - 180) }}
           >
             {/* Top gradient bar */}
             <div
