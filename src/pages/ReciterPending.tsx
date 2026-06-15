@@ -59,7 +59,7 @@ const ReciterPending = () => {
 
             <div className="space-y-2">
               <h2 className="text-xl font-bold text-foreground font-cairo">
-                تم تفعيل حسابك بنجاح!
+                حسابك قيد المراجعة من قبل الإدارة
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 طلبك قيد المراجعة من قبل إدارة التطبيق
@@ -75,25 +75,20 @@ const ReciterPending = () => {
               </p>
             </div>
 
-            {/* Association contact info */}
+            {/* Admin contact info */}
             <div className="bg-card rounded-2xl p-4 space-y-3 border border-border/60">
-              <div className="flex items-center justify-center gap-2">
-                <img src={logoEqraa} alt="جمعية إقراء" className="w-8 h-8 rounded-lg object-contain" />
-                <p className="text-foreground text-xs font-bold">جمعية إقراء القرآن الكريم بمكة المكرمة</p>
-              </div>
-              <p className="text-muted-foreground text-[11px]">
-                للتواصل أو الاستفسار:
-              </p>
+              <p className="text-foreground text-xs font-bold">للتواصل مع إدارة التطبيق</p>
               <div className="flex items-center justify-center gap-3">
                 <a
-                  href="tel:920033676"
+                  href="tel:+966507040036"
                   className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors"
+                  dir="ltr"
                 >
                   <Phone className="w-3.5 h-3.5" />
-                  920033676
+                  0507040036
                 </a>
                 <a
-                  href="https://wa.me/966920033676"
+                  href="https://wa.me/966507040036"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 text-xs font-semibold hover:bg-emerald-500/20 transition-colors"
