@@ -91,11 +91,26 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { data: dupEmail } = await serviceClient.rpc("check_email_exists", { p_email: normalizeEmail(email) });
-    if (dupEmail) {
-      return new Response(JSON.stringify({ error: "البريد الإلكتروني مكرر" }), {
+    // Check email — but allow recycling orphan auth users (no role + no profile)
+    const emailNorm = normalizeEmail(email);
+    const { data: emailStatus } = await serviceClient.rpc("get_email_registration_status", { p_email: emailNorm });
+    if (emailStatus === "active") {
+      return new Response(JSON.stringify({ error: "البريد الإلكتروني مكرر - الحساب موجود ومفعل" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+    if (emailStatus === "needs_activation") {
+      // Find and delete orphan auth user to free the email
+      const { data: pageList } = await serviceClient.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const orphan = pageList?.users?.find((u: any) => (u.email || "").toLowerCase() === emailNorm);
+      if (orphan) {
+        // Clean any partial profile/role data
+        await serviceClient.from("reciter_profiles").delete().eq("user_id", orphan.id);
+        await serviceClient.from("student_profiles").delete().eq("user_id", orphan.id);
+        await serviceClient.from("user_roles").delete().eq("user_id", orphan.id);
+        await serviceClient.from("profiles").delete().eq("user_id", orphan.id);
+        try { await serviceClient.auth.admin.deleteUser(orphan.id); } catch (_) {}
+      }
     }
 
     const translateErr = (m: string) => {
