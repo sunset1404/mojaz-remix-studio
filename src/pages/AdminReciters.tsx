@@ -864,51 +864,53 @@ const AdminReciters = () => {
                                       </div>
 
                                       {/* Approval Actions */}
-                                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
-                                        {reciter.status !== "approved" && (
+                                      <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/20">
+                                        {(state === "unconfirmed" || state === "incomplete" || state === "pending") && (
                                           <Button
                                             size="sm"
-                                            className="flex-1 gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs"
-                                            onClick={(e) => { e.stopPropagation(); updateStatus(reciter.id, "approved"); }}
-                                            disabled={updatingId === reciter.id}
+                                            className="flex-1 gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs min-w-[120px]"
+                                            onClick={(e) => { e.stopPropagation(); activateAccount(reciter); }}
+                                            disabled={updatingId === (reciter.id || reciter.user_id)}
                                           >
                                             <ShieldCheck className="w-3.5 h-3.5" />
                                             تفعيل الحساب
                                           </Button>
                                         )}
-                                        {reciter.status !== "rejected" && (
+                                        {!isOrphan && state === "approved" && (
                                           <Button
                                             size="sm"
                                             variant="outline"
-                                            className="flex-1 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
-                                            onClick={(e) => { e.stopPropagation(); updateStatus(reciter.id, "rejected"); }}
-                                            disabled={updatingId === reciter.id}
-                                          >
-                                            <XCircle className="w-3.5 h-3.5" />
-                                            رفض
-                                          </Button>
-                                        )}
-                                        {reciter.status !== "pending" && (
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="flex-1 gap-1.5 text-amber-600 border-amber-200 hover:bg-amber-50 text-xs"
-                                            onClick={(e) => { e.stopPropagation(); updateStatus(reciter.id, "pending"); }}
+                                            className="flex-1 gap-1.5 text-amber-600 border-amber-200 hover:bg-amber-50 text-xs min-w-[100px]"
+                                            onClick={(e) => { e.stopPropagation(); updateStatus(reciter.id!, "pending"); }}
                                             disabled={updatingId === reciter.id}
                                           >
                                             <Clock className="w-3.5 h-3.5" />
                                             تعليق
                                           </Button>
                                         )}
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          className="gap-1.5 text-primary border-primary/30 hover:bg-primary/10 text-xs"
-                                          onClick={(e) => { e.stopPropagation(); openEditDialog(reciter); }}
-                                        >
-                                          <Pencil className="w-3.5 h-3.5" />
-                                          تعديل
-                                        </Button>
+                                        {!isOrphan && state !== "rejected" && (
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs min-w-[80px]"
+                                            onClick={(e) => { e.stopPropagation(); updateStatus(reciter.id!, "rejected"); }}
+                                            disabled={updatingId === reciter.id}
+                                          >
+                                            <XCircle className="w-3.5 h-3.5" />
+                                            رفض
+                                          </Button>
+                                        )}
+                                        {!isOrphan && (
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="gap-1.5 text-primary border-primary/30 hover:bg-primary/10 text-xs"
+                                            onClick={(e) => { e.stopPropagation(); openEditDialog(reciter); }}
+                                          >
+                                            <Pencil className="w-3.5 h-3.5" />
+                                            تعديل
+                                          </Button>
+                                        )}
                                         <Button
                                           size="sm"
                                           variant="outline"
