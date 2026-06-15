@@ -57,7 +57,12 @@ export function ReciterSessionPanel({ onDataChange }: ReciterSessionPanelProps) 
   };
 
   return (
-    <div className="absolute bottom-28 left-3 right-3 z-[60]" dir="rtl">
+    <div
+      ref={panelRef}
+      className="absolute left-3 right-3 z-[60] transition-[bottom] duration-200"
+      style={{ bottom: `calc(7rem + ${keyboardHeight}px)` }}
+      dir="rtl"
+    >
       {/* Toggle */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
