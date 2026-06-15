@@ -15,7 +15,7 @@ export function SurahSelect({ value, onChange, placeholder = "اختر السو�
   const btnRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0, maxHeight: 320, openUp: false });
 
   const filtered = search
     ? SURAHS.filter(s => s.name.includes(search) || String(s.id).includes(search))
@@ -24,7 +24,19 @@ export function SurahSelect({ value, onChange, placeholder = "اختر السو�
   useEffect(() => {
     if (isOpen && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 4, left: r.left, width: r.width });
+      const vh = window.innerHeight;
+      const spaceBelow = vh - r.bottom - 12;
+      const spaceAbove = r.top - 12;
+      const desired = 320;
+      const openUp = spaceBelow < 220 && spaceAbove > spaceBelow;
+      const maxHeight = Math.max(180, Math.min(desired, openUp ? spaceAbove : spaceBelow));
+      setPos({
+        top: openUp ? Math.max(8, r.top - maxHeight - 4) : r.bottom + 4,
+        left: r.left,
+        width: r.width,
+        maxHeight,
+        openUp,
+      });
       setTimeout(() => searchRef.current?.focus(), 50);
     }
   }, [isOpen]);
