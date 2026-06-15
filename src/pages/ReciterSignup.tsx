@@ -227,11 +227,19 @@ const ReciterSignup = () => {
     });
 
     if (error || (data as any)?.error) {
-      const message = (data as any)?.message || error?.message || "حدث خطأ أثناء التسجيل";
-      toast({ title: "خطأ في التسجيل", description: message, variant: "destructive" });
+      const rawMessage = (data as any)?.message || error?.message || "حدث خطأ أثناء التسجيل";
+      const friendly = mapAuthError(rawMessage);
+      if (isPasswordError(rawMessage)) {
+        setPasswordError(friendly);
+        setStep(0);
+        toast({ title: "كلمة المرور غير مقبولة", description: friendly, variant: "destructive" });
+      } else {
+        toast({ title: "خطأ في التسجيل", description: friendly, variant: "destructive" });
+      }
       setLoading(false);
       return;
     }
+
 
     toast({ title: "تم إنشاء الحساب بنجاح" });
     navigate("/signup/success?role=reciter");
