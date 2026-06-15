@@ -11,6 +11,7 @@ import logoMojaz from "@/assets/logo-mojaz.webp";
 import CountrySelect from "@/components/CountrySelect";
 import PhoneCodeSelect from "@/components/PhoneCodeSelect";
 import { COUNTRY_CODES } from "@/data/countries";
+import { validatePassword, mapAuthError, isPasswordError } from "@/lib/passwordPolicy";
 
 interface AdmissionExam {
   id: string;
@@ -68,6 +69,9 @@ const StudentSignup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmError, setConfirmError] = useState("");
+
 
   // Step 0: Account
   const [email, setEmail] = useState("");
@@ -140,12 +144,17 @@ const StudentSignup = () => {
 
   const validateStep = () => {
     if (step === 0) {
-      if (!email || !password || !confirmPassword) {toast({ title: "مطلوب", description: "أدخل البريد وكلمة المرور وتأكيدها", variant: "destructive" });return false;}
+      if (!email) { toast({ title: "مطلوب", description: "أدخل البريد الإلكتروني", variant: "destructive" }); return false; }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email.trim())) {setEmailError("صيغة البريد الإلكتروني غير صحيحة");return false;}
-      if (password.length < 6) {toast({ title: "كلمة المرور قصيرة", description: "يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });return false;}
-      if (password !== confirmPassword) {toast({ title: "عدم تطابق", description: "كلمة المرور وتأكيدها غير متطابقتين", variant: "destructive" });return false;}
+      if (!emailRegex.test(email.trim())) { setEmailError("صيغة البريد الإلكتروني غير صحيحة"); return false; }
+      const check = validatePassword(password);
+      if (!check.valid) { setPasswordError(check.message); return false; }
+      setPasswordError("");
+      if (!confirmPassword) { setConfirmError("يرجى تأكيد كلمة المرور"); return false; }
+      if (password !== confirmPassword) { setConfirmError("كلمة المرور وتأكيدها غير متطابقتين"); return false; }
+      setConfirmError("");
     }
+
     if (step === 1) {
       if (!fullName || !gender || !nationality || !phone || !educationLevel) {
         toast({ title: "مطلوب", description: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });return false;
@@ -212,11 +221,19 @@ const StudentSignup = () => {
     });
 
     if (error || (data as any)?.error) {
-      const msg = (data as any)?.message || error?.message || "حدث خطأ أثناء التسجيل";
-      toast({ title: "خطأ في التسجيل", description: msg, variant: "destructive" });
+      const raw = (data as any)?.message || error?.message || "حدث خطأ أثناء التسجيل";
+      const friendly = mapAuthError(raw);
+      if (isPasswordError(raw)) {
+        setPasswordError(friendly);
+        setStep(0);
+        toast({ title: "كلمة المرور غير مقبولة", description: friendly, variant: "destructive" });
+      } else {
+        toast({ title: "خطأ في التسجيل", description: friendly, variant: "destructive" });
+      }
       setLoading(false);
       return;
     }
+
 
     toast({ title: "تم إنشاء الحساب بنجاح" });
     navigate("/signup/success?role=student");
@@ -249,14 +266,20 @@ const StudentSignup = () => {
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-gold/15 flex items-center justify-center">
                   <Lock className="w-4 h-4 text-gold" />
                 </div>
-                <Input type={showPassword ? "text" : "password"} placeholder="6 أحرف على الأقل"
-                value={password} onChange={(e) => setPassword(e.target.value)}
-                className={`pr-14 pl-12 text-left ${inputClass}`} dir="ltr" required />
+                <Input type={showPassword ? "text" : "password"} placeholder="8 أحرف على الأقل، حرف ورقم"
+                value={password} onChange={(e) => { setPassword(e.target.value); setPasswordError(""); }}
+                className={`pr-14 pl-12 text-left ${inputClass} ${passwordError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
                 </button>
               </div>
+              {passwordError && (
+                <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
+                  <span>⚠</span> {passwordError}
+                </p>
+              )}
+
               {password && (() => {
                 const strength = getPasswordStrength(password);
                 return (
@@ -279,9 +302,15 @@ const StudentSignup = () => {
                   <Lock className="w-4 h-4 text-gold" />
                 </div>
                 <Input type={showPassword ? "text" : "password"} placeholder="أعد إدخال كلمة المرور"
-                value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`pr-14 text-left ${inputClass}`} dir="ltr" required />
+                value={confirmPassword} onChange={(e) => { setConfirmPassword(e.target.value); setConfirmError(""); }}
+                className={`pr-14 text-left ${inputClass} ${confirmError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
               </div>
+              {confirmError && (
+                <p className="text-destructive text-xs font-medium mt-1 flex items-center gap-1">
+                  <span>⚠</span> {confirmError}
+                </p>
+              )}
+
             </div>
           </div>);
 
