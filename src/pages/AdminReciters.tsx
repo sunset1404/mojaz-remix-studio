@@ -135,7 +135,11 @@ const AdminReciters = () => {
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      setReciters(prev => prev.filter(r => r.id !== deleteTarget.id));
+      setReciters(prev => prev.filter(r => {
+        if (deleteTarget.id) return r.id !== deleteTarget.id;
+        // Orphan (id is null) — match by user_id instead so we don't drop all orphans
+        return r.user_id !== deleteTarget.user_id;
+      }));
       toast({ title: "تم حذف المقرئ بنجاح ✅" });
       setDeleteTarget(null);
     } catch (e: any) {
@@ -304,21 +308,36 @@ const AdminReciters = () => {
     }
   };
 
+  const CACHE_KEY = "admin_reciters_cache_v1";
+
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
+    // Show cached data instantly (stale-while-revalidate)
     try {
-      setLoading(true);
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.accounts) setReciters(parsed.accounts);
+        if (parsed?.certifications) setCertifications(parsed.certifications);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+    } catch { setLoading(true); }
+
+    try {
       const [accRes, certRes] = await Promise.all([
         supabase.functions.invoke("list-reciter-accounts"),
         supabase.from("reciter_certifications").select("*"),
       ]);
       if (accRes.error) throw accRes.error;
       const accounts = (accRes.data as any)?.accounts || [];
+      const certs = certRes.data || [];
       setReciters(accounts);
-      setCertifications(certRes.data || []);
+      setCertifications(certs);
+      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ accounts, certifications: certs })); } catch {}
     } catch (error: any) {
-      // Fallback to direct query if edge function unavailable
       try {
         const { data, error: e2 } = await supabase
           .from("reciter_profiles").select("*").order("created_at", { ascending: false });
