@@ -11,6 +11,7 @@ import logoMojaz from "@/assets/logo-mojaz.webp";
 import CountrySelect from "@/components/CountrySelect";
 import PhoneCodeSelect from "@/components/PhoneCodeSelect";
 import { COUNTRY_CODES } from "@/data/countries";
+import { validatePassword, mapAuthError, isPasswordError } from "@/lib/passwordPolicy";
 
 interface AdmissionExam {
   id: string;
