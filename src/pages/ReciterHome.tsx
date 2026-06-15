@@ -31,6 +31,7 @@ const ReciterHome = () => {
   const [assignedStudents, setAssignedStudents] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [queueCount, setQueueCount] = useState(0);
+  const [stats, setStats] = useState({ students: 0, todaySessions: 0, hours: 0, certificates: 0 });
   const onlineReciters = useOnlineReciters();
   const isOnline = user ? onlineReciters.includes(user.id) : false;
 
