@@ -30,6 +30,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!
+    );
 
     const siteUrl = req.headers.get("origin") || Deno.env.get("SUPABASE_URL")!;
 
@@ -48,11 +52,10 @@ Deno.serve(async (req) => {
     }
 
     // Create user (email confirmation required by default settings)
-    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+    const { data: created, error: createErr } = await authClient.auth.signUp({
       email,
       password,
-      email_confirm: false,
-      user_metadata: { full_name },
+      options: { data: { full_name }, emailRedirectTo: `${siteUrl}/` },
     });
 
     if (createErr || !created?.user) {
@@ -97,14 +100,6 @@ Deno.serve(async (req) => {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Send confirmation email link
-    await admin.auth.admin.generateLink({
-      type: "signup",
-      email,
-      password,
-      options: { redirectTo: `${siteUrl}/` },
-    }).catch((e) => console.error("generateLink error", e));
 
     return new Response(JSON.stringify({ success: true, user_id: userId }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
