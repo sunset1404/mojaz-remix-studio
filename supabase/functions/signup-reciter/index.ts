@@ -43,11 +43,21 @@ Deno.serve(async (req) => {
     const siteUrl = req.headers.get("origin") || Deno.env.get("SUPABASE_URL")!;
     const { data: emailStatus } = await admin.rpc("get_email_registration_status", { p_email: emailValue });
 
-    if (emailStatus && emailStatus !== "available") {
-      const message = emailStatus === "active"
-        ? "هذا الحساب موجود ومفعل بالفعل، يمكنك تسجيل الدخول بهذا البريد."
-        : "هذا الحساب موجود لكنه يحتاج إلى تفعيل أو استكمال بياناته قبل استخدامه.";
-      return json({ error: emailStatus, message });
+    if (emailStatus === "active") {
+      return json({ error: "active", message: "هذا الحساب موجود ومفعل بالفعل، يمكنك تسجيل الدخول بهذا البريد." });
+    }
+
+    // Purge abandoned/unconfirmed prior account with same email
+    if (emailStatus === "needs_activation") {
+      const { data: usersList } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+      const stale = (usersList?.users || []).filter((u: any) => (u.email || "").toLowerCase() === emailValue && !u.email_confirmed_at);
+      for (const u of stale) {
+        await admin.from("reciter_profiles").delete().eq("user_id", u.id);
+        await admin.from("student_profiles").delete().eq("user_id", u.id);
+        await admin.from("user_roles").delete().eq("user_id", u.id);
+        await admin.from("profiles").delete().eq("user_id", u.id);
+        await admin.auth.admin.deleteUser(u.id);
+      }
     }
 
     const { data: created, error: createErr } = await authClient.auth.signUp({

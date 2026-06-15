@@ -37,18 +37,28 @@ Deno.serve(async (req) => {
 
     const siteUrl = req.headers.get("origin") || Deno.env.get("SUPABASE_URL")!;
 
+    const emailValue = String(email).trim().toLowerCase();
     const { data: emailStatus } = await admin.rpc("get_email_registration_status", {
-      p_email: String(email).trim().toLowerCase(),
+      p_email: emailValue,
     });
 
-    if (emailStatus && emailStatus !== "available") {
-      const message = emailStatus === "active"
-        ? "هذا الحساب موجود ومفعل بالفعل، يمكنك تسجيل الدخول بهذا البريد."
-        : "هذا الحساب موجود لكنه يحتاج إلى تفعيل أو استكمال بياناته قبل استخدامه.";
-
-      return new Response(JSON.stringify({ error: emailStatus, message }), {
+    if (emailStatus === "active") {
+      return new Response(JSON.stringify({ error: "active", message: "هذا الحساب موجود ومفعل بالفعل، يمكنك تسجيل الدخول بهذا البريد." }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Purge any abandoned/unconfirmed prior account with same email so user can re-register freely
+    if (emailStatus === "needs_activation") {
+      const { data: usersList } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+      const stale = (usersList?.users || []).filter((u: any) => (u.email || "").toLowerCase() === emailValue && !u.email_confirmed_at);
+      for (const u of stale) {
+        await admin.from("student_profiles").delete().eq("user_id", u.id);
+        await admin.from("reciter_profiles").delete().eq("user_id", u.id);
+        await admin.from("user_roles").delete().eq("user_id", u.id);
+        await admin.from("profiles").delete().eq("user_id", u.id);
+        await admin.auth.admin.deleteUser(u.id);
+      }
     }
 
     // Create user (email confirmation required by default settings)

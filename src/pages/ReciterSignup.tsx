@@ -168,7 +168,7 @@ const ReciterSignup = () => {
     // Check email uniqueness on step 0 using SECURITY DEFINER function (bypasses RLS)
     if (step === 0) {
       const { data: emailStatus } = await (supabase as any).rpc("get_email_registration_status", { p_email: email.trim().toLowerCase() });
-      if (emailStatus && emailStatus !== "available") {
+      if (emailStatus === "active") {
         setEmailError(getEmailStatusMessage(emailStatus));
         return;
       }
