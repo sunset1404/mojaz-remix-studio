@@ -23,6 +23,12 @@ project_id = "cfihcvudcwujylipqngk"
     verify_jwt = true
   [functions.activate-reciter]
     verify_jwt = true
+  [functions.list-student-accounts]
+    verify_jwt = true
+  [functions.create-student]
+    verify_jwt = true
+  [functions.update-student]
+    verify_jwt = true
   [functions.verify-certificate]
     verify_jwt = false
   [functions.verify-payment]
