@@ -20,12 +20,8 @@ const promoSlides = [
   { title: "شهادات الطلاب", desc: "امنح طلابك شهادات معتمدة", icon: Award, bg: "gradient-primary", iconBg: "bg-gold/20", iconColor: "text-gold" },
 ];
 
-const quickStats = [
-  { label: "عدد الطلاب", value: "24", icon: Users, color: "primary" },
-  { label: "جلسات اليوم", value: "5", icon: CalendarDays, color: "gold" },
-  { label: "ساعات الإقراء", value: "320", icon: BookOpen, color: "primary" },
-  { label: "إنجازات", value: "12", icon: Trophy, color: "gold" },
-];
+// quickStats values are loaded from the DB per logged-in reciter
+
 
 const ReciterHome = () => {
   const { user, avatarUrl, reciterType } = useAuth();
@@ -35,6 +31,7 @@ const ReciterHome = () => {
   const [assignedStudents, setAssignedStudents] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [queueCount, setQueueCount] = useState(0);
+  const [stats, setStats] = useState({ students: 0, todaySessions: 0, hours: 0, certificates: 0 });
   const onlineReciters = useOnlineReciters();
   const isOnline = user ? onlineReciters.includes(user.id) : false;
 
@@ -85,6 +82,61 @@ const ReciterHome = () => {
       .eq("status", "waiting")
       .eq("caller_role", "student")
       .then(({ count }) => { setQueueCount(count || 0); });
+
+    // Real stats for reciter
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    const todayIso = todayStart.toISOString();
+
+    // Today sessions
+    supabase
+      .from("video_call_sessions")
+      .select("id", { count: "exact", head: true })
+      .eq("reciter_id", user.id)
+      .gte("started_at", todayIso)
+      .then(({ count }) => {
+        setStats(s => ({ ...s, todaySessions: count || 0 }));
+      });
+
+    // Students count: assigned (ijazah) or distinct from sessions (general)
+    if (reciterType === "ijazah") {
+      supabase
+        .from("student_profiles")
+        .select("user_id", { count: "exact", head: true })
+        .eq("assigned_reciter_id", user.id)
+        .then(({ count }) => setStats(s => ({ ...s, students: count || 0 })));
+    } else {
+      supabase
+        .from("video_call_sessions")
+        .select("student_id")
+        .eq("reciter_id", user.id)
+        .not("student_id", "is", null)
+        .then(({ data }) => {
+          const uniq = new Set((data || []).map((r: any) => r.student_id));
+          setStats(s => ({ ...s, students: uniq.size }));
+        });
+    }
+
+    // Total hours from completed call durations
+    supabase
+      .from("video_call_sessions")
+      .select("started_at, ended_at")
+      .eq("reciter_id", user.id)
+      .not("ended_at", "is", null)
+      .then(({ data }) => {
+        const totalMs = (data || []).reduce((acc: number, r: any) => {
+          if (!r.started_at || !r.ended_at) return acc;
+          const diff = new Date(r.ended_at).getTime() - new Date(r.started_at).getTime();
+          return acc + Math.max(0, diff);
+        }, 0);
+        setStats(s => ({ ...s, hours: Math.floor(totalMs / 3600000) }));
+      });
+
+    // Certificates issued by this reciter
+    supabase
+      .from("certificates")
+      .select("id", { count: "exact", head: true })
+      .eq("reciter_id", user.id)
+      .then(({ count }) => setStats(s => ({ ...s, certificates: count || 0 })));
   }, [user, reciterType]);
 
   useEffect(() => {
@@ -214,7 +266,12 @@ const ReciterHome = () => {
           transition={{ delay: 0.4 }}
           className="glass-card rounded-2xl p-4 grid grid-cols-4 gap-2"
         >
-          {quickStats.map((stat, i) => (
+          {[
+            { label: "عدد الطلاب", value: String(stats.students), icon: Users, color: "primary" },
+            { label: "جلسات اليوم", value: String(stats.todaySessions), icon: CalendarDays, color: "gold" },
+            { label: "ساعات الإقراء", value: String(stats.hours), icon: BookOpen, color: "primary" },
+            { label: "إنجازات", value: String(stats.certificates), icon: Trophy, color: "gold" },
+          ].map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ scale: 0.8, opacity: 0 }}
