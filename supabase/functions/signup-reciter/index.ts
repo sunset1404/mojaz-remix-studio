@@ -34,8 +34,13 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!
+    );
 
     const emailValue = String(email).trim().toLowerCase();
+    const siteUrl = req.headers.get("origin") || Deno.env.get("SUPABASE_URL")!;
     const { data: emailStatus } = await admin.rpc("get_email_registration_status", { p_email: emailValue });
 
     if (emailStatus && emailStatus !== "available") {
@@ -45,11 +50,10 @@ Deno.serve(async (req) => {
       return json({ error: emailStatus, message });
     }
 
-    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+    const { data: created, error: createErr } = await authClient.auth.signUp({
       email: emailValue,
       password,
-      email_confirm: false,
-      user_metadata: { full_name },
+      options: { data: { full_name }, emailRedirectTo: siteUrl },
     });
 
     if (createErr || !created?.user) {
