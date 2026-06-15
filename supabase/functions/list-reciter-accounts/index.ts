@@ -45,10 +45,19 @@ Deno.serve(async (req) => {
       .from("reciter_profiles").select("*").order("created_at", { ascending: false });
     if (pErr) throw pErr;
 
-    // 2) All user_roles for reciters
-    const { data: reciterRoles } = await admin
-      .from("user_roles").select("user_id").eq("role", "reciter");
-    const reciterRoleIds = new Set((reciterRoles || []).map((r: any) => r.user_id));
+    // 2) All user_roles (to identify orphans with no role and reciters)
+    const { data: allRoles } = await admin
+      .from("user_roles").select("user_id, role");
+    const rolesByUser = new Map<string, Set<string>>();
+    for (const r of allRoles || []) {
+      const s = rolesByUser.get((r as any).user_id) || new Set<string>();
+      s.add((r as any).role);
+      rolesByUser.set((r as any).user_id, s);
+    }
+    const reciterRoleIds = new Set<string>();
+    for (const [uid, roles] of rolesByUser) {
+      if (roles.has("reciter")) reciterRoleIds.add(uid);
+    }
 
     // 3) Load auth users (paginate up to 5000)
     const authMap = new Map<string, any>();
@@ -83,11 +92,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Orphans: have reciter role but no profile
-    for (const uid of reciterRoleIds) {
+    // Orphans: auth users with reciter role but no profile, OR no role at all (abandoned signup)
+    // Skip users that have a non-reciter role (student/partner/admin)
+    const NON_RECITER_ROLES = new Set(["student", "partner", "admin"]);
+    for (const [uid, u] of authMap) {
       if (seenIds.has(uid)) continue;
-      const u = authMap.get(uid);
-      if (!u) continue;
+      const roles = rolesByUser.get(uid);
+      // Skip if user has a confirmed non-reciter role (they belong to a different category)
+      if (roles && !roles.has("reciter")) {
+        const onlyOther = [...roles].every(r => NON_RECITER_ROLES.has(r));
+        if (onlyOther) continue;
+      }
       result.push({
         id: null,
         user_id: uid,
