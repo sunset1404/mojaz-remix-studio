@@ -82,18 +82,26 @@ import { ReciterPresenceTracker } from "./components/ReciterPresenceTracker";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode; allowedRole?: "student" | "reciter" | "partner" }) => {
-  const { user, role, loading } = useAuth();
+const ProtectedRoute = ({ children, allowedRole, allowPending }: { children: React.ReactNode; allowedRole?: "student" | "reciter" | "partner"; allowPending?: boolean }) => {
+  const { user, role, reciterStatus, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center"><span className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full" /></div>;
   if (!user) return <Navigate to="/login" replace />;
   if (allowedRole && role && role !== allowedRole) return <Navigate to="/" replace />;
+  if (!allowPending && role === "reciter" && reciterStatus && reciterStatus !== "approved") {
+    return <Navigate to="/reciter-pending" replace />;
+  }
   return <>{children}</>;
 };
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, role, reciterStatus, loading } = useAuth();
   if (loading) return null;
-  if (user) return <Navigate to="/" replace />;
+  if (user) {
+    if (role === "reciter" && reciterStatus && reciterStatus !== "approved") {
+      return <Navigate to="/reciter-pending" replace />;
+    }
+    return <Navigate to="/" replace />;
+  }
   return <>{children}</>;
 };
 
