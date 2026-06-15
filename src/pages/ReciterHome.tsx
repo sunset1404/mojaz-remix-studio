@@ -82,6 +82,61 @@ const ReciterHome = () => {
       .eq("status", "waiting")
       .eq("caller_role", "student")
       .then(({ count }) => { setQueueCount(count || 0); });
+
+    // Real stats for reciter
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    const todayIso = todayStart.toISOString();
+
+    // Today sessions
+    supabase
+      .from("video_call_sessions")
+      .select("id", { count: "exact", head: true })
+      .eq("reciter_id", user.id)
+      .gte("started_at", todayIso)
+      .then(({ count }) => {
+        setStats(s => ({ ...s, todaySessions: count || 0 }));
+      });
+
+    // Students count: assigned (ijazah) or distinct from sessions (general)
+    if (reciterType === "ijazah") {
+      supabase
+        .from("student_profiles")
+        .select("user_id", { count: "exact", head: true })
+        .eq("assigned_reciter_id", user.id)
+        .then(({ count }) => setStats(s => ({ ...s, students: count || 0 })));
+    } else {
+      supabase
+        .from("video_call_sessions")
+        .select("student_id")
+        .eq("reciter_id", user.id)
+        .not("student_id", "is", null)
+        .then(({ data }) => {
+          const uniq = new Set((data || []).map((r: any) => r.student_id));
+          setStats(s => ({ ...s, students: uniq.size }));
+        });
+    }
+
+    // Total hours from completed call durations
+    supabase
+      .from("video_call_sessions")
+      .select("started_at, ended_at")
+      .eq("reciter_id", user.id)
+      .not("ended_at", "is", null)
+      .then(({ data }) => {
+        const totalMs = (data || []).reduce((acc: number, r: any) => {
+          if (!r.started_at || !r.ended_at) return acc;
+          const diff = new Date(r.ended_at).getTime() - new Date(r.started_at).getTime();
+          return acc + Math.max(0, diff);
+        }, 0);
+        setStats(s => ({ ...s, hours: Math.floor(totalMs / 3600000) }));
+      });
+
+    // Certificates issued by this reciter
+    supabase
+      .from("certificates")
+      .select("id", { count: "exact", head: true })
+      .eq("reciter_id", user.id)
+      .then(({ count }) => setStats(s => ({ ...s, certificates: count || 0 })));
   }, [user, reciterType]);
 
   useEffect(() => {
