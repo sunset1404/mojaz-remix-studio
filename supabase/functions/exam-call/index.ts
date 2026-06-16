@@ -112,6 +112,7 @@ serve(async (req: Request) => {
         status: "waiting",
         caller_role: "reciter",
         reciter_joined_at: new Date().toISOString(),
+        exam_id: exam_id,
       })
       .select("id, room_id")
       .single();
