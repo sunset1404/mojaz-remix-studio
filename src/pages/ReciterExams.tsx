@@ -55,14 +55,27 @@ export default function ReciterExams() {
   const fetchExams = async () => {
     if (!user) return;
     setLoading(true);
+    // Get reciter profile id, then only fetch exams where this reciter is a committee member
+    const { data: profile } = await (supabase as any)
+      .from("reciter_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!profile) {
+      setExams([]);
+      setLoading(false);
+      return;
+    }
     const { data, error } = await (supabase as any)
       .from("exams")
       .select("*")
+      .or(`committee_member_1.eq.${profile.id},committee_member_2.eq.${profile.id},committee_member_3.eq.${profile.id}`)
       .order("date", { ascending: true })
       .order("time", { ascending: true });
     if (!error && data) setExams(data as Exam[]);
     setLoading(false);
   };
+
 
   useEffect(() => { fetchExams(); }, [user]);
 
