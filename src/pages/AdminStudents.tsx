@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";
 
 interface StudentProfile {
   id: string | null;
