@@ -48,6 +48,7 @@ const VideoCallPage = () => {
     const [notesOpen, setNotesOpen] = useState(false);
     const [scoringOpen, setScoringOpen] = useState(false);
     const [examScores, setExamScores] = useState<Record<string, number>>({});
+    const [examId, setExamId] = useState<string | null>(navState?.examId || null);
     const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, scores: {}, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
 
     // ── New call creation flow ──
@@ -163,6 +164,7 @@ const VideoCallPage = () => {
 
                 const isStudent = session.student_id === user.id;
                 setIsReciter(!isStudent);
+                if (session.exam_id) setExamId(session.exam_id);
                 const callerRole = session.caller_role || (isStudent ? "student" : "reciter");
 
                 if (callerRole === "student") {
@@ -414,7 +416,7 @@ const VideoCallPage = () => {
                 confirmOnEnd={!isReciter}
                 extraControls={isReciter ? (
                     <>
-                        {navState?.examId && (
+                        {examId && (
                             <button
                                 type="button"
                                 onClick={() => {
@@ -450,7 +452,7 @@ const VideoCallPage = () => {
                     hideToggle
                 />
             )}
-            {isReciter && navState?.examId && (
+            {isReciter && examId && (
                 <ExamScoringPanel
                     scores={examScores}
                     onScoresChange={(scores) => {
@@ -470,7 +472,7 @@ const VideoCallPage = () => {
                         data={sessionNoteRef.current}
                         onConfirm={handleConfirmEnd}
                         onCancel={() => setShowConfirm(false)}
-                        isExam={!!navState?.examId}
+                        isExam={!!examId}
                     />
                 )}
             </AnimatePresence>
