@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ChevronDown, ChevronUp, FileText, BookOpen } from 'lucide-react';
+import { ChevronDown, ChevronUp, FileText, BookOpen, ClipboardList } from 'lucide-react';
 import { SurahSelect } from './SurahSelect';
 import { AyahSelect } from './AyahSelect';
 import { useVisualViewport } from '@/hooks/useVisualViewport';
+import { RubricScoring } from './RubricScoring';
+import { computeTotalScore, RUBRIC_PASS } from '@/data/examRubric';
 
 interface ReciterSessionPanelProps {
   onDataChange?: (data: SessionNoteData) => void;
@@ -14,6 +16,7 @@ interface ReciterSessionPanelProps {
 
 export interface SessionNoteData {
   rating: number;
+  scores: Record<string, number>;
   startSurah: string;
   startAyah: string;
   endSurah: string;
