@@ -44,7 +44,7 @@ const VideoCallPage = () => {
     const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
     const [noCreditsMessage, setNoCreditsMessage] = useState("");
     const [notesOpen, setNotesOpen] = useState(false);
-    const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
+    const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, scores: {}, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
 
     // ── New call creation flow ──
     useEffect(() => {
