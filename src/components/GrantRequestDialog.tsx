@@ -51,6 +51,10 @@ const GrantRequestDialog = ({ open, onOpenChange }: Props) => {
       toast.error("الرجاء تعبئة الاسم وسبب الطلب");
       return;
     }
+    if (!planId) {
+      toast.error("الرجاء اختيار الباقة المطلوبة");
+      return;
+    }
     setLoading(true);
     try {
       const plan = plans.find((p) => p.id === planId);
