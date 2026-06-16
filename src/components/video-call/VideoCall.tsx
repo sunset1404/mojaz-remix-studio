@@ -229,6 +229,8 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
                     >
                         <SwitchCamera className="w-5 h-5" />
                     </motion.button>
+
+                    {extraControls}
                 </div>
 
                 <motion.button
