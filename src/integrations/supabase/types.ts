@@ -305,6 +305,74 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_evaluations: {
+        Row: {
+          created_at: string
+          end_ayah: string | null
+          end_surah: string | null
+          exam_id: string | null
+          exam_type: string | null
+          id: string
+          notes: string | null
+          passed: boolean
+          reciter_id: string
+          reciter_name: string | null
+          scores: Json
+          start_ayah: string | null
+          start_surah: string | null
+          student_id: string
+          student_name: string | null
+          total_score: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_ayah?: string | null
+          end_surah?: string | null
+          exam_id?: string | null
+          exam_type?: string | null
+          id?: string
+          notes?: string | null
+          passed?: boolean
+          reciter_id: string
+          reciter_name?: string | null
+          scores?: Json
+          start_ayah?: string | null
+          start_surah?: string | null
+          student_id: string
+          student_name?: string | null
+          total_score?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_ayah?: string | null
+          end_surah?: string | null
+          exam_id?: string | null
+          exam_type?: string | null
+          id?: string
+          notes?: string | null
+          passed?: boolean
+          reciter_id?: string
+          reciter_name?: string | null
+          scores?: Json
+          start_ayah?: string | null
+          start_surah?: string | null
+          student_id?: string
+          student_name?: string | null
+          total_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_evaluations_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exams: {
         Row: {
           capacity: number
@@ -1511,6 +1579,7 @@ export type Database = {
           caller_role: string
           created_at: string | null
           ended_at: string | null
+          exam_id: string | null
           id: string
           link_used: boolean | null
           notes: string | null
@@ -1530,6 +1599,7 @@ export type Database = {
           caller_role?: string
           created_at?: string | null
           ended_at?: string | null
+          exam_id?: string | null
           id?: string
           link_used?: boolean | null
           notes?: string | null
@@ -1549,6 +1619,7 @@ export type Database = {
           caller_role?: string
           created_at?: string | null
           ended_at?: string | null
+          exam_id?: string | null
           id?: string
           link_used?: boolean | null
           notes?: string | null
@@ -1563,7 +1634,15 @@ export type Database = {
           student_name?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "video_call_sessions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       weekly_plans: {
         Row: {
