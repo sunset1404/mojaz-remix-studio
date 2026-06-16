@@ -74,6 +74,7 @@ import ReciterSessionLog from "./pages/ReciterSessionLog";
 import ReciterMyStats from "./pages/ReciterMyStats";
 import ReciterExams from "./pages/ReciterExams";
 import StudentDetail from "./pages/StudentDetail";
+import MyExamEvaluations from "./pages/MyExamEvaluations";
 import PaymentCallback from "./pages/PaymentCallback";
 import VideoCallPage from "./pages/VideoCallPage";
 import PublicVideoCall from "./pages/PublicVideoCall";
@@ -180,6 +181,7 @@ const AppRoutes = () => (
 
     {/* Shared routes */}
     <Route path="/achievements" element={<ProtectedRoute><><Achievements /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/my-exam-evaluations" element={<ProtectedRoute><><MyExamEvaluations /><BottomNav /></></ProtectedRoute>} />
     <Route path="/weekly-plan" element={<ProtectedRoute><><WeeklyPlan /><BottomNav /></></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><><Profile /><BottomNav /></></ProtectedRoute>} />
     <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
