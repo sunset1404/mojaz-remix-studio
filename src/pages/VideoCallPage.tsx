@@ -46,6 +46,8 @@ const VideoCallPage = () => {
     const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
     const [noCreditsMessage, setNoCreditsMessage] = useState("");
     const [notesOpen, setNotesOpen] = useState(false);
+    const [scoringOpen, setScoringOpen] = useState(false);
+    const [examScores, setExamScores] = useState<Record<string, number>>({});
     const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, scores: {}, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
 
     // ── New call creation flow ──
