@@ -1304,6 +1304,7 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
+          student_notified_at: string | null
           updated_at: string
           user_id: string
         }
@@ -1325,6 +1326,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
+          student_notified_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1346,6 +1348,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
+          student_notified_at?: string | null
           updated_at?: string
           user_id?: string
         }

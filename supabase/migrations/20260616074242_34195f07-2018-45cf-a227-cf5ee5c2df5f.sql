@@ -1,0 +1,1 @@
+ALTER TABLE public.subscription_grant_requests ADD COLUMN IF NOT EXISTS student_notified_at timestamptz;
