@@ -1292,6 +1292,7 @@ export type Database = {
           approved_minutes: number | null
           approved_plan_id: string | null
           approved_plan_name: string | null
+          approved_subscription_id: string | null
           created_at: string
           email: string | null
           full_name: string
@@ -1312,6 +1313,7 @@ export type Database = {
           approved_minutes?: number | null
           approved_plan_id?: string | null
           approved_plan_name?: string | null
+          approved_subscription_id?: string | null
           created_at?: string
           email?: string | null
           full_name: string
@@ -1332,6 +1334,7 @@ export type Database = {
           approved_minutes?: number | null
           approved_plan_id?: string | null
           approved_plan_name?: string | null
+          approved_subscription_id?: string | null
           created_at?: string
           email?: string | null
           full_name?: string
@@ -1352,6 +1355,13 @@ export type Database = {
             columns: ["approved_plan_id"]
             isOneToOne: false
             referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_grant_requests_approved_subscription_id_fkey"
+            columns: ["approved_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "student_subscriptions"
             referencedColumns: ["id"]
           },
           {

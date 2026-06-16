@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Check, X, HandHeart, Clock, Phone, Mail, User } from "lucide-react";
+import { Loader2, Check, X, HandHeart, Clock, Phone, Mail, User, Pause, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +24,7 @@ type Request = {
   approved_plan_name: string | null;
   approved_duration_months: number | null;
   approved_minutes: number | null;
+  approved_subscription_id: string | null;
   reviewed_at: string | null;
   created_at: string;
 };
@@ -43,11 +44,15 @@ const AdminGrantRequests = () => {
   const [actionDialog, setActionDialog] = useState<{ open: boolean; req: Request | null; mode: "approve" | "reject" }>({
     open: false, req: null, mode: "approve",
   });
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; req: Request | null; mode: "suspend" | "delete" }>({
+    open: false, req: null, mode: "suspend",
+  });
   const [planId, setPlanId] = useState<string>("");
   const [durationMonths, setDurationMonths] = useState<string>("1");
   const [minutes, setMinutes] = useState<string>("60");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [managing, setManaging] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -70,6 +75,10 @@ const AdminGrantRequests = () => {
     setNotes("");
   };
 
+  const openConfirm = (req: Request, mode: "suspend" | "delete") => {
+    setConfirmDialog({ open: true, req, mode });
+  };
+
   const handleSubmit = async () => {
     if (!actionDialog.req || !user) return;
     setSubmitting(true);
@@ -89,7 +98,7 @@ const AdminGrantRequests = () => {
         endDate.setMonth(endDate.getMonth() + months);
 
         // Create active subscription
-        const { error: subErr } = await supabase.from("student_subscriptions").insert({
+        const { data: subData, error: subErr } = await supabase.from("student_subscriptions").insert({
           student_id: actionDialog.req.user_id,
           student_name: actionDialog.req.full_name,
           student_phone: actionDialog.req.phone,
@@ -100,7 +109,7 @@ const AdminGrantRequests = () => {
           end_date: endDate.toISOString().split("T")[0],
           status: "active",
           notes: `منحة معتمدة من الإدارة. ${notes}`.trim(),
-        });
+        }).select("id").single();
         if (subErr) throw subErr;
 
         // Add minutes
@@ -122,6 +131,7 @@ const AdminGrantRequests = () => {
           approved_plan_name: plan?.name || null,
           approved_duration_months: months,
           approved_minutes: mins,
+          approved_subscription_id: subData?.id || null,
           reviewed_by: user.id,
           reviewed_at: new Date().toISOString(),
         }).eq("id", actionDialog.req.id);
@@ -145,6 +155,29 @@ const AdminGrantRequests = () => {
       toast.error(e.message || "حدث خطأ");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleManage = async () => {
+    if (!confirmDialog.req) return;
+    setManaging(true);
+    try {
+      if (confirmDialog.mode === "suspend") {
+        const { error } = await supabase.from("student_subscriptions").update({ status: "suspended" }).eq("id", confirmDialog.req.approved_subscription_id);
+        if (error) throw error;
+        toast.success("تم تعليق الاشتراك");
+      } else {
+        const { error } = await supabase.from("student_subscriptions").delete().eq("id", confirmDialog.req.approved_subscription_id);
+        if (error) throw error;
+        toast.success("تم حذف الاشتراك");
+      }
+      setConfirmDialog({ open: false, req: null, mode: "suspend" });
+      await load();
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "حدث خطأ");
+    } finally {
+      setManaging(false);
     }
   };
 
@@ -230,6 +263,17 @@ const AdminGrantRequests = () => {
                   </Button>
                 </div>
               )}
+
+              {r.status === "approved" && r.approved_subscription_id && (
+                <div className="flex gap-2 mt-2">
+                  <Button size="sm" variant="outline" onClick={() => openConfirm(r, "suspend")}>
+                    <Pause className="w-4 h-4 ml-1" />تعليق الاشتراك
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => openConfirm(r, "delete")}>
+                    <Trash2 className="w-4 h-4 ml-1" />حذف الاشتراك
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -275,6 +319,25 @@ const AdminGrantRequests = () => {
             <Button variant="outline" onClick={() => setActionDialog({ open: false, req: null, mode: "approve" })}>إلغاء</Button>
             <Button onClick={handleSubmit} disabled={submitting} className={actionDialog.mode === "approve" ? "bg-green-600 hover:bg-green-700" : ""} variant={actionDialog.mode === "reject" ? "destructive" : "default"}>
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : actionDialog.mode === "approve" ? "تأكيد المنح" : "تأكيد الرفض"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmDialog.open} onOpenChange={(o) => !o && setConfirmDialog({ open: false, req: null, mode: "suspend" })}>
+        <DialogContent dir="rtl" className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{confirmDialog.mode === "suspend" ? "تعليق الاشتراك" : "حذف الاشتراك"}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {confirmDialog.mode === "suspend"
+              ? "هل أنت متأكد من تعليق هذا الاشتراك؟ لن يتمكن الطالب من استخدامه حتى يتم تفعيله مرة أخرى."
+              : "هل أنت متأكد من حذف هذا الاشتراك نهائيًا؟ لا يمكن التراجع عن هذا الإجراء."}
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDialog({ open: false, req: null, mode: "suspend" })}>إلغاء</Button>
+            <Button onClick={handleManage} disabled={managing} variant={confirmDialog.mode === "delete" ? "destructive" : "default"}>
+              {managing ? <Loader2 className="w-4 h-4 animate-spin" /> : confirmDialog.mode === "suspend" ? "تعليق" : "حذف"}
             </Button>
           </DialogFooter>
         </DialogContent>
