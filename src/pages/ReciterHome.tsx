@@ -32,16 +32,25 @@ const ReciterHome = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [queueCount, setQueueCount] = useState(0);
   const [stats, setStats] = useState({ students: 0, todaySessions: 0, hours: 0, certificates: 0 });
+  const [hasExams, setHasExams] = useState(false);
   const onlineReciters = useOnlineReciters();
   const isOnline = user ? onlineReciters.includes(user.id) : false;
 
   const fetchData = useCallback(async () => {
     if (!user) return;
-    supabase.from("reciter_profiles").select("full_name").eq("user_id", user.id).maybeSingle()
-      .then(({ data }) => { if (data) {
+    supabase.from("reciter_profiles").select("id, full_name").eq("user_id", user.id).maybeSingle()
+      .then(async ({ data }) => {
+        if (!data) return;
         const parts = data.full_name.trim().split(/\s+/);
         setUserName(parts.slice(0, 2).join(" "));
-      }});
+        // Check if reciter is on any exam committee
+        const { count } = await (supabase as any)
+          .from("exams")
+          .select("id", { count: "exact", head: true })
+          .or(`committee_member_1.eq.${data.id},committee_member_2.eq.${data.id},committee_member_3.eq.${data.id}`);
+        setHasExams((count || 0) > 0);
+      });
+
 
     if (reciterType === "ijazah") {
       supabase
