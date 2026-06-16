@@ -51,6 +51,10 @@ const GrantRequestDialog = ({ open, onOpenChange }: Props) => {
       toast.error("الرجاء تعبئة الاسم وسبب الطلب");
       return;
     }
+    if (!planId) {
+      toast.error("الرجاء اختيار الباقة المطلوبة");
+      return;
+    }
     setLoading(true);
     try {
       const plan = plans.find((p) => p.id === planId);
@@ -106,7 +110,7 @@ const GrantRequestDialog = ({ open, onOpenChange }: Props) => {
               <Input value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" />
             </div>
             <div>
-              <Label>الباقة المطلوبة (اختياري)</Label>
+              <Label>الباقة المطلوبة *</Label>
               <Select value={planId} onValueChange={setPlanId}>
                 <SelectTrigger><SelectValue placeholder="اختر الباقة" /></SelectTrigger>
                 <SelectContent>
