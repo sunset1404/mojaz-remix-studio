@@ -444,8 +444,23 @@ const VideoCallPage = () => {
             {isReciter && (
                 <ReciterSessionPanel
                     onDataChange={(data) => { sessionNoteRef.current = data; }}
+                    scores={examScores}
                     isOpen={notesOpen}
                     onOpenChange={setNotesOpen}
+                    hideToggle
+                />
+            )}
+            {isReciter && navState?.examId && (
+                <ExamScoringPanel
+                    scores={examScores}
+                    onScoresChange={(scores) => {
+                        setExamScores(scores);
+                        const total = computeTotalScore(scores);
+                        const rating = Math.max(0, Math.min(5, Math.round((total / 100) * 5)));
+                        sessionNoteRef.current = { ...sessionNoteRef.current, scores, rating };
+                    }}
+                    isOpen={scoringOpen}
+                    onOpenChange={setScoringOpen}
                     hideToggle
                 />
             )}
@@ -455,6 +470,7 @@ const VideoCallPage = () => {
                         data={sessionNoteRef.current}
                         onConfirm={handleConfirmEnd}
                         onCancel={() => setShowConfirm(false)}
+                        isExam={!!navState?.examId}
                     />
                 )}
             </AnimatePresence>
