@@ -9,6 +9,7 @@ import {
   Star, Calendar, Phone, Video, MapPin, GraduationCap,
   Target, TrendingUp
 } from "lucide-react";
+import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";
 
 const StudentDetail = () => {
   const { studentId } = useParams();
