@@ -80,6 +80,7 @@ import VerifyCertificate from "./pages/VerifyCertificate";
 import { IncomingCallListener } from "./components/video-call/IncomingCallListener";
 import { StudentIncomingCallListener } from "./components/video-call/StudentIncomingCallListener";
 import { ReciterPresenceTracker } from "./components/ReciterPresenceTracker";
+import GrantApprovedNotice from "./components/GrantApprovedNotice";
 
 const queryClient = new QueryClient();
 
@@ -250,6 +251,7 @@ const App = () => (
           <ScrollToTop />
           <CallListeners />
           <ReciterPresenceTracker />
+          <GrantApprovedNotice />
           <AppLayout />
         </AuthProvider>
       </BrowserRouter>
