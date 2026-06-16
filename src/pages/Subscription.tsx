@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { Check, Crown, Sparkles, Zap, Gift, ChevronLeft, Clock, Loader2 } from "lucide-react";
+import { Check, Crown, Sparkles, Zap, Gift, ChevronLeft, Clock, Loader2, HandHeart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PaymentModal from "@/components/PaymentModal";
+import GrantRequestDialog from "@/components/GrantRequestDialog";
 
 const iconMap: Record<string, typeof Zap> = {
   Zap, Crown, Sparkles
@@ -33,6 +34,7 @@ const Subscription = () => {
   const [loading, setLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
   const [freeLoading, setFreeLoading] = useState(false);
+  const [grantOpen, setGrantOpen] = useState(false);
   const [paymentModal, setPaymentModal] = useState<{open: boolean;planName: string;price: number | string;period?: string;subscriptionType?: string;durationMonths?: number;sourceType?: "subscription" | "gift" | "extra_hours";metadata?: Record<string, any>;}>({ open: false, planName: "", price: 0 });
 
   useEffect(() => {
