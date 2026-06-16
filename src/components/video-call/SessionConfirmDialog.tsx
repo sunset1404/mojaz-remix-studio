@@ -10,9 +10,10 @@ interface SessionConfirmDialogProps {
   data: SessionNoteData;
   onConfirm: (updatedData: SessionNoteData) => void;
   onCancel: () => void;
+  isExam?: boolean;
 }
 
-export function SessionConfirmDialog({ data, onConfirm, onCancel }: SessionConfirmDialogProps) {
+export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: SessionConfirmDialogProps) {
   const [scores, setScores] = useState<Record<string, number>>(data.scores || {});
   const [startSurah, setStartSurah] = useState(data.startSurah);
   const [startAyah, setStartAyah] = useState(data.startAyah);
@@ -55,14 +56,16 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel }: SessionConfi
             <p className="text-xs text-muted-foreground">أدخل أو عدّل البيانات قبل حفظها</p>
           </div>
 
-          {/* Rubric scoring */}
-          <div className="space-y-1.5">
-            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-              <ClipboardList className="w-3.5 h-3.5 text-primary" />
-              معايير التقييم
-            </label>
-            <RubricScoring scores={scores} onChange={setScores} />
-          </div>
+          {/* Rubric scoring — only for exams */}
+          {isExam && (
+            <div className="space-y-1.5">
+              <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+                <ClipboardList className="w-3.5 h-3.5 text-primary" />
+                معايير التقييم
+              </label>
+              <RubricScoring scores={scores} onChange={setScores} />
+            </div>
+          )}
 
           {/* Start point */}
 

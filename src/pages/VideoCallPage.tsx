@@ -1,14 +1,16 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Loader2, AlertCircle, PhoneOff, Clock, FileText } from "lucide-react";
+import { ChevronRight, Loader2, AlertCircle, PhoneOff, Clock, FileText, ClipboardList } from "lucide-react";
 import { VideoCall } from "@/components/video-call/VideoCall";
 import { ReciterSessionPanel, SessionNoteData } from "@/components/video-call/ReciterSessionPanel";
+import { ExamScoringPanel } from "@/components/video-call/ExamScoringPanel";
 import { SessionConfirmDialog } from "@/components/video-call/SessionConfirmDialog";
 import { StudentSessionPopup } from "@/components/video-call/StudentSessionPopup";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { computeTotalScore } from "@/data/examRubric";
 import {
     AlertDialog,
     AlertDialogContent,
@@ -44,6 +46,8 @@ const VideoCallPage = () => {
     const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
     const [noCreditsMessage, setNoCreditsMessage] = useState("");
     const [notesOpen, setNotesOpen] = useState(false);
+    const [scoringOpen, setScoringOpen] = useState(false);
+    const [examScores, setExamScores] = useState<Record<string, number>>({});
     const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, scores: {}, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
 
     // ── New call creation flow ──
@@ -409,21 +413,54 @@ const VideoCallPage = () => {
                 autoStartCall={callRole === "caller"}
                 confirmOnEnd={!isReciter}
                 extraControls={isReciter ? (
-                    <button
-                        type="button"
-                        onClick={() => setNotesOpen((v) => !v)}
-                        aria-label="ملاحظات الجلسة"
-                        className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border ${notesOpen ? 'bg-primary text-primary-foreground border-primary/60' : 'bg-card/80 text-foreground border-border hover:bg-card'}`}
-                    >
-                        <FileText className="w-5 h-5" />
-                    </button>
+                    <>
+                        {navState?.examId && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setScoringOpen((v) => !v);
+                                    setNotesOpen(false);
+                                }}
+                                aria-label="معايير التقييم"
+                                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border ${scoringOpen ? 'bg-gold text-white border-gold/60' : 'bg-card/80 text-foreground border-border hover:bg-card'}`}
+                            >
+                                <ClipboardList className="w-5 h-5" />
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setNotesOpen((v) => !v);
+                                setScoringOpen(false);
+                            }}
+                            aria-label="ملاحظات الجلسة"
+                            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border ${notesOpen ? 'bg-primary text-primary-foreground border-primary/60' : 'bg-card/80 text-foreground border-border hover:bg-card'}`}
+                        >
+                            <FileText className="w-5 h-5" />
+                        </button>
+                    </>
                 ) : undefined}
             />
             {isReciter && (
                 <ReciterSessionPanel
                     onDataChange={(data) => { sessionNoteRef.current = data; }}
+                    scores={examScores}
                     isOpen={notesOpen}
                     onOpenChange={setNotesOpen}
+                    hideToggle
+                />
+            )}
+            {isReciter && navState?.examId && (
+                <ExamScoringPanel
+                    scores={examScores}
+                    onScoresChange={(scores) => {
+                        setExamScores(scores);
+                        const total = computeTotalScore(scores);
+                        const rating = Math.max(0, Math.min(5, Math.round((total / 100) * 5)));
+                        sessionNoteRef.current = { ...sessionNoteRef.current, scores, rating };
+                    }}
+                    isOpen={scoringOpen}
+                    onOpenChange={setScoringOpen}
                     hideToggle
                 />
             )}
@@ -433,6 +470,7 @@ const VideoCallPage = () => {
                         data={sessionNoteRef.current}
                         onConfirm={handleConfirmEnd}
                         onCancel={() => setShowConfirm(false)}
+                        isExam={!!navState?.examId}
                     />
                 )}
             </AnimatePresence>
