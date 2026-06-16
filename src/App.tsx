@@ -251,6 +251,7 @@ const App = () => (
           <ScrollToTop />
           <CallListeners />
           <ReciterPresenceTracker />
+          <GrantApprovedNotice />
           <AppLayout />
         </AuthProvider>
       </BrowserRouter>
