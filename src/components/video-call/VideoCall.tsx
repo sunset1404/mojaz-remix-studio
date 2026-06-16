@@ -59,6 +59,56 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         if (pipVideoRef.current) pipVideoRef.current.srcObject = pipStream || null;
     }, [localStream, remoteStream, swapped]);
 
+    // Ringback tone: play a phone-like ringing sound for the caller while waiting for the other party
+    useEffect(() => {
+        if (role !== 'caller') return;
+        if (remoteStream || callState.isConnected || showEndedScreen) return;
+
+        let ctx: AudioContext | null = null;
+        let intervalId: number | null = null;
+        let stopped = false;
+
+        try {
+            const AC = (window.AudioContext || (window as any).webkitAudioContext);
+            if (!AC) return;
+            ctx = new AC();
+
+            const playRing = () => {
+                if (!ctx || stopped) return;
+                const now = ctx.currentTime;
+                // Two-tone ringback (similar to phone): 440Hz + 480Hz for 1.2s, then 4s silence
+                [440, 480].forEach((freq) => {
+                    const osc = ctx!.createOscillator();
+                    const gain = ctx!.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(0.12, now + 0.05);
+                    gain.gain.setValueAtTime(0.12, now + 1.15);
+                    gain.gain.linearRampToValueAtTime(0, now + 1.2);
+                    osc.connect(gain).connect(ctx!.destination);
+                    osc.start(now);
+                    osc.stop(now + 1.25);
+                });
+            };
+
+            // Resume on iOS if suspended (autoplay may block — first user gesture already happened on call start)
+            ctx.resume?.().catch(() => {});
+            playRing();
+            intervalId = window.setInterval(playRing, 5000);
+        } catch (e) {
+            console.warn('Ringback tone unavailable:', e);
+        }
+
+        return () => {
+            stopped = true;
+            if (intervalId) clearInterval(intervalId);
+            try { ctx?.close(); } catch {}
+        };
+    }, [role, remoteStream, callState.isConnected, showEndedScreen]);
+
+
+
 
     const handleEndCall = () => {
         endCall();
