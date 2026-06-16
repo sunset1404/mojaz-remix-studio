@@ -72,6 +72,7 @@ import MyGifts from "./pages/MyGifts";
 import ReciterStudentPerformance from "./pages/ReciterStudentPerformance";
 import ReciterSessionLog from "./pages/ReciterSessionLog";
 import ReciterMyStats from "./pages/ReciterMyStats";
+import ReciterExams from "./pages/ReciterExams";
 import StudentDetail from "./pages/StudentDetail";
 import PaymentCallback from "./pages/PaymentCallback";
 import VideoCallPage from "./pages/VideoCallPage";
@@ -170,6 +171,7 @@ const AppRoutes = () => (
     <Route path="/student-performance" element={<ProtectedRoute allowedRole="reciter"><><ReciterStudentPerformance /><BottomNav /></></ProtectedRoute>} />
     <Route path="/reciter-session-log" element={<ProtectedRoute allowedRole="reciter"><><ReciterSessionLog /><BottomNav /></></ProtectedRoute>} />
     <Route path="/reciter-my-stats" element={<ProtectedRoute allowedRole="reciter"><><ReciterMyStats /><BottomNav /></></ProtectedRoute>} />
+    <Route path="/reciter-exams" element={<ProtectedRoute allowedRole="reciter"><><ReciterExams /><BottomNav /></></ProtectedRoute>} />
 
     {/* Partner-only routes */}
     <Route path="/partner-dashboard" element={<ProtectedRoute allowedRole="partner"><><PartnerDashboard /><BottomNav /></></ProtectedRoute>} />

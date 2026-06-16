@@ -46,9 +46,16 @@ interface Reciter {
   user_id: string;
 }
 
+interface StudentOption {
+  user_id: string;
+  full_name: string;
+}
+
 interface Exam {
   id: string;
   type: ExamType;
+  student_id: string | null;
+  student_name: string | null;
   date: string;
   time: string;
   capacity: number;
@@ -65,6 +72,8 @@ interface Exam {
 
 const emptyForm = {
   type: "admission" as ExamType,
+  student_id: "",
+  student_name: "",
   date: "",
   time: "",
   capacity: 10,
@@ -88,6 +97,7 @@ export default function AdminExams() {
   const { toast } = useToast();
   const [exams, setExams] = useState<Exam[]>([]);
   const [reciters, setReciters] = useState<Reciter[]>([]);
+  const [students, setStudents] = useState<StudentOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -99,6 +109,7 @@ export default function AdminExams() {
   useEffect(() => {
     fetchExams();
     fetchReciters();
+    fetchStudents();
   }, []);
 
   const fetchExams = async () => {
@@ -119,6 +130,14 @@ export default function AdminExams() {
     if (data) setReciters(data);
   };
 
+  const fetchStudents = async () => {
+    const { data } = await supabase
+      .from("student_profiles")
+      .select("user_id, full_name")
+      .order("full_name", { ascending: true });
+    if (data) setStudents(data as StudentOption[]);
+  };
+
   const openAdd = () => {
     setEditingExam(null);
     setForm(emptyForm);
@@ -129,6 +148,8 @@ export default function AdminExams() {
     setEditingExam(exam);
     setForm({
       type: exam.type,
+      student_id: exam.student_id || "",
+      student_name: exam.student_name || "",
       date: exam.date,
       time: exam.time,
       capacity: exam.capacity ?? 10,
@@ -166,6 +187,8 @@ export default function AdminExams() {
     setSaving(true);
     const payload = {
       type: form.type,
+      student_id: form.student_id || null,
+      student_name: form.student_name || null,
       date: form.date,
       time: form.time,
       capacity: form.capacity,
@@ -431,6 +454,33 @@ export default function AdminExams() {
                 ))}
               </div>
             </div>
+
+            {/* Student selector */}
+            <div className="space-y-2">
+              <Label>الطالب (اختياري — مطلوب لتمكين الاتصال من حساب المقرئ)</Label>
+              <Select
+                value={form.student_id || "none"}
+                onValueChange={(v) => {
+                  if (v === "none") {
+                    setForm((p) => ({ ...p, student_id: "", student_name: "" }));
+                  } else {
+                    const s = students.find((x) => x.user_id === v);
+                    setForm((p) => ({ ...p, student_id: v, student_name: s?.full_name || "" }));
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الطالب" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— بدون طالب محدد —</SelectItem>
+                  {students.map((s) => (
+                    <SelectItem key={s.user_id} value={s.user_id}>{s.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
 
             {/* Date, Time & Capacity */}
             <div className="grid grid-cols-3 gap-3">

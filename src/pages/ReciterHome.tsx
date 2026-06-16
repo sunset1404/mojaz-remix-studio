@@ -328,6 +328,35 @@ const ReciterHome = () => {
         </motion.div>
       </div>
 
+      {/* Exams Card (for all reciters) */}
+      <div className="px-5 mt-3">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.62 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <Link to="/reciter-exams" className="block">
+            <div className="relative rounded-2xl overflow-hidden bg-card border border-border/60 p-4 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
+                  <Award className="w-6 h-6 text-gold" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-base text-foreground">
+                    اختبارات القبول والاستحقاق
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    اطّلع على اختباراتك واتصل بالطلاب لإجرائها
+                  </p>
+                </div>
+                <ChevronLeft className="w-5 h-5 text-muted-foreground shrink-0" />
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+      </div>
+
       {/* Students Section (Ijazah) or Recent Sessions (General) */}
       {reciterType === "ijazah" ? (
         <div className="px-5 mt-6">
