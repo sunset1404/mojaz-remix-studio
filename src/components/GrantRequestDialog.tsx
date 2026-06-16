@@ -110,7 +110,7 @@ const GrantRequestDialog = ({ open, onOpenChange }: Props) => {
               <Input value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" />
             </div>
             <div>
-              <Label>الباقة المطلوبة (اختياري)</Label>
+              <Label>الباقة المطلوبة *</Label>
               <Select value={planId} onValueChange={setPlanId}>
                 <SelectTrigger><SelectValue placeholder="اختر الباقة" /></SelectTrigger>
                 <SelectContent>
