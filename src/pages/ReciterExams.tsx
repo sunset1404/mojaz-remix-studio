@@ -222,7 +222,7 @@ export default function ReciterExams() {
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
             <ClipboardList className="w-5 h-5 text-primary" />
           </div>
-          <h1 className="text-lg font-bold text-foreground">اختبارات القبول والاستحقاق</h1>
+          <h1 className="text-lg font-bold text-foreground text-right">اختبارات القبول والاستحقاق</h1>
         </div>
       </div>
 
@@ -239,7 +239,7 @@ export default function ReciterExams() {
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             ) : upcoming.length === 0 ? (
-              <Card className="p-8 text-center text-muted-foreground text-sm">
+              <Card className="p-8 text-center text-muted-foreground text-sm text-right">
                 لا توجد اختبارات قادمة
               </Card>
             ) : (
@@ -253,7 +253,7 @@ export default function ReciterExams() {
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             ) : done.length === 0 ? (
-              <Card className="p-8 text-center text-muted-foreground text-sm">
+              <Card className="p-8 text-center text-muted-foreground text-sm text-right">
                 لا توجد اختبارات منجزة
               </Card>
             ) : (
@@ -265,9 +265,9 @@ export default function ReciterExams() {
 
       {/* Result dialog */}
       <Dialog open={!!resultDialog} onOpenChange={(o) => !o && setResultDialog(null)}>
-        <DialogContent dir="rtl" className="max-w-sm">
+        <DialogContent dir="rtl" className="max-w-sm text-right">
           <DialogHeader>
-            <DialogTitle>تسجيل نتيجة الاختبار</DialogTitle>
+            <DialogTitle className="text-right">تسجيل نتيجة الاختبار</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
