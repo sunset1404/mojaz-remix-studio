@@ -135,7 +135,7 @@ export default function ReciterExams() {
               {exam.result === "passed" ? "ناجح" : "راسب"}
             </Badge>
           )}
-          <div className="flex items-center gap-2 ms-auto">
+          <div className="flex items-center gap-2 ml-auto">
             <div className="text-right">
               <p className="font-bold text-sm text-foreground">
                 اختبار {exam.type === "admission" ? "قبول" : "استحقاق"}
