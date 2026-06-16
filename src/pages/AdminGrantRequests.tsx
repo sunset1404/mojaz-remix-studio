@@ -206,9 +206,10 @@ const AdminGrantRequests = () => {
                 {statusBadge(r.status)}
               </div>
 
-              {r.requested_plan_name && (
-                <div className="text-sm mb-2"><span className="text-muted-foreground">الباقة المطلوبة:</span> <b>{r.requested_plan_name}</b></div>
-              )}
+              <div className="text-sm mb-2 flex items-center gap-2">
+                <span className="text-muted-foreground">الباقة المطلوبة:</span>
+                <b className="text-foreground">{r.requested_plan_name || "— لم يحدد —"}</b>
+              </div>
               <div className="bg-muted/40 rounded-xl p-3 text-sm mb-3 whitespace-pre-wrap">{r.reason}</div>
 
               {r.status !== "pending" && (
