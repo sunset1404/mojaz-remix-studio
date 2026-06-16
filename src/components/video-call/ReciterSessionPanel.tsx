@@ -7,6 +7,9 @@ import { useVisualViewport } from '@/hooks/useVisualViewport';
 
 interface ReciterSessionPanelProps {
   onDataChange?: (data: SessionNoteData) => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideToggle?: boolean;
 }
 
 export interface SessionNoteData {
@@ -18,8 +21,15 @@ export interface SessionNoteData {
   notes: string;
 }
 
-export function ReciterSessionPanel({ onDataChange }: ReciterSessionPanelProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOpenChange, hideToggle }: ReciterSessionPanelProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const isOpen = isControlled ? controlledOpen : internalOpen;
+  const setIsOpen = (v: boolean) => {
+    if (!isControlled) setInternalOpen(v);
+    onOpenChange?.(v);
+  };
+
   const [rating, setRating] = useState(0);
   const [startSurah, setStartSurah] = useState('');
   const [startAyah, setStartAyah] = useState('');
@@ -60,21 +70,24 @@ export function ReciterSessionPanel({ onDataChange }: ReciterSessionPanelProps) 
     <div
       ref={panelRef}
       className="absolute left-3 right-3 z-[60] transition-[bottom] duration-200"
-      style={{ bottom: `calc(7rem + ${keyboardHeight}px)` }}
+      style={{ bottom: `calc(5rem + ${keyboardHeight}px)` }}
       dir="rtl"
     >
-      {/* Toggle */}
-      <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        className="mr-auto mb-2 flex items-center gap-2 rounded-xl border border-primary/25 bg-card shadow-md px-4 py-2.5 text-sm font-semibold text-foreground backdrop-blur-sm"
-        whileTap={{ scale: 0.96 }}
-      >
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--gold)))" }}>
-          <FileText className="w-4 h-4 text-white" />
-        </div>
-        ملاحظات الجلسة
-        {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
-      </motion.button>
+      {/* Toggle (hidden when controlled from outside, e.g. control bar button) */}
+      {!hideToggle && (
+        <motion.button
+          onClick={() => setIsOpen(!isOpen)}
+          className="mr-auto mb-2 flex items-center gap-2 rounded-xl border border-primary/25 bg-card shadow-md px-4 py-2.5 text-sm font-semibold text-foreground backdrop-blur-sm"
+          whileTap={{ scale: 0.96 }}
+        >
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--gold)))" }}>
+            <FileText className="w-4 h-4 text-white" />
+          </div>
+          ملاحظات الجلسة
+          {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
+        </motion.button>
+      )}
+
 
       <AnimatePresence>
         {isOpen && (
