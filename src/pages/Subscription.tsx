@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { Check, Crown, Sparkles, Zap, Gift, ChevronLeft, Clock, Loader2 } from "lucide-react";
+import { Check, Crown, Sparkles, Zap, Gift, ChevronLeft, Clock, Loader2, HandHeart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PaymentModal from "@/components/PaymentModal";
+import GrantRequestDialog from "@/components/GrantRequestDialog";
 
 const iconMap: Record<string, typeof Zap> = {
   Zap, Crown, Sparkles
@@ -33,6 +34,7 @@ const Subscription = () => {
   const [loading, setLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
   const [freeLoading, setFreeLoading] = useState(false);
+  const [grantOpen, setGrantOpen] = useState(false);
   const [paymentModal, setPaymentModal] = useState<{open: boolean;planName: string;price: number | string;period?: string;subscriptionType?: string;durationMonths?: number;sourceType?: "subscription" | "gift" | "extra_hours";metadata?: Record<string, any>;}>({ open: false, planName: "", price: 0 });
 
   useEffect(() => {
@@ -168,7 +170,7 @@ const Subscription = () => {
       {/* Gift Banner - Top */}
       <div className="px-5 mt-5">
         <Link to="/gift">
-          
+
 
 
 
@@ -185,6 +187,22 @@ const Subscription = () => {
 
 
         </Link>
+      </div>
+
+      {/* Grant Request */}
+      <div className="px-5 mt-4">
+        <button
+          onClick={() => setGrantOpen(true)}
+          className="w-full rounded-2xl p-4 flex items-center gap-3 bg-gradient-to-l from-primary/10 to-gold/10 border border-primary/20 hover:from-primary/15 hover:to-gold/15 transition-all text-right">
+          <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+            <HandHeart className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-foreground">طلب منحة اشتراك</p>
+            <p className="text-xs text-muted-foreground">إذا كنت غير قادر على الدفع، قدّم طلبك وستراجعه الإدارة</p>
+          </div>
+          <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+        </button>
       </div>
 
       {/* Plans */}
@@ -324,6 +342,8 @@ const Subscription = () => {
         durationMonths={paymentModal.durationMonths}
         sourceType={paymentModal.sourceType || "subscription"}
         metadata={paymentModal.metadata} />
+
+      <GrantRequestDialog open={grantOpen} onOpenChange={setGrantOpen} />
 
     </div>);
 
