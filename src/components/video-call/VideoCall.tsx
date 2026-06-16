@@ -21,9 +21,10 @@ interface VideoCallProps {
     onOtherPartyEnded?: () => void;
     autoStartCall?: boolean;
     confirmOnEnd?: boolean;
+    extraControls?: React.ReactNode;
 }
 
-export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false, confirmOnEnd = false }: VideoCallProps) {
+export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false, confirmOnEnd = false, extraControls }: VideoCallProps) {
     const {
         localStream,
         remoteStream,
