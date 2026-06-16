@@ -7,6 +7,9 @@ import { useVisualViewport } from '@/hooks/useVisualViewport';
 
 interface ReciterSessionPanelProps {
   onDataChange?: (data: SessionNoteData) => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideToggle?: boolean;
 }
 
 export interface SessionNoteData {
@@ -18,8 +21,15 @@ export interface SessionNoteData {
   notes: string;
 }
 
-export function ReciterSessionPanel({ onDataChange }: ReciterSessionPanelProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOpenChange, hideToggle }: ReciterSessionPanelProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const isOpen = isControlled ? controlledOpen : internalOpen;
+  const setIsOpen = (v: boolean) => {
+    if (!isControlled) setInternalOpen(v);
+    onOpenChange?.(v);
+  };
+
   const [rating, setRating] = useState(0);
   const [startSurah, setStartSurah] = useState('');
   const [startAyah, setStartAyah] = useState('');
