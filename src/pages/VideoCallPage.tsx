@@ -404,9 +404,24 @@ const VideoCallPage = () => {
                 onOtherPartyEnded={handleOtherPartyEnded}
                 autoStartCall={callRole === "caller"}
                 confirmOnEnd={!isReciter}
+                extraControls={isReciter ? (
+                    <button
+                        type="button"
+                        onClick={() => setNotesOpen((v) => !v)}
+                        aria-label="ملاحظات الجلسة"
+                        className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border ${notesOpen ? 'bg-primary text-primary-foreground border-primary/60' : 'bg-card/80 text-foreground border-border hover:bg-card'}`}
+                    >
+                        <FileText className="w-5 h-5" />
+                    </button>
+                ) : undefined}
             />
             {isReciter && (
-                <ReciterSessionPanel onDataChange={(data) => { sessionNoteRef.current = data; }} />
+                <ReciterSessionPanel
+                    onDataChange={(data) => { sessionNoteRef.current = data; }}
+                    isOpen={notesOpen}
+                    onOpenChange={setNotesOpen}
+                    hideToggle
+                />
             )}
             <AnimatePresence>
                 {showConfirm && isReciter && (
