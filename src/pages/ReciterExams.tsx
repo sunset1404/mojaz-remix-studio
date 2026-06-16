@@ -126,7 +126,7 @@ export default function ReciterExams() {
             <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
               <GraduationCap className="w-4 h-4 text-primary" />
             </div>
-            <div>
+            <div className="text-right">
               <p className="font-bold text-sm text-foreground">
                 اختبار {exam.type === "admission" ? "قبول" : "استحقاق"}
               </p>
@@ -150,23 +150,23 @@ export default function ReciterExams() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-          <div className="flex items-center gap-1.5 text-muted-foreground">
+        <div className="grid grid-cols-2 gap-2 mt-3 text-xs text-right">
+          <div className="flex items-center gap-1.5 text-muted-foreground justify-end">
             <Calendar className="w-3.5 h-3.5" />
             <span>{exam.date}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-muted-foreground justify-end">
             <Clock className="w-3.5 h-3.5" />
             <span>{exam.time}</span>
           </div>
         </div>
 
-        <div className="mt-3 pt-3 border-t border-border/40">
-          <div className="flex items-center gap-1.5 mb-1.5">
+        <div className="mt-3 pt-3 border-t border-border/40 text-right">
+          <div className="flex items-center gap-1.5 mb-1.5 justify-end">
             <Users className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">أعضاء اللجنة</span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5 justify-end">
             {[exam.committee_member_1_name, exam.committee_member_2_name, exam.committee_member_3_name]
               .filter(Boolean)
               .map((n, i) => (
@@ -178,7 +178,7 @@ export default function ReciterExams() {
         </div>
 
         {exam.notes && (
-          <p className="text-xs text-muted-foreground mt-3 bg-muted/30 rounded-lg p-2">
+          <p className="text-xs text-muted-foreground mt-3 bg-muted/30 rounded-lg p-2 text-right">
             {exam.notes}
           </p>
         )}
@@ -222,7 +222,7 @@ export default function ReciterExams() {
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
             <ClipboardList className="w-5 h-5 text-primary" />
           </div>
-          <h1 className="text-lg font-bold text-foreground">اختبارات القبول والاستحقاق</h1>
+          <h1 className="text-lg font-bold text-foreground text-right">اختبارات القبول والاستحقاق</h1>
         </div>
       </div>
 
@@ -239,7 +239,7 @@ export default function ReciterExams() {
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             ) : upcoming.length === 0 ? (
-              <Card className="p-8 text-center text-muted-foreground text-sm">
+              <Card className="p-8 text-center text-muted-foreground text-sm text-right">
                 لا توجد اختبارات قادمة
               </Card>
             ) : (
@@ -253,7 +253,7 @@ export default function ReciterExams() {
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             ) : done.length === 0 ? (
-              <Card className="p-8 text-center text-muted-foreground text-sm">
+              <Card className="p-8 text-center text-muted-foreground text-sm text-right">
                 لا توجد اختبارات منجزة
               </Card>
             ) : (
@@ -265,9 +265,9 @@ export default function ReciterExams() {
 
       {/* Result dialog */}
       <Dialog open={!!resultDialog} onOpenChange={(o) => !o && setResultDialog(null)}>
-        <DialogContent dir="rtl" className="max-w-sm">
+        <DialogContent dir="rtl" className="max-w-sm text-right">
           <DialogHeader>
-            <DialogTitle>تسجيل نتيجة الاختبار</DialogTitle>
+            <DialogTitle className="text-right">تسجيل نتيجة الاختبار</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
