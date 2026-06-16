@@ -243,6 +243,13 @@ const StudentDetail = () => {
         </motion.div>
       </div>
 
+      {/* Exam Evaluations */}
+      <div className="px-5 mt-4">
+        <ExamEvaluationsSection studentId={student.user_id} />
+      </div>
+
+
+
       {/* Contact Actions */}
       <div className="px-5 mt-4">
         <motion.div
