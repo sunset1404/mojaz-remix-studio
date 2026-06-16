@@ -26,21 +26,46 @@ const GrantRequestDialog = ({ open, onOpenChange }: Props) => {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [hasPending, setHasPending] = useState(false);
+  const [activeGrant, setActiveGrant] = useState<any>(null);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     if (!open || !user) return;
     setChecking(true);
     (async () => {
-      const [{ data: pl }, { data: prof }, { data: pending }] = await Promise.all([
+      const today = new Date().toISOString().slice(0, 10);
+      const [{ data: pl }, { data: prof }, { data: pending }, { data: approved }] = await Promise.all([
         supabase.from("subscription_plans").select("id, name").eq("is_active", true).gt("price_monthly", 0).order("sort_order"),
         supabase.from("student_profiles").select("full_name, phone").eq("user_id", user.id).maybeSingle(),
         supabase.from("subscription_grant_requests" as any).select("id").eq("user_id", user.id).eq("status", "pending").maybeSingle(),
+        supabase
+          .from("subscription_grant_requests" as any)
+          .select("id, approved_plan_name, approved_duration_months, approved_minutes, reviewed_at, approved_subscription_id")
+          .eq("user_id", user.id)
+          .eq("status", "approved")
+          .not("approved_subscription_id", "is", null)
+          .order("reviewed_at", { ascending: false }),
       ]);
       setPlans((pl as any) || []);
       if (prof?.full_name && !fullName) setFullName(prof.full_name);
       if (prof?.phone && !phone) setPhone(prof.phone);
       setHasPending(!!pending);
+
+      // Check if any approved grant's linked subscription is still active
+      let active: any = null;
+      const approvedList = (approved as any[]) || [];
+      const subIds = approvedList.map((r) => r.approved_subscription_id).filter(Boolean);
+      if (subIds.length) {
+        const { data: subs } = await supabase
+          .from("student_subscriptions")
+          .select("id, status, end_date")
+          .in("id", subIds);
+        const activeSub = (subs || []).find(
+          (s: any) => s.status === "active" && (!s.end_date || s.end_date >= today)
+        );
+        if (activeSub) active = approvedList.find((r) => r.approved_subscription_id === activeSub.id) || null;
+      }
+      setActiveGrant(active);
       setChecking(false);
     })();
   }, [open, user]);
@@ -95,6 +120,16 @@ const GrantRequestDialog = ({ open, onOpenChange }: Props) => {
 
         {checking ? (
           <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+        ) : activeGrant ? (
+          <div className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-200 p-4 rounded-xl text-sm space-y-2">
+            <p className="font-bold">لديك منحة فعّالة حالياً</p>
+            <p>لا يمكن تقديم طلب منحة جديد ما دامت لديك منحة سارية.</p>
+            <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3 mt-2 space-y-1">
+              {activeGrant.approved_plan_name && <div>الباقة: <b>{activeGrant.approved_plan_name}</b></div>}
+              {activeGrant.approved_duration_months != null && <div>المدة: <b>{activeGrant.approved_duration_months} شهر</b></div>}
+              {activeGrant.approved_minutes != null && <div>الدقائق الممنوحة: <b>{activeGrant.approved_minutes} دقيقة</b></div>}
+            </div>
+          </div>
         ) : hasPending ? (
           <div className="bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 p-4 rounded-xl text-sm">
             لديك طلب منحة قيد المراجعة بالفعل. سيتم إشعارك عند صدور قرار الإدارة.
@@ -132,7 +167,7 @@ const GrantRequestDialog = ({ open, onOpenChange }: Props) => {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
-          {!hasPending && !checking && (
+          {!hasPending && !activeGrant && !checking && (
             <Button onClick={submit} disabled={loading}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "إرسال الطلب"}
             </Button>
