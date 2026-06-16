@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Loader2, AlertCircle, PhoneOff, Clock } from "lucide-react";
+import { ChevronRight, Loader2, AlertCircle, PhoneOff, Clock, FileText } from "lucide-react";
 import { VideoCall } from "@/components/video-call/VideoCall";
 import { ReciterSessionPanel, SessionNoteData } from "@/components/video-call/ReciterSessionPanel";
 import { SessionConfirmDialog } from "@/components/video-call/SessionConfirmDialog";
