@@ -32,16 +32,25 @@ const ReciterHome = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [queueCount, setQueueCount] = useState(0);
   const [stats, setStats] = useState({ students: 0, todaySessions: 0, hours: 0, certificates: 0 });
+  const [hasExams, setHasExams] = useState(false);
   const onlineReciters = useOnlineReciters();
   const isOnline = user ? onlineReciters.includes(user.id) : false;
 
   const fetchData = useCallback(async () => {
     if (!user) return;
-    supabase.from("reciter_profiles").select("full_name").eq("user_id", user.id).maybeSingle()
-      .then(({ data }) => { if (data) {
+    supabase.from("reciter_profiles").select("id, full_name").eq("user_id", user.id).maybeSingle()
+      .then(async ({ data }) => {
+        if (!data) return;
         const parts = data.full_name.trim().split(/\s+/);
         setUserName(parts.slice(0, 2).join(" "));
-      }});
+        // Check if reciter is on any exam committee
+        const { count } = await (supabase as any)
+          .from("exams")
+          .select("id", { count: "exact", head: true })
+          .or(`committee_member_1.eq.${data.id},committee_member_2.eq.${data.id},committee_member_3.eq.${data.id}`);
+        setHasExams((count || 0) > 0);
+      });
+
 
     if (reciterType === "ijazah") {
       supabase
@@ -328,34 +337,37 @@ const ReciterHome = () => {
         </motion.div>
       </div>
 
-      {/* Exams Card (for all reciters) */}
-      <div className="px-5 mt-3">
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.62 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <Link to="/reciter-exams" className="block">
-            <div className="relative rounded-2xl overflow-hidden bg-card border border-border/60 p-4 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
-                  <Award className="w-6 h-6 text-gold" />
+      {/* Exams Card — only for reciters who have any exams as committee members */}
+      {hasExams && (
+        <div className="px-5 mt-3">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.62 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Link to="/reciter-exams" className="block">
+              <div className="relative rounded-2xl overflow-hidden bg-card border border-border/60 p-4 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
+                    <Award className="w-6 h-6 text-gold" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-base text-foreground">
+                      اختبارات القبول والاستحقاق
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      اطّلع على اختباراتك واتصل بالطلاب لإجرائها
+                    </p>
+                  </div>
+                  <ChevronLeft className="w-5 h-5 text-muted-foreground shrink-0" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-base text-foreground">
-                    اختبارات القبول والاستحقاق
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    اطّلع على اختباراتك واتصل بالطلاب لإجرائها
-                  </p>
-                </div>
-                <ChevronLeft className="w-5 h-5 text-muted-foreground shrink-0" />
               </div>
-            </div>
-          </Link>
-        </motion.div>
-      </div>
+            </Link>
+          </motion.div>
+        </div>
+      )}
+
 
       {/* Students Section (Ijazah) or Recent Sessions (General) */}
       {reciterType === "ijazah" ? (
