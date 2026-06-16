@@ -455,6 +455,33 @@ export default function AdminExams() {
               </div>
             </div>
 
+            {/* Student selector */}
+            <div className="space-y-2">
+              <Label>الطالب (اختياري — مطلوب لتمكين الاتصال من حساب المقرئ)</Label>
+              <Select
+                value={form.student_id || "none"}
+                onValueChange={(v) => {
+                  if (v === "none") {
+                    setForm((p) => ({ ...p, student_id: "", student_name: "" }));
+                  } else {
+                    const s = students.find((x) => x.user_id === v);
+                    setForm((p) => ({ ...p, student_id: v, student_name: s?.full_name || "" }));
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الطالب" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— بدون طالب محدد —</SelectItem>
+                  {students.map((s) => (
+                    <SelectItem key={s.user_id} value={s.user_id}>{s.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+
             {/* Date, Time & Capacity */}
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
