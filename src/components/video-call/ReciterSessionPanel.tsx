@@ -112,37 +112,23 @@ export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOp
               style={{ background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--gold)))" }}
             />
 
-            <div className="p-5 space-y-5">
-              {/* Rating */}
+            <div className="p-4 space-y-4">
+              {/* Rubric scoring */}
               <div className="space-y-2">
                 <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-                  <Star className="w-3.5 h-3.5 text-gold" />
-                  تقييم الجلسة
+                  <ClipboardList className="w-3.5 h-3.5 text-primary" />
+                  معايير التقييم
                 </label>
-                <div className="flex gap-1.5 justify-start">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => {
-                        setRating(star);
-                        updateData({ rating: star });
-                      }}
-                      className="p-0.5 transition-transform hover:scale-110"
-                    >
-                      <Star
-                        className={`w-8 h-8 transition-all ${
-                          star <= rating
-                            ? 'fill-gold text-gold drop-shadow-sm'
-                            : 'text-border hover:text-gold/40'
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
+                <RubricScoring
+                  scores={scores}
+                  onChange={(s) => {
+                    setScores(s);
+                    updateData({ scores: s });
+                  }}
+                />
               </div>
 
-              {/* Start point */}
+
               <div className="space-y-2">
                 <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-primary" />
