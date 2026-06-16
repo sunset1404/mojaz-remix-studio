@@ -9,6 +9,7 @@ import {
   Star, Calendar, Phone, Video, MapPin, GraduationCap,
   Target, TrendingUp
 } from "lucide-react";
+import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";
 
 const StudentDetail = () => {
   const { studentId } = useParams();
@@ -241,6 +242,13 @@ const StudentDetail = () => {
           )}
         </motion.div>
       </div>
+
+      {/* Exam Evaluations */}
+      <div className="px-5 mt-4">
+        <ExamEvaluationsSection studentId={student.user_id} />
+      </div>
+
+
 
       {/* Contact Actions */}
       <div className="px-5 mt-4">

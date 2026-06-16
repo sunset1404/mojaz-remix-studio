@@ -12,6 +12,7 @@ const menuSections = [
     items: [
       { icon: User, label: "البيانات الشخصية", desc: "الاسم، الجوال، البريد", path: "/profile/edit" },
       { icon: Award, label: "الإجازات والشهادات", desc: "إجازاتي وشهاداتي المعتمدة", path: "/certificates" },
+      { icon: Award, label: "تقييمات الاختبارات", desc: "نتائج اختبارات القبول والاستحقاق", path: "/my-exam-evaluations" },
       { icon: CalendarDays, label: "خطتي الأسبوعية", desc: "عرض وتعديل خطة الحفظ", path: "/weekly-plan" },
       { icon: Gift, label: "إهداءاتي", desc: "الاشتراكات التي أهديتها للآخرين", path: "/my-gifts" },
       { icon: CreditCard, label: "المدفوعات والفواتير", desc: "بطاقات الائتمان، سجل الدفعات", path: "/payments" },

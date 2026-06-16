@@ -48,6 +48,7 @@ const VideoCallPage = () => {
     const [notesOpen, setNotesOpen] = useState(false);
     const [scoringOpen, setScoringOpen] = useState(false);
     const [examScores, setExamScores] = useState<Record<string, number>>({});
+    const [examId, setExamId] = useState<string | null>(navState?.examId || null);
     const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, scores: {}, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
 
     // ── New call creation flow ──
@@ -163,6 +164,7 @@ const VideoCallPage = () => {
 
                 const isStudent = session.student_id === user.id;
                 setIsReciter(!isStudent);
+                if (session.exam_id) setExamId(session.exam_id);
                 const callerRole = session.caller_role || (isStudent ? "student" : "reciter");
 
                 if (callerRole === "student") {
@@ -327,6 +329,42 @@ const VideoCallPage = () => {
                             notes: updatePayload.notes || null,
                             status: "مكتملة",
                         });
+
+                    // If this was an exam call and we have rubric scores, save evaluation
+                    if (examId && noteData.scores && Object.keys(noteData.scores).length > 0) {
+                        try {
+                            const { computeTotalScore: _ct, RUBRIC_PASS } = await import('@/data/examRubric');
+                            const total = _ct(noteData.scores);
+                            const { data: examRow } = await (supabase as any)
+                                .from('exams')
+                                .select('type, student_name')
+                                .eq('id', examId)
+                                .maybeSingle();
+                            await (supabase as any).from('exam_evaluations').insert({
+                                exam_id: examId,
+                                student_id: session.student_id,
+                                student_name: examRow?.student_name || session.student_name,
+                                reciter_id: session.reciter_id,
+                                reciter_name: reciterName,
+                                exam_type: examRow?.type || null,
+                                scores: noteData.scores,
+                                total_score: total,
+                                passed: total >= RUBRIC_PASS,
+                                start_surah: noteData.startSurah || null,
+                                start_ayah: noteData.startAyah || null,
+                                end_surah: noteData.endSurah || null,
+                                end_ayah: noteData.endAyah || null,
+                                notes: noteData.notes || null,
+                            });
+                            // Mark exam status as completed
+                            await (supabase as any)
+                                .from('exams')
+                                .update({ status: 'completed', result: total >= RUBRIC_PASS ? 'passed' : 'failed' })
+                                .eq('id', examId);
+                        } catch (e) {
+                            console.error('exam_evaluation insert error', e);
+                        }
+                    }
                 }
             } catch (err) {
                 console.error("Error creating session record:", err);
@@ -414,7 +452,7 @@ const VideoCallPage = () => {
                 confirmOnEnd={!isReciter}
                 extraControls={isReciter ? (
                     <>
-                        {navState?.examId && (
+                        {examId && (
                             <button
                                 type="button"
                                 onClick={() => {
@@ -450,7 +488,7 @@ const VideoCallPage = () => {
                     hideToggle
                 />
             )}
-            {isReciter && navState?.examId && (
+            {isReciter && examId && (
                 <ExamScoringPanel
                     scores={examScores}
                     onScoresChange={(scores) => {
@@ -470,7 +508,7 @@ const VideoCallPage = () => {
                         data={sessionNoteRef.current}
                         onConfirm={handleConfirmEnd}
                         onCancel={() => setShowConfirm(false)}
-                        isExam={!!navState?.examId}
+                        isExam={!!examId}
                     />
                 )}
             </AnimatePresence>
