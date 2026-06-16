@@ -13,6 +13,8 @@ project_id = "cfihcvudcwujylipqngk"
     verify_jwt = true
   [functions.reciter-call]
     verify_jwt = true
+  [functions.exam-call]
+    verify_jwt = true
   [functions.request-call]
     verify_jwt = false
   [functions.signup-student]
