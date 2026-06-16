@@ -30,7 +30,7 @@ const VideoCallPage = () => {
     const { toast } = useToast();
 
     // State from navigation (new call flow)
-    const navState = location.state as { reciterId?: string; reciterName?: string; studentId?: string; studentName?: string } | null;
+    const navState = location.state as { reciterId?: string; reciterName?: string; studentId?: string; studentName?: string; examId?: string } | null;
 
     const [roomId, setRoomId] = useState<string | null>(routeRoomId || null);
     const [pageState, setPageState] = useState<CallPageState>(routeRoomId ? "loading" : "creating");
@@ -59,12 +59,21 @@ const VideoCallPage = () => {
                 let fnError: any;
 
                 if (isReciterCall) {
-                    // Reciter calling student
-                    const result = await supabase.functions.invoke("reciter-call", {
-                        body: { student_id: navState!.studentId },
-                    });
-                    data = result.data;
-                    fnError = result.error;
+                    if (navState!.examId) {
+                        // Reciter calling student for an exam (admission/eligibility)
+                        const result = await supabase.functions.invoke("exam-call", {
+                            body: { exam_id: navState!.examId },
+                        });
+                        data = result.data;
+                        fnError = result.error;
+                    } else {
+                        // Reciter calling student
+                        const result = await supabase.functions.invoke("reciter-call", {
+                            body: { student_id: navState!.studentId },
+                        });
+                        data = result.data;
+                        fnError = result.error;
+                    }
                 } else {
                     // Student calling reciter
                     const result = await supabase.functions.invoke("request-call", {
