@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, BookOpen, FileText, CheckCircle2 } from 'lucide-react';
+import { BookOpen, FileText, CheckCircle2, ClipboardList } from 'lucide-react';
 import { SessionNoteData } from './ReciterSessionPanel';
 import { SurahSelect } from './SurahSelect';
+import { RubricScoring } from './RubricScoring';
+import { computeTotalScore } from '@/data/examRubric';
 
 interface SessionConfirmDialogProps {
   data: SessionNoteData;
@@ -11,7 +13,7 @@ interface SessionConfirmDialogProps {
 }
 
 export function SessionConfirmDialog({ data, onConfirm, onCancel }: SessionConfirmDialogProps) {
-  const [rating, setRating] = useState(data.rating);
+  const [scores, setScores] = useState<Record<string, number>>(data.scores || {});
   const [startSurah, setStartSurah] = useState(data.startSurah);
   const [startAyah, setStartAyah] = useState(data.startAyah);
   const [endSurah, setEndSurah] = useState(data.endSurah);
@@ -21,8 +23,11 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel }: SessionConfi
   const [endMaxAyahs, setEndMaxAyahs] = useState(0);
 
   const handleConfirm = () => {
-    onConfirm({ rating, startSurah, startAyah, endSurah, endAyah, notes });
+    const total = computeTotalScore(scores);
+    const rating = Math.max(0, Math.min(5, Math.round((total / 100) * 5)));
+    onConfirm({ rating, scores, startSurah, startAyah, endSurah, endAyah, notes });
   };
+
 
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-4" dir="rtl">
