@@ -69,8 +69,8 @@ export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOp
   return (
     <div
       ref={panelRef}
-      className="absolute left-3 right-3 z-[60] transition-[bottom] duration-200"
-      style={{ bottom: `calc(7rem + ${keyboardHeight}px)` }}
+      className="absolute left-3 right-3 z-[60] transition-[bottom] duration-200 pointer-events-none"
+      style={{ bottom: `calc(5rem + ${keyboardHeight}px)` }}
       dir="rtl"
     >
       {/* Toggle (hidden when controlled from outside, e.g. control bar button) */}
