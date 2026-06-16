@@ -120,6 +120,16 @@ const GrantRequestDialog = ({ open, onOpenChange }: Props) => {
 
         {checking ? (
           <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+        ) : activeGrant ? (
+          <div className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-200 p-4 rounded-xl text-sm space-y-2">
+            <p className="font-bold">لديك منحة فعّالة حالياً</p>
+            <p>لا يمكن تقديم طلب منحة جديد ما دامت لديك منحة سارية.</p>
+            <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3 mt-2 space-y-1">
+              {activeGrant.approved_plan_name && <div>الباقة: <b>{activeGrant.approved_plan_name}</b></div>}
+              {activeGrant.approved_duration_months != null && <div>المدة: <b>{activeGrant.approved_duration_months} شهر</b></div>}
+              {activeGrant.approved_minutes != null && <div>الدقائق الممنوحة: <b>{activeGrant.approved_minutes} دقيقة</b></div>}
+            </div>
+          </div>
         ) : hasPending ? (
           <div className="bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 p-4 rounded-xl text-sm">
             لديك طلب منحة قيد المراجعة بالفعل. سيتم إشعارك عند صدور قرار الإدارة.
@@ -157,7 +167,7 @@ const GrantRequestDialog = ({ open, onOpenChange }: Props) => {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
-          {!hasPending && !checking && (
+          {!hasPending && !activeGrant && !checking && (
             <Button onClick={submit} disabled={loading}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "إرسال الطلب"}
             </Button>
