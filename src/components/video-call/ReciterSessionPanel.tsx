@@ -8,6 +8,7 @@ import { computeTotalScore } from '@/data/examRubric';
 
 interface ReciterSessionPanelProps {
   onDataChange?: (data: SessionNoteData) => void;
+  scores?: Record<string, number>;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideToggle?: boolean;
@@ -23,7 +24,7 @@ export interface SessionNoteData {
   notes: string;
 }
 
-export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOpenChange, hideToggle }: ReciterSessionPanelProps) {
+export function ReciterSessionPanel({ onDataChange, scores: externalScores = {}, isOpen: controlledOpen, onOpenChange, hideToggle }: ReciterSessionPanelProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
   const isOpen = isControlled ? controlledOpen : internalOpen;
@@ -111,22 +112,7 @@ export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOp
             />
 
             <div className="p-4 space-y-4">
-              {/* Rubric scoring */}
-              <div className="space-y-2">
-                <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-                  <ClipboardList className="w-3.5 h-3.5 text-primary" />
-                  معايير التقييم
-                </label>
-                <RubricScoring
-                  scores={scores}
-                  onChange={(s) => {
-                    setScores(s);
-                    updateData({ scores: s });
-                  }}
-                />
-              </div>
-
-
+              {/* Start point */}
               <div className="space-y-2">
                 <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-primary" />
