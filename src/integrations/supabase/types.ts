@@ -1285,6 +1285,84 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_grant_requests: {
+        Row: {
+          admin_notes: string | null
+          approved_duration_months: number | null
+          approved_minutes: number | null
+          approved_plan_id: string | null
+          approved_plan_name: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          reason: string
+          requested_plan_id: string | null
+          requested_plan_name: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_duration_months?: number | null
+          approved_minutes?: number | null
+          approved_plan_id?: string | null
+          approved_plan_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          phone?: string | null
+          reason: string
+          requested_plan_id?: string | null
+          requested_plan_name?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_duration_months?: number | null
+          approved_minutes?: number | null
+          approved_plan_id?: string | null
+          approved_plan_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          reason?: string
+          requested_plan_id?: string | null
+          requested_plan_name?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_grant_requests_approved_plan_id_fkey"
+            columns: ["approved_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_grant_requests_requested_plan_id_fkey"
+            columns: ["requested_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           created_at: string
