@@ -266,6 +266,10 @@ const VideoCallPage = () => {
             if (isReciter) {
                 if (noteData.rating > 0) updatePayload.rating = noteData.rating;
                 const noteParts: string[] = [];
+                if (noteData.scores && Object.keys(noteData.scores).length > 0) {
+                    const { rubricToNotesText } = await import('@/data/examRubric');
+                    noteParts.push(rubricToNotesText(noteData.scores));
+                }
                 if (noteData.startSurah || noteData.startAyah) noteParts.push(`بدأ من: ${noteData.startSurah} آية ${noteData.startAyah}`);
                 if (noteData.endSurah || noteData.endAyah) noteParts.push(`انتهى عند: ${noteData.endSurah} آية ${noteData.endAyah}`);
                 if (noteData.notes) noteParts.push(`ملاحظات: ${noteData.notes}`);
