@@ -170,7 +170,7 @@ const Subscription = () => {
       {/* Gift Banner - Top */}
       <div className="px-5 mt-5">
         <Link to="/gift">
-          
+
 
 
 
@@ -187,6 +187,22 @@ const Subscription = () => {
 
 
         </Link>
+      </div>
+
+      {/* Grant Request */}
+      <div className="px-5 mt-4">
+        <button
+          onClick={() => setGrantOpen(true)}
+          className="w-full rounded-2xl p-4 flex items-center gap-3 bg-gradient-to-l from-primary/10 to-gold/10 border border-primary/20 hover:from-primary/15 hover:to-gold/15 transition-all text-right">
+          <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+            <HandHeart className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-foreground">طلب منحة اشتراك</p>
+            <p className="text-xs text-muted-foreground">إذا كنت غير قادر على الدفع، قدّم طلبك وستراجعه الإدارة</p>
+          </div>
+          <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+        </button>
       </div>
 
       {/* Plans */}
