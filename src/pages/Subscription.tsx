@@ -343,6 +343,8 @@ const Subscription = () => {
         sourceType={paymentModal.sourceType || "subscription"}
         metadata={paymentModal.metadata} />
 
+      <GrantRequestDialog open={grantOpen} onOpenChange={setGrantOpen} />
+
     </div>);
 
 };
