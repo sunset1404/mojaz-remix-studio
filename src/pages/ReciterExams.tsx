@@ -211,27 +211,28 @@ export default function ReciterExams() {
   return (
     <div className="min-h-screen bg-background pb-24" dir="rtl">
       {/* Header */}
-      <div className="px-5 pt-8 pb-4 flex items-center gap-3">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center"
-        >
-          <ChevronRight className="w-5 h-5 text-foreground" />
-        </button>
-        <div className="flex items-center gap-2">
+      <div className="px-5 pt-8 pb-4 flex flex-row-reverse items-center gap-3 justify-between" dir="rtl">
+        <div className="flex flex-row-reverse items-center gap-2">
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
             <ClipboardList className="w-5 h-5 text-primary" />
           </div>
           <h1 className="text-lg font-bold text-foreground text-right">اختبارات القبول والاستحقاق</h1>
         </div>
+        <button
+          onClick={() => navigate(-1)}
+          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center"
+        >
+          <ChevronRight className="w-5 h-5 text-foreground rotate-180" />
+        </button>
       </div>
 
-      <div className="px-5">
-        <Tabs value={tab} onValueChange={setTab}>
+      <div className="px-5" dir="rtl">
+        <Tabs value={tab} onValueChange={setTab} dir="rtl">
           <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="upcoming">القادمة ({upcoming.length})</TabsTrigger>
             <TabsTrigger value="done">المنجزة ({done.length})</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="upcoming" className="mt-4 space-y-3">
             {loading ? (
