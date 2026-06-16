@@ -32,7 +32,6 @@ export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOp
     onOpenChange?.(v);
   };
 
-  const [scores, setScores] = useState<Record<string, number>>({});
   const [startSurah, setStartSurah] = useState('');
   const [startAyah, setStartAyah] = useState('');
   const [endSurah, setEndSurah] = useState('');
@@ -57,7 +56,7 @@ export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOp
   }, [keyboardHeight]);
 
   const updateData = (updates: Partial<SessionNoteData>) => {
-    const nextScores = updates.scores ?? scores;
+    const nextScores = updates.scores ?? externalScores;
     const total = computeTotalScore(nextScores);
     const data: SessionNoteData = {
       rating: Math.max(0, Math.min(5, Math.round((total / 100) * 5))),
