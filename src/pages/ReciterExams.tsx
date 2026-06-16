@@ -126,7 +126,7 @@ export default function ReciterExams() {
             <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
               <GraduationCap className="w-4 h-4 text-primary" />
             </div>
-            <div>
+            <div className="text-right">
               <p className="font-bold text-sm text-foreground">
                 اختبار {exam.type === "admission" ? "قبول" : "استحقاق"}
               </p>
@@ -150,23 +150,23 @@ export default function ReciterExams() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-          <div className="flex items-center gap-1.5 text-muted-foreground">
+        <div className="grid grid-cols-2 gap-2 mt-3 text-xs text-right">
+          <div className="flex items-center gap-1.5 text-muted-foreground justify-end">
             <Calendar className="w-3.5 h-3.5" />
             <span>{exam.date}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-muted-foreground justify-end">
             <Clock className="w-3.5 h-3.5" />
             <span>{exam.time}</span>
           </div>
         </div>
 
-        <div className="mt-3 pt-3 border-t border-border/40">
-          <div className="flex items-center gap-1.5 mb-1.5">
+        <div className="mt-3 pt-3 border-t border-border/40 text-right">
+          <div className="flex items-center gap-1.5 mb-1.5 justify-end">
             <Users className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">أعضاء اللجنة</span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5 justify-end">
             {[exam.committee_member_1_name, exam.committee_member_2_name, exam.committee_member_3_name]
               .filter(Boolean)
               .map((n, i) => (
@@ -178,7 +178,7 @@ export default function ReciterExams() {
         </div>
 
         {exam.notes && (
-          <p className="text-xs text-muted-foreground mt-3 bg-muted/30 rounded-lg p-2">
+          <p className="text-xs text-muted-foreground mt-3 bg-muted/30 rounded-lg p-2 text-right">
             {exam.notes}
           </p>
         )}
