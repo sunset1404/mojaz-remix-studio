@@ -122,19 +122,6 @@ export default function ReciterExams() {
     >
       <Card className="p-4 border-border/60">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <GraduationCap className="w-4 h-4 text-primary" />
-            </div>
-            <div className="text-right">
-              <p className="font-bold text-sm text-foreground">
-                اختبار {exam.type === "admission" ? "قبول" : "استحقاق"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {exam.student_name || "بدون طالب محدد"}
-              </p>
-            </div>
-          </div>
           {!isUpcoming && exam.result && (
             <Badge
               variant={exam.result === "passed" ? "default" : "destructive"}
@@ -148,23 +135,36 @@ export default function ReciterExams() {
               {exam.result === "passed" ? "ناجح" : "راسب"}
             </Badge>
           )}
+          <div className="flex items-center gap-2 ml-auto">
+            <div className="text-right">
+              <p className="font-bold text-sm text-foreground">
+                اختبار {exam.type === "admission" ? "قبول" : "استحقاق"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {exam.student_name || "بدون طالب محدد"}
+              </p>
+            </div>
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <GraduationCap className="w-4 h-4 text-primary" />
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-3 text-xs text-right">
-          <div className="flex items-center gap-1.5 text-muted-foreground justify-end">
-            <Calendar className="w-3.5 h-3.5" />
-            <span>{exam.date}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-muted-foreground justify-end">
+        <div className="flex items-center justify-between gap-2 mt-3 text-xs">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
             <Clock className="w-3.5 h-3.5" />
             <span>{exam.time}</span>
           </div>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <span>{exam.date}</span>
+            <Calendar className="w-3.5 h-3.5" />
+          </div>
         </div>
 
-        <div className="mt-3 pt-3 border-t border-border/40 text-right">
+        <div className="mt-3 pt-3 border-t border-border/40">
           <div className="flex items-center gap-1.5 mb-1.5 justify-end">
-            <Users className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">أعضاء اللجنة</span>
+            <Users className="w-3.5 h-3.5 text-muted-foreground" />
           </div>
           <div className="flex flex-wrap gap-1.5 justify-end">
             {[exam.committee_member_1_name, exam.committee_member_2_name, exam.committee_member_3_name]
@@ -184,11 +184,11 @@ export default function ReciterExams() {
         )}
 
         {isUpcoming && (
-          <div className="grid grid-cols-2 gap-2 mt-3">
+          <div className="flex gap-2 mt-3">
             <Button
               size="sm"
               onClick={() => startCall(exam)}
-              className="gap-2"
+              className="gap-2 flex-1"
             >
               <Phone className="w-4 h-4" />
               اتصال بالطالب
@@ -197,13 +197,14 @@ export default function ReciterExams() {
               size="sm"
               variant="outline"
               onClick={() => openResult(exam)}
-              className="gap-2"
+              className="gap-2 flex-1"
             >
               <ClipboardList className="w-4 h-4" />
               تسجيل النتيجة
             </Button>
           </div>
         )}
+
       </Card>
     </motion.div>
   );
@@ -211,7 +212,7 @@ export default function ReciterExams() {
   return (
     <div className="min-h-screen bg-background pb-24" dir="rtl">
       {/* Header */}
-      <div className="px-5 pt-8 pb-4 flex items-center gap-3">
+      <div className="px-5 pt-8 pb-4 flex items-center justify-between gap-3">
         <button
           onClick={() => navigate(-1)}
           className="w-9 h-9 rounded-full bg-muted flex items-center justify-center"
@@ -219,19 +220,21 @@ export default function ReciterExams() {
           <ChevronRight className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex items-center gap-2">
+          <h1 className="text-lg font-bold text-foreground text-right">اختبارات القبول والاستحقاق</h1>
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
             <ClipboardList className="w-5 h-5 text-primary" />
           </div>
-          <h1 className="text-lg font-bold text-foreground text-right">اختبارات القبول والاستحقاق</h1>
         </div>
       </div>
 
-      <div className="px-5">
-        <Tabs value={tab} onValueChange={setTab}>
+
+      <div className="px-5" dir="rtl">
+        <Tabs value={tab} onValueChange={setTab} dir="rtl">
           <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="upcoming">القادمة ({upcoming.length})</TabsTrigger>
             <TabsTrigger value="done">المنجزة ({done.length})</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="upcoming" className="mt-4 space-y-3">
             {loading ? (
