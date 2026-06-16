@@ -55,33 +55,17 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel }: SessionConfi
             <p className="text-xs text-muted-foreground">أدخل أو عدّل البيانات قبل حفظها</p>
           </div>
 
-          {/* Rating */}
+          {/* Rubric scoring */}
           <div className="space-y-1.5">
             <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-              <Star className="w-3.5 h-3.5 text-gold" />
-              تقييم الجلسة
+              <ClipboardList className="w-3.5 h-3.5 text-primary" />
+              معايير التقييم
             </label>
-            <div className="flex gap-1.5 justify-start">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setRating(s)}
-                  className="p-0.5 transition-transform hover:scale-110"
-                >
-                  <Star
-                    className={`w-7 h-7 transition-all ${
-                      s <= rating
-                        ? 'fill-gold text-gold drop-shadow-sm'
-                        : 'text-border hover:text-gold/40'
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
+            <RubricScoring scores={scores} onChange={setScores} />
           </div>
 
           {/* Start point */}
+
           <div className="space-y-1.5">
             <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-primary" />
