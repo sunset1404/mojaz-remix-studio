@@ -26,21 +26,46 @@ const GrantRequestDialog = ({ open, onOpenChange }: Props) => {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [hasPending, setHasPending] = useState(false);
+  const [activeGrant, setActiveGrant] = useState<any>(null);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     if (!open || !user) return;
     setChecking(true);
     (async () => {
-      const [{ data: pl }, { data: prof }, { data: pending }] = await Promise.all([
+      const today = new Date().toISOString().slice(0, 10);
+      const [{ data: pl }, { data: prof }, { data: pending }, { data: approved }] = await Promise.all([
         supabase.from("subscription_plans").select("id, name").eq("is_active", true).gt("price_monthly", 0).order("sort_order"),
         supabase.from("student_profiles").select("full_name, phone").eq("user_id", user.id).maybeSingle(),
         supabase.from("subscription_grant_requests" as any).select("id").eq("user_id", user.id).eq("status", "pending").maybeSingle(),
+        supabase
+          .from("subscription_grant_requests" as any)
+          .select("id, approved_plan_name, approved_duration_months, approved_minutes, reviewed_at, approved_subscription_id")
+          .eq("user_id", user.id)
+          .eq("status", "approved")
+          .not("approved_subscription_id", "is", null)
+          .order("reviewed_at", { ascending: false }),
       ]);
       setPlans((pl as any) || []);
       if (prof?.full_name && !fullName) setFullName(prof.full_name);
       if (prof?.phone && !phone) setPhone(prof.phone);
       setHasPending(!!pending);
+
+      // Check if any approved grant's linked subscription is still active
+      let active: any = null;
+      const approvedList = (approved as any[]) || [];
+      const subIds = approvedList.map((r) => r.approved_subscription_id).filter(Boolean);
+      if (subIds.length) {
+        const { data: subs } = await supabase
+          .from("student_subscriptions")
+          .select("id, status, end_date")
+          .in("id", subIds);
+        const activeSub = (subs || []).find(
+          (s: any) => s.status === "active" && (!s.end_date || s.end_date >= today)
+        );
+        if (activeSub) active = approvedList.find((r) => r.approved_subscription_id === activeSub.id) || null;
+      }
+      setActiveGrant(active);
       setChecking(false);
     })();
   }, [open, user]);
