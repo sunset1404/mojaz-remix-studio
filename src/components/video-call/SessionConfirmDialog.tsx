@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, BookOpen, FileText, CheckCircle2 } from 'lucide-react';
+import { BookOpen, FileText, CheckCircle2, ClipboardList } from 'lucide-react';
 import { SessionNoteData } from './ReciterSessionPanel';
 import { SurahSelect } from './SurahSelect';
+import { RubricScoring } from './RubricScoring';
+import { computeTotalScore } from '@/data/examRubric';
 
 interface SessionConfirmDialogProps {
   data: SessionNoteData;
@@ -11,7 +13,7 @@ interface SessionConfirmDialogProps {
 }
 
 export function SessionConfirmDialog({ data, onConfirm, onCancel }: SessionConfirmDialogProps) {
-  const [rating, setRating] = useState(data.rating);
+  const [scores, setScores] = useState<Record<string, number>>(data.scores || {});
   const [startSurah, setStartSurah] = useState(data.startSurah);
   const [startAyah, setStartAyah] = useState(data.startAyah);
   const [endSurah, setEndSurah] = useState(data.endSurah);
@@ -21,8 +23,11 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel }: SessionConfi
   const [endMaxAyahs, setEndMaxAyahs] = useState(0);
 
   const handleConfirm = () => {
-    onConfirm({ rating, startSurah, startAyah, endSurah, endAyah, notes });
+    const total = computeTotalScore(scores);
+    const rating = Math.max(0, Math.min(5, Math.round((total / 100) * 5)));
+    onConfirm({ rating, scores, startSurah, startAyah, endSurah, endAyah, notes });
   };
+
 
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-4" dir="rtl">
@@ -50,33 +55,17 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel }: SessionConfi
             <p className="text-xs text-muted-foreground">أدخل أو عدّل البيانات قبل حفظها</p>
           </div>
 
-          {/* Rating */}
+          {/* Rubric scoring */}
           <div className="space-y-1.5">
             <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-              <Star className="w-3.5 h-3.5 text-gold" />
-              تقييم الجلسة
+              <ClipboardList className="w-3.5 h-3.5 text-primary" />
+              معايير التقييم
             </label>
-            <div className="flex gap-1.5 justify-start">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setRating(s)}
-                  className="p-0.5 transition-transform hover:scale-110"
-                >
-                  <Star
-                    className={`w-7 h-7 transition-all ${
-                      s <= rating
-                        ? 'fill-gold text-gold drop-shadow-sm'
-                        : 'text-border hover:text-gold/40'
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
+            <RubricScoring scores={scores} onChange={setScores} />
           </div>
 
           {/* Start point */}
+
           <div className="space-y-1.5">
             <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-primary" />

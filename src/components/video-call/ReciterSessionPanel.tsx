@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ChevronDown, ChevronUp, FileText, BookOpen } from 'lucide-react';
+import { ChevronDown, ChevronUp, FileText, BookOpen, ClipboardList } from 'lucide-react';
 import { SurahSelect } from './SurahSelect';
 import { AyahSelect } from './AyahSelect';
 import { useVisualViewport } from '@/hooks/useVisualViewport';
+import { RubricScoring } from './RubricScoring';
+import { computeTotalScore, RUBRIC_PASS } from '@/data/examRubric';
 
 interface ReciterSessionPanelProps {
   onDataChange?: (data: SessionNoteData) => void;
@@ -14,6 +16,7 @@ interface ReciterSessionPanelProps {
 
 export interface SessionNoteData {
   rating: number;
+  scores: Record<string, number>;
   startSurah: string;
   startAyah: string;
   endSurah: string;
@@ -30,7 +33,7 @@ export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOp
     onOpenChange?.(v);
   };
 
-  const [rating, setRating] = useState(0);
+  const [scores, setScores] = useState<Record<string, number>>({});
   const [startSurah, setStartSurah] = useState('');
   const [startAyah, setStartAyah] = useState('');
   const [endSurah, setEndSurah] = useState('');
@@ -55,8 +58,11 @@ export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOp
   }, [keyboardHeight]);
 
   const updateData = (updates: Partial<SessionNoteData>) => {
+    const nextScores = updates.scores ?? scores;
+    const total = computeTotalScore(nextScores);
     const data: SessionNoteData = {
-      rating: updates.rating ?? rating,
+      rating: Math.max(0, Math.min(5, Math.round((total / 100) * 5))),
+      scores: nextScores,
       startSurah: updates.startSurah ?? startSurah,
       startAyah: updates.startAyah ?? startAyah,
       endSurah: updates.endSurah ?? endSurah,
@@ -65,6 +71,7 @@ export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOp
     };
     onDataChange?.(data);
   };
+
 
   return (
     <div
@@ -105,37 +112,23 @@ export function ReciterSessionPanel({ onDataChange, isOpen: controlledOpen, onOp
               style={{ background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--gold)))" }}
             />
 
-            <div className="p-5 space-y-5">
-              {/* Rating */}
+            <div className="p-4 space-y-4">
+              {/* Rubric scoring */}
               <div className="space-y-2">
                 <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-                  <Star className="w-3.5 h-3.5 text-gold" />
-                  تقييم الجلسة
+                  <ClipboardList className="w-3.5 h-3.5 text-primary" />
+                  معايير التقييم
                 </label>
-                <div className="flex gap-1.5 justify-start">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => {
-                        setRating(star);
-                        updateData({ rating: star });
-                      }}
-                      className="p-0.5 transition-transform hover:scale-110"
-                    >
-                      <Star
-                        className={`w-8 h-8 transition-all ${
-                          star <= rating
-                            ? 'fill-gold text-gold drop-shadow-sm'
-                            : 'text-border hover:text-gold/40'
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
+                <RubricScoring
+                  scores={scores}
+                  onChange={(s) => {
+                    setScores(s);
+                    updateData({ scores: s });
+                  }}
+                />
               </div>
 
-              {/* Start point */}
+
               <div className="space-y-2">
                 <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-primary" />
