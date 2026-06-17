@@ -325,7 +325,9 @@ const Subscription = () => {
               </div>
 
               {(() => {
-                const isCurrent = activePlanName === plan.name;
+                const selectedCycle = (billingCycle[plan.id] || "monthly") as "monthly" | "yearly";
+                const activeCycle = activeSubscription ? (activeSubscription.durationMonths >= 12 ? "yearly" : "monthly") : "monthly";
+                const isCurrent = activeSubscription?.name === plan.name && activeCycle === selectedCycle;
                 return (
                   <motion.button
                     whileTap={{ scale: isCurrent ? 1 : 0.97 }}
@@ -339,9 +341,9 @@ const Subscription = () => {
                           open: true,
                           planName: plan.name,
                           price: getPrice(plan),
-                          period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
+                          period: selectedCycle === "yearly" ? "سنوياً" : "شهرياً",
                           subscriptionType: plan.name,
-                          durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1
+                          durationMonths: selectedCycle === "yearly" ? 12 : 1
                         });
                       }
                     }}
