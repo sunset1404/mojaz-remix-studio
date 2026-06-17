@@ -35,7 +35,7 @@ const Subscription = () => {
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
   const [freeLoading, setFreeLoading] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
-  const [activePlanName, setActivePlanName] = useState<string | null>(null);
+  const [activeSubscription, setActiveSubscription] = useState<{ name: string; durationMonths: number } | null>(null);
   const [paymentModal, setPaymentModal] = useState<{open: boolean;planName: string;price: number | string;period?: string;subscriptionType?: string;durationMonths?: number;sourceType?: "subscription" | "gift" | "extra_hours";metadata?: Record<string, any>;}>({ open: false, planName: "", price: 0 });
 
   useEffect(() => {
@@ -52,17 +52,23 @@ const Subscription = () => {
   }, []);
 
   useEffect(() => {
-    if (!user) { setActivePlanName(null); return; }
+    if (!user) { setActiveSubscription(null); return; }
     supabase
       .from("student_subscriptions")
-      .select("subscription_type,end_date")
+      .select("subscription_type, duration_months, end_date")
       .eq("student_id", user.id)
       .eq("status", "active")
       .gte("end_date", new Date().toISOString().split("T")[0])
       .order("end_date", { ascending: false })
       .limit(1)
       .maybeSingle()
-      .then(({ data }) => setActivePlanName((data as any)?.subscription_type ?? null));
+      .then(({ data }) => {
+        if (data) {
+          setActiveSubscription({ name: data.subscription_type, durationMonths: data.duration_months });
+        } else {
+          setActiveSubscription(null);
+        }
+      });
   }, [user]);
 
   const handleFreePlan = async () => {
@@ -319,7 +325,9 @@ const Subscription = () => {
               </div>
 
               {(() => {
-                const isCurrent = activePlanName === plan.name;
+                const selectedCycle = (billingCycle[plan.id] || "monthly") as "monthly" | "yearly";
+                const activeCycle = activeSubscription ? (activeSubscription.durationMonths >= 12 ? "yearly" : "monthly") : "monthly";
+                const isCurrent = activeSubscription?.name === plan.name && activeCycle === selectedCycle;
                 return (
                   <motion.button
                     whileTap={{ scale: isCurrent ? 1 : 0.97 }}
@@ -333,9 +341,9 @@ const Subscription = () => {
                           open: true,
                           planName: plan.name,
                           price: getPrice(plan),
-                          period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
+                          period: selectedCycle === "yearly" ? "سنوياً" : "شهرياً",
                           subscriptionType: plan.name,
-                          durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1
+                          durationMonths: selectedCycle === "yearly" ? 12 : 1
                         });
                       }
                     }}
