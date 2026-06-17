@@ -318,30 +318,43 @@ const Subscription = () => {
                 )}
               </div>
 
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                disabled={isFree && freeLoading}
-                onClick={() => {
-                  if (isFree) {
-                    handleFreePlan();
-                  } else {
-                    setPaymentModal({
-                      open: true,
-                      planName: plan.name,
-                      price: getPrice(plan),
-                      period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
-                      subscriptionType: plan.name,
-                      durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1
-                    });
-                  }
-                }}
-                className={`w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60 ${plan.is_popular ?
-                "bg-white text-gold-foreground hover:bg-white/90" :
-                "gradient-primary text-primary-foreground hover:opacity-90"}`
-                }>
+              {(() => {
+                const isCurrent = activePlanName === plan.name;
+                return (
+                  <motion.button
+                    whileTap={{ scale: isCurrent ? 1 : 0.97 }}
+                    disabled={isCurrent || (isFree && freeLoading)}
+                    onClick={() => {
+                      if (isCurrent) return;
+                      if (isFree) {
+                        handleFreePlan();
+                      } else {
+                        setPaymentModal({
+                          open: true,
+                          planName: plan.name,
+                          price: getPrice(plan),
+                          period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
+                          subscriptionType: plan.name,
+                          durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1
+                        });
+                      }
+                    }}
+                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                      isCurrent
+                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-80"
+                        : plan.is_popular
+                        ? "bg-white text-gold-foreground hover:bg-white/90"
+                        : "gradient-primary text-primary-foreground hover:opacity-90"
+                    } disabled:opacity-80`}>
 
-                {isFree ? freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً" : "اشترك الآن"}
-              </motion.button>
+                    {isCurrent
+                      ? "مشترك ✓"
+                      : isFree
+                      ? freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً"
+                      : "اشترك الآن"}
+                  </motion.button>
+                );
+              })()}
             </motion.div>);
 
         })}
