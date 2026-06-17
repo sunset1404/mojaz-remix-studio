@@ -137,10 +137,15 @@ export async function initMoyasarForm(config: {
     };
 
     // Add Apple Pay config if included in methods
+    // Add Apple Pay config if included in methods
     if (config.methods?.includes("applepay")) {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const validateUrl = `${supabaseUrl}/functions/v1/moyasar-applepay-session?apikey=${anonKey}`;
         moyasarConfig.apple_pay = {
             country: "SA",
             label: "إقراء",
+            validate_merchant_url: validateUrl,
         };
     }
 
