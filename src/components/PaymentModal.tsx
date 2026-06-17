@@ -123,7 +123,9 @@ const PaymentModal = ({
         description: `اشتراك ${planName}`,
         callbackUrl,
         publishableKey: paymentData.publishable_key,
-        methods: ["creditcard", "stcpay", "applepay", "samsungpay"],
+        methods: (typeof window !== "undefined" && window.location.hostname === "mojaz-remix-studio.lovable.app")
+          ? ["creditcard", "stcpay", "applepay", "samsungpay"]
+          : ["creditcard", "stcpay", "samsungpay"],
         metadata: { payment_ref: paymentData.payment_ref },
         onCompleted: (payment: MoyasarPaymentResponse) => {
           handlePaymentCompleted(payment, paymentMetadata);
