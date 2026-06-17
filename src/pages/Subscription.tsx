@@ -35,6 +35,7 @@ const Subscription = () => {
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
   const [freeLoading, setFreeLoading] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
+  const [activePlanName, setActivePlanName] = useState<string | null>(null);
   const [paymentModal, setPaymentModal] = useState<{open: boolean;planName: string;price: number | string;period?: string;subscriptionType?: string;durationMonths?: number;sourceType?: "subscription" | "gift" | "extra_hours";metadata?: Record<string, any>;}>({ open: false, planName: "", price: 0 });
 
   useEffect(() => {
@@ -49,6 +50,20 @@ const Subscription = () => {
     };
     fetchPlans();
   }, []);
+
+  useEffect(() => {
+    if (!user) { setActivePlanName(null); return; }
+    supabase
+      .from("student_subscriptions")
+      .select("subscription_type,end_date")
+      .eq("student_id", user.id)
+      .eq("status", "active")
+      .gte("end_date", new Date().toISOString().split("T")[0])
+      .order("end_date", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setActivePlanName((data as any)?.subscription_type ?? null));
+  }, [user]);
 
   const handleFreePlan = async () => {
     if (!user) {
