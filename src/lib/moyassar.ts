@@ -141,7 +141,6 @@ export async function initMoyasarForm(config: {
         moyasarConfig.apple_pay = {
             country: "SA",
             label: "إقراء",
-            validate_merchant_url: "https://api.moyasar.com/v1/applepay/initiate",
         };
     }
 
