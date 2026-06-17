@@ -40,14 +40,19 @@ export function useReciterPresence() {
         };
 
         const destroyChannel = async () => {
-            if (!channelRef.current) return;
+            const channel = channelRef.current;
+            if (!channel) return;
+            channelRef.current = null;
             try {
-                await channelRef.current.untrack();
+                await channel.untrack();
             } catch {
                 // ignore untrack failures
             }
-            await supabase.removeChannel(channelRef.current);
-            channelRef.current = null;
+            try {
+                await supabase.removeChannel(channel);
+            } catch {
+                // ignore remove failures from already-closed realtime sockets
+            }
         };
 
         const syncLastSeen = async () => {

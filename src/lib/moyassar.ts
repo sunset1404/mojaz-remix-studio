@@ -77,13 +77,17 @@ export async function initMoyasarForm(config: {
     amountSar: number;
     description: string;
     callbackUrl: string;
+    publishableKey?: string;
     methods?: ("creditcard" | "applepay" | "stcpay" | "samsungpay")[];
     metadata?: Record<string, any>;
     onCompleted?: (payment: MoyasarPaymentResponse) => void;
     onFailure?: (error: any) => void;
     onInitiating?: () => void;
 }): Promise<void> {
-    const publishableKey = import.meta.env.VITE_MOYASSAR_PUBLISHABLE_KEY;
+    const publishableKey =
+        config.publishableKey ||
+        import.meta.env.VITE_MOYASSAR_PUBLISHABLE_KEY ||
+        import.meta.env.VITE_MOYASAR_PUBLISHABLE_KEY;
 
     if (!publishableKey || publishableKey === "pk_test_REPLACE_ME") {
         console.warn("Moyassar publishable key not configured");

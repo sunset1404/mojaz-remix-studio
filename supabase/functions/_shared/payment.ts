@@ -3,7 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 export type SourceType = "subscription" | "gift" | "extra_hours";
 
 const MOYASAR_API_BASE = Deno.env.get("MOYASAR_API_BASE") ?? "https://api.moyasar.com/v1";
-const MOYASAR_SECRET_KEY = Deno.env.get("MOYASAR_SECRET_KEY") ?? "";
+const MOYASAR_SECRET_KEY =
+  Deno.env.get("MOYASSAR_SECRET_KEY") ?? Deno.env.get("MOYASAR_SECRET_KEY") ?? "";
 
 const EXTRA_HOURS_PACKAGES = [
   { hours: 1, price: 15, label: "ساعة واحدة" },
@@ -44,7 +45,7 @@ export async function processMoyasarPayment(params: {
   expected_user_id?: string;
 }) {
   if (!MOYASAR_SECRET_KEY) {
-    throw new Error("Missing MOYASAR_SECRET_KEY");
+    throw new Error("Missing MOYASSAR_SECRET_KEY");
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

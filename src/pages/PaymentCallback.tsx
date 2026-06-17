@@ -29,27 +29,11 @@ export default function PaymentCallback() {
             }
 
             const paymentId = searchParams.get("id");
-            const paymentStatus = searchParams.get("status");
             const paymentRef = searchParams.get("ref");
 
             if (!paymentId) {
                 setStatus("failed");
                 setMessage("لم يتم العثور على معرف الدفع");
-                return;
-            }
-
-            if (paymentStatus !== "paid") {
-                setStatus("failed");
-                setMessage("لم يتم إتمام عملية الدفع");
-
-                // Update metadata status if exists
-                // Note: using (supabase as any) because payment_invoice_metadata is not in generated types yet
-                if (paymentRef) {
-                    await (supabase as any)
-                        .from("payment_invoice_metadata")
-                        .update({ status: "failed" })
-                        .eq("id", paymentRef);
-                }
                 return;
             }
 
@@ -62,7 +46,7 @@ export default function PaymentCallback() {
             // Update metadata with payment id
             await (supabase as any)
                 .from("payment_invoice_metadata")
-                .update({ moyassar_payment_id: paymentId })
+                .update({ moyassar_payment_id: paymentId, status: "pending" })
                 .eq("id", paymentRef);
 
             // Call verify-payment edge function
@@ -74,7 +58,8 @@ export default function PaymentCallback() {
             });
 
             if (error || !data?.success) {
-                throw new Error(data?.error || error?.message || "فشل التحقق من الدفع");
+                const isIncomplete = data?.error === "Payment not completed";
+                throw new Error(isIncomplete ? "لم يتم اعتماد الدفع من البنك" : data?.error || error?.message || "فشل التحقق من الدفع");
             }
 
             setStatus("success");

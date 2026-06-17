@@ -10,6 +10,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const MOYASAR_PUBLISHABLE_KEY =
+  Deno.env.get("MOYASAR_PUBLISHABLE_KEY") ?? Deno.env.get("MOYASSAR_PUBLISHABLE_KEY") ?? "";
+
 // Price lookup for extra hours packages
 const HOUR_PACKAGES: Record<number, number> = {
   1: 15,
@@ -151,6 +154,7 @@ async function handler(req: Request): Promise<Response> {
           payment_ref: existing.id,
           amount_sar: existing.amount_sar,
           metadata: { ...metadata, plan_name, duration_months },
+          publishable_key: MOYASAR_PUBLISHABLE_KEY,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -191,6 +195,7 @@ async function handler(req: Request): Promise<Response> {
         payment_ref: record.id,
         amount_sar: record.amount_sar,
         metadata: paymentMetadata,
+        publishable_key: MOYASAR_PUBLISHABLE_KEY,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

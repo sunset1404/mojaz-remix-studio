@@ -122,6 +122,7 @@ const PaymentModal = ({
         amountSar: validatedAmount,
         description: `اشتراك ${planName}`,
         callbackUrl,
+        publishableKey: paymentData.publishable_key,
         methods: ["creditcard", "stcpay", "applepay", "samsungpay"],
         metadata: { payment_ref: paymentData.payment_ref },
         onCompleted: (payment: MoyasarPaymentResponse) => {
