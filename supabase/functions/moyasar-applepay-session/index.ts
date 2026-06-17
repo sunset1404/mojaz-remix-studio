@@ -1,6 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
-const DISPLAY_NAME = 'إقراء';
+const DISPLAY_NAME = 'Iqraa';
 const DOMAIN = 'mojaz-remix-studio.lovable.app';
 
 const applePayCorsHeaders = {
