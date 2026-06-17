@@ -52,17 +52,23 @@ const Subscription = () => {
   }, []);
 
   useEffect(() => {
-    if (!user) { setActivePlanName(null); return; }
+    if (!user) { setActiveSubscription(null); return; }
     supabase
       .from("student_subscriptions")
-      .select("subscription_type,end_date")
+      .select("subscription_type, duration_months, end_date")
       .eq("student_id", user.id)
       .eq("status", "active")
       .gte("end_date", new Date().toISOString().split("T")[0])
       .order("end_date", { ascending: false })
       .limit(1)
       .maybeSingle()
-      .then(({ data }) => setActivePlanName((data as any)?.subscription_type ?? null));
+      .then(({ data }) => {
+        if (data) {
+          setActiveSubscription({ name: data.subscription_type, durationMonths: data.duration_months });
+        } else {
+          setActiveSubscription(null);
+        }
+      });
   }, [user]);
 
   const handleFreePlan = async () => {
