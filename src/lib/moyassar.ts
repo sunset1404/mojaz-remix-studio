@@ -144,7 +144,7 @@ export async function initMoyasarForm(config: {
         const validateUrl = `${supabaseUrl}/functions/v1/moyasar-applepay-session?apikey=${anonKey}`;
         moyasarConfig.apple_pay = {
             country: "SA",
-            label: "إقراء",
+            label: "Iqraa",
             validate_merchant_url: validateUrl,
         };
     }
