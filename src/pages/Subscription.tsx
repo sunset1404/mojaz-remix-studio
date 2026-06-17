@@ -35,6 +35,7 @@ const Subscription = () => {
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
   const [freeLoading, setFreeLoading] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
+  const [activePlanName, setActivePlanName] = useState<string | null>(null);
   const [paymentModal, setPaymentModal] = useState<{open: boolean;planName: string;price: number | string;period?: string;subscriptionType?: string;durationMonths?: number;sourceType?: "subscription" | "gift" | "extra_hours";metadata?: Record<string, any>;}>({ open: false, planName: "", price: 0 });
 
   useEffect(() => {
@@ -49,6 +50,20 @@ const Subscription = () => {
     };
     fetchPlans();
   }, []);
+
+  useEffect(() => {
+    if (!user) { setActivePlanName(null); return; }
+    supabase
+      .from("student_subscriptions")
+      .select("subscription_type,end_date")
+      .eq("student_id", user.id)
+      .eq("status", "active")
+      .gte("end_date", new Date().toISOString().split("T")[0])
+      .order("end_date", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setActivePlanName((data as any)?.subscription_type ?? null));
+  }, [user]);
 
   const handleFreePlan = async () => {
     if (!user) {
@@ -303,30 +318,43 @@ const Subscription = () => {
                 )}
               </div>
 
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                disabled={isFree && freeLoading}
-                onClick={() => {
-                  if (isFree) {
-                    handleFreePlan();
-                  } else {
-                    setPaymentModal({
-                      open: true,
-                      planName: plan.name,
-                      price: getPrice(plan),
-                      period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
-                      subscriptionType: plan.name,
-                      durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1
-                    });
-                  }
-                }}
-                className={`w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60 ${plan.is_popular ?
-                "bg-white text-gold-foreground hover:bg-white/90" :
-                "gradient-primary text-primary-foreground hover:opacity-90"}`
-                }>
+              {(() => {
+                const isCurrent = activePlanName === plan.name;
+                return (
+                  <motion.button
+                    whileTap={{ scale: isCurrent ? 1 : 0.97 }}
+                    disabled={isCurrent || (isFree && freeLoading)}
+                    onClick={() => {
+                      if (isCurrent) return;
+                      if (isFree) {
+                        handleFreePlan();
+                      } else {
+                        setPaymentModal({
+                          open: true,
+                          planName: plan.name,
+                          price: getPrice(plan),
+                          period: (billingCycle[plan.id] || "monthly") === "yearly" ? "سنوياً" : "شهرياً",
+                          subscriptionType: plan.name,
+                          durationMonths: (billingCycle[plan.id] || "monthly") === "yearly" ? 12 : 1
+                        });
+                      }
+                    }}
+                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                      isCurrent
+                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-80"
+                        : plan.is_popular
+                        ? "bg-white text-gold-foreground hover:bg-white/90"
+                        : "gradient-primary text-primary-foreground hover:opacity-90"
+                    } disabled:opacity-80`}>
 
-                {isFree ? freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً" : "اشترك الآن"}
-              </motion.button>
+                    {isCurrent
+                      ? "مشترك ✓"
+                      : isFree
+                      ? freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً"
+                      : "اشترك الآن"}
+                  </motion.button>
+                );
+              })()}
             </motion.div>);
 
         })}
