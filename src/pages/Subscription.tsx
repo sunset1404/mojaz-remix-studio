@@ -35,7 +35,7 @@ const Subscription = () => {
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
   const [freeLoading, setFreeLoading] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
-  const [activePlanName, setActivePlanName] = useState<string | null>(null);
+  const [activeSubscription, setActiveSubscription] = useState<{ name: string; durationMonths: number } | null>(null);
   const [paymentModal, setPaymentModal] = useState<{open: boolean;planName: string;price: number | string;period?: string;subscriptionType?: string;durationMonths?: number;sourceType?: "subscription" | "gift" | "extra_hours";metadata?: Record<string, any>;}>({ open: false, planName: "", price: 0 });
 
   useEffect(() => {
