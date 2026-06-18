@@ -138,11 +138,12 @@ export async function processMoyasarPayment(params: {
       const months = safeNumber(metadata.duration_months) ?? 1;
       const today = new Date();
       const todayStr = today.toISOString().split("T")[0];
+      const newAmount = Number(paymentRow.amount_sar);
 
-      // إن وُجد اشتراك نشط لم ينتهِ، نُمدِّد من تاريخ نهايته بدل البدء من اليوم
+      // اشتراك نشط لم ينتهِ
       const { data: activeSub } = await supabase
         .from("student_subscriptions")
-        .select("id, end_date")
+        .select("id, end_date, start_date, amount, duration_months, subscription_type")
         .eq("student_id", paymentRow.user_id)
         .eq("status", "active")
         .gte("end_date", todayStr)
@@ -150,15 +151,46 @@ export async function processMoyasarPayment(params: {
         .limit(1)
         .maybeSingle();
 
-      const startDate = activeSub?.end_date ? new Date(activeSub.end_date) : today;
+      let startDate = today;
+      let bonusDays = 0;
+      let prorationNote = "";
+
+      if (activeSub?.end_date) {
+        const oldEnd = new Date(activeSub.end_date);
+        const remainingMs = oldEnd.getTime() - today.getTime();
+        const remainingDays = Math.max(0, Math.ceil(remainingMs / 86400000));
+
+        const oldStart = activeSub.start_date ? new Date(activeSub.start_date) : today;
+        const oldTotalDays = Math.max(1, Math.ceil((oldEnd.getTime() - oldStart.getTime()) / 86400000));
+        const oldAmount = Number(activeSub.amount) || 0;
+        const oldDailyValue = oldAmount / oldTotalDays;
+        const remainingValue = oldDailyValue * remainingDays;
+
+        const newTotalDays = (months || 1) * 30;
+        const newDailyPrice = newAmount > 0 ? newAmount / newTotalDays : 0;
+
+        const sameOrCheaperUpgrade = newDailyPrice <= oldDailyValue;
+
+        if (sameOrCheaperUpgrade) {
+          // الباقة الجديدة أرخص أو مساوية → نحتفظ بالأيام المتبقية كاملة (تمديد)
+          startDate = oldEnd;
+          prorationNote = " (تمديد بالأيام المتبقية)";
+        } else if (newDailyPrice > 0) {
+          // ترقية لباقة أغلى → نحوّل القيمة المتبقية بالريال إلى أيام مكافئة في الباقة الجديدة
+          bonusDays = Math.floor(remainingValue / newDailyPrice);
+          startDate = today;
+          prorationNote = ` (إضافة ${bonusDays} يوم مكافئ للقيمة المتبقية من الباقة السابقة)`;
+        }
+      }
+
       const endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + months);
+      if (bonusDays > 0) endDate.setDate(endDate.getDate() + bonusDays);
 
-      // إنهاء الاشتراك القديم حتى لا يظهر اشتراكان نشطان (المدة المتبقية محفوظة في تاريخ بداية الجديد)
       if (activeSub?.id) {
         await supabase
           .from("student_subscriptions")
-          .update({ status: "superseded", notes: "تم الترقية لباقة جديدة - المدة المتبقية مُضافة للاشتراك الجديد" })
+          .update({ status: "superseded", notes: "تم الترقية/الاستبدال بباقة جديدة - القيمة المتبقية مُحوَّلة" })
           .eq("id", activeSub.id);
       }
 
@@ -174,7 +206,7 @@ export async function processMoyasarPayment(params: {
           start_date: startDate.toISOString().split("T")[0],
           end_date: endDate.toISOString().split("T")[0],
           status: "active",
-          notes: `تم الاشتراك عبر الدفع الإلكتروني - ${metadata.plan_name || ""}${activeSub ? " (تمديد للمدة المتبقية)" : ""}`,
+          notes: `تم الاشتراك عبر الدفع الإلكتروني - ${metadata.plan_name || ""}${prorationNote}`,
         })
         .select()
         .single();
