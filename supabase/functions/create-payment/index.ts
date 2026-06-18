@@ -95,7 +95,6 @@ async function handler(req: Request): Promise<Response> {
     } else if (source_type === "subscription" || source_type === "gift") {
       // Look up plan price from database
       const months = Number(duration_months) || 1;
-      const priceColumn = months >= 12 ? "price_yearly" : "price_monthly";
 
       // Try subscription_plans first
       const { data: plan } = await supabase
@@ -128,6 +127,63 @@ async function handler(req: Request): Promise<Response> {
           JSON.stringify({ error: "Plan not found or invalid price" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      }
+
+      // ===== خصم القيمة المتبقية من الاشتراك الحالي (Proration) =====
+      // ينطبق فقط على الاشتراكات الحقيقية (لا تنطبق على الهدايا)
+      if (source_type === "subscription") {
+        const dayMs = 86400000;
+        const today = new Date();
+        const todayUTC = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+        const todayStr = new Date(todayUTC).toISOString().split("T")[0];
+
+        const { data: activeSub } = await supabase
+          .from("student_subscriptions")
+          .select("id, start_date, end_date, amount, subscription_type")
+          .eq("student_id", userId)
+          .eq("status", "active")
+          .gte("end_date", todayStr)
+          .order("end_date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const originalAmountHalalas = Math.round(amountSar * 100);
+        let creditHalalas = 0;
+        let prorationInfo: Record<string, any> | null = null;
+
+        if (activeSub?.start_date && activeSub?.end_date && Number(activeSub.amount) > 0) {
+          const oldStart = new Date(activeSub.start_date + "T00:00:00Z").getTime();
+          const oldEnd = new Date(activeSub.end_date + "T00:00:00Z").getTime();
+          const oldTotalDays = Math.max(1, Math.round((oldEnd - oldStart) / dayMs));
+          const remainingDays = Math.max(0, Math.round((oldEnd - todayUTC) / dayMs));
+          const oldAmountHalalas = Math.round(Number(activeSub.amount) * 100);
+          // حساب دقيق بالهللات (integer math) ثم floor لمصلحة العميل
+          creditHalalas = Math.min(
+            originalAmountHalalas - 100, // نضمن مبلغ نهائي >= 1 ريال
+            Math.floor((oldAmountHalalas * remainingDays) / oldTotalDays)
+          );
+          if (creditHalalas < 0) creditHalalas = 0;
+
+          if (creditHalalas > 0) {
+            prorationInfo = {
+              applied: true,
+              old_subscription_id: activeSub.id,
+              old_plan_name: activeSub.subscription_type,
+              old_amount_sar: Number(activeSub.amount),
+              old_total_days: oldTotalDays,
+              remaining_days: remainingDays,
+              credit_sar: creditHalalas / 100,
+              original_amount_sar: amountSar,
+            };
+          }
+        }
+
+        const finalHalalas = Math.max(100, originalAmountHalalas - creditHalalas);
+        amountSar = finalHalalas / 100;
+
+        if (prorationInfo) {
+          (metadata as any).proration = prorationInfo;
+        }
       }
     } else {
       return new Response(
