@@ -35,7 +35,14 @@ const Subscription = () => {
   const [billingCycle, setBillingCycle] = useState<Record<string, "monthly" | "yearly">>({});
   const [freeLoading, setFreeLoading] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
-  const [activeSubscription, setActiveSubscription] = useState<{ name: string; durationMonths: number } | null>(null);
+  const [activeSubscription, setActiveSubscription] = useState<{
+    id: string;
+    name: string;
+    durationMonths: number;
+    startDate: string;
+    endDate: string;
+    amount: number;
+  } | null>(null);
   const [paymentModal, setPaymentModal] = useState<{open: boolean;planName: string;price: number | string;period?: string;subscriptionType?: string;durationMonths?: number;sourceType?: "subscription" | "gift" | "extra_hours";metadata?: Record<string, any>;}>({ open: false, planName: "", price: 0 });
 
   useEffect(() => {
@@ -55,7 +62,7 @@ const Subscription = () => {
     if (!user) { setActiveSubscription(null); return; }
     supabase
       .from("student_subscriptions")
-      .select("subscription_type, duration_months, end_date")
+      .select("id, subscription_type, duration_months, start_date, end_date, amount")
       .eq("student_id", user.id)
       .eq("status", "active")
       .gte("end_date", new Date().toISOString().split("T")[0])
@@ -64,12 +71,40 @@ const Subscription = () => {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setActiveSubscription({ name: data.subscription_type, durationMonths: data.duration_months });
+          setActiveSubscription({
+            id: data.id,
+            name: data.subscription_type,
+            durationMonths: data.duration_months,
+            startDate: data.start_date,
+            endDate: data.end_date,
+            amount: Number(data.amount) || 0,
+          });
         } else {
           setActiveSubscription(null);
         }
       });
   }, [user]);
+
+  // حساب القيمة المتبقية من الاشتراك الحالي (بالهللات للدقة 100%)
+  const computeProration = (newPriceSar: number): { finalPrice: number; creditSar: number } => {
+    if (!activeSubscription || activeSubscription.amount <= 0) {
+      return { finalPrice: newPriceSar, creditSar: 0 };
+    }
+    const dayMs = 86400000;
+    const today = new Date();
+    const todayUTC = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+    const oldStart = new Date(activeSubscription.startDate + "T00:00:00Z").getTime();
+    const oldEnd = new Date(activeSubscription.endDate + "T00:00:00Z").getTime();
+    const oldTotalDays = Math.max(1, Math.round((oldEnd - oldStart) / dayMs));
+    const remainingDays = Math.max(0, Math.round((oldEnd - todayUTC) / dayMs));
+    const oldAmountHalalas = Math.round(activeSubscription.amount * 100);
+    const newPriceHalalas = Math.round(newPriceSar * 100);
+    let creditHalalas = Math.floor((oldAmountHalalas * remainingDays) / oldTotalDays);
+    creditHalalas = Math.min(creditHalalas, newPriceHalalas - 100); // حد أدنى 1 ريال
+    if (creditHalalas < 0) creditHalalas = 0;
+    const finalHalalas = Math.max(100, newPriceHalalas - creditHalalas);
+    return { finalPrice: finalHalalas / 100, creditSar: creditHalalas / 100 };
+  };
 
   const handleFreePlan = async () => {
     if (!user) {
@@ -328,39 +363,55 @@ const Subscription = () => {
                 const selectedCycle = (billingCycle[plan.id] || "monthly") as "monthly" | "yearly";
                 const activeCycle = activeSubscription ? (activeSubscription.durationMonths >= 12 ? "yearly" : "monthly") : "monthly";
                 const isCurrent = activeSubscription?.name === plan.name && activeCycle === selectedCycle;
+                const basePrice = Number(getPrice(plan));
+                const hasUpgrade = !isFree && !isCurrent && activeSubscription && !isNaN(basePrice);
+                const proration = hasUpgrade ? computeProration(basePrice) : { finalPrice: basePrice, creditSar: 0 };
+                const showDiscount = hasUpgrade && proration.creditSar > 0;
                 return (
-                  <motion.button
-                    whileTap={{ scale: isCurrent ? 1 : 0.97 }}
-                    disabled={isCurrent || (isFree && freeLoading)}
-                    onClick={() => {
-                      if (isCurrent) return;
-                      if (isFree) {
-                        handleFreePlan();
-                      } else {
-                        setPaymentModal({
-                          open: true,
-                          planName: plan.name,
-                          price: getPrice(plan),
-                          period: selectedCycle === "yearly" ? "سنوياً" : "شهرياً",
-                          subscriptionType: plan.name,
-                          durationMonths: selectedCycle === "yearly" ? 12 : 1
-                        });
-                      }
-                    }}
-                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
-                      isCurrent
-                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-80"
-                        : plan.is_popular
-                        ? "bg-white text-gold-foreground hover:bg-white/90"
-                        : "gradient-primary text-primary-foreground hover:opacity-90"
-                    } disabled:opacity-80`}>
+                  <>
+                    {showDiscount && (
+                      <div className="mb-2 text-[11px] text-center bg-primary/10 text-primary rounded-lg py-1.5 px-2 font-semibold">
+                        خصم {proration.creditSar.toFixed(2)} ريال من قيمة اشتراكك الحالي المتبقية
+                        <div className="text-foreground font-bold mt-0.5">
+                          السعر بعد الخصم: {proration.finalPrice.toFixed(2)} ريال
+                        </div>
+                      </div>
+                    )}
+                    <motion.button
+                      whileTap={{ scale: isCurrent ? 1 : 0.97 }}
+                      disabled={isCurrent || (isFree && freeLoading)}
+                      onClick={() => {
+                        if (isCurrent) return;
+                        if (isFree) {
+                          handleFreePlan();
+                        } else {
+                          setPaymentModal({
+                            open: true,
+                            planName: plan.name,
+                            price: showDiscount ? proration.finalPrice.toFixed(2) : getPrice(plan),
+                            period: selectedCycle === "yearly" ? "سنوياً" : "شهرياً",
+                            subscriptionType: plan.name,
+                            durationMonths: selectedCycle === "yearly" ? 12 : 1
+                          });
+                        }
+                      }}
+                      className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                        isCurrent
+                          ? "bg-muted text-muted-foreground cursor-not-allowed opacity-80"
+                          : plan.is_popular
+                          ? "bg-white text-gold-foreground hover:bg-white/90"
+                          : "gradient-primary text-primary-foreground hover:opacity-90"
+                      } disabled:opacity-80`}>
 
-                    {isCurrent
-                      ? "مشترك ✓"
-                      : isFree
-                      ? freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً"
-                      : "اشترك الآن"}
-                  </motion.button>
+                      {isCurrent
+                        ? "مشترك ✓"
+                        : isFree
+                        ? freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً"
+                        : showDiscount
+                        ? `ترقية بـ ${proration.finalPrice.toFixed(2)} ريال`
+                        : "اشترك الآن"}
+                    </motion.button>
+                  </>
                 );
               })()}
             </motion.div>);
