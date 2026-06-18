@@ -363,39 +363,55 @@ const Subscription = () => {
                 const selectedCycle = (billingCycle[plan.id] || "monthly") as "monthly" | "yearly";
                 const activeCycle = activeSubscription ? (activeSubscription.durationMonths >= 12 ? "yearly" : "monthly") : "monthly";
                 const isCurrent = activeSubscription?.name === plan.name && activeCycle === selectedCycle;
+                const basePrice = Number(getPrice(plan));
+                const hasUpgrade = !isFree && !isCurrent && activeSubscription && !isNaN(basePrice);
+                const proration = hasUpgrade ? computeProration(basePrice) : { finalPrice: basePrice, creditSar: 0 };
+                const showDiscount = hasUpgrade && proration.creditSar > 0;
                 return (
-                  <motion.button
-                    whileTap={{ scale: isCurrent ? 1 : 0.97 }}
-                    disabled={isCurrent || (isFree && freeLoading)}
-                    onClick={() => {
-                      if (isCurrent) return;
-                      if (isFree) {
-                        handleFreePlan();
-                      } else {
-                        setPaymentModal({
-                          open: true,
-                          planName: plan.name,
-                          price: getPrice(plan),
-                          period: selectedCycle === "yearly" ? "سنوياً" : "شهرياً",
-                          subscriptionType: plan.name,
-                          durationMonths: selectedCycle === "yearly" ? 12 : 1
-                        });
-                      }
-                    }}
-                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
-                      isCurrent
-                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-80"
-                        : plan.is_popular
-                        ? "bg-white text-gold-foreground hover:bg-white/90"
-                        : "gradient-primary text-primary-foreground hover:opacity-90"
-                    } disabled:opacity-80`}>
+                  <>
+                    {showDiscount && (
+                      <div className="mb-2 text-[11px] text-center bg-primary/10 text-primary rounded-lg py-1.5 px-2 font-semibold">
+                        خصم {proration.creditSar.toFixed(2)} ريال من قيمة اشتراكك الحالي المتبقية
+                        <div className="text-foreground font-bold mt-0.5">
+                          السعر بعد الخصم: {proration.finalPrice.toFixed(2)} ريال
+                        </div>
+                      </div>
+                    )}
+                    <motion.button
+                      whileTap={{ scale: isCurrent ? 1 : 0.97 }}
+                      disabled={isCurrent || (isFree && freeLoading)}
+                      onClick={() => {
+                        if (isCurrent) return;
+                        if (isFree) {
+                          handleFreePlan();
+                        } else {
+                          setPaymentModal({
+                            open: true,
+                            planName: plan.name,
+                            price: showDiscount ? proration.finalPrice.toFixed(2) : getPrice(plan),
+                            period: selectedCycle === "yearly" ? "سنوياً" : "شهرياً",
+                            subscriptionType: plan.name,
+                            durationMonths: selectedCycle === "yearly" ? 12 : 1
+                          });
+                        }
+                      }}
+                      className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                        isCurrent
+                          ? "bg-muted text-muted-foreground cursor-not-allowed opacity-80"
+                          : plan.is_popular
+                          ? "bg-white text-gold-foreground hover:bg-white/90"
+                          : "gradient-primary text-primary-foreground hover:opacity-90"
+                      } disabled:opacity-80`}>
 
-                    {isCurrent
-                      ? "مشترك ✓"
-                      : isFree
-                      ? freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً"
-                      : "اشترك الآن"}
-                  </motion.button>
+                      {isCurrent
+                        ? "مشترك ✓"
+                        : isFree
+                        ? freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً"
+                        : showDiscount
+                        ? `ترقية بـ ${proration.finalPrice.toFixed(2)} ريال`
+                        : "اشترك الآن"}
+                    </motion.button>
+                  </>
                 );
               })()}
             </motion.div>);
