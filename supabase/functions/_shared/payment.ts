@@ -139,45 +139,13 @@ export async function processMoyasarPayment(params: {
       const today = new Date();
       const todayStr = today.toISOString().split("T")[0];
 
-      // الترقية المسبقة الخصم: تم خصم القيمة المتبقية من سعر الباقة الجديدة في create-payment
-      const proration = (metadata.proration || null) as Record<string, any> | null;
-      const oldSubId = proration?.applied ? proration.old_subscription_id : null;
-
-      // إذا لم يكن هناك proration معد مسبقاً، نحاول أيضاً إنهاء أي اشتراك نشط (للحماية)
-      let activeSubId: string | null = oldSubId;
-      if (!activeSubId) {
-        const { data: activeSub } = await supabase
-          .from("student_subscriptions")
-          .select("id")
-          .eq("student_id", paymentRow.user_id)
-          .eq("status", "active")
-          .gte("end_date", todayStr)
-          .order("end_date", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        activeSubId = activeSub?.id ?? null;
-      }
-
+      // ملاحظة: نسمح بتعدد الاشتراكات النشطة - كل باقة لها مميزاتها الخاصة
+      // لا يتم استبدال أو إنهاء أي اشتراك سابق
       const startDate = today;
       const endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + months);
+      const prorationNote = "";
 
-      let prorationNote = "";
-      if (proration?.applied) {
-        prorationNote = ` (تمت ترقية - خُصم ${proration.credit_sar} ريال من قيمة الاشتراك السابق المتبقية)`;
-      }
-
-      if (activeSubId) {
-        await supabase
-          .from("student_subscriptions")
-          .update({
-            status: "superseded",
-            notes: proration?.applied
-              ? `تم استبدال الاشتراك بترقية - خُصمت القيمة المتبقية (${proration.credit_sar} ريال) من الباقة الجديدة`
-              : "تم الاستبدال بباقة جديدة",
-          })
-          .eq("id", activeSubId);
-      }
 
       const { data: subscription, error: subError } = await supabase
         .from("student_subscriptions")
