@@ -334,33 +334,46 @@ const Subscription = () => {
 
               {(() => {
                 const selectedCycle = (billingCycle[plan.id] || "monthly") as "monthly" | "yearly";
+                const subscribed = isSubscribedTo(plan.name);
+                const sub = getSubscribedPlan(plan.name);
                 return (
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    disabled={isFree && freeLoading}
-                    onClick={() => {
-                      if (isFree) {
-                        handleFreePlan();
-                      } else {
-                        setPaymentModal({
-                          open: true,
-                          planName: plan.name,
-                          price: getPrice(plan),
-                          period: selectedCycle === "yearly" ? "سنوياً" : "شهرياً",
-                          subscriptionType: plan.name,
-                          durationMonths: selectedCycle === "yearly" ? 12 : 1
-                        });
-                      }
-                    }}
-                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
-                      plan.is_popular
-                        ? "bg-white text-gold-foreground hover:bg-white/90"
-                        : "gradient-primary text-primary-foreground hover:opacity-90"
-                    } disabled:opacity-80`}>
-                    {isFree
-                      ? freeLoading ? "جاري التفعيل..." : "ابدأ مجاناً"
-                      : "اشترك الآن"}
-                  </motion.button>
+                  <>
+                    {subscribed && sub && (
+                      <div className={`text-center text-xs mb-2 ${plan.is_popular ? "text-white/80" : "text-muted-foreground"}`}>
+                        مشترك حتى {new Date(sub.endDate).toLocaleDateString('ar-SA')}
+                      </div>
+                    )}
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      disabled={subscribed || (isFree && freeLoading)}
+                      onClick={() => {
+                        if (isFree) {
+                          handleFreePlan();
+                        } else {
+                          setPaymentModal({
+                            open: true,
+                            planName: plan.name,
+                            price: getPrice(plan),
+                            period: selectedCycle === "yearly" ? "سنوياً" : "شهرياً",
+                            subscriptionType: plan.name,
+                            durationMonths: selectedCycle === "yearly" ? 12 : 1
+                          });
+                        }
+                      }}
+                      className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                        subscribed
+                          ? plan.is_popular
+                            ? "bg-white/30 text-white cursor-default"
+                            : "bg-muted text-muted-foreground cursor-default"
+                          : plan.is_popular
+                            ? "bg-white text-gold-foreground hover:bg-white/90"
+                            : "gradient-primary text-primary-foreground hover:opacity-90"
+                      } disabled:opacity-80`}>
+                      {isFree
+                        ? freeLoading ? "جاري التفعيل..." : subscribed ? "مشترك ✓" : "ابدأ مجاناً"
+                        : subscribed ? "مشترك ✓" : "اشترك الآن"}
+                    </motion.button>
+                  </>
                 );
               })()}
             </motion.div>);
