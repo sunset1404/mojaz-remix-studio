@@ -135,10 +135,32 @@ export async function processMoyasarPayment(params: {
     let result: Record<string, any> = {};
 
     if (sourceType === "subscription") {
-      const startDate = new Date();
       const months = safeNumber(metadata.duration_months) ?? 1;
+      const today = new Date();
+      const todayStr = today.toISOString().split("T")[0];
+
+      // إن وُجد اشتراك نشط لم ينتهِ، نُمدِّد من تاريخ نهايته بدل البدء من اليوم
+      const { data: activeSub } = await supabase
+        .from("student_subscriptions")
+        .select("id, end_date")
+        .eq("student_id", paymentRow.user_id)
+        .eq("status", "active")
+        .gte("end_date", todayStr)
+        .order("end_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const startDate = activeSub?.end_date ? new Date(activeSub.end_date) : today;
       const endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + months);
+
+      // إنهاء الاشتراك القديم حتى لا يظهر اشتراكان نشطان (المدة المتبقية محفوظة في تاريخ بداية الجديد)
+      if (activeSub?.id) {
+        await supabase
+          .from("student_subscriptions")
+          .update({ status: "superseded", notes: "تم الترقية لباقة جديدة - المدة المتبقية مُضافة للاشتراك الجديد" })
+          .eq("id", activeSub.id);
+      }
 
       const { data: subscription, error: subError } = await supabase
         .from("student_subscriptions")
@@ -152,7 +174,7 @@ export async function processMoyasarPayment(params: {
           start_date: startDate.toISOString().split("T")[0],
           end_date: endDate.toISOString().split("T")[0],
           status: "active",
-          notes: `تم الاشتراك عبر الدفع الإلكتروني - ${metadata.plan_name || ""}`,
+          notes: `تم الاشتراك عبر الدفع الإلكتروني - ${metadata.plan_name || ""}${activeSub ? " (تمديد للمدة المتبقية)" : ""}`,
         })
         .select()
         .single();
