@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BookOpen, Mic } from "lucide-react";
+import { BookOpen, Mic, ArrowRight } from "lucide-react";
 import logoMojaz from "@/assets/logo-mojaz.webp";
 
 const roles = [
