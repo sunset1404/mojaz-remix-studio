@@ -84,6 +84,7 @@ import { IncomingCallListener } from "./components/video-call/IncomingCallListen
 import { StudentIncomingCallListener } from "./components/video-call/StudentIncomingCallListener";
 import { ReciterPresenceTracker } from "./components/ReciterPresenceTracker";
 import GrantApprovedNotice from "./components/GrantApprovedNotice";
+import GlobalBackButton from "./components/GlobalBackButton";
 
 const queryClient = new QueryClient();
 
