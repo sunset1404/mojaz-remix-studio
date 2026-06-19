@@ -58,24 +58,22 @@ const SignupSuccess = () => {
 
             <div className="space-y-2">
               <h2 className="text-xl font-bold text-foreground font-cairo">
-                تم التسجيل بنجاح!
+                تم إنشاء الحساب بنجاح!
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                بقيت خطوة واحدة لإكمال التسجيل
+                يمكنك الآن تسجيل الدخول مباشرة باستخدام بريدك وكلمة المرور.
               </p>
             </div>
 
             <div className="bg-primary/5 rounded-2xl p-4 space-y-3 border border-primary/10">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                <Mail className="w-6 h-6 text-primary" />
+                <CheckCircle className="w-6 h-6 text-primary" />
               </div>
               <p className="text-foreground text-sm font-semibold">
-                تفعيل الحساب عبر البريد الإلكتروني
+                حسابك جاهز للاستخدام
               </p>
               <p className="text-muted-foreground text-xs leading-relaxed">
-                تم إرسال رسالة تأكيد إلى بريدك الإلكتروني.
-                <br />
-                يرجى فتح الرسالة والضغط على رابط التفعيل لإكمال تسجيلك.
+                لا حاجة لتأكيد البريد الإلكتروني.
               </p>
             </div>
 
