@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BookOpen, Mic } from "lucide-react";
+import { BookOpen, Mic, ArrowRight } from "lucide-react";
 import logoMojaz from "@/assets/logo-mojaz.webp";
 
 const roles = [
@@ -28,6 +28,18 @@ const Signup = () => {
         <div className="absolute top-16 right-24 w-3 h-3 rounded-full bg-gold/40" />
         <div className="absolute top-32 left-10 w-2 h-2 rounded-full bg-gold/50" />
       </div>
+
+      {/* Back button */}
+      <motion.button
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.2 }}
+        onClick={() => navigate("/login")}
+        className="absolute top-6 right-6 z-20 flex items-center gap-1.5 text-primary-foreground font-semibold text-sm hover:text-[#d2ac4b] transition-colors"
+      >
+        <ArrowRight className="w-5 h-5" />
+        رجوع
+      </motion.button>
 
       {/* Logo and title */}
       <div className="relative z-10 flex flex-col items-center pt-16 pb-8">

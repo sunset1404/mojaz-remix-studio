@@ -548,30 +548,36 @@ const ReciterSignup = () => {
 
             {/* Navigation */}
             <div className="flex gap-3 mt-5">
-              {step > 0 &&
-              <Button type="button" variant="outline" onClick={prevStep}
-              className="flex-1 h-12 rounded-2xl border-border/60 font-semibold">
+              {step > 0 ?
+                <Button type="button" variant="outline" onClick={prevStep}
+                  className="flex-1 h-12 rounded-2xl border-border/60 font-semibold">
                   <ArrowRight className="w-4 h-4 ml-1" />
                   السابق
                 </Button>
+                :
+                <Button type="button" variant="outline" onClick={() => navigate("/signup")}
+                  className="flex-1 h-12 rounded-2xl border-border/60 font-semibold">
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                  رجوع
+                </Button>
               }
               {step < 3 ?
-              <Button type="button" onClick={nextStep}
-              className="flex-1 gradient-primary text-primary-foreground h-12 rounded-2xl font-bold shadow-md">
+                <Button type="button" onClick={nextStep}
+                  className="flex-1 gradient-primary text-primary-foreground h-12 rounded-2xl font-bold shadow-md">
                   التالي
                   <ArrowLeft className="w-4 h-4 mr-1" />
                 </Button> :
 
-              <Button type="button" onClick={handleSubmit} disabled={loading}
-              className="flex-1 gradient-primary text-primary-foreground h-12 rounded-2xl font-bold shadow-md">
+                <Button type="button" onClick={handleSubmit} disabled={loading}
+                  className="flex-1 gradient-primary text-primary-foreground h-12 rounded-2xl font-bold shadow-md">
                   {loading ?
-                <span className="animate-spin w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full inline-block" /> :
+                    <span className="animate-spin w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full inline-block" /> :
 
-                <>
+                    <>
                       <Check className="w-5 h-5 ml-1" />
                       إنشاء الحساب
                     </>
-                }
+                  }
                 </Button>
               }
             </div>
