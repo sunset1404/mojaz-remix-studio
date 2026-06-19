@@ -4,7 +4,6 @@ import * as React from 'npm:react@18.3.1'
 
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -17,16 +16,17 @@ import {
 
 interface RecoveryEmailProps {
   siteName: string
-  confirmationUrl: string
+  confirmationUrl?: string
+  token?: string
 }
 
 const LOGO_URL =
   'https://cfihcvudcwujylipqngk.supabase.co/storage/v1/object/public/reciter-assets/email%2Flogo-mojaz.png'
 
-export const RecoveryEmail = ({ confirmationUrl }: RecoveryEmailProps) => (
+export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
   <Html lang="ar" dir="rtl">
     <Head />
-    <Preview>إعادة تعيين كلمة المرور في مجاز</Preview>
+    <Preview>رمز إعادة تعيين كلمة المرور في مجاز</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
@@ -34,20 +34,18 @@ export const RecoveryEmail = ({ confirmationUrl }: RecoveryEmailProps) => (
           <Heading style={brand}>مجاز</Heading>
         </Section>
         <Section style={card}>
-          <Heading style={h1}>طلب إعادة تعيين كلمة المرور</Heading>
+          <Heading style={h1}>رمز إعادة تعيين كلمة المرور</Heading>
           <Text style={text}>
-            استلمنا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك في تطبيق <strong>مجاز</strong>.
+            استلمنا طلباً لإعادة تعيين كلمة المرور لحسابك في تطبيق <strong>مجاز</strong>.
           </Text>
           <Text style={text}>
-            اضغط على الزر أدناه لاختيار كلمة مرور جديدة:
+            استخدم الرمز التالي في صفحة إعادة تعيين كلمة المرور داخل التطبيق:
           </Text>
           <Section style={buttonWrap}>
-            <Button style={button} href={confirmationUrl}>
-              إعادة تعيين كلمة المرور
-            </Button>
+            <Text style={codeBox}>{token || '------'}</Text>
           </Section>
           <Text style={hint}>
-            إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة، ولن يتم تغيير كلمة المرور الخاصة بك.
+            هذا الرمز صالح لمدة 60 دقيقة. إذا لم تطلب إعادة تعيين كلمة المرور، تجاهل هذه الرسالة.
           </Text>
         </Section>
         <Text style={footer}>
@@ -77,16 +75,17 @@ const card = {
 const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 16px' }
 const text = { fontSize: '15px', color: '#334155', lineHeight: '1.8', margin: '0 0 16px' }
 const buttonWrap = { textAlign: 'center' as const, margin: '24px 0 16px' }
-const button = {
-  backgroundColor: '#14b8a6',
-  color: '#ffffff',
-  fontSize: '16px',
-  fontWeight: 'bold' as const,
-  borderRadius: '12px',
-  padding: '14px 36px',
-  textDecoration: 'none',
+const codeBox = {
   display: 'inline-block',
-  borderBottom: '3px solid #d4af37',
+  backgroundColor: '#f0fdfa',
+  border: '2px dashed #14b8a6',
+  color: '#0f766e',
+  fontSize: '32px',
+  fontWeight: 'bold' as const,
+  letterSpacing: '10px',
+  padding: '16px 28px',
+  borderRadius: '12px',
+  fontFamily: 'monospace',
 }
 const hint = { fontSize: '13px', color: '#64748b', lineHeight: '1.7', margin: '20px 0 0' }
 const footer = { fontSize: '12px', color: '#94a3b8', textAlign: 'center' as const, margin: '24px 0 0' }
