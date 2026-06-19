@@ -85,8 +85,10 @@ const Subscription = () => {
       });
   }, [user]);
 
-  const isSubscribedTo = (planName: string) => activeSubscriptions.some(s => s.name === planName);
-  const getSubscribedPlan = (planName: string) => activeSubscriptions.find(s => s.name === planName);
+  const isSubscribedTo = (planName: string, durationMonths?: number) =>
+    activeSubscriptions.some(s => s.name === planName && (durationMonths === undefined || s.durationMonths === durationMonths));
+  const getSubscribedPlan = (planName: string, durationMonths?: number) =>
+    activeSubscriptions.find(s => s.name === planName && (durationMonths === undefined || s.durationMonths === durationMonths));
 
   const handleFreePlan = async () => {
     if (!user) {
