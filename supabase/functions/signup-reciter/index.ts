@@ -34,13 +34,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
-    const authClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!
-    );
-
     const emailValue = String(email).trim().toLowerCase();
-    const siteUrl = req.headers.get("origin") || Deno.env.get("SUPABASE_URL")!;
     const { data: emailStatus } = await admin.rpc("get_email_registration_status", { p_email: emailValue });
 
     if (emailStatus === "active") {
@@ -60,16 +54,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { data: created, error: createErr } = await authClient.auth.signUp({
+    // Create user already-confirmed (no verification email)
+    const { data: created, error: createErr } = await admin.auth.admin.createUser({
       email: emailValue,
       password,
-      options: { data: { full_name }, emailRedirectTo: siteUrl },
+      email_confirm: true,
+      user_metadata: { full_name },
     });
 
     if (createErr || !created?.user) {
       const msg = (createErr?.message || "").toLowerCase();
       if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
-        return json({ error: "email_exists", message: "هذا الحساب موجود بالفعل. إذا لم تتمكن من الدخول فقد يحتاج إلى تفعيل أو استكمال بياناته." });
+        return json({ error: "email_exists", message: "هذا الحساب موجود بالفعل. يمكنك تسجيل الدخول مباشرة." });
       }
       return json({ error: "create_failed", message: createErr?.message || "تعذر إنشاء الحساب" });
     }
