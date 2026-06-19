@@ -336,8 +336,13 @@ const Subscription = () => {
 
               {(() => {
                 const selectedCycle = (billingCycle[plan.id] || "monthly") as "monthly" | "yearly";
-                const subscribed = isSubscribedTo(plan.name);
-                const sub = getSubscribedPlan(plan.name);
+                const selectedDuration = isFree ? 1 : (selectedCycle === "yearly" ? 12 : 1);
+                const subscribed = plan.has_billing || isFree
+                  ? isSubscribedTo(plan.name, selectedDuration)
+                  : isSubscribedTo(plan.name);
+                const sub = plan.has_billing || isFree
+                  ? getSubscribedPlan(plan.name, selectedDuration)
+                  : getSubscribedPlan(plan.name);
                 return (
                   <>
                     {subscribed && sub && (
