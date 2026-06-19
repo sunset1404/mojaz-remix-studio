@@ -85,8 +85,10 @@ const Subscription = () => {
       });
   }, [user]);
 
-  const isSubscribedTo = (planName: string) => activeSubscriptions.some(s => s.name === planName);
-  const getSubscribedPlan = (planName: string) => activeSubscriptions.find(s => s.name === planName);
+  const isSubscribedTo = (planName: string, durationMonths?: number) =>
+    activeSubscriptions.some(s => s.name === planName && (durationMonths === undefined || s.durationMonths === durationMonths));
+  const getSubscribedPlan = (planName: string, durationMonths?: number) =>
+    activeSubscriptions.find(s => s.name === planName && (durationMonths === undefined || s.durationMonths === durationMonths));
 
   const handleFreePlan = async () => {
     if (!user) {
@@ -334,8 +336,13 @@ const Subscription = () => {
 
               {(() => {
                 const selectedCycle = (billingCycle[plan.id] || "monthly") as "monthly" | "yearly";
-                const subscribed = isSubscribedTo(plan.name);
-                const sub = getSubscribedPlan(plan.name);
+                const selectedDuration = isFree ? 1 : (selectedCycle === "yearly" ? 12 : 1);
+                const subscribed = plan.has_billing || isFree
+                  ? isSubscribedTo(plan.name, selectedDuration)
+                  : isSubscribedTo(plan.name);
+                const sub = plan.has_billing || isFree
+                  ? getSubscribedPlan(plan.name, selectedDuration)
+                  : getSubscribedPlan(plan.name);
                 return (
                   <>
                     {subscribed && sub && (
