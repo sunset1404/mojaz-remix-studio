@@ -223,7 +223,8 @@ const AppLayout = () => {
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background" dir="rtl">
           <AdminSidebar />
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto relative">
+            <GlobalBackButton />
             <AppRoutes />
           </main>
         </div>
@@ -234,6 +235,7 @@ const AppLayout = () => {
   return (
     <SidebarProvider>
       <div className="w-full sm:max-w-md mx-auto relative min-h-screen bg-background sm:shadow-2xl">
+        <GlobalBackButton />
         <AppRoutes />
       </div>
     </SidebarProvider>
