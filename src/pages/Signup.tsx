@@ -29,6 +29,18 @@ const Signup = () => {
         <div className="absolute top-32 left-10 w-2 h-2 rounded-full bg-gold/50" />
       </div>
 
+      {/* Back button */}
+      <motion.button
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.2 }}
+        onClick={() => navigate("/login")}
+        className="absolute top-6 right-6 z-20 flex items-center gap-1.5 text-primary-foreground font-semibold text-sm hover:text-[#d2ac4b] transition-colors"
+      >
+        <ArrowRight className="w-5 h-5" />
+        رجوع
+      </motion.button>
+
       {/* Logo and title */}
       <div className="relative z-10 flex flex-col items-center pt-16 pb-8">
         <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
