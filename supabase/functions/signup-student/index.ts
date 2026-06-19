@@ -30,6 +30,11 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!
+    );
+
     const emailValue = String(email).trim().toLowerCase();
     const { data: emailStatus } = await admin.rpc("get_email_registration_status", {
       p_email: emailValue,
@@ -41,7 +46,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Purge any abandoned/unconfirmed prior account with same email so user can re-register freely
+    // Purge any abandoned/unconfirmed prior account with same email
     if (emailStatus === "needs_activation") {
       const { data: usersList } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
       const stale = (usersList?.users || []).filter((u: any) => (u.email || "").toLowerCase() === emailValue && !u.email_confirmed_at);
@@ -54,18 +59,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Create user already-confirmed (no verification email)
-    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+    // signUp triggers OTP email (template uses {{ .Token }})
+    const { data: created, error: createErr } = await authClient.auth.signUp({
       email: emailValue,
       password,
-      email_confirm: true,
-      user_metadata: { full_name },
+      options: { data: { full_name } },
     });
 
     if (createErr || !created?.user) {
       const msg = (createErr?.message || "").toLowerCase();
       if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
-        return new Response(JSON.stringify({ error: "email_exists", message: "هذا الحساب موجود بالفعل. يمكنك تسجيل الدخول مباشرة." }), {
+        return new Response(JSON.stringify({ error: "email_exists", message: "هذا الحساب موجود بالفعل. إذا لم تتمكن من الدخول فقد يحتاج إلى تفعيل أو استكمال بياناته." }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

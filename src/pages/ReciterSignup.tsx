@@ -241,8 +241,8 @@ const ReciterSignup = () => {
     }
 
 
-    toast({ title: "تم إنشاء الحساب بنجاح" });
-    navigate("/signup/success?role=reciter");
+    toast({ title: "تم إنشاء الحساب", description: "أدخل رمز التحقق المُرسَل إلى بريدك" });
+    navigate(`/verify-signup?email=${encodeURIComponent(email.trim().toLowerCase())}&role=reciter`);
     setLoading(false);
   };
 

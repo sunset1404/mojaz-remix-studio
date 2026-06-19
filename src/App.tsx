@@ -33,6 +33,7 @@ import Signup from "./pages/Signup";
 import ReciterSignup from "./pages/ReciterSignup";
 import StudentSignup from "./pages/StudentSignup";
 import SignupSuccess from "./pages/SignupSuccess";
+import VerifySignupOtp from "./pages/VerifySignupOtp";
 import ReciterPending from "./pages/ReciterPending";
 import MyStudents from "./pages/MyStudents";
 import Sessions from "./pages/Sessions";
@@ -118,6 +119,7 @@ const AppRoutes = () => (
     <Route path="/signup/reciter" element={<AuthRoute><ReciterSignup /></AuthRoute>} />
     <Route path="/signup/student" element={<AuthRoute><StudentSignup /></AuthRoute>} />
     <Route path="/signup/success" element={<SignupSuccess />} />
+    <Route path="/verify-signup" element={<VerifySignupOtp />} />
     <Route path="/forgot-password" element={<AuthRoute><ForgotPassword /></AuthRoute>} />
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/reciter-pending" element={<ProtectedRoute allowPending><ReciterPending /></ProtectedRoute>} />

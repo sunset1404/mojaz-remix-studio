@@ -4,7 +4,6 @@ import * as React from 'npm:react@18.3.1'
 
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -20,15 +19,16 @@ interface SignupEmailProps {
   siteUrl: string
   recipient: string
   confirmationUrl: string
+  token?: string
 }
 
 const LOGO_URL =
   'https://cfihcvudcwujylipqngk.supabase.co/storage/v1/object/public/reciter-assets/email%2Flogo-mojaz.png'
 
-export const SignupEmail = ({ confirmationUrl }: SignupEmailProps) => (
+export const SignupEmail = ({ token }: SignupEmailProps) => (
   <Html lang="ar" dir="rtl">
     <Head />
-    <Preview>تفعيل حسابك في تطبيق مجاز</Preview>
+    <Preview>رمز تفعيل حسابك في تطبيق مجاز</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
@@ -41,15 +41,13 @@ export const SignupEmail = ({ confirmationUrl }: SignupEmailProps) => (
             نشكر لك تسجيلك في تطبيق <strong>مجاز</strong> لتعليم وتلاوة القرآن الكريم.
           </Text>
           <Text style={text}>
-            لإكمال إنشاء حسابك، يرجى تأكيد بريدك الإلكتروني من خلال الضغط على الزر أدناه:
+            استخدم الرمز التالي لتفعيل حسابك:
           </Text>
-          <Section style={buttonWrap}>
-            <Button style={button} href={confirmationUrl}>
-              تفعيل الحساب
-            </Button>
+          <Section style={codeBox}>
+            <Text style={codeText}>{token || '------'}</Text>
           </Section>
           <Text style={hint}>
-            في حال لم تقم بإنشاء حساب في مجاز، يمكنك تجاهل هذه الرسالة بأمان.
+            هذا الرمز صالح لمدة 60 دقيقة. إذا لم تقم بإنشاء حساب في مجاز، يمكنك تجاهل هذه الرسالة بأمان.
           </Text>
         </Section>
         <Text style={footer}>
@@ -78,17 +76,21 @@ const card = {
 }
 const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 16px' }
 const text = { fontSize: '15px', color: '#334155', lineHeight: '1.8', margin: '0 0 16px' }
-const buttonWrap = { textAlign: 'center' as const, margin: '24px 0 16px' }
-const button = {
-  backgroundColor: '#14b8a6',
-  color: '#ffffff',
-  fontSize: '16px',
+const codeBox = {
+  backgroundColor: '#ecfdf5',
+  border: '2px dashed #14b8a6',
+  borderRadius: '14px',
+  padding: '20px',
+  textAlign: 'center' as const,
+  margin: '20px 0',
+}
+const codeText = {
+  fontSize: '34px',
   fontWeight: 'bold' as const,
-  borderRadius: '12px',
-  padding: '14px 36px',
-  textDecoration: 'none',
-  display: 'inline-block',
-  borderBottom: '3px solid #d4af37',
+  color: '#0f766e',
+  letterSpacing: '10px',
+  margin: 0,
+  fontFamily: 'monospace',
 }
 const hint = { fontSize: '13px', color: '#64748b', lineHeight: '1.7', margin: '20px 0 0' }
 const footer = { fontSize: '12px', color: '#94a3b8', textAlign: 'center' as const, margin: '24px 0 0' }

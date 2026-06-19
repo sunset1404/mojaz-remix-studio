@@ -235,8 +235,8 @@ const StudentSignup = () => {
     }
 
 
-    toast({ title: "تم إنشاء الحساب بنجاح" });
-    navigate("/signup/success?role=student");
+    toast({ title: "تم إنشاء الحساب", description: "أدخل رمز التحقق المُرسَل إلى بريدك" });
+    navigate(`/verify-signup?email=${encodeURIComponent(email.trim().toLowerCase())}&role=student`);
     setLoading(false);
   };
 
