@@ -136,7 +136,7 @@ serve(async (req: Request) => {
             });
         }
 
-        console.log(`Call requested by ${student_id} for reciter ${reciter_id}. Session ID: ${callSession.id}. Remaining minutes: ${remainingMinutes}`);
+        console.log(`Call requested by ${student_id} for reciter ${reciter_id}. Session ID: ${callSession.id}. Skip checks: ${skipSubscriptionChecks}`);
 
         return new Response(JSON.stringify(callSession), {
             status: 200,
