@@ -250,6 +250,13 @@ const VideoCallPage = () => {
             setSessionFeedback(feedback);
             setShowStudentPopup(true);
         } else {
+            // Reciter side: if it's an exam, force the scoring/confirm dialog so the evaluation is saved.
+            if (examId) {
+                setShowConfirm(true);
+                return;
+            }
+            // Otherwise save whatever notes/rating were entered and exit
+            await saveAndEnd();
             toast({ title: "انتهت المكالمة", description: "تم إنهاء الجلسة" });
             navigate(-1);
         }
