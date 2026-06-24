@@ -54,44 +54,57 @@ serve(async (req: Request) => {
         // Use service role to check credits (bypasses RLS)
         const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-        // Check active subscription
-        const { data: activeSub } = await adminClient
-            .from("student_subscriptions")
-            .select("id, end_date")
-            .eq("student_id", student_id)
-            .eq("status", "active")
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+        // Check caller role — reciters have unlimited calls (no subscription/credits required)
+        const { data: rolesData } = await adminClient
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", student_id);
+        const callerRoles = (rolesData || []).map((r: any) => r.role);
+        const isReciterCaller = callerRoles.includes("reciter");
+        const isAdminCaller = callerRoles.includes("admin");
+        const skipSubscriptionChecks = isReciterCaller || isAdminCaller;
 
-        if (!activeSub) {
-            return new Response(JSON.stringify({ 
-                error: "no_subscription",
-                message: "ليس لديك اشتراك نشط. يرجى الاشتراك أولاً." 
-            }), {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+        if (!skipSubscriptionChecks) {
+            // Check active subscription
+            const { data: activeSub } = await adminClient
+                .from("student_subscriptions")
+                .select("id, end_date")
+                .eq("student_id", student_id)
+                .eq("status", "active")
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (!activeSub) {
+                return new Response(JSON.stringify({ 
+                    error: "no_subscription",
+                    message: "ليس لديك اشتراك نشط. يرجى الاشتراك أولاً." 
+                }), {
+                    status: 200,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                });
+            }
+
+            // Check remaining minutes
+            const { data: credits } = await adminClient
+                .from("student_hour_credits")
+                .select("remaining_minutes")
+                .eq("user_id", student_id)
+                .maybeSingle();
+
+            const remainingMinutes = credits?.remaining_minutes ?? 0;
+
+            if (remainingMinutes <= 0) {
+                return new Response(JSON.stringify({ 
+                    error: "no_credits",
+                    message: "نفذ رصيد ساعاتك. يرجى تجديد الاشتراك أو شراء ساعات إضافية." 
+                }), {
+                    status: 200,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                });
+            }
         }
 
-        // Check remaining minutes
-        const { data: credits } = await adminClient
-            .from("student_hour_credits")
-            .select("remaining_minutes")
-            .eq("user_id", student_id)
-            .maybeSingle();
-
-        const remainingMinutes = credits?.remaining_minutes ?? 0;
-
-        if (remainingMinutes <= 0) {
-            return new Response(JSON.stringify({ 
-                error: "no_credits",
-                message: "نفذ رصيد ساعاتك. يرجى تجديد الاشتراك أو شراء ساعات إضافية." 
-            }), {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
-        }
 
         // Fetch student name
         const { data: studentProfile } = await supabaseClient
@@ -123,7 +136,7 @@ serve(async (req: Request) => {
             });
         }
 
-        console.log(`Call requested by ${student_id} for reciter ${reciter_id}. Session ID: ${callSession.id}. Remaining minutes: ${remainingMinutes}`);
+        console.log(`Call requested by ${student_id} for reciter ${reciter_id}. Session ID: ${callSession.id}. Skip checks: ${skipSubscriptionChecks}`);
 
         return new Response(JSON.stringify(callSession), {
             status: 200,
