@@ -29,38 +29,19 @@ const RedeemGift = () => {
 
     setLoading(true);
 
-    // Look up the gift
-    const { data: gift, error: lookupError } = await supabase
-      .from("gift_subscriptions")
-      .select("*")
-      .eq("gift_code", code.trim().toUpperCase())
-      .eq("status", "pending")
-      .maybeSingle();
+    // Look up & redeem via secure RPC
+    const { data: result, error: rpcError } = await (supabase as any).rpc("redeem_gift_by_code", {
+      p_code: code.trim().toUpperCase(),
+    });
 
-    if (lookupError || !gift) {
-      setLoading(false);
+    setLoading(false);
+
+    if (rpcError || !result?.success) {
       toast({ title: "كود الهدية غير صالح أو تم استخدامه مسبقاً", variant: "destructive" });
       return;
     }
 
-    // Redeem
-    const { error: updateError } = await supabase
-      .from("gift_subscriptions")
-      .update({
-        status: "redeemed",
-        redeemed_by: user.id,
-        redeemed_at: new Date().toISOString(),
-      })
-      .eq("id", gift.id);
-
-    setLoading(false);
-
-    if (updateError) {
-      toast({ title: "حدث خطأ أثناء تفعيل الهدية", variant: "destructive" });
-      return;
-    }
-
-    setGiftInfo({ planName: gift.plan_name, duration: gift.duration_months });
+    setGiftInfo({ planName: result.plan_name, duration: result.duration_months });
     setRedeemed(true);
   };
 
