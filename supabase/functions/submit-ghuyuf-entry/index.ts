@@ -65,7 +65,6 @@ Deno.serve(async (req) => {
       students_count: Math.max(0, Math.min(100000, Number(body.students_count) || 0)),
       notes: body.notes ? String(body.notes).slice(0, 2000) : null,
       source: "survey",
-      submitted_by: claims.claims.sub,
     };
 
     const { error } = await supabase.from("ghuyuf_rahman_entries").insert(payload);
