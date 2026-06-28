@@ -88,7 +88,7 @@ import GlobalBackButton from "./components/GlobalBackButton";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children, allowedRole, allowPending }: { children: React.ReactNode; allowedRole?: "student" | "reciter" | "partner"; allowPending?: boolean }) => {
+const ProtectedRoute = ({ children, allowedRole, allowPending }: { children: React.ReactNode; allowedRole?: "student" | "reciter" | "partner" | "admin"; allowPending?: boolean }) => {
   const { user, role, reciterStatus, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center"><span className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full" /></div>;
   if (!user) return <Navigate to="/login" replace />;
@@ -96,6 +96,14 @@ const ProtectedRoute = ({ children, allowedRole, allowPending }: { children: Rea
   if (!allowPending && role === "reciter" && reciterStatus && reciterStatus !== "approved") {
     return <Navigate to="/reciter-pending" replace />;
   }
+  return <>{children}</>;
+};
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, role, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><span className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full" /></div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (role !== "admin") return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 

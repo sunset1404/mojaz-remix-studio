@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("signup-student error", e);
-    return new Response(JSON.stringify({ error: "internal", message: String(e) }), {
+    return new Response(JSON.stringify({ error: "internal" }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

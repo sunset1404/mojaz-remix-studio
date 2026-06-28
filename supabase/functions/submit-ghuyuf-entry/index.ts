@@ -12,6 +12,28 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Require authenticated caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: claimsErr } = await authClient.auth.getClaims(token);
+    if (claimsErr || !claims?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const body = await req.json();
     const reciter_name = String(body.reciter_name || "").trim();
     if (!reciter_name) {
@@ -43,11 +65,13 @@ Deno.serve(async (req) => {
       students_count: Math.max(0, Math.min(100000, Number(body.students_count) || 0)),
       notes: body.notes ? String(body.notes).slice(0, 2000) : null,
       source: "survey",
+      submitted_by: claims.claims.sub,
     };
 
     const { error } = await supabase.from("ghuyuf_rahman_entries").insert(payload);
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), {
+      console.error("submit-ghuyuf insert error:", error);
+      return new Response(JSON.stringify({ error: "Internal server error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -57,8 +81,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "خطأ";
-    return new Response(JSON.stringify({ error: msg }), {
+    console.error("submit-ghuyuf-entry error:", e);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
