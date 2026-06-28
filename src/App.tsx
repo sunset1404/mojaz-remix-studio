@@ -146,26 +146,26 @@ const AppRoutes = () => (
     } />
 
     {/* Admin routes */}
-    <Route path="/admin/students" element={<ProtectedRoute><AdminStudents /></ProtectedRoute>} />
-    <Route path="/admin/ijazah-students" element={<ProtectedRoute><AdminIjazahStudents /></ProtectedRoute>} />
-    <Route path="/admin/reciters" element={<ProtectedRoute><AdminReciters /></ProtectedRoute>} />
-    <Route path="/admin/partners" element={<ProtectedRoute><AdminPartners /></ProtectedRoute>} />
-    <Route path="/admin/certificates" element={<ProtectedRoute><AdminCertificates /></ProtectedRoute>} />
-    <Route path="/admin/certificate-templates" element={<ProtectedRoute><AdminCertificateTemplates /></ProtectedRoute>} />
-    <Route path="/admin/exams" element={<ProtectedRoute><AdminExams /></ProtectedRoute>} />
-    <Route path="/admin/sessions" element={<ProtectedRoute><AdminSessions /></ProtectedRoute>} />
-    <Route path="/admin/notifications" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
-    <Route path="/admin/achievements" element={<ProtectedRoute><AdminAchievements /></ProtectedRoute>} />
-    <Route path="/admin/ghuyuf-rahman" element={<ProtectedRoute><AdminGhuyufRahman /></ProtectedRoute>} />
-    <Route path="/admin/rewards" element={<ProtectedRoute><AdminRewards /></ProtectedRoute>} />
-    <Route path="/admin/popup-messages" element={<ProtectedRoute><AdminPopupMessages /></ProtectedRoute>} />
-    <Route path="/admin/whatsapp" element={<ProtectedRoute><AdminWhatsApp /></ProtectedRoute>} />
-    <Route path="/admin/whatsapp-templates" element={<ProtectedRoute><AdminWhatsAppTemplates /></ProtectedRoute>} />
-    <Route path="/admin/subscriptions" element={<ProtectedRoute><AdminSubscriptions /></ProtectedRoute>} />
-    <Route path="/admin/gifts" element={<ProtectedRoute><AdminGifts /></ProtectedRoute>} />
-    <Route path="/admin/plans" element={<ProtectedRoute><AdminPlans /></ProtectedRoute>} />
-    <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
-    <Route path="/admin/grant-requests" element={<ProtectedRoute><AdminGrantRequests /></ProtectedRoute>} />
+    <Route path="/admin/students" element={<AdminRoute><AdminStudents /></AdminRoute>} />
+    <Route path="/admin/ijazah-students" element={<AdminRoute><AdminIjazahStudents /></AdminRoute>} />
+    <Route path="/admin/reciters" element={<AdminRoute><AdminReciters /></AdminRoute>} />
+    <Route path="/admin/partners" element={<AdminRoute><AdminPartners /></AdminRoute>} />
+    <Route path="/admin/certificates" element={<AdminRoute><AdminCertificates /></AdminRoute>} />
+    <Route path="/admin/certificate-templates" element={<AdminRoute><AdminCertificateTemplates /></AdminRoute>} />
+    <Route path="/admin/exams" element={<AdminRoute><AdminExams /></AdminRoute>} />
+    <Route path="/admin/sessions" element={<AdminRoute><AdminSessions /></AdminRoute>} />
+    <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
+    <Route path="/admin/achievements" element={<AdminRoute><AdminAchievements /></AdminRoute>} />
+    <Route path="/admin/ghuyuf-rahman" element={<AdminRoute><AdminGhuyufRahman /></AdminRoute>} />
+    <Route path="/admin/rewards" element={<AdminRoute><AdminRewards /></AdminRoute>} />
+    <Route path="/admin/popup-messages" element={<AdminRoute><AdminPopupMessages /></AdminRoute>} />
+    <Route path="/admin/whatsapp" element={<AdminRoute><AdminWhatsApp /></AdminRoute>} />
+    <Route path="/admin/whatsapp-templates" element={<AdminRoute><AdminWhatsAppTemplates /></AdminRoute>} />
+    <Route path="/admin/subscriptions" element={<AdminRoute><AdminSubscriptions /></AdminRoute>} />
+    <Route path="/admin/gifts" element={<AdminRoute><AdminGifts /></AdminRoute>} />
+    <Route path="/admin/plans" element={<AdminRoute><AdminPlans /></AdminRoute>} />
+    <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+    <Route path="/admin/grant-requests" element={<AdminRoute><AdminGrantRequests /></AdminRoute>} />
 
     {/* Student-only routes */}
     <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />
