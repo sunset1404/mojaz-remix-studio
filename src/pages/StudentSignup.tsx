@@ -107,30 +107,13 @@ const StudentSignup = () => {
     if (preferredTrack === "الحصول على إجازة قرآنية") {
       setLoadingExams(true);
       const fetchExams = async () => {
-        const { data: examsData } = await (supabase as any).
-        from("exams").
-        select("id, date, time, capacity, committee_member_1_name, committee_member_2_name, committee_member_3_name").
-        eq("type", "admission").
-        eq("status", "scheduled").
-        order("date", { ascending: true });
+        const { data: examsData } = await (supabase as any).rpc("get_scheduled_admission_exams");
 
-        if (!examsData) {setLoadingExams(false);return;}
+        if (!examsData) { setLoadingExams(false); return; }
 
-        const { data: countData } = await (supabase as any).
-        from("student_profiles").
-        select("selected_exam_id").
-        in("selected_exam_id", examsData.map((e: AdmissionExam) => e.id));
-
-        const countMap: Record<string, number> = {};
-        (countData || []).forEach((row: {selected_exam_id: string;}) => {
-          if (row.selected_exam_id) {
-            countMap[row.selected_exam_id] = (countMap[row.selected_exam_id] || 0) + 1;
-          }
-        });
-
-        const available = examsData.
-        map((exam: AdmissionExam) => ({ ...exam, registered_count: countMap[exam.id] || 0 })).
-        filter((exam: AdmissionExam) => exam.registered_count < exam.capacity);
+        const available = (examsData as AdmissionExam[])
+          .map((exam) => ({ ...exam, registered_count: Number((exam as any).registered_count) || 0 }))
+          .filter((exam) => exam.registered_count < exam.capacity);
 
         setAdmissionExams(available);
         setLoadingExams(false);

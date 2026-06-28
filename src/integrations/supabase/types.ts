@@ -1851,6 +1851,26 @@ export type Database = {
         Args: { p_email: string }
         Returns: string
       }
+      get_exam_registration_counts: {
+        Args: { p_exam_ids: string[] }
+        Returns: {
+          exam_id: string
+          registered_count: number
+        }[]
+      }
+      get_scheduled_admission_exams: {
+        Args: never
+        Returns: {
+          capacity: number
+          committee_member_1_name: string
+          committee_member_2_name: string
+          committee_member_3_name: string
+          date: string
+          id: string
+          registered_count: number
+          time: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1887,6 +1907,7 @@ export type Database = {
         Args: { p_student_id: string }
         Returns: undefined
       }
+      redeem_gift_by_code: { Args: { p_code: string }; Returns: Json }
     }
     Enums: {
       app_role: "student" | "reciter" | "partner" | "admin"
