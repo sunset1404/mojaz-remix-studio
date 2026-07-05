@@ -340,7 +340,9 @@ const AdminReciters = () => {
     } catch (error: any) {
       try {
         const { data, error: e2 } = await supabase
-          .from("reciter_profiles").select("*").order("created_at", { ascending: false });
+          .from("reciter_profiles")
+          .select("id, user_id, full_name, gender, nationality, city, profession, qualifications, quran_certifications, teaching_experience, preferred_days, preferred_times, preferred_track, reciter_type, status, stamp_url, signature_url, last_seen_at, created_at")
+          .order("created_at", { ascending: false });
         if (e2) throw e2;
         setReciters((data || []).map((p: any) => ({
           ...p,
