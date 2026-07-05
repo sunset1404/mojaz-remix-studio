@@ -58,7 +58,7 @@ const AdminDashboard = () => {
         supabase.from("certificates").select("id", { count: "exact", head: true }),
         supabase.from("gift_subscriptions").select("id", { count: "exact", head: true }),
         supabase.from("student_profiles").select("full_name, nationality, created_at, preferred_track, gender, phone").order("created_at", { ascending: false }).limit(8),
-        supabase.from("reciter_profiles").select("full_name, city, created_at, preferred_track, gender, phone").order("created_at", { ascending: false }).limit(8),
+        supabase.from("reciter_profiles").select("full_name, city, created_at, preferred_track, gender").order("created_at", { ascending: false }).limit(8),
       ]);
 
       setStats({

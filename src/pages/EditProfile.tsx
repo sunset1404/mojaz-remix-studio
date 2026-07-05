@@ -73,16 +73,19 @@ const EditProfile = () => {
       if (role === "reciter") {
         const { data } = await supabase
           .from("reciter_profiles")
-          .select("*")
+          .select("id, user_id, full_name, gender, nationality, city, created_at, profession, qualifications, quran_certifications, teaching_experience, preferred_days, preferred_times, preferred_track")
           .eq("user_id", user.id)
           .maybeSingle();
+        // Fetch sensitive fields (id_number, phone) via secured RPC
+        const { data: sensitive } = await (supabase as any).rpc("get_my_reciter_sensitive");
+        const s = Array.isArray(sensitive) && sensitive[0] ? sensitive[0] : {};
         if (data) {
           setForm({
             name: data.full_name,
             gender: data.gender === "male" ? "ذكر" : data.gender === "female" ? "أنثى" : data.gender,
             nationality: data.nationality,
-            idNumber: data.id_number,
-            phone: data.phone,
+            idNumber: s.id_number || "",
+            phone: s.phone || "",
             email,
             city: data.city,
             joinDate: new Date(data.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" }),

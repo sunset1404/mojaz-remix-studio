@@ -325,11 +325,14 @@ const AdminWhatsApp = () => {
     }
 
     if (targetGroup === "all" || targetGroup === "reciters") {
-      let query = supabase.from("reciter_profiles").select("user_id, phone");
+      let query = supabase.from("reciter_profiles").select("user_id");
       if (filters.reciterStatus !== "all") query = query.eq("status", filters.reciterStatus);
       if (filters.reciterGender !== "all") query = query.eq("gender", filters.reciterGender === "male" ? "male" : "female");
       const { data } = await query;
-      users = [...users, ...(data || []).map((r: any) => ({ user_id: r.user_id, phone: r.phone }))];
+      // Fetch sensitive phone numbers via admin RPC
+      const { data: sensitive } = await (supabase as any).rpc("list_reciter_sensitive_admin");
+      const phoneByUser = new Map<string, string>((sensitive || []).map((s: any) => [s.user_id, s.phone]));
+      users = [...users, ...(data || []).map((r: any) => ({ user_id: r.user_id, phone: phoneByUser.get(r.user_id) || "" }))];
     }
 
     // De-duplicate by user_id

@@ -28,12 +28,11 @@ const PublicVideoCall = () => {
 
     const validateAndFetchCall = async () => {
         try {
-            const { data, error: err } = await (supabase as any)
-                .from("video_call_sessions")
-                .select("id, room_id, student_name, status, link_used")
-                .eq("access_token", token)
-                .maybeSingle();
+            const { data: resp, error: err } = await (supabase as any).functions.invoke("validate-call-link", {
+                body: { token },
+            });
 
+            const data = (resp as any)?.session;
             if (err || !data) {
                 setError("رابط المكالمة غير صالح أو منتهي الصلاحية");
                 setPageState("error");

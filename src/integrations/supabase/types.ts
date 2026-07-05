@@ -1021,10 +1021,10 @@ export type Database = {
           full_name: string
           gender: string
           id: string
-          id_number: string
+          id_number: string | null
           last_seen_at: string | null
           nationality: string
-          phone: string
+          phone: string | null
           preferred_days: string[]
           preferred_times: string[]
           preferred_track: string
@@ -1045,10 +1045,10 @@ export type Database = {
           full_name: string
           gender: string
           id?: string
-          id_number: string
+          id_number?: string | null
           last_seen_at?: string | null
           nationality: string
-          phone: string
+          phone?: string | null
           preferred_days?: string[]
           preferred_times?: string[]
           preferred_track?: string
@@ -1069,10 +1069,10 @@ export type Database = {
           full_name?: string
           gender?: string
           id?: string
-          id_number?: string
+          id_number?: string | null
           last_seen_at?: string | null
           nationality?: string
-          phone?: string
+          phone?: string | null
           preferred_days?: string[]
           preferred_times?: string[]
           preferred_track?: string
@@ -1837,6 +1837,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_assign_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _target_user: string
+        }
+        Returns: undefined
+      }
+      admin_revoke_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _target_user: string
+        }
+        Returns: undefined
+      }
       check_email_exists: { Args: { p_email: string }; Returns: boolean }
       check_phone_exists: { Args: { p_phone: string }; Returns: boolean }
       delete_email: {
@@ -1857,6 +1871,21 @@ export type Database = {
         Returns: {
           exam_id: string
           registered_count: number
+        }[]
+      }
+      get_my_reciter_sensitive: {
+        Args: never
+        Returns: {
+          id_number: string
+          phone: string
+        }[]
+      }
+      get_reciter_sensitive_admin: {
+        Args: { _user_id: string }
+        Returns: {
+          id_number: string
+          phone: string
+          user_id: string
         }[]
       }
       get_scheduled_admission_exams: {
@@ -1882,6 +1911,14 @@ export type Database = {
       is_exam_committee_member: {
         Args: { _exam_id: string; _user_id: string }
         Returns: boolean
+      }
+      list_reciter_sensitive_admin: {
+        Args: never
+        Returns: {
+          id_number: string
+          phone: string
+          user_id: string
+        }[]
       }
       move_to_dlq: {
         Args: {
