@@ -1021,8 +1021,10 @@ export type Database = {
           full_name: string
           gender: string
           id: string
+          id_number: string | null
           last_seen_at: string | null
           nationality: string
+          phone: string | null
           preferred_days: string[]
           preferred_times: string[]
           preferred_track: string
@@ -1043,8 +1045,10 @@ export type Database = {
           full_name: string
           gender: string
           id?: string
+          id_number?: string | null
           last_seen_at?: string | null
           nationality: string
+          phone?: string | null
           preferred_days?: string[]
           preferred_times?: string[]
           preferred_track?: string
@@ -1065,8 +1069,10 @@ export type Database = {
           full_name?: string
           gender?: string
           id?: string
+          id_number?: string | null
           last_seen_at?: string | null
           nationality?: string
+          phone?: string | null
           preferred_days?: string[]
           preferred_times?: string[]
           preferred_track?: string
@@ -1078,30 +1084,6 @@ export type Database = {
           stamp_url?: string | null
           status?: string
           teaching_experience?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      reciter_sensitive_data: {
-        Row: {
-          created_at: string
-          id_number: string | null
-          phone: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id_number?: string | null
-          phone?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id_number?: string | null
-          phone?: string | null
           updated_at?: string
           user_id?: string
         }
