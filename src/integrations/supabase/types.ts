@@ -1834,9 +1834,88 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      reciter_directory: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          full_name: string | null
+          gender: string | null
+          id: string | null
+          last_seen_at: string | null
+          nationality: string | null
+          preferred_days: string[] | null
+          preferred_times: string[] | null
+          preferred_track: string | null
+          profession: string | null
+          qualifications: string | null
+          quran_certifications: string | null
+          reciter_type: string | null
+          signature_url: string | null
+          stamp_url: string | null
+          status: string | null
+          teaching_experience: string | null
+          user_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          gender?: string | null
+          id?: string | null
+          last_seen_at?: string | null
+          nationality?: string | null
+          preferred_days?: string[] | null
+          preferred_times?: string[] | null
+          preferred_track?: string | null
+          profession?: string | null
+          qualifications?: string | null
+          quran_certifications?: string | null
+          reciter_type?: string | null
+          signature_url?: string | null
+          stamp_url?: string | null
+          status?: string | null
+          teaching_experience?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          gender?: string | null
+          id?: string | null
+          last_seen_at?: string | null
+          nationality?: string | null
+          preferred_days?: string[] | null
+          preferred_times?: string[] | null
+          preferred_track?: string | null
+          profession?: string | null
+          qualifications?: string | null
+          quran_certifications?: string | null
+          reciter_type?: string | null
+          signature_url?: string | null
+          stamp_url?: string | null
+          status?: string | null
+          teaching_experience?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      admin_assign_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _target_user: string
+        }
+        Returns: undefined
+      }
+      admin_revoke_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _target_user: string
+        }
+        Returns: undefined
+      }
       check_email_exists: { Args: { p_email: string }; Returns: boolean }
       check_phone_exists: { Args: { p_phone: string }; Returns: boolean }
       delete_email: {
