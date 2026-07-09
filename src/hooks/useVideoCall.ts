@@ -33,6 +33,8 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
     const webrtcManager = useRef<WebRTCManager | null>(null);
     const signalingService = useRef<SignalingService | null>(null);
     const dbChannel = useRef<RealtimeChannel | null>(null);
+    const endedRef = useRef<boolean>(false);
+    const initializedRef = useRef<boolean>(false);
     const { toast } = useToast();
 
     // Handle incoming WebRTC signals
@@ -80,6 +82,12 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
     // Initialize WebRTC and signaling
     const initialize = useCallback(async () => {
+        if (initializedRef.current) {
+            console.log('useVideoCall: initialize skipped (already initialized)');
+            return;
+        }
+        initializedRef.current = true;
+        endedRef.current = false;
         try {
             setCallState(prev => ({ ...prev, isConnecting: true, error: null }));
 
@@ -209,7 +217,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                     console.log('DB Session status updated via Realtime:', newStatus);
                     setDbStatus(newStatus);
 
-                    if (newStatus === 'ended' || newStatus === 'failed') {
+                    if ((newStatus === 'ended' || newStatus === 'failed') && !endedRef.current) {
                         toast({
                             title: newStatus === 'failed' ? 'تم رفض المكالمة' : 'انتهت المكالمة',
                             description: newStatus === 'failed' ? 'تم رفض المكالمة من قبل الطرف الآخر' : 'تم إنهاء المكالمة من قبل الطرف الآخر',
@@ -301,6 +309,13 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
     // End call
     const endCall = useCallback(async () => {
+        if (endedRef.current) {
+            console.log('useVideoCall: endCall skipped (already ended)');
+            return;
+        }
+        endedRef.current = true;
+        initializedRef.current = false;
+
         webrtcManager.current?.cleanup();
         await signalingService.current?.disconnect();
 
@@ -322,6 +337,26 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
         webrtcManager.current = null;
         signalingService.current = null;
+    }, []);
+
+    // Handle network changes: trigger ICE restart when connection returns
+    useEffect(() => {
+        const handleOnline = () => {
+            console.log('Network back online — attempting ICE restart');
+            webrtcManager.current?.restartIce().catch(err =>
+                console.error('ICE restart on online failed:', err)
+            );
+        };
+        const handleOffline = () => {
+            console.log('Network went offline — waiting for reconnection');
+            setCallState(prev => ({ ...prev, isReconnecting: true }));
+        };
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
     }, []);
 
     // Auto-start if enabled
