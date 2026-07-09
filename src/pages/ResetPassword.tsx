@@ -37,8 +37,8 @@ const ResetPassword = () => {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || code.length < 6) {
-      toast({ title: "خطأ", description: "أدخل البريد والرمز المكون من 6 أرقام", variant: "destructive" });
+    if (!email || code.length !== 8) {
+      toast({ title: "خطأ", description: "أدخل البريد والرمز المكون من 8 أرقام", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -116,13 +116,13 @@ const ResetPassword = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="code" className="text-foreground text-sm font-semibold">رمز التحقق (6 أرقام)</Label>
+                  <Label htmlFor="code" className="text-foreground text-sm font-semibold">رمز التحقق (8 أرقام)</Label>
                   <div className="relative">
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-gold/15 flex items-center justify-center">
                       <KeyRound className="w-4 h-4 text-gold" />
                     </div>
-                    <Input id="code" type="text" inputMode="numeric" maxLength={6} placeholder="------"
-                      value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                    <Input id="code" type="text" inputMode="numeric" maxLength={8} placeholder="--------"
+                      value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
                       className="pr-14 text-center h-12 rounded-xl border-primary/20 bg-card focus:border-primary shadow-sm text-2xl tracking-[0.5em] font-bold"
                       dir="ltr" required />
                   </div>

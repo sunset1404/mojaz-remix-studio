@@ -31,8 +31,8 @@ const VerifySignupOtp = () => {
   }, [cooldown]);
 
   const handleVerify = async () => {
-    if (token.length !== 6) {
-      toast({ title: "رمز غير صحيح", description: "يجب أن يتكون الرمز من 6 أرقام", variant: "destructive" });
+    if (token.length !== 8) {
+      toast({ title: "رمز غير صحيح", description: "يجب أن يتكون الرمز من 8 أرقام", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -92,7 +92,7 @@ const VerifySignupOtp = () => {
             <div className="space-y-1">
               <h2 className="text-xl font-bold text-foreground font-cairo">تحقق من بريدك الإلكتروني</h2>
               <p className="text-muted-foreground text-xs leading-relaxed">
-                أرسلنا رمزاً مكوناً من 6 أرقام إلى
+                أرسلنا رمزاً مكوناً من 8 أرقام إلى
               </p>
               <p className="text-foreground text-sm font-semibold flex items-center justify-center gap-1.5" dir="ltr">
                 <Mail className="w-4 h-4 text-primary" />
@@ -105,10 +105,10 @@ const VerifySignupOtp = () => {
               <Input
                 type="text"
                 inputMode="numeric"
-                maxLength={6}
-                placeholder="------"
+                maxLength={8}
+                placeholder="--------"
                 value={token}
-                onChange={(e) => setToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(e) => setToken(e.target.value.replace(/\D/g, "").slice(0, 8))}
                 className="h-14 rounded-xl border-primary/20 bg-card focus:border-primary text-center text-2xl font-bold tracking-[10px]"
                 dir="ltr"
               />
@@ -116,7 +116,7 @@ const VerifySignupOtp = () => {
 
             <Button
               onClick={handleVerify}
-              disabled={loading || token.length !== 6}
+              disabled={loading || token.length !== 8}
               className="w-full gradient-primary text-primary-foreground h-12 rounded-2xl font-bold shadow-md"
             >
               {loading ? "جاري التحقق..." : "تفعيل الحساب"}
