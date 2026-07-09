@@ -18,6 +18,24 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     const emailValue = email.trim().toLowerCase();
+
+    // تحقق من وجود الحساب أولاً حتى لا نُظهر "تم الإرسال" لبريد غير مسجّل
+    const { data: exists, error: checkError } = await supabase.rpc("check_email_exists", { p_email: emailValue });
+    if (checkError) {
+      toast({ title: "خطأ", description: "تعذّر التحقق من البريد، حاول مرة أخرى", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+    if (!exists) {
+      toast({
+        title: "البريد غير مسجّل",
+        description: "لا يوجد حساب مرتبط بهذا البريد. تأكد من الإملاء أو أنشئ حساباً جديداً.",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.auth.resetPasswordForEmail(emailValue, {
       redirectTo: `${window.location.origin}/reset-password?email=${encodeURIComponent(emailValue)}`,
     });
