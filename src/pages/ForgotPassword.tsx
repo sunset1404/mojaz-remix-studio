@@ -17,13 +17,16 @@ const ForgotPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const emailValue = email.trim().toLowerCase();
+    const { error } = await supabase.auth.resetPasswordForEmail(emailValue, {
+      redirectTo: `${window.location.origin}/reset-password?email=${encodeURIComponent(emailValue)}`,
+    });
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
       setLoading(false);
     } else {
       toast({ title: "تم الإرسال", description: "أرسلنا رمز التحقق إلى بريدك" });
-      navigate(`/reset-password?email=${encodeURIComponent(email)}`);
+      navigate(`/reset-password?email=${encodeURIComponent(emailValue)}`);
     }
   };
 
