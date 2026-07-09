@@ -320,14 +320,6 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             dbChannel.current = null;
         }
 
-        // Only update DB status if we are actually connected/in-call
-        if (webrtcManager.current) {
-            await supabase
-                .from('video_call_sessions')
-                .update({ status: 'ended', ended_at: new Date().toISOString() })
-                .eq('room_id', roomId);
-        }
-
         webrtcManager.current = null;
         signalingService.current = null;
     }, []);
