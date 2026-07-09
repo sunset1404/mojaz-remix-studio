@@ -55,8 +55,31 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
     useEffect(() => {
         const mainStream = swapped ? localStream : remoteStream;
         const pipStream = swapped ? remoteStream : localStream;
-        if (mainVideoRef.current) mainVideoRef.current.srcObject = mainStream || null;
-        if (pipVideoRef.current) pipVideoRef.current.srcObject = pipStream || null;
+
+        const assign = (el: HTMLVideoElement | null, s: MediaStream | null) => {
+            if (!el) return;
+            if (el.srcObject !== s) {
+                el.srcObject = s || null;
+            }
+            if (s) {
+                const p = el.play();
+                if (p && typeof (p as Promise<void>).catch === 'function') {
+                    (p as Promise<void>).catch((err) => console.warn('video.play() blocked:', err));
+                }
+            }
+        };
+
+        assign(mainVideoRef.current, mainStream);
+        assign(pipVideoRef.current, pipStream);
+
+        // Re-assign / replay when remote adds a new track after initial srcObject was set
+        if (!remoteStream) return;
+        const onAddTrack = () => {
+            assign(mainVideoRef.current, swapped ? localStream : remoteStream);
+            assign(pipVideoRef.current, swapped ? remoteStream : localStream);
+        };
+        remoteStream.addEventListener('addtrack', onAddTrack);
+        return () => remoteStream.removeEventListener('addtrack', onAddTrack);
     }, [localStream, remoteStream, swapped]);
 
     // Ringback tone: play a phone-like ringing sound for the caller while waiting for the other party
