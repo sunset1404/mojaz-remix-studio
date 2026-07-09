@@ -48,10 +48,39 @@ export class WebRTCManager {
             }
         };
 
-        // Remote tracks
+        // Remote tracks — accumulate audio & video into a single persistent MediaStream
         this.peerConnection.ontrack = (event) => {
-            this.remoteStream = event.streams[0];
-            this.onRemoteStream(event.streams[0]);
+            if (!this.remoteStream) {
+                this.remoteStream = new MediaStream();
+            }
+            // Prefer the track associated with the stream if available, otherwise the event track
+            const incoming = event.track;
+            if (incoming && !this.remoteStream.getTracks().some((t) => t.id === incoming.id)) {
+                this.remoteStream.addTrack(incoming);
+            }
+            // Also fold in any tracks Safari attached to event.streams[0] (some browsers do this instead)
+            const eventStream = event.streams && event.streams[0];
+            if (eventStream) {
+                eventStream.getTracks().forEach((t) => {
+                    if (!this.remoteStream!.getTracks().some((x) => x.id === t.id)) {
+                        this.remoteStream!.addTrack(t);
+                    }
+                });
+            }
+            console.log('ontrack:', incoming?.kind, '— remote tracks now:', this.remoteStream.getTracks().map(t => t.kind));
+            this.onRemoteStream(this.remoteStream);
+        };
+
+        // Renegotiate automatically when local tracks change (e.g. after fallback / replaceTrack)
+        this.peerConnection.onnegotiationneeded = async () => {
+            try {
+                if (!this.peerConnection || this.peerConnection.signalingState !== 'stable') return;
+                const offer = await this.peerConnection.createOffer();
+                await this.peerConnection.setLocalDescription(offer);
+                this.onNeedsReOffer?.(offer);
+            } catch (err) {
+                console.warn('onnegotiationneeded failed:', err);
+            }
         };
 
         // Connection state management with auto-recovery
