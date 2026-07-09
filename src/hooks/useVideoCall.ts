@@ -82,6 +82,12 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
     // Initialize WebRTC and signaling
     const initialize = useCallback(async () => {
+        if (initializedRef.current) {
+            console.log('useVideoCall: initialize skipped (already initialized)');
+            return;
+        }
+        initializedRef.current = true;
+        endedRef.current = false;
         try {
             setCallState(prev => ({ ...prev, isConnecting: true, error: null }));
 
