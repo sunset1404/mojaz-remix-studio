@@ -309,6 +309,13 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
     // End call
     const endCall = useCallback(async () => {
+        if (endedRef.current) {
+            console.log('useVideoCall: endCall skipped (already ended)');
+            return;
+        }
+        endedRef.current = true;
+        initializedRef.current = false;
+
         webrtcManager.current?.cleanup();
         await signalingService.current?.disconnect();
 
@@ -330,6 +337,26 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
         webrtcManager.current = null;
         signalingService.current = null;
+    }, []);
+
+    // Handle network changes: trigger ICE restart when connection returns
+    useEffect(() => {
+        const handleOnline = () => {
+            console.log('Network back online — attempting ICE restart');
+            webrtcManager.current?.restartIce().catch(err =>
+                console.error('ICE restart on online failed:', err)
+            );
+        };
+        const handleOffline = () => {
+            console.log('Network went offline — waiting for reconnection');
+            setCallState(prev => ({ ...prev, isReconnecting: true }));
+        };
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
     }, []);
 
     // Auto-start if enabled
