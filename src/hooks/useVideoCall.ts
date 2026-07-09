@@ -33,6 +33,8 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
     const webrtcManager = useRef<WebRTCManager | null>(null);
     const signalingService = useRef<SignalingService | null>(null);
     const dbChannel = useRef<RealtimeChannel | null>(null);
+    const endedRef = useRef<boolean>(false);
+    const initializedRef = useRef<boolean>(false);
     const { toast } = useToast();
 
     // Handle incoming WebRTC signals
