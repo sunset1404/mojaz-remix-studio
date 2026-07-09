@@ -217,7 +217,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                     console.log('DB Session status updated via Realtime:', newStatus);
                     setDbStatus(newStatus);
 
-                    if (newStatus === 'ended' || newStatus === 'failed') {
+                    if ((newStatus === 'ended' || newStatus === 'failed') && !endedRef.current) {
                         toast({
                             title: newStatus === 'failed' ? 'تم رفض المكالمة' : 'انتهت المكالمة',
                             description: newStatus === 'failed' ? 'تم رفض المكالمة من قبل الطرف الآخر' : 'تم إنهاء المكالمة من قبل الطرف الآخر',
