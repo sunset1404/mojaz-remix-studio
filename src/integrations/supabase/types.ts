@@ -1581,8 +1581,8 @@ export type Database = {
           callee_connection_state: string | null
           callee_ready_at: string | null
           caller_connection_state: string | null
-          caller_role: string
           caller_ready_at: string | null
+          caller_role: string
           created_at: string | null
           ended_at: string | null
           exam_id: string | null
@@ -1611,8 +1611,8 @@ export type Database = {
           callee_connection_state?: string | null
           callee_ready_at?: string | null
           caller_connection_state?: string | null
-          caller_role?: string
           caller_ready_at?: string | null
+          caller_role?: string
           created_at?: string | null
           ended_at?: string | null
           exam_id?: string | null
@@ -1641,8 +1641,8 @@ export type Database = {
           callee_connection_state?: string | null
           callee_ready_at?: string | null
           caller_connection_state?: string | null
-          caller_role?: string
           caller_ready_at?: string | null
+          caller_role?: string
           created_at?: string | null
           ended_at?: string | null
           exam_id?: string | null
