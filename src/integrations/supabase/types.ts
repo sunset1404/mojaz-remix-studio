@@ -1576,17 +1576,27 @@ export type Database = {
       video_call_sessions: {
         Row: {
           access_token: string | null
+          answer_generation: number | null
+          answer_sdp: Json | null
+          callee_connection_state: string | null
+          callee_ready_at: string | null
+          caller_connection_state: string | null
           caller_role: string
+          caller_ready_at: string | null
           created_at: string | null
           ended_at: string | null
           exam_id: string | null
+          failure_code: string | null
           id: string
           link_used: boolean | null
           notes: string | null
+          offer_generation: number | null
+          offer_sdp: Json | null
           rating: number | null
           reciter_id: string
           reciter_joined_at: string | null
           room_id: string
+          signaling_generation: number
           started_at: string | null
           status: string | null
           student_id: string
@@ -1596,17 +1606,27 @@ export type Database = {
         }
         Insert: {
           access_token?: string | null
+          answer_generation?: number | null
+          answer_sdp?: Json | null
+          callee_connection_state?: string | null
+          callee_ready_at?: string | null
+          caller_connection_state?: string | null
           caller_role?: string
+          caller_ready_at?: string | null
           created_at?: string | null
           ended_at?: string | null
           exam_id?: string | null
+          failure_code?: string | null
           id?: string
           link_used?: boolean | null
           notes?: string | null
+          offer_generation?: number | null
+          offer_sdp?: Json | null
           rating?: number | null
           reciter_id: string
           reciter_joined_at?: string | null
           room_id?: string
+          signaling_generation?: number
           started_at?: string | null
           status?: string | null
           student_id: string
@@ -1616,17 +1636,27 @@ export type Database = {
         }
         Update: {
           access_token?: string | null
+          answer_generation?: number | null
+          answer_sdp?: Json | null
+          callee_connection_state?: string | null
+          callee_ready_at?: string | null
+          caller_connection_state?: string | null
           caller_role?: string
+          caller_ready_at?: string | null
           created_at?: string | null
           ended_at?: string | null
           exam_id?: string | null
+          failure_code?: string | null
           id?: string
           link_used?: boolean | null
           notes?: string | null
+          offer_generation?: number | null
+          offer_sdp?: Json | null
           rating?: number | null
           reciter_id?: string
           reciter_joined_at?: string | null
           room_id?: string
+          signaling_generation?: number
           started_at?: string | null
           status?: string | null
           student_id?: string

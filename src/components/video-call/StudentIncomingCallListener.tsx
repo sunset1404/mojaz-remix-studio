@@ -52,7 +52,7 @@ export const StudentIncomingCallListener = () => {
                         filter: `student_id=eq.${userId}`
                     },
                     (payload) => {
-                        if (payload.new.status !== 'waiting') {
+                        if (payload.new.status !== 'waiting' || payload.new.student_joined_at) {
                             setIncomingCall(null);
                         }
                     }
@@ -66,12 +66,13 @@ export const StudentIncomingCallListener = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) return;
 
-            const { data } = await (supabase as any)
+            const { data } = await supabase
                 .from('video_call_sessions')
                 .select('id, room_id, caller_role')
                 .eq('student_id', session.user.id)
                 .eq('caller_role', 'reciter')
                 .eq('status', 'waiting')
+                .is('student_joined_at', null)
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .maybeSingle();
@@ -99,7 +100,7 @@ export const StudentIncomingCallListener = () => {
         try {
             await supabase
                 .from('video_call_sessions')
-                .update({ status: 'active', student_joined_at: new Date().toISOString() })
+                .update({ student_joined_at: new Date().toISOString() })
                 .eq('id', incomingCall.id);
 
             const roomId = incomingCall.room_id;

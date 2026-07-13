@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WebRTCManager } from '@/lib/webrtc/WebRTCManager';
 import { SignalingService } from '@/lib/webrtc/SignalingService';
-import { CallState, WebRTCSignal, VideoCallSession } from '@/types/video-call';
+import { CallSignalingState, CallState, VideoCallSession } from '@/types/video-call';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface UseVideoCallOptions {
     roomId: string;
@@ -12,114 +10,162 @@ interface UseVideoCallOptions {
     autoStart?: boolean;
 }
 
+const INITIAL_CALL_STATE: CallState = {
+    isConnected: false,
+    isConnecting: false,
+    isReconnecting: false,
+    isMuted: false,
+    isVideoEnabled: false,
+    error: null,
+};
+
 /**
- * useVideoCall - React hook for managing WebRTC video calls
- * Handles connection setup, media streams, call controls,
- * and automatic reconnection on disconnection.
+ * Owns the media connection and the durable Supabase-backed negotiation state.
+ * Critical SDP is stored in Postgres; Realtime only accelerates state delivery.
  */
 export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOptions) {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
-    const [callState, setCallState] = useState<CallState>({
-        isConnected: false,
-        isConnecting: false,
-        isReconnecting: false,
-        isMuted: false,
-        isVideoEnabled: false,
-        error: null,
-    });
+    const [callState, setCallState] = useState<CallState>(INITIAL_CALL_STATE);
     const [dbStatus, setDbStatus] = useState<VideoCallSession['status']>('waiting');
 
     const webrtcManager = useRef<WebRTCManager | null>(null);
     const signalingService = useRef<SignalingService | null>(null);
-    const dbChannel = useRef<RealtimeChannel | null>(null);
-    const endedRef = useRef<boolean>(false);
-    const initializedRef = useRef<boolean>(false);
+    const endedRef = useRef(false);
+    const initializedRef = useRef(false);
+    const localMediaReadyRef = useRef(false);
+    const latestGenerationRef = useRef(0);
+    const offerPublishingGenerationRef = useRef(0);
+    const offerAppliedGenerationRef = useRef(0);
+    const answerAppliedGenerationRef = useRef(0);
+    const answerPublishingGenerationRef = useRef(0);
+    const processingRef = useRef<Promise<void>>(Promise.resolve());
+    const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const endCallRef = useRef<() => Promise<void>>(async () => {});
     const { toast } = useToast();
 
-    // Handle incoming WebRTC signals
-    const handleSignal = useCallback(async (signal: WebRTCSignal) => {
-        if (!webrtcManager.current) {
-            console.error('WebRTC manager not initialized!');
-            return;
-        }
-
-        try {
-            switch (signal.type) {
-                case 'ready':
-                    if (role === 'caller') {
-                        console.log('Received ready signal from callee. Sending offer...');
-                        const offer = await webrtcManager.current.createOffer();
-                        await signalingService.current?.sendSignal({ type: 'offer', data: offer });
-                        toast({
-                            title: 'جاري إنهاء الاتصال',
-                            description: 'تم ربط الطرفين، جاري الاتصال...',
-                        });
-                    }
-                    break;
-
-                case 'offer':
-                    console.log('Received offer. Creating answer...');
-                    await webrtcManager.current.setRemoteDescription(signal.data as RTCSessionDescriptionInit);
-                    const answer = await webrtcManager.current.createAnswer();
-                    await signalingService.current?.sendSignal({ type: 'answer', data: answer });
-                    break;
-
-                case 'answer':
-                    console.log('Received answer. Setting remote description...');
-                    await webrtcManager.current.setRemoteDescription(signal.data as RTCSessionDescriptionInit);
-                    break;
-
-                case 'ice-candidate':
-                    await webrtcManager.current.addIceCandidate(signal.data as RTCIceCandidateInit);
-                    break;
-            }
-        } catch (error) {
-            console.error('Error handling signal:', error);
-            setCallState(prev => ({ ...prev, error: 'فشل في معالجة إشارة الاتصال' }));
+    const clearConnectionTimeout = useCallback(() => {
+        if (connectionTimeoutRef.current) {
+            clearTimeout(connectionTimeoutRef.current);
+            connectionTimeoutRef.current = null;
         }
     }, []);
 
-    // Initialize WebRTC and signaling
-    const initialize = useCallback(async () => {
-        if (initializedRef.current) {
-            console.log('useVideoCall: initialize skipped (already initialized)');
+    const ensureConnectionTimeout = useCallback(() => {
+        if (connectionTimeoutRef.current) return;
+        connectionTimeoutRef.current = setTimeout(() => {
+            if (webrtcManager.current?.getConnectionState() !== 'connected') {
+                setCallState(prev => ({
+                    ...prev,
+                    isConnecting: false,
+                    isReconnecting: false,
+                    error: 'تعذر إكمال الاتصال. تحقق من الشبكة ثم أعد المحاولة',
+                }));
+            }
+        }, 30_000);
+    }, []);
+
+    const processSignalingState = useCallback(async (snapshot: CallSignalingState) => {
+        setDbStatus(snapshot.status);
+
+        if ((snapshot.status === 'ended' || snapshot.status === 'failed') && !endedRef.current) {
+            toast({
+                title: snapshot.status === 'failed' ? 'تم رفض المكالمة' : 'انتهت المكالمة',
+                description: snapshot.status === 'failed'
+                    ? 'تم رفض المكالمة أو تعذر إكمالها'
+                    : 'تم إنهاء المكالمة من الطرف الآخر',
+            });
+            await endCallRef.current();
             return;
         }
+
+        if (!localMediaReadyRef.current || !webrtcManager.current || !signalingService.current) return;
+        if (snapshot.signaling_generation < latestGenerationRef.current) return;
+        latestGenerationRef.current = snapshot.signaling_generation;
+
+        const bothReady = Boolean(snapshot.caller_ready_at && snapshot.callee_ready_at);
+        if (!bothReady) return;
+        ensureConnectionTimeout();
+
+        const generation = snapshot.signaling_generation;
+        if (role === 'caller') {
+            const hasCurrentOffer = snapshot.offer_generation === generation && Boolean(snapshot.offer_sdp);
+            if (!hasCurrentOffer && offerPublishingGenerationRef.current < generation) {
+                offerPublishingGenerationRef.current = generation;
+                console.log(`Creating durable offer for generation ${generation}`);
+                const offer = await webrtcManager.current.createOffer();
+                await signalingService.current.publishOffer(offer, generation);
+                return;
+            }
+
+            // A durable offer exists but this browser instance did not create it
+            // (for example after a caller page reload). A new peer connection
+            // cannot safely reuse the previous instance's local SDP, so start a
+            // new generation and let the callee answer it.
+            if (hasCurrentOffer && offerPublishingGenerationRef.current < generation) {
+                offerPublishingGenerationRef.current = generation + 1;
+                console.log(`Replacing stale local offer from generation ${generation}`);
+                const replacementOffer = await webrtcManager.current.createOffer();
+                await signalingService.current.publishRestartOffer(replacementOffer);
+                return;
+            }
+
+            const hasCurrentAnswer = snapshot.answer_generation === generation && Boolean(snapshot.answer_sdp);
+            if (hasCurrentAnswer && answerAppliedGenerationRef.current < generation) {
+                console.log(`Applying durable answer for generation ${generation}`);
+                await webrtcManager.current.setRemoteDescription(snapshot.answer_sdp!);
+                answerAppliedGenerationRef.current = generation;
+            }
+            return;
+        }
+
+        const hasCurrentOffer = snapshot.offer_generation === generation && Boolean(snapshot.offer_sdp);
+        if (hasCurrentOffer && offerAppliedGenerationRef.current < generation) {
+            offerAppliedGenerationRef.current = generation;
+            console.log(`Applying durable offer for generation ${generation}`);
+            await webrtcManager.current.setRemoteDescription(snapshot.offer_sdp!);
+
+            if (answerPublishingGenerationRef.current < generation) {
+                answerPublishingGenerationRef.current = generation;
+                const answer = await webrtcManager.current.createAnswer();
+                await signalingService.current.publishAnswer(answer, generation);
+            }
+        }
+    }, [ensureConnectionTimeout, role, toast]);
+
+    const enqueueSignalingState = useCallback((snapshot: CallSignalingState) => {
+        processingRef.current = processingRef.current
+            .catch(error => console.error('Previous signaling operation failed:', error))
+            .then(() => processSignalingState(snapshot))
+            .catch(error => {
+                console.error('Durable signaling failed:', error);
+                setCallState(prev => ({
+                    ...prev,
+                    isConnecting: false,
+                    isReconnecting: false,
+                    error: 'فشل في التفاوض على الاتصال. يرجى إعادة المحاولة',
+                }));
+                void signalingService.current?.updateConnectionState('failed', 'signaling_failed');
+            });
+    }, [processSignalingState]);
+
+    const initialize = useCallback(async () => {
+        if (initializedRef.current) return;
         initializedRef.current = true;
         endedRef.current = false;
+
         try {
             setCallState(prev => ({ ...prev, isConnecting: true, error: null }));
 
             webrtcManager.current = new WebRTCManager(
-                // On remote stream
                 (stream) => {
-                    console.log('Remote stream received');
+                    console.log('Remote stream received:', stream.getTracks().map(track => track.kind));
                     setRemoteStream(stream);
                 },
-                // On ICE candidate
-                async (candidate) => {
-                    await signalingService.current?.sendSignal({
-                        type: 'ice-candidate',
-                        data: candidate.toJSON(),
-                    });
-                },
-                // On connection state change
                 (state) => {
-                    console.log('Connection state:', state);
-
-                    if (state === 'disconnected') {
-                        setCallState(prev => ({
-                            ...prev,
-                            isReconnecting: true,
-                            isConnected: false,
-                            error: null,
-                        }));
-                        toast({
-                            title: 'انقطع الاتصال',
-                            description: 'جاري إعادة الاتصال تلقائياً...',
-                        });
-                    } else if (state === 'connected') {
+                    console.log('Peer connection state:', state);
+                    if (state === 'connected') {
+                        clearConnectionTimeout();
                         setCallState(prev => ({
                             ...prev,
                             isConnected: true,
@@ -127,229 +173,178 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                             isReconnecting: false,
                             error: null,
                         }));
+                    } else if (state === 'disconnected') {
+                        setCallState(prev => ({
+                            ...prev,
+                            isConnected: false,
+                            isReconnecting: true,
+                            error: null,
+                        }));
                     } else if (state === 'failed') {
                         setCallState(prev => ({
                             ...prev,
                             isConnected: false,
                             isConnecting: false,
-                            isReconnecting: false,
-                            error: 'فشل الاتصال. يرجى المحاولة مرة أخرى',
+                            isReconnecting: role === 'caller',
+                            error: role === 'caller' ? null : 'فشل الاتصال. في انتظار إعادة المحاولة',
                         }));
                     } else {
                         setCallState(prev => ({
                             ...prev,
-                            isConnecting: state === 'connecting',
+                            isConnecting: state === 'connecting' || state === 'new',
                         }));
                     }
+                    void signalingService.current
+                        ?.updateConnectionState(state, state === 'failed' ? 'ice_failed' : undefined)
+                        .catch(error => console.warn('Failed to persist connection state:', error));
                 },
-                // On needs re-offer (ICE restart)
                 async (offer) => {
-                    console.log('Sending ICE restart offer...');
+                    if (role !== 'caller') return;
                     try {
-                        await signalingService.current?.sendSignal({ type: 'offer', data: offer });
+                        console.log('Publishing durable ICE restart offer');
+                        offerPublishingGenerationRef.current = Math.max(
+                            offerPublishingGenerationRef.current,
+                            latestGenerationRef.current + 1,
+                        );
+                        await signalingService.current?.publishRestartOffer(offer);
                     } catch (error) {
-                        console.error('Failed to send ICE restart offer:', error);
+                        console.error('Failed to publish restart offer:', error);
+                        setCallState(prev => ({ ...prev, isReconnecting: false, error: 'فشلت إعادة الاتصال' }));
                     }
-                }
+                },
+                role === 'caller',
             );
-
             await webrtcManager.current.initialize();
 
-            // Get local media stream with fallback
-            let stream: MediaStream | null = null;
+            // Subscribe before media permission prompts. Durable state plus a post-subscribe
+            // read means accepting quickly can no longer lose the handshake.
+            signalingService.current = new SignalingService(roomId, role, enqueueSignalingState);
+            const initialSnapshot = await signalingService.current.connect();
+            enqueueSignalingState(initialSnapshot);
+
+            let stream: MediaStream;
             try {
                 stream = await webrtcManager.current.startLocalStream();
-            } catch (mediaError: any) {
-                console.warn('Failed to get video+audio, trying audio only:', mediaError);
-                try {
-                    stream = await webrtcManager.current.startLocalStream({
-                        video: false,
-                        audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            autoGainControl: true,
-                        },
-                    });
-                    setCallState(prev => ({ ...prev, isVideoEnabled: false }));
-                    toast({
-                        title: 'تنبيه',
-                        description: 'لم يتم العثور على كاميرا، تم تفعيل الصوت فقط',
-                    });
-                } catch (audioError: any) {
-                    console.warn('Failed to get any media, proceeding without local stream:', audioError);
-                    setCallState(prev => ({ ...prev, isVideoEnabled: false, isMuted: true }));
-                    toast({
-                        title: 'تنبيه',
-                        description: 'لم يتم العثور على كاميرا أو ميكروفون، يمكنك مشاهدة الطرف الآخر فقط',
-                    });
-                }
-            }
-            if (stream) {
-                const videoTrack = stream.getVideoTracks()[0];
-                if (videoTrack) {
-                    videoTrack.enabled = false; // camera off by default
-                    setCallState(prev => ({ ...prev, isVideoEnabled: false }));
-                }
-                setLocalStream(stream);
+            } catch (mediaError) {
+                console.warn('Video + audio unavailable; trying audio only:', mediaError);
+                stream = await webrtcManager.current.startLocalStream({
+                    video: false,
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                    },
+                });
+                toast({ title: 'تنبيه', description: 'تعذر تشغيل الكاميرا، وتم تفعيل الصوت فقط' });
             }
 
-            // Initialize signaling
-            signalingService.current = new SignalingService(roomId, role, handleSignal);
-            await signalingService.current.connect();
-
-            if (role === 'callee') {
-                console.log('We are the callee. Sending ready signal to trigger caller offer...');
-                await signalingService.current.sendSignal({ type: 'ready' });
+            const audioTrack = stream.getAudioTracks()[0];
+            if (!audioTrack || audioTrack.readyState !== 'live') {
+                stream.getTracks().forEach(track => track.stop());
+                throw new DOMException('A working microphone is required', 'NotFoundError');
             }
+            audioTrack.addEventListener('ended', () => {
+                setCallState(prev => ({ ...prev, isMuted: true, error: 'توقف الميكروفون. أعد الانضمام للمكالمة' }));
+            });
 
-            // Initialize DB Realtime Listener for true cross-device status sync
-            dbChannel.current = supabase.channel(`session:${roomId}`);
-            dbChannel.current.on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'video_call_sessions',
-                    filter: `room_id=eq.${roomId}`
-                },
-                (payload) => {
-                    const newStatus = payload.new.status as VideoCallSession['status'];
-                    console.log('DB Session status updated via Realtime:', newStatus);
-                    setDbStatus(newStatus);
+            const videoTrack = stream.getVideoTracks()[0];
+            if (videoTrack) videoTrack.enabled = false;
+            setLocalStream(stream);
+            setCallState(prev => ({ ...prev, isVideoEnabled: false, isMuted: false }));
+            localMediaReadyRef.current = true;
 
-                    if ((newStatus === 'ended' || newStatus === 'failed') && !endedRef.current) {
-                        toast({
-                            title: newStatus === 'failed' ? 'تم رفض المكالمة' : 'انتهت المكالمة',
-                            description: newStatus === 'failed' ? 'تم رفض المكالمة من قبل الطرف الآخر' : 'تم إنهاء المكالمة من قبل الطرف الآخر',
-                        });
-                        endCall();
-                    }
-                }
-            ).subscribe();
-
-            setCallState(prev => ({ ...prev, isConnecting: false }));
-
+            const readySnapshot = await signalingService.current.markReady();
+            enqueueSignalingState(readySnapshot);
             toast({
                 title: 'جاهز للمكالمة',
-                description: 'تم تفعيل الميكروفون. الكاميرا مغلقة افتراضياً',
+                description: 'الميكروفون يعمل. في انتظار اكتمال اتصال الطرف الآخر',
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error initializing video call:', error);
+            initializedRef.current = false;
+            localMediaReadyRef.current = false;
+            webrtcManager.current?.cleanup();
+            await signalingService.current?.disconnect().catch(disconnectError => {
+                console.warn('Failed to clean up signaling after initialization error:', disconnectError);
+            });
+            webrtcManager.current = null;
+            signalingService.current = null;
+            setLocalStream(null);
+            setRemoteStream(null);
 
             let errorMessage = 'فشل في بدء المكالمة';
-            if (error.name === 'NotAllowedError') {
-                errorMessage = 'يرجى السماح بالوصول إلى الكاميرا والميكروفون';
-            } else if (error.name === 'NotFoundError') {
-                errorMessage = 'لم يتم العثور على كاميرا أو ميكروفون';
-            } else if (error.name === 'NotReadableError') {
-                errorMessage = 'الكاميرا أو الميكروفون قيد الاستخدام من قبل تطبيق آخر';
+            const errorName = error instanceof Error || error instanceof DOMException ? error.name : '';
+            if (errorName === 'NotAllowedError') {
+                errorMessage = 'يرجى السماح بالوصول إلى الميكروفون والكاميرا';
+            } else if (errorName === 'NotFoundError') {
+                errorMessage = 'لم يتم العثور على ميكروفون يعمل';
+            } else if (errorName === 'NotReadableError') {
+                errorMessage = 'الميكروفون أو الكاميرا مستخدم في تطبيق آخر';
             }
-
             setCallState(prev => ({ ...prev, isConnecting: false, error: errorMessage }));
-            toast({
-                title: 'خطأ',
-                description: errorMessage,
-                variant: 'destructive',
-            });
+            toast({ title: 'خطأ', description: errorMessage, variant: 'destructive' });
         }
-    }, [roomId, role, handleSignal, toast]);
+    }, [clearConnectionTimeout, enqueueSignalingState, role, roomId, toast]);
 
-    // Start call (create offer) - typically called by the initiator
-    const startCall = useCallback(async () => {
-        if (!webrtcManager.current || !signalingService.current) {
+    const retryCall = useCallback(async () => {
+        if (!initializedRef.current || !webrtcManager.current || !signalingService.current) {
             await initialize();
-        }
-
-        try {
-            if (!webrtcManager.current) {
-                throw new Error('WebRTC manager not initialized');
-            }
-
-            const offer = await webrtcManager.current.createOffer();
-            await signalingService.current!.sendSignal({ type: 'offer', data: offer });
-
-            toast({
-                title: 'جاري الاتصال',
-                description: 'في انتظار انضمام الطرف الآخر...',
-            });
-        } catch (error) {
-            console.error('Error starting call:', error);
-            toast({
-                title: 'خطأ',
-                description: 'فشل في بدء المكالمة',
-                variant: 'destructive',
-            });
-        }
-    }, [initialize, toast]);
-
-    // Toggle mute
-    const toggleMute = useCallback(() => {
-        if (webrtcManager.current) {
-            const isMuted = webrtcManager.current.toggleMute();
-            setCallState(prev => ({ ...prev, isMuted }));
-        }
-    }, []);
-
-    // Toggle video
-    const toggleVideo = useCallback(() => {
-        if (webrtcManager.current) {
-            const isVideoEnabled = webrtcManager.current.toggleVideo();
-            setCallState(prev => ({ ...prev, isVideoEnabled }));
-        }
-    }, []);
-
-    // Switch camera (front/back)
-    const switchCamera = useCallback(async () => {
-        if (webrtcManager.current) {
-            await webrtcManager.current.switchCamera();
-            const stream = (webrtcManager.current as any).localStream as MediaStream | null;
-            if (stream) setLocalStream(new MediaStream(stream.getTracks()));
-        }
-    }, []);
-
-    // End call
-    const endCall = useCallback(async () => {
-        if (endedRef.current) {
-            console.log('useVideoCall: endCall skipped (already ended)');
             return;
         }
+        setCallState(prev => ({ ...prev, isConnecting: true, isReconnecting: true, error: null }));
+        clearConnectionTimeout();
+        ensureConnectionTimeout();
+        if (role === 'caller') {
+            await webrtcManager.current?.restartIce();
+        } else {
+            const snapshot = await signalingService.current?.refresh();
+            if (snapshot) enqueueSignalingState(snapshot);
+        }
+    }, [clearConnectionTimeout, enqueueSignalingState, ensureConnectionTimeout, initialize, role]);
+
+    const toggleMute = useCallback(() => {
+        if (!webrtcManager.current) return;
+        const isMuted = webrtcManager.current.toggleMute();
+        setCallState(prev => ({ ...prev, isMuted }));
+    }, []);
+
+    const toggleVideo = useCallback(() => {
+        if (!webrtcManager.current) return;
+        const isVideoEnabled = webrtcManager.current.toggleVideo();
+        setCallState(prev => ({ ...prev, isVideoEnabled }));
+    }, []);
+
+    const switchCamera = useCallback(async () => {
+        if (!webrtcManager.current) return;
+        await webrtcManager.current.switchCamera();
+        const stream = webrtcManager.current.getCurrentLocalStream();
+        if (stream) setLocalStream(new MediaStream(stream.getTracks()));
+    }, []);
+
+    const endCall = useCallback(async () => {
+        if (endedRef.current) return;
         endedRef.current = true;
         initializedRef.current = false;
+        localMediaReadyRef.current = false;
+        clearConnectionTimeout();
 
         webrtcManager.current?.cleanup();
         await signalingService.current?.disconnect();
+        webrtcManager.current = null;
+        signalingService.current = null;
 
         setLocalStream(null);
         setRemoteStream(null);
-        setCallState({
-            isConnected: false,
-            isConnecting: false,
-            isReconnecting: false,
-            isMuted: false,
-            isVideoEnabled: false,
-            error: null,
-        });
+        setCallState(INITIAL_CALL_STATE);
+    }, [clearConnectionTimeout]);
+    endCallRef.current = endCall;
 
-        if (dbChannel.current) {
-            await supabase.removeChannel(dbChannel.current);
-            dbChannel.current = null;
-        }
-
-        webrtcManager.current = null;
-        signalingService.current = null;
-    }, []);
-
-    // Handle network changes: trigger ICE restart when connection returns
     useEffect(() => {
         const handleOnline = () => {
-            console.log('Network back online — attempting ICE restart');
-            webrtcManager.current?.restartIce().catch(err =>
-                console.error('ICE restart on online failed:', err)
-            );
+            if (role === 'caller') void retryCall();
         };
         const handleOffline = () => {
-            console.log('Network went offline — waiting for reconnection');
-            setCallState(prev => ({ ...prev, isReconnecting: true }));
+            setCallState(prev => ({ ...prev, isConnected: false, isReconnecting: true }));
         };
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
@@ -357,24 +352,19 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
         };
-    }, []);
+    }, [retryCall, role]);
 
-    // Auto-start if enabled
     useEffect(() => {
-        if (autoStart) {
-            initialize();
-        }
-
-        return () => {
-            endCall();
-        };
+        if (autoStart) void initialize();
+        return () => { void endCall(); };
     }, [autoStart]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return {
         localStream,
         remoteStream,
         callState,
-        startCall,
+        startCall: initialize,
+        retryCall,
         toggleMute,
         toggleVideo,
         switchCamera,

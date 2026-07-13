@@ -16,13 +16,31 @@ export interface VideoCallSession {
     notes: string | null;
     created_at: string;
     updated_at: string;
+    signaling_generation: number;
+    caller_ready_at: string | null;
+    callee_ready_at: string | null;
+    offer_sdp: RTCSessionDescriptionInit | null;
+    answer_sdp: RTCSessionDescriptionInit | null;
+    offer_generation: number | null;
+    answer_generation: number | null;
+    caller_connection_state: RTCPeerConnectionState | null;
+    callee_connection_state: RTCPeerConnectionState | null;
+    failure_code: string | null;
 }
 
-// WebRTC Signaling Types
-export interface WebRTCSignal {
-    type: 'offer' | 'answer' | 'ice-candidate' | 'ready';
-    data?: RTCSessionDescriptionInit | RTCIceCandidateInit | null;
-    from: 'caller' | 'callee';
+export interface CallSignalingState {
+    room_id: string;
+    status: VideoCallSession['status'];
+    signaling_generation: number;
+    caller_ready_at: string | null;
+    callee_ready_at: string | null;
+    offer_sdp: RTCSessionDescriptionInit | null;
+    answer_sdp: RTCSessionDescriptionInit | null;
+    offer_generation: number | null;
+    answer_generation: number | null;
+    caller_connection_state: RTCPeerConnectionState | null;
+    callee_connection_state: RTCPeerConnectionState | null;
+    failure_code: string | null;
 }
 
 // Call State Management
