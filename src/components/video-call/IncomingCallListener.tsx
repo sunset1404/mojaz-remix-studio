@@ -58,7 +58,7 @@ export const IncomingCallListener = () => {
                     },
                     (payload) => {
                         console.log('Call session UPDATE event:', payload);
-                        if (payload.new.status !== 'waiting') {
+                        if (payload.new.status !== 'waiting' || payload.new.reciter_joined_at) {
                             setIncomingCall(null);
                         }
                     }
@@ -75,12 +75,13 @@ export const IncomingCallListener = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) return;
 
-            const { data } = await (supabase as any)
+            const { data } = await supabase
                 .from('video_call_sessions')
                 .select('id, room_id, student_name, caller_role')
                 .eq('reciter_id', session.user.id)
                 .eq('caller_role', 'student')
                 .eq('status', 'waiting')
+                .is('reciter_joined_at', null)
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .maybeSingle();
@@ -108,10 +109,11 @@ export const IncomingCallListener = () => {
         if (!incomingCall) return;
 
         try {
-            // Update status to active
+            // Record acceptance. The database marks the call active only after
+            // both WebRTC peer connections report connected.
             await supabase
                 .from('video_call_sessions')
-                .update({ status: 'active', reciter_joined_at: new Date().toISOString() })
+                .update({ reciter_joined_at: new Date().toISOString() })
                 .eq('id', incomingCall.id);
 
             const roomId = incomingCall.room_id;

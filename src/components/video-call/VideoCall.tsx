@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, WifiOff, User, SwitchCamera } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, WifiOff, User, SwitchCamera, Volume2 } from 'lucide-react';
 import { useVideoCall } from '@/hooks/useVideoCall';
 import {
     AlertDialog,
@@ -32,17 +32,18 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         toggleMute,
         toggleVideo,
         switchCamera,
+        retryCall,
         endCall,
         dbStatus,
     } = useVideoCall({ roomId, role, autoStart: true });
 
-    const localVideoRef = useRef<HTMLVideoElement>(null);
-    const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const pipVideoRef = useRef<HTMLVideoElement>(null);
     const mainVideoRef = useRef<HTMLVideoElement>(null);
+    const remoteAudioRef = useRef<HTMLAudioElement>(null);
     const [showEndedScreen, setShowEndedScreen] = useState(false);
     const [swapped, setSwapped] = useState(false);
     const [showEndConfirm, setShowEndConfirm] = useState(false);
+    const [audioPlaybackBlocked, setAudioPlaybackBlocked] = useState(false);
 
     // When the other side ends the call via DB, show ended screen
     useEffect(() => {
@@ -82,6 +83,49 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         return () => remoteStream.removeEventListener('addtrack', onAddTrack);
     }, [localStream, remoteStream, swapped]);
 
+    // Remote sound has its own element and never follows the video swap/mute state.
+    // This prevents moving the student into PiP from muting the student's voice.
+    useEffect(() => {
+        const audio = remoteAudioRef.current;
+        if (!audio) return;
+        audio.srcObject = remoteStream;
+        setAudioPlaybackBlocked(false);
+        if (!remoteStream) return;
+
+        const play = () => {
+            const result = audio.play();
+            if (result && typeof result.catch === 'function') {
+                result
+                    .then(() => setAudioPlaybackBlocked(false))
+                    .catch((error) => {
+                        console.warn('Remote audio playback blocked:', error);
+                        setAudioPlaybackBlocked(true);
+                    });
+            }
+        };
+        const handleTrack = (event: MediaStreamTrackEvent) => {
+            if (event.track.kind === 'audio') {
+                event.track.addEventListener('unmute', play);
+                play();
+            }
+        };
+
+        remoteStream.addEventListener('addtrack', handleTrack);
+        remoteStream.getAudioTracks().forEach(track => track.addEventListener('unmute', play));
+        play();
+
+        return () => {
+            remoteStream.removeEventListener('addtrack', handleTrack);
+            remoteStream.getAudioTracks().forEach(track => track.removeEventListener('unmute', play));
+        };
+    }, [remoteStream]);
+
+    const enableRemoteAudio = () => {
+        remoteAudioRef.current?.play()
+            .then(() => setAudioPlaybackBlocked(false))
+            .catch(error => console.warn('Remote audio remains blocked:', error));
+    };
+
     // Ringback tone: play a phone-like ringing sound for the caller while waiting for the other party
     useEffect(() => {
         if (role !== 'caller') return;
@@ -92,7 +136,10 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         let stopped = false;
 
         try {
-            const AC = (window.AudioContext || (window as any).webkitAudioContext);
+            const audioWindow = window as Window & typeof globalThis & {
+                webkitAudioContext?: typeof AudioContext;
+            };
+            const AC = window.AudioContext || audioWindow.webkitAudioContext;
             if (!AC) return;
             ctx = new AC();
 
@@ -126,7 +173,11 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         return () => {
             stopped = true;
             if (intervalId) clearInterval(intervalId);
-            try { ctx?.close(); } catch {}
+            try {
+                ctx?.close();
+            } catch (error) {
+                console.warn('Could not close ringback audio context:', error);
+            }
         };
     }, [role, remoteStream, callState.isConnected, showEndedScreen]);
 
@@ -191,9 +242,16 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-destructive/15 border border-destructive/30 backdrop-blur-sm text-foreground px-4 py-2 rounded-full text-sm font-medium max-w-[90%] text-center safe-top"
+                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-destructive/15 border border-destructive/30 backdrop-blur-sm text-foreground px-4 py-2 rounded-2xl text-sm font-medium max-w-[90%] text-center safe-top"
                 >
-                    {callState.error}
+                    <div>{callState.error}</div>
+                    <button
+                        type="button"
+                        onClick={() => void retryCall()}
+                        className="mt-2 rounded-full bg-card/90 px-4 py-1.5 text-xs text-foreground"
+                    >
+                        إعادة المحاولة
+                    </button>
                 </motion.div>
             );
         }
@@ -203,7 +261,20 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
 
     return (
         <div className="absolute inset-0 z-50 bg-black">
+            <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
             {renderStatusBadge()}
+
+            {audioPlaybackBlocked && (
+                <button
+                    type="button"
+                    onClick={enableRemoteAudio}
+                    className="absolute top-20 left-1/2 -translate-x-1/2 z-40 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg flex items-center gap-2"
+                    dir="rtl"
+                >
+                    <Volume2 className="w-4 h-4" />
+                    اضغط لتفعيل الصوت
+                </button>
+            )}
 
             <div className="absolute inset-0 overflow-hidden">
                 {(swapped ? localStream : remoteStream) ? (
@@ -211,7 +282,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
                         ref={mainVideoRef}
                         autoPlay
                         playsInline
-                        muted={swapped}
+                        muted
                         className="w-full h-full object-cover"
                         style={swapped ? { transform: 'scaleX(-1)' } : undefined}
                     />

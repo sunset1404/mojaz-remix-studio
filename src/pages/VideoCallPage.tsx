@@ -177,7 +177,7 @@ const VideoCallPage = () => {
                         if (!session.reciter_joined_at) {
                             await (supabase as any)
                                 .from("video_call_sessions")
-                                .update({ reciter_joined_at: new Date().toISOString(), status: "active" })
+                                .update({ reciter_joined_at: new Date().toISOString() })
                                 .eq("room_id", roomId);
                         }
                     }

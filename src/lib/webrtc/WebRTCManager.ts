@@ -27,9 +27,9 @@ export class WebRTCManager {
 
     constructor(
         private onRemoteStream: (stream: MediaStream) => void,
-        private onIceCandidate: (candidate: RTCIceCandidate) => void,
         private onConnectionStateChange: (state: RTCPeerConnectionState) => void,
-        private onNeedsReOffer?: (offer: RTCSessionDescriptionInit) => void
+        private onNeedsReOffer?: (offer: RTCSessionDescriptionInit) => void,
+        private canInitiateRecovery = false,
     ) { }
 
     /**
@@ -40,13 +40,6 @@ export class WebRTCManager {
             iceServers: this.iceServers,
             iceCandidatePoolSize: 4,
         });
-
-        // ICE candidates
-        this.peerConnection.onicecandidate = (event) => {
-            if (event.candidate) {
-                this.onIceCandidate(event.candidate);
-            }
-        };
 
         // Remote tracks — accumulate audio & video into a single persistent MediaStream
         this.peerConnection.ontrack = (event) => {
@@ -71,18 +64,6 @@ export class WebRTCManager {
             this.onRemoteStream(this.remoteStream);
         };
 
-        // Renegotiate automatically when local tracks change (e.g. after fallback / replaceTrack)
-        this.peerConnection.onnegotiationneeded = async () => {
-            try {
-                if (!this.peerConnection || this.peerConnection.signalingState !== 'stable') return;
-                const offer = await this.peerConnection.createOffer();
-                await this.peerConnection.setLocalDescription(offer);
-                this.onNeedsReOffer?.(offer);
-            } catch (err) {
-                console.warn('onnegotiationneeded failed:', err);
-            }
-        };
-
         // Connection state management with auto-recovery
         this.peerConnection.onconnectionstatechange = () => {
             if (!this.peerConnection) return;
@@ -90,9 +71,9 @@ export class WebRTCManager {
             console.log('Connection state:', state);
             this.onConnectionStateChange(state);
 
-            if (state === 'disconnected') {
+            if (state === 'disconnected' && this.canInitiateRecovery) {
                 this.scheduleReconnect(3000);
-            } else if (state === 'failed') {
+            } else if (state === 'failed' && this.canInitiateRecovery) {
                 this.scheduleReconnect(0);
             } else if (state === 'connected') {
                 this.reconnectAttempts = 0;
@@ -210,9 +191,13 @@ export class WebRTCManager {
 
             const offer = await this.peerConnection.createOffer({ iceRestart: true });
             await this.peerConnection.setLocalDescription(offer);
+            await this.waitForIceGatheringComplete();
+
+            const completeOffer = this.peerConnection.localDescription?.toJSON();
+            if (!completeOffer) throw new Error('ICE restart offer was not created');
 
             if (this.onNeedsReOffer) {
-                this.onNeedsReOffer(offer);
+                this.onNeedsReOffer(completeOffer);
             }
 
             console.log('ICE restart offer created and sent');
@@ -264,7 +249,10 @@ export class WebRTCManager {
             offerToReceiveVideo: true,
         });
         await this.peerConnection.setLocalDescription(offer);
-        return offer;
+        await this.waitForIceGatheringComplete();
+        const completeOffer = this.peerConnection.localDescription?.toJSON();
+        if (!completeOffer) throw new Error('Offer was not created');
+        return completeOffer;
     }
 
     async createAnswer(): Promise<RTCSessionDescriptionInit> {
@@ -272,7 +260,38 @@ export class WebRTCManager {
 
         const answer = await this.peerConnection.createAnswer();
         await this.peerConnection.setLocalDescription(answer);
-        return answer;
+        await this.waitForIceGatheringComplete();
+        const completeAnswer = this.peerConnection.localDescription?.toJSON();
+        if (!completeAnswer) throw new Error('Answer was not created');
+        return completeAnswer;
+    }
+
+    /**
+     * Non-trickle ICE: persist SDP only after candidates have been embedded.
+     * This avoids losing candidates when either client subscribes late.
+     */
+    private async waitForIceGatheringComplete(timeoutMs = 10_000): Promise<void> {
+        const pc = this.peerConnection;
+        if (!pc || pc.iceGatheringState === 'complete') return;
+
+        await new Promise<void>((resolve) => {
+            let settled = false;
+            const finish = () => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timeout);
+                pc.removeEventListener('icegatheringstatechange', handleStateChange);
+                resolve();
+            };
+            const handleStateChange = () => {
+                if (pc.iceGatheringState === 'complete') finish();
+            };
+            const timeout = setTimeout(() => {
+                console.warn('ICE gathering timed out; using candidates gathered so far');
+                finish();
+            }, timeoutMs);
+            pc.addEventListener('icegatheringstatechange', handleStateChange);
+        });
     }
 
     async setRemoteDescription(description: RTCSessionDescriptionInit): Promise<void> {
