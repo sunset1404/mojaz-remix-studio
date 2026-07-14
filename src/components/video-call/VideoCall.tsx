@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, WifiOff, User, SwitchCamera, Volume2 } from 'lucide-react';
 import { useVideoCall } from '@/hooks/useVideoCall';
+import { useReciterAvailability } from '@/contexts/ReciterAvailabilityContext';
 import {
     AlertDialog,
     AlertDialogContent,
@@ -25,6 +26,7 @@ interface VideoCallProps {
 }
 
 export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false, confirmOnEnd = false, extraControls }: VideoCallProps) {
+    const { setCallBusy } = useReciterAvailability();
     const {
         localStream,
         remoteStream,
@@ -44,6 +46,11 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
     const [swapped, setSwapped] = useState(false);
     const [showEndConfirm, setShowEndConfirm] = useState(false);
     const [audioPlaybackBlocked, setAudioPlaybackBlocked] = useState(false);
+
+    useEffect(() => {
+        setCallBusy(true);
+        return () => setCallBusy(false);
+    }, [setCallBusy]);
 
     // When the other side ends the call via DB, show ended screen
     useEffect(() => {

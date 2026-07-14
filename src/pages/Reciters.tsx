@@ -79,22 +79,25 @@ const Reciters = () => {
         return;
       }
 
-      if (data?.error) throw new Error(data.error);
+      if (data?.error) throw new Error(data.message || data.error);
 
       toast({ title: "جاري الاتصال...", description: `بانتظار رد ${reciter.full_name}` });
       navigate(`/call/${data.room_id}?role=caller`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Call error:", err);
+      const errorMessage = err instanceof Error ? err.message : "حدث خطأ";
       // Try to parse JSON error from edge function
       try {
-        const parsed = JSON.parse(err?.message || "{}");
+        const parsed = JSON.parse(errorMessage);
         if (parsed?.error === "no_credits" || parsed?.error === "no_subscription") {
           setNoCreditsMessage(parsed.message || "نفذ رصيد ساعاتك");
           setShowNoCreditsDialog(true);
           return;
         }
-      } catch {}
-      toast({ title: "فشل بدء المكالمة", description: err.message || "حدث خطأ", variant: "destructive" });
+      } catch {
+        // The error is already represented by its plain message below.
+      }
+      toast({ title: "فشل بدء المكالمة", description: errorMessage, variant: "destructive" });
     } finally {
       setCallingId(null);
     }
@@ -146,7 +149,7 @@ const Reciters = () => {
 
       // Fetch certifications for all reciters
       const reciterUserIds = (data ?? []).map(r => r.user_id);
-      let certMap: Record<string, string[]> = {};
+      const certMap: Record<string, string[]> = {};
       
       if (reciterUserIds.length > 0) {
         const { data: certs } = await supabase

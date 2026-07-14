@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { canAcceptStudentCall } from "../_shared/reciter-availability.ts";
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -105,7 +106,6 @@ serve(async (req: Request) => {
             }
         }
 
-
         // Fetch student name
         const { data: studentProfile } = await supabaseClient
             .from('student_profiles')
@@ -114,6 +114,27 @@ serve(async (req: Request) => {
             .single();
 
         const student_name = studentProfile?.full_name || "طالب بدون اسم";
+
+        // Check immediately before insertion so a stale student list cannot
+        // create a new call after the reciter goes offline or becomes busy.
+        const { data: reciterProfile, error: reciterProfileError } = await adminClient
+            .from("reciter_profiles")
+            .select("status, is_available, last_seen_at")
+            .eq("user_id", reciter_id)
+            .maybeSingle();
+
+        const reciterIsAvailable = !reciterProfileError
+            && canAcceptStudentCall(reciterProfile);
+
+        if (!reciterIsAvailable) {
+            return new Response(JSON.stringify({
+                error: "reciter_unavailable",
+                message: "المقرئ غير متاح حالياً",
+            }), {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
 
         // Insert the video call session using service role (bypasses RLS)
         const { data: callSession, error: insertError } = await adminClient

@@ -82,7 +82,7 @@ import PublicVideoCall from "./pages/PublicVideoCall";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import { IncomingCallListener } from "./components/video-call/IncomingCallListener";
 import { StudentIncomingCallListener } from "./components/video-call/StudentIncomingCallListener";
-import { ReciterPresenceTracker } from "./components/ReciterPresenceTracker";
+import { ReciterAvailabilityProvider } from "./contexts/ReciterAvailabilityContext";
 import GrantApprovedNotice from "./components/GrantApprovedNotice";
 import GlobalBackButton from "./components/GlobalBackButton";
 
@@ -265,11 +265,12 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <ScrollToTop />
-          <CallListeners />
-          <ReciterPresenceTracker />
-          <GrantApprovedNotice />
-          <AppLayout />
+          <ReciterAvailabilityProvider>
+            <ScrollToTop />
+            <CallListeners />
+            <GrantApprovedNotice />
+            <AppLayout />
+          </ReciterAvailabilityProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
