@@ -1022,6 +1022,7 @@ export type Database = {
           gender: string
           id: string
           id_number: string | null
+          is_available: boolean
           last_seen_at: string | null
           nationality: string
           phone: string | null
@@ -1046,6 +1047,7 @@ export type Database = {
           gender: string
           id?: string
           id_number?: string | null
+          is_available?: boolean
           last_seen_at?: string | null
           nationality: string
           phone?: string | null
@@ -1070,6 +1072,7 @@ export type Database = {
           gender?: string
           id?: string
           id_number?: string | null
+          is_available?: boolean
           last_seen_at?: string | null
           nationality?: string
           phone?: string | null
