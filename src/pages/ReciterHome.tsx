@@ -4,7 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useOnlineReciters } from "@/hooks/useOnlineReciters";
+import { useReciterAvailability } from "@/contexts/ReciterAvailabilityContext";
+import { Switch } from "@/components/ui/switch";
 import PullToRefresh from "@/components/PullToRefresh";
 import reciter1 from "@/assets/reciters/reciter1.jpg";
 import reciter2 from "@/assets/reciters/reciter2.jpg";
@@ -20,6 +21,15 @@ const promoSlides = [
   { title: "شهادات الطلاب", desc: "امنح طلابك شهادات معتمدة", icon: Award, bg: "gradient-primary", iconBg: "bg-gold/20", iconColor: "text-gold" },
 ];
 
+interface AssignedStudent {
+  user_id: string;
+  full_name: string;
+  gender: string;
+  preferred_track: string;
+  preferred_riwaya: string | null;
+  avatarUrl?: string | null;
+}
+
 // quickStats values are loaded from the DB per logged-in reciter
 
 
@@ -28,13 +38,18 @@ const ReciterHome = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [userName, setUserName] = useState("");
-  const [assignedStudents, setAssignedStudents] = useState<any[]>([]);
+  const [assignedStudents, setAssignedStudents] = useState<AssignedStudent[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [queueCount, setQueueCount] = useState(0);
   const [stats, setStats] = useState({ students: 0, todaySessions: 0, hours: 0, certificates: 0 });
   const [hasExams, setHasExams] = useState(false);
-  const onlineReciters = useOnlineReciters();
-  const isOnline = user ? onlineReciters.includes(user.id) : false;
+  const {
+    manualEnabled,
+    isAvailable,
+    isBusy,
+    isSyncing,
+    setManualEnabled,
+  } = useReciterAvailability();
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -44,7 +59,7 @@ const ReciterHome = () => {
         const parts = data.full_name.trim().split(/\s+/);
         setUserName(parts.slice(0, 2).join(" "));
         // Check if reciter is on any exam committee
-        const { count } = await (supabase as any)
+        const { count } = await supabase
           .from("exams")
           .select("id", { count: "exact", head: true })
           .or(`committee_member_1.eq.${data.id},committee_member_2.eq.${data.id},committee_member_3.eq.${data.id}`);
@@ -120,7 +135,7 @@ const ReciterHome = () => {
         .eq("reciter_id", user.id)
         .not("student_id", "is", null)
         .then(({ data }) => {
-          const uniq = new Set((data || []).map((r: any) => r.student_id));
+          const uniq = new Set((data || []).map((row) => row.student_id));
           setStats(s => ({ ...s, students: uniq.size }));
         });
     }
@@ -132,9 +147,9 @@ const ReciterHome = () => {
       .eq("reciter_id", user.id)
       .not("ended_at", "is", null)
       .then(({ data }) => {
-        const totalMs = (data || []).reduce((acc: number, r: any) => {
-          if (!r.started_at || !r.ended_at) return acc;
-          const diff = new Date(r.ended_at).getTime() - new Date(r.started_at).getTime();
+        const totalMs = (data || []).reduce((acc, row) => {
+          if (!row.started_at || !row.ended_at) return acc;
+          const diff = new Date(row.ended_at).getTime() - new Date(row.started_at).getTime();
           return acc + Math.max(0, diff);
         }, 0);
         setStats(s => ({ ...s, hours: Math.floor(totalMs / 3600000) }));
@@ -150,7 +165,7 @@ const ReciterHome = () => {
 
   useEffect(() => {
     fetchData();
-  }, [user, reciterType]);
+  }, [fetchData]);
 
   useEffect(() => {
     const handler = () => { fetchData(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
@@ -186,14 +201,19 @@ const ReciterHome = () => {
                   <User className="w-5 h-5 text-muted-foreground" />
                 )}
               </div>
-              <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/50'}`} />
+              <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${isAvailable ? 'bg-emerald-500' : isBusy ? 'bg-gold' : 'bg-muted-foreground/50'}`} />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground font-cairo">
                 أهلاً {userName || "أيها المقرئ"} 👋
               </h1>
               <div className="flex items-center gap-1.5 mt-0.5">
-                {isOnline ? (
+                {isBusy ? (
+                  <>
+                    <WifiOff className="w-3 h-3 text-gold" />
+                    <span className="text-xs font-medium text-gold">مشغول بمكالمة</span>
+                  </>
+                ) : isAvailable ? (
                   <>
                     <Wifi className="w-3 h-3 text-emerald-500" />
                     <span className="text-xs font-medium text-emerald-500">متصل - ظاهر للطلاب</span>
@@ -201,9 +221,16 @@ const ReciterHome = () => {
                 ) : (
                   <>
                     <WifiOff className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs font-medium text-muted-foreground">غير متصل</span>
+                    <span className="text-xs font-medium text-muted-foreground">غير متاح للطلاب</span>
                   </>
                 )}
+                <Switch
+                  checked={manualEnabled}
+                  disabled={isSyncing}
+                  onCheckedChange={(checked) => { void setManualEnabled(checked); }}
+                  aria-label="تحديد التوفر للطلاب"
+                  className="mr-2 scale-75 data-[state=checked]:bg-emerald-500"
+                />
               </div>
             </div>
           </div>

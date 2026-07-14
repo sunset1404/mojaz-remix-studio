@@ -1,13 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { collectPresenceAvailability, ReciterPresenceMeta } from '@/lib/reciterAvailability';
 
 const PRESENCE_CHANNEL = 'reciter-presence';
-
-interface PresenceState {
-    user_id: string;
-    online_at: string;
-}
 
 /**
  * useOnlineReciters
@@ -17,6 +13,7 @@ interface PresenceState {
  */
 export function useOnlineReciters(): string[] {
     const [presenceReciterIds, setPresenceReciterIds] = useState<string[]>([]);
+    const [unavailablePresenceIds, setUnavailablePresenceIds] = useState<string[]>([]);
     const [recentReciterIds, setRecentReciterIds] = useState<string[]>([]);
 
     useEffect(() => {
@@ -28,17 +25,8 @@ export function useOnlineReciters(): string[] {
         }
 
         const syncPresence = () => {
-            const state = channel!.presenceState<PresenceState>();
-            const ids = new Set<string>();
-            for (const key in state) {
-                const presences = state[key];
-                presences.forEach((p) => {
-                    if (p.user_id) ids.add(p.user_id);
-                });
-            }
-
-            const idsArray = Array.from(ids);
-            idsArray.sort();
+            const state = channel!.presenceState<ReciterPresenceMeta>();
+            const { availableIds: idsArray, unavailableIds } = collectPresenceAvailability(state);
             console.log('[OnlineReciters] Online IDs:', idsArray);
 
             setPresenceReciterIds((prev) => {
@@ -47,6 +35,12 @@ export function useOnlineReciters(): string[] {
                     return prev;
                 }
                 return idsArray;
+            });
+            setUnavailablePresenceIds((prev) => {
+                if (prev.length === unavailableIds.length && prev.every((id, index) => id === unavailableIds[index])) {
+                    return prev;
+                }
+                return unavailableIds;
             });
         };
 
@@ -87,13 +81,14 @@ export function useOnlineReciters(): string[] {
             const threshold = new Date(Date.now() - 60000).toISOString();
             const { data, error } = await supabase
                 .from('reciter_profiles')
-                .select('user_id, last_seen_at' as any)
-                .gte('last_seen_at' as any, threshold)
+                .select('user_id, last_seen_at, is_available')
+                .eq('is_available', true)
+                .gte('last_seen_at', threshold)
                 .eq('status', 'approved');
 
             if (error || !isMounted) return;
 
-            const ids = (data || []).map((row: any) => row.user_id).filter(Boolean);
+            const ids = (data || []).map((row) => row.user_id).filter(Boolean);
             ids.sort();
             setRecentReciterIds((prev) => {
                 if (prev.length === ids.length && prev.every((id, index) => id === ids[index])) {
@@ -113,8 +108,10 @@ export function useOnlineReciters(): string[] {
     }, []);
 
     const combined = useMemo(() => {
-        return Array.from(new Set([...presenceReciterIds, ...recentReciterIds]));
-    }, [presenceReciterIds, recentReciterIds]);
+        const explicitlyUnavailable = new Set(unavailablePresenceIds);
+        return Array.from(new Set([...presenceReciterIds, ...recentReciterIds]))
+            .filter((id) => !explicitlyUnavailable.has(id));
+    }, [presenceReciterIds, recentReciterIds, unavailablePresenceIds]);
 
     return combined;
 }
