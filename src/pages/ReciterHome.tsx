@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Users, Bell, Award, Headphones, Phone, Video, User, Wifi, WifiOff } from "lucide-react";
+import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Users, Bell, Award, Headphones, Phone, Video, User, Wifi, WifiOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -208,7 +208,12 @@ const ReciterHome = () => {
                 أهلاً {userName || "أيها المقرئ"} 👋
               </h1>
               <div className="flex items-center gap-1.5 mt-0.5">
-                {isBusy ? (
+                {isSyncing && manualEnabled ? (
+                  <>
+                    <Loader2 className="w-3 h-3 text-muted-foreground animate-spin" />
+                    <span className="text-xs font-medium text-muted-foreground">جاري تفعيل التوفر...</span>
+                  </>
+                ) : isBusy ? (
                   <>
                     <WifiOff className="w-3 h-3 text-gold" />
                     <span className="text-xs font-medium text-gold">مشغول بمكالمة</span>

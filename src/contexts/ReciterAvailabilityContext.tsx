@@ -11,6 +11,8 @@ import {
 } from '@/lib/reciterAvailability';
 
 const PRESENCE_CHANNEL = 'reciter-presence';
+const PRESENCE_JOIN_TIMEOUT_MS = 15_000;
+const PRESENCE_JOIN_POLL_MS = 150;
 
 interface ReciterAvailabilityValue {
     manualEnabled: boolean;
@@ -52,6 +54,20 @@ export const ReciterAvailabilityProvider = ({ children }: { children: React.Reac
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const syncInFlightRef = useRef<Promise<boolean> | null>(null);
+    const connectPresenceRef = useRef<() => void>(() => undefined);
+
+    const waitForJoinedPresence = useCallback(async (): Promise<RealtimeChannel> => {
+        const deadline = Date.now() + PRESENCE_JOIN_TIMEOUT_MS;
+
+        while (!cleanedUpRef.current && Date.now() < deadline) {
+            const channel = channelRef.current;
+            if (channel?.state === 'joined') return channel;
+            if (!channel) connectPresenceRef.current();
+            await new Promise<void>((resolve) => setTimeout(resolve, PRESENCE_JOIN_POLL_MS));
+        }
+
+        throw new Error('Presence channel did not connect in time');
+    }, []);
 
     const syncAdvertisement = useCallback(async (forceAvailable?: boolean): Promise<boolean> => {
         if (!userId || role !== 'reciter' || cleanedUpRef.current) return false;
@@ -66,11 +82,11 @@ export const ReciterAvailabilityProvider = ({ children }: { children: React.Reac
 
         const operation = (async () => {
             const track = async (available: boolean) => {
-                const channel = channelRef.current;
-                if (!channel || channel.state !== 'joined') {
-                    if (available) throw new Error('Presence channel is not connected');
-                    return;
-                }
+                const currentChannel = channelRef.current;
+                const channel = available
+                    ? await waitForJoinedPresence()
+                    : currentChannel?.state === 'joined' ? currentChannel : null;
+                if (!channel) return;
                 const result = await channel.track({
                     user_id: userId,
                     online_at: now,
@@ -134,7 +150,7 @@ export const ReciterAvailabilityProvider = ({ children }: { children: React.Reac
         } finally {
             if (syncInFlightRef.current === operation) syncInFlightRef.current = null;
         }
-    }, [role, userId]);
+    }, [role, userId, waitForJoinedPresence]);
 
     const setManualEnabled = useCallback(async (enabled: boolean) => {
         if (!userId || role !== 'reciter' || isSyncing) return;
@@ -226,11 +242,12 @@ export const ReciterAvailabilityProvider = ({ children }: { children: React.Reac
                     channelRef.current = null;
                     void supabase.removeChannel(channel).catch(() => undefined);
                     if (reconnectRef.current) clearTimeout(reconnectRef.current);
-                    reconnectRef.current = setTimeout(connectPresence, 2_000);
+                    reconnectRef.current = setTimeout(() => connectPresenceRef.current(), 1_000);
                 }
             });
         };
 
+        connectPresenceRef.current = connectPresence;
         connectPresence();
         // A fresh launch is always offline, including before the channel joins.
         void syncAdvertisement(false).catch(error => {
@@ -284,6 +301,7 @@ export const ReciterAvailabilityProvider = ({ children }: { children: React.Reac
             if (reconnectRef.current) clearTimeout(reconnectRef.current);
             heartbeatRef.current = null;
             reconnectRef.current = null;
+            connectPresenceRef.current = () => undefined;
             document.removeEventListener('visibilitychange', handleVisibility);
             void appStateListener?.remove();
             void resumeListener?.remove();

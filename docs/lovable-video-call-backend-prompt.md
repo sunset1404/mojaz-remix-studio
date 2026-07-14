@@ -1,86 +1,64 @@
-# Lovable AI prompt — video-call signaling and reciter availability backend
+# Lovable AI prompt — manual reciter availability backend
 
-Copy and send the following prompt to Lovable AI while this branch is selected:
+Copy and send the following prompt to Lovable AI while the `main` branch is selected:
 
 ---
 
-Apply the Supabase backend changes required by the `fix/reliable-video-calls` branch.
+Apply only the Supabase backend changes for the manual reciter-availability feature in the current `main` branch, including commit `4ab4491`.
+
+The previous durable video-call signaling backend changes have already been applied successfully. Do not reapply or modify the durable signaling migrations, `public.video_call_sessions` schema, signaling trigger, or Realtime publication.
 
 Important constraints:
 
-- Continue using only the existing Lovable-linked Supabase project. Do not add another server, calling provider, TURN provider, or paid service.
-- Do not drop or recreate `public.video_call_sessions` and do not delete or rewrite existing call records.
-- Do not change unrelated tables, Edge Functions, authentication, subscriptions, or payment logic.
-- Do not weaken RLS or grant anonymous access to authenticated call sessions.
-- The frontend implementation and generated TypeScript types are already complete. Do not replace the durable SDP flow with ephemeral Broadcast messages.
+- Continue using only the existing Lovable-linked Supabase project. Do not add another server, calling provider, TURN provider, scheduled job, or paid service.
+- Do not drop or recreate any table and do not delete or rewrite existing records.
+- Do not change unrelated tables, Edge Functions, authentication, subscriptions, credits, or payment logic.
+- Do not weaken RLS or grant anonymous access.
+- The frontend implementation and generated TypeScript types are already complete.
 
-Use and apply the existing additive migration:
-
-`supabase/migrations/20260713090000_durable_video_call_signaling.sql`
-
-Also apply the new additive reciter-availability migration:
+Apply this existing additive migration exactly as committed:
 
 `supabase/migrations/20260714090000_manual_reciter_availability.sql`
 
 The migration must:
 
-1. Add these columns to `public.video_call_sessions` if they do not exist:
-   - `signaling_generation integer NOT NULL DEFAULT 1`
-   - `caller_ready_at timestamptz`
-   - `callee_ready_at timestamptz`
-   - `offer_sdp jsonb`
-   - `answer_sdp jsonb`
-   - `offer_generation integer`
-   - `answer_generation integer`
-   - `caller_connection_state text`
-   - `callee_connection_state text`
-   - `failure_code text`
-2. Add the generation and peer-connection-state check constraints contained in the migration.
-3. Create `public.sync_video_call_connected_status()` and its trigger so a session changes to `active` and receives `started_at` only when both caller and callee connection states equal `connected`.
-4. Preserve `ended` and `failed` sessions—the trigger must never reactivate them.
-5. Confirm `public.video_call_sessions` remains enabled for Supabase Realtime. It is already expected to be in the `supabase_realtime` publication; do not add it twice if it is already present.
-6. Preserve the existing participant RLS behavior: the session's student and reciter can select/update their own session, while unrelated authenticated users cannot access it.
+1. Add `public.reciter_profiles.is_available boolean NOT NULL DEFAULT false` if it does not exist.
+2. Keep all existing reciter profile rows and fields intact. Existing rows must receive `is_available = false`.
+3. Create the partial index `idx_reciter_profiles_available_recent` contained in the migration.
+4. Preserve the existing `reciter_profiles` RLS policies. Reciters must still be able to update their own profile, authenticated users may read approved reciter profiles under the existing policies, and no anonymous access may be added.
 
-The reciter-availability migration must:
+Deploy the updated existing Edge Function and its shared helper:
 
-1. Add `public.reciter_profiles.is_available boolean NOT NULL DEFAULT false` without recreating the table or modifying any existing profile fields.
-2. Add the partial recent-availability index contained in the migration.
-3. Preserve the existing `reciter_profiles` RLS policies. Do not broaden public or anonymous access.
+- `supabase/functions/request-call/index.ts`
+- `supabase/functions/_shared/reciter-availability.ts`
 
-Deploy the updated existing Edge Function:
-
-`supabase/functions/request-call/index.ts`
-
-Immediately before creating a student-initiated call session, it must require the target reciter to:
+Immediately before creating a student-initiated call session, `request-call` must require the target reciter to:
 
 - have an approved `reciter_profiles` record,
 - have `is_available = true`, and
-- have `last_seen_at` within the previous 60 seconds.
+- have `last_seen_at` no older than 60 seconds.
 
-If any check fails, it must return HTTP 200 with exactly this response shape and create no session:
+If any availability check fails, return HTTP 200 with exactly this response shape and create no call session:
 
 ```json
 { "error": "reciter_unavailable", "message": "المقرئ غير متاح حالياً" }
 ```
 
-Do not apply this restriction to reciter-initiated calls or existing/ongoing calls. Do not change the existing subscription and credit checks.
+Do not apply this availability restriction to reciter-initiated calls or existing/ongoing calls. Do not change the existing subscription and credit checks.
 
-After applying the migration, verify and report:
+After applying and deploying, verify and report:
 
-- All new columns exist with the expected types/defaults.
-- Existing rows are intact and have `signaling_generation = 1`.
-- Updating only one peer state to `connected` does not activate a waiting test session.
-- Updating both peer states to `connected` sets `status = 'active'` and populates `started_at`.
-- An `ended` or `failed` session remains unchanged when connection-state columns are updated.
-- Realtime UPDATE events for `video_call_sessions` are enabled.
-- No RLS policy was removed or broadened.
-- `reciter_profiles.is_available` exists, is non-null, defaults to `false`, and all existing rows remain intact.
-- A profile with `is_available = false` is rejected by `request-call` and creates no session.
-- A profile with a heartbeat older than 60 seconds is rejected and creates no session.
-- An approved profile with `is_available = true` and a fresh heartbeat can proceed through the existing call checks.
-- An unapproved or missing reciter profile is rejected and creates no session.
-- The updated `request-call` Edge Function is deployed successfully.
+- `reciter_profiles.is_available` exists, is boolean, non-null, and defaults to `false`.
+- Existing reciter profile rows remain intact and have `is_available = false` initially.
+- The existing `reciter_profiles` RLS policies were not removed or broadened.
+- An approved reciter can update their own `is_available` and `last_seen_at` fields through the authenticated client.
+- A profile with `is_available = false` is rejected by `request-call` and no session is created.
+- A profile with a heartbeat older than 60 seconds is rejected and no session is created.
+- An unapproved or missing reciter profile is rejected and no session is created.
+- An approved profile with `is_available = true` and a fresh heartbeat proceeds through the existing subscription and credit checks.
+- The updated `request-call` Edge Function, including the shared helper, is deployed successfully.
+- No durable signaling objects or unrelated backend resources were changed.
 
-Do not deploy the frontend before both migrations and the updated Edge Function succeed, because the branch reads and writes these columns during call setup.
+Do not deploy the frontend until this migration succeeds and the updated `request-call` Edge Function is deployed.
 
 ---
