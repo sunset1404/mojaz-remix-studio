@@ -55,50 +55,36 @@ serve(async (req: Request) => {
         // Use service role to check credits (bypasses RLS)
         const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-        // Check caller role — reciters have unlimited calls (no subscription/credits required)
-        const { data: rolesData } = await adminClient
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", student_id);
-        const callerRoles = (rolesData || []).map((r: any) => r.role);
+        // Run all independent lookups in parallel to minimize latency.
+        const [rolesRes, studentProfileRes, reciterProfileRes, activeSubRes, creditsRes] = await Promise.all([
+            adminClient.from("user_roles").select("role").eq("user_id", student_id),
+            supabaseClient.from('student_profiles').select('full_name').eq('user_id', student_id).single(),
+            adminClient.from("reciter_profiles").select("status, is_available, last_seen_at").eq("user_id", reciter_id).maybeSingle(),
+            adminClient.from("student_subscriptions").select("id, end_date").eq("student_id", student_id).eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+            adminClient.from("student_hour_credits").select("remaining_minutes").eq("user_id", student_id).maybeSingle(),
+        ]);
+
+        const callerRoles = (rolesRes.data || []).map((r: any) => r.role);
         const isReciterCaller = callerRoles.includes("reciter");
         const isAdminCaller = callerRoles.includes("admin");
         const skipSubscriptionChecks = isReciterCaller || isAdminCaller;
 
         if (!skipSubscriptionChecks) {
-            // Check active subscription
-            const { data: activeSub } = await adminClient
-                .from("student_subscriptions")
-                .select("id, end_date")
-                .eq("student_id", student_id)
-                .eq("status", "active")
-                .order("created_at", { ascending: false })
-                .limit(1)
-                .maybeSingle();
-
-            if (!activeSub) {
-                return new Response(JSON.stringify({ 
+            if (!activeSubRes.data) {
+                return new Response(JSON.stringify({
                     error: "no_subscription",
-                    message: "ليس لديك اشتراك نشط. يرجى الاشتراك أولاً." 
+                    message: "ليس لديك اشتراك نشط. يرجى الاشتراك أولاً."
                 }), {
                     status: 200,
                     headers: { ...corsHeaders, "Content-Type": "application/json" },
                 });
             }
 
-            // Check remaining minutes
-            const { data: credits } = await adminClient
-                .from("student_hour_credits")
-                .select("remaining_minutes")
-                .eq("user_id", student_id)
-                .maybeSingle();
-
-            const remainingMinutes = credits?.remaining_minutes ?? 0;
-
+            const remainingMinutes = creditsRes.data?.remaining_minutes ?? 0;
             if (remainingMinutes <= 0) {
-                return new Response(JSON.stringify({ 
+                return new Response(JSON.stringify({
                     error: "no_credits",
-                    message: "نفذ رصيد ساعاتك. يرجى تجديد الاشتراك أو شراء ساعات إضافية." 
+                    message: "نفذ رصيد ساعاتك. يرجى تجديد الاشتراك أو شراء ساعات إضافية."
                 }), {
                     status: 200,
                     headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -106,25 +92,10 @@ serve(async (req: Request) => {
             }
         }
 
-        // Fetch student name
-        const { data: studentProfile } = await supabaseClient
-            .from('student_profiles')
-            .select('full_name')
-            .eq('user_id', student_id)
-            .single();
+        const student_name = studentProfileRes.data?.full_name || "طالب بدون اسم";
 
-        const student_name = studentProfile?.full_name || "طالب بدون اسم";
-
-        // Check immediately before insertion so a stale student list cannot
-        // create a new call after the reciter goes offline or becomes busy.
-        const { data: reciterProfile, error: reciterProfileError } = await adminClient
-            .from("reciter_profiles")
-            .select("status, is_available, last_seen_at")
-            .eq("user_id", reciter_id)
-            .maybeSingle();
-
-        const reciterIsAvailable = !reciterProfileError
-            && canAcceptStudentCall(reciterProfile);
+        const reciterIsAvailable = !reciterProfileRes.error
+            && canAcceptStudentCall(reciterProfileRes.data);
 
         if (!reciterIsAvailable) {
             return new Response(JSON.stringify({
