@@ -99,7 +99,7 @@ export function useOnlineReciters(): string[] {
         };
 
         fetchRecent();
-        const interval = setInterval(fetchRecent, 30000);
+        const interval = setInterval(fetchRecent, 10000);
 
         return () => {
             isMounted = false;
@@ -108,9 +108,10 @@ export function useOnlineReciters(): string[] {
     }, []);
 
     const combined = useMemo(() => {
+        const recentlyAvailable = new Set(recentReciterIds);
         const explicitlyUnavailable = new Set(unavailablePresenceIds);
-        return Array.from(new Set([...presenceReciterIds, ...recentReciterIds]))
-            .filter((id) => !explicitlyUnavailable.has(id));
+        const livePresenceIds = presenceReciterIds.filter((id) => !explicitlyUnavailable.has(id));
+        return Array.from(new Set([...recentlyAvailable, ...livePresenceIds]));
     }, [presenceReciterIds, recentReciterIds, unavailablePresenceIds]);
 
     return combined;
