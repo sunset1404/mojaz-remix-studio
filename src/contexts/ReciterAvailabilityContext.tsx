@@ -128,17 +128,14 @@ export const ReciterAvailabilityProvider = ({ children }: { children: React.Reac
                 return true;
             }
 
-            // Do not expose the database fallback unless the live channel can
-            // first advertise the same state. Roll Presence back if DB sync fails.
-            await track(true);
-
-            try {
-                await updateProfile(true);
-            } catch (error) {
-                await track(false).catch(() => undefined);
-                setIsAvailable(false);
-                throw error;
-            }
+            // The database heartbeat is the source of truth for students and
+            // request-call. Presence is only a live acceleration layer, so a
+            // transient Realtime join/track failure must not keep reciters
+            // permanently hidden as "offline".
+            await updateProfile(true);
+            await track(true).catch((error) => {
+                console.warn('[Availability] Presence advertisement failed after DB heartbeat:', error);
+            });
 
             setIsAvailable(true);
             return true;
