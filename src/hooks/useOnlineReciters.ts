@@ -99,11 +99,22 @@ export function useOnlineReciters(): string[] {
         };
 
         fetchRecent();
-        const interval = setInterval(fetchRecent, 10000);
+        const interval = setInterval(fetchRecent, 5000);
+
+        // Live updates: refetch immediately when any reciter profile changes.
+        const changesChannel = supabase
+            .channel('reciter-profiles-availability')
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'reciter_profiles' },
+                () => { void fetchRecent(); },
+            )
+            .subscribe();
 
         return () => {
             isMounted = false;
             clearInterval(interval);
+            supabase.removeChannel(changesChannel);
         };
     }, []);
 
