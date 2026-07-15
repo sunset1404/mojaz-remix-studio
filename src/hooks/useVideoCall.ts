@@ -3,6 +3,7 @@ import { WebRTCManager } from '@/lib/webrtc/WebRTCManager';
 import { SignalingService } from '@/lib/webrtc/SignalingService';
 import { CallSignalingState, CallState, VideoCallSession } from '@/types/video-call';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseVideoCallOptions {
     roomId: string;
@@ -17,6 +18,29 @@ const INITIAL_CALL_STATE: CallState = {
     isMuted: false,
     isVideoEnabled: false,
     error: null,
+};
+
+const loadIceServers = async (): Promise<RTCConfiguration['iceServers'] | undefined> => {
+    try {
+        const { data, error } = await supabase.functions.invoke('webrtc-ice-servers', { body: {} });
+        if (error) {
+            console.warn('Could not load WebRTC ICE servers:', error);
+            return undefined;
+        }
+        const iceServers = (data as { iceServers?: RTCIceServer[] } | null)?.iceServers;
+        if (!Array.isArray(iceServers) || iceServers.length === 0) return undefined;
+        const hasTurn = iceServers.some((server) => {
+            const urls = Array.isArray(server.urls) ? server.urls : [server.urls];
+            return urls.some((url) => typeof url === 'string' && url.startsWith('turn'));
+        });
+        if (!hasTurn) {
+            console.warn('TURN is not configured; calls may fail on restrictive networks.');
+        }
+        return iceServers;
+    } catch (error) {
+        console.warn('Failed to load WebRTC ICE server config:', error);
+        return undefined;
+    }
 };
 
 /**
@@ -156,6 +180,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
         try {
             setCallState(prev => ({ ...prev, isConnecting: true, error: null }));
+            const iceServers = await loadIceServers();
 
             webrtcManager.current = new WebRTCManager(
                 (stream) => {
@@ -213,6 +238,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                     }
                 },
                 role === 'caller',
+                iceServers,
             );
             await webrtcManager.current.initialize();
 
@@ -243,8 +269,15 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                 stream.getTracks().forEach(track => track.stop());
                 throw new DOMException('A working microphone is required', 'NotFoundError');
             }
+            audioTrack.enabled = true;
             audioTrack.addEventListener('ended', () => {
                 setCallState(prev => ({ ...prev, isMuted: true, error: 'توقف الميكروفون. أعد الانضمام للمكالمة' }));
+            });
+            audioTrack.addEventListener('mute', () => {
+                console.warn('Local microphone track muted by device/browser');
+            });
+            audioTrack.addEventListener('unmute', () => {
+                console.log('Local microphone track unmuted');
             });
 
             const videoTrack = stream.getVideoTracks()[0];

@@ -18,19 +18,24 @@ export class WebRTCManager {
     private static readonly MAX_RECONNECT_ATTEMPTS = 3;
     private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-    private readonly iceServers: RTCIceServer[] = [
+    private static readonly DEFAULT_ICE_SERVERS: RTCIceServer[] = [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
         { urls: 'stun:stun2.l.google.com:19302' },
         { urls: 'stun:stun3.l.google.com:19302' },
     ];
 
+    private readonly iceServers: RTCIceServer[];
+
     constructor(
         private onRemoteStream: (stream: MediaStream) => void,
         private onConnectionStateChange: (state: RTCPeerConnectionState) => void,
         private onNeedsReOffer?: (offer: RTCSessionDescriptionInit) => void,
         private canInitiateRecovery = false,
-    ) { }
+        iceServers?: RTCIceServer[],
+    ) {
+        this.iceServers = iceServers?.length ? iceServers : WebRTCManager.DEFAULT_ICE_SERVERS;
+    }
 
     /**
      * Initialize the peer connection with event handlers
@@ -39,6 +44,13 @@ export class WebRTCManager {
         this.peerConnection = new RTCPeerConnection({
             iceServers: this.iceServers,
             iceCandidatePoolSize: 4,
+        });
+        console.log('WebRTC ICE servers configured:', {
+            total: this.iceServers.length,
+            hasTurn: this.iceServers.some((server) => {
+                const urls = Array.isArray(server.urls) ? server.urls : [server.urls];
+                return urls.some((url) => typeof url === 'string' && url.startsWith('turn'));
+            }),
         });
 
         // Remote tracks — accumulate audio & video into a single persistent MediaStream
@@ -50,6 +62,17 @@ export class WebRTCManager {
             const incoming = event.track;
             if (incoming && !this.remoteStream.getTracks().some((t) => t.id === incoming.id)) {
                 this.remoteStream.addTrack(incoming);
+            }
+            if (incoming) {
+                console.log('Remote track received:', {
+                    kind: incoming.kind,
+                    readyState: incoming.readyState,
+                    muted: incoming.muted,
+                    enabled: incoming.enabled,
+                });
+                incoming.onunmute = () => console.log(`Remote ${incoming.kind} track unmuted`);
+                incoming.onmute = () => console.log(`Remote ${incoming.kind} track muted`);
+                incoming.onended = () => console.warn(`Remote ${incoming.kind} track ended`);
             }
             // Also fold in any tracks Safari attached to event.streams[0] (some browsers do this instead)
             const eventStream = event.streams && event.streams[0];
@@ -229,6 +252,17 @@ export class WebRTCManager {
             );
 
             this.localStream.getTracks().forEach((track) => {
+                if (track.kind === 'audio') {
+                    track.enabled = true;
+                    console.log('Local audio track ready:', {
+                        readyState: track.readyState,
+                        muted: track.muted,
+                        enabled: track.enabled,
+                    });
+                    track.onmute = () => console.warn('Local audio track muted by browser/device');
+                    track.onunmute = () => console.log('Local audio track unmuted');
+                    track.onended = () => console.warn('Local audio track ended');
+                }
                 if (this.peerConnection && this.localStream) {
                     this.peerConnection.addTrack(track, this.localStream);
                 }
