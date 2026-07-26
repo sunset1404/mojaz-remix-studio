@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WebRTCManager } from '@/lib/webrtc/WebRTCManager';
+import { CallDiagnostics } from '@/lib/webrtc/CallDiagnostics';
 import { SignalingService } from '@/lib/webrtc/SignalingService';
+
 import { CallSignalingState, CallState, VideoCallSession } from '@/types/video-call';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,6 +34,8 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
     const webrtcManager = useRef<WebRTCManager | null>(null);
     const signalingService = useRef<SignalingService | null>(null);
+    const diagnostics = useRef<CallDiagnostics | null>(null);
+
     const endedRef = useRef(false);
     const initializedRef = useRef(false);
     const localMediaReadyRef = useRef(false);
@@ -195,9 +199,16 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                             isConnecting: state === 'connecting' || state === 'new',
                         }));
                     }
+                    if (state === 'failed' || state === 'disconnected') {
+                        void diagnostics.current?.flush(state);
+                    }
+                    const failureCode = state === 'failed'
+                        ? (diagnostics.current?.getLastSnapshot()?.verdict ?? 'ice_failed')
+                        : undefined;
                     void signalingService.current
-                        ?.updateConnectionState(state, state === 'failed' ? 'ice_failed' : undefined)
+                        ?.updateConnectionState(state, failureCode)
                         .catch(error => console.warn('Failed to persist connection state:', error));
+
                 },
                 async (offer) => {
                     if (role !== 'caller') return;
@@ -217,6 +228,16 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                 
             );
             await webrtcManager.current.initialize();
+
+            // Capture the real reason a call degrades (one-way audio, blocked RTP,
+            // ICE failure) instead of guessing that a TURN server is required.
+            diagnostics.current = new CallDiagnostics(
+                () => webrtcManager.current?.getPeerConnection() ?? null,
+                roomId,
+                role,
+            );
+            diagnostics.current.start();
+
 
             // Subscribe before media permission prompts. Durable state plus a post-subscribe
             // read means accepting quickly can no longer lose the handshake.
@@ -337,10 +358,15 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         localMediaReadyRef.current = false;
         clearConnectionTimeout();
 
+        await diagnostics.current?.flush('call_ended').catch(() => {});
+        diagnostics.current?.stop();
+        diagnostics.current = null;
+
         webrtcManager.current?.cleanup();
         await signalingService.current?.disconnect();
         webrtcManager.current = null;
         signalingService.current = null;
+
 
         setLocalStream(null);
         setRemoteStream(null);

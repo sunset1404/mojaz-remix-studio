@@ -423,7 +423,12 @@ export class WebRTCManager {
         return this.remoteStream;
     }
 
+    getPeerConnection(): RTCPeerConnection | null {
+        return this.peerConnection;
+    }
+
     getConnectionState(): RTCPeerConnectionState | null {
         return this.peerConnection?.connectionState || null;
     }
+
 }

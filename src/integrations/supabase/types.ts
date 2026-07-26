@@ -98,6 +98,78 @@ export type Database = {
         }
         Relationships: []
       }
+      call_diagnostics: {
+        Row: {
+          audio_level: number | null
+          candidate_protocol: string | null
+          connection_state: string | null
+          created_at: string
+          details: Json | null
+          gathered_candidate_types: string[] | null
+          ice_connection_state: string | null
+          id: string
+          inbound_audio_bytes: number | null
+          inbound_audio_packets: number | null
+          local_candidate_type: string | null
+          network_type: string | null
+          outbound_audio_bytes: number | null
+          outbound_audio_packets: number | null
+          remote_candidate_type: string | null
+          role: string
+          room_id: string
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+          verdict: string
+        }
+        Insert: {
+          audio_level?: number | null
+          candidate_protocol?: string | null
+          connection_state?: string | null
+          created_at?: string
+          details?: Json | null
+          gathered_candidate_types?: string[] | null
+          ice_connection_state?: string | null
+          id?: string
+          inbound_audio_bytes?: number | null
+          inbound_audio_packets?: number | null
+          local_candidate_type?: string | null
+          network_type?: string | null
+          outbound_audio_bytes?: number | null
+          outbound_audio_packets?: number | null
+          remote_candidate_type?: string | null
+          role: string
+          room_id: string
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+          verdict: string
+        }
+        Update: {
+          audio_level?: number | null
+          candidate_protocol?: string | null
+          connection_state?: string | null
+          created_at?: string
+          details?: Json | null
+          gathered_candidate_types?: string[] | null
+          ice_connection_state?: string | null
+          id?: string
+          inbound_audio_bytes?: number | null
+          inbound_audio_packets?: number | null
+          local_candidate_type?: string | null
+          network_type?: string | null
+          outbound_audio_bytes?: number | null
+          outbound_audio_packets?: number | null
+          remote_candidate_type?: string | null
+          role?: string
+          room_id?: string
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+          verdict?: string
+        }
+        Relationships: []
+      }
       certificate_templates: {
         Row: {
           background_color: string | null
