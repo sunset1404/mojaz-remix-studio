@@ -3,7 +3,6 @@ import { WebRTCManager } from '@/lib/webrtc/WebRTCManager';
 import { SignalingService } from '@/lib/webrtc/SignalingService';
 import { CallSignalingState, CallState, VideoCallSession } from '@/types/video-call';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface UseVideoCallOptions {
     roomId: string;
