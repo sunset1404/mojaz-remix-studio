@@ -69,6 +69,7 @@ import AdminGifts from "./pages/AdminGifts";
 import AdminPlans from "./pages/AdminPlans";
 import AdminUsers from "./pages/AdminUsers";
 import AdminGrantRequests from "./pages/AdminGrantRequests";
+import AdminCallDiagnostics from "./pages/AdminCallDiagnostics";
 import MyGifts from "./pages/MyGifts";
 import ReciterStudentPerformance from "./pages/ReciterStudentPerformance";
 import ReciterSessionLog from "./pages/ReciterSessionLog";
@@ -166,6 +167,7 @@ const AppRoutes = () => (
     <Route path="/admin/plans" element={<AdminRoute><AdminPlans /></AdminRoute>} />
     <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
     <Route path="/admin/grant-requests" element={<AdminRoute><AdminGrantRequests /></AdminRoute>} />
+    <Route path="/admin/call-diagnostics" element={<AdminRoute><AdminCallDiagnostics /></AdminRoute>} />
 
     {/* Student-only routes */}
     <Route path="/reciters" element={<ProtectedRoute allowedRole="student"><><Reciters /><BottomNav /></></ProtectedRoute>} />
