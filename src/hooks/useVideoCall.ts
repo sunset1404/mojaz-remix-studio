@@ -199,9 +199,16 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                             isConnecting: state === 'connecting' || state === 'new',
                         }));
                     }
+                    if (state === 'failed' || state === 'disconnected') {
+                        void diagnostics.current?.flush(state);
+                    }
+                    const failureCode = state === 'failed'
+                        ? (diagnostics.current?.getLastSnapshot()?.verdict ?? 'ice_failed')
+                        : undefined;
                     void signalingService.current
-                        ?.updateConnectionState(state, state === 'failed' ? 'ice_failed' : undefined)
+                        ?.updateConnectionState(state, failureCode)
                         .catch(error => console.warn('Failed to persist connection state:', error));
+
                 },
                 async (offer) => {
                     if (role !== 'caller') return;
