@@ -34,6 +34,8 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
     const webrtcManager = useRef<WebRTCManager | null>(null);
     const signalingService = useRef<SignalingService | null>(null);
+    const diagnostics = useRef<CallDiagnostics | null>(null);
+
     const endedRef = useRef(false);
     const initializedRef = useRef(false);
     const localMediaReadyRef = useRef(false);
