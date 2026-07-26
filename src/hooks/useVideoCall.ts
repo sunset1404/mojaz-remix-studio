@@ -222,6 +222,16 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             );
             await webrtcManager.current.initialize();
 
+            // Capture the real reason a call degrades (one-way audio, blocked RTP,
+            // ICE failure) instead of guessing that a TURN server is required.
+            diagnostics.current = new CallDiagnostics(
+                () => webrtcManager.current?.getPeerConnection() ?? null,
+                roomId,
+                role,
+            );
+            diagnostics.current.start();
+
+
             // Subscribe before media permission prompts. Durable state plus a post-subscribe
             // read means accepting quickly can no longer lose the handshake.
             signalingService.current = new SignalingService(roomId, role, enqueueSignalingState);
