@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WebRTCManager } from '@/lib/webrtc/WebRTCManager';
+import { CallDiagnostics } from '@/lib/webrtc/CallDiagnostics';
 import { SignalingService } from '@/lib/webrtc/SignalingService';
+
 import { CallSignalingState, CallState, VideoCallSession } from '@/types/video-call';
 import { useToast } from '@/hooks/use-toast';
 
