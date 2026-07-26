@@ -358,10 +358,15 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         localMediaReadyRef.current = false;
         clearConnectionTimeout();
 
+        await diagnostics.current?.flush('call_ended').catch(() => {});
+        diagnostics.current?.stop();
+        diagnostics.current = null;
+
         webrtcManager.current?.cleanup();
         await signalingService.current?.disconnect();
         webrtcManager.current = null;
         signalingService.current = null;
+
 
         setLocalStream(null);
         setRemoteStream(null);
