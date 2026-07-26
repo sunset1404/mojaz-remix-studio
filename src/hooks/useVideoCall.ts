@@ -215,7 +215,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                     }
                 },
                 role === 'caller',
-                iceServers,
+                
             );
             await webrtcManager.current.initialize();
 
