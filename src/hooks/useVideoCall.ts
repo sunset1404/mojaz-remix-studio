@@ -158,7 +158,6 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
         try {
             setCallState(prev => ({ ...prev, isConnecting: true, error: null }));
-            const iceServers = await loadIceServers();
 
             webrtcManager.current = new WebRTCManager(
                 (stream) => {
