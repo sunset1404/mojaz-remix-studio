@@ -31,6 +31,7 @@ const mainMenuItems = [
   { title: "الإنجازات", icon: Trophy, id: "achievements", path: "/admin/achievements" },
   { title: "إقراء ضيوف الرحمن", icon: Sparkles, id: "ghuyuf-rahman", path: "/admin/ghuyuf-rahman" },
   { title: "الاختبارات", icon: ClipboardList, id: "exams", path: "/admin/exams" },
+  { title: "تشخيصات المكالمات", icon: Activity, id: "call-diagnostics", path: "/admin/call-diagnostics" },
 ];
 
 const AdminSidebar = () => {
