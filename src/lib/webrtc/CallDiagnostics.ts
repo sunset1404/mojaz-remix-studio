@@ -293,7 +293,7 @@ export class CallDiagnostics {
 
         try {
             const { data } = await supabase.auth.getUser();
-            await supabase.from('call_diagnostics').insert({
+            const { error: insertError } = await supabase.from('call_diagnostics').insert({
                 room_id: this.roomId,
                 user_id: data.user?.id ?? null,
                 role: this.role,
