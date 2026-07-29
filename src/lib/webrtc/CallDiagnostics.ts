@@ -314,6 +314,11 @@ export class CallDiagnostics {
                 user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
                 details: snapshot.details as never,
             });
+            if (insertError) {
+                // Do not swallow: a rejected insert is why diagnostics went missing before.
+                this.loggedVerdicts.delete(snapshot.verdict);
+                console.error('[CallDiagnostics] insert rejected:', insertError.message);
+            }
         } catch (error) {
             console.warn('[CallDiagnostics] persist failed:', error);
         }
