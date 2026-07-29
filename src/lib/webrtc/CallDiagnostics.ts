@@ -276,7 +276,9 @@ export class CallDiagnostics {
 
             console.log('[CallDiagnostics]', verdict, snapshot);
 
-            if (severity !== 'info') {
+            // Always persist the first sample so every call leaves a trace,
+            // then only distinct non-healthy verdicts afterwards.
+            if (severity !== 'info' || this.sampleCount === 1) {
                 await this.persist(snapshot, false);
             }
         } catch (error) {
@@ -291,7 +293,7 @@ export class CallDiagnostics {
 
         try {
             const { data } = await supabase.auth.getUser();
-            await supabase.from('call_diagnostics').insert({
+            const { error: insertError } = await supabase.from('call_diagnostics').insert({
                 room_id: this.roomId,
                 user_id: data.user?.id ?? null,
                 role: this.role,
@@ -312,6 +314,11 @@ export class CallDiagnostics {
                 user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
                 details: snapshot.details as never,
             });
+            if (insertError) {
+                // Do not swallow: a rejected insert is why diagnostics went missing before.
+                this.loggedVerdicts.delete(snapshot.verdict);
+                console.error('[CallDiagnostics] insert rejected:', insertError.message);
+            }
         } catch (error) {
             console.warn('[CallDiagnostics] persist failed:', error);
         }
