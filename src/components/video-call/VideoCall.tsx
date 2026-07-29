@@ -34,6 +34,8 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         toggleMute,
         toggleVideo,
         switchCamera,
+        reportRemoteAudioPlayback,
+        reportVideoPlayback,
         retryCall,
         endCall,
         dbStatus,
@@ -70,9 +72,27 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
                 el.srcObject = s || null;
             }
             if (s) {
+                const source = s === remoteStream ? 'remote' : 'local';
                 const p = el.play();
                 if (p && typeof (p as Promise<void>).catch === 'function') {
-                    (p as Promise<void>).catch((err) => console.warn('video.play() blocked:', err));
+                    (p as Promise<void>)
+                        .then(() => reportVideoPlayback(source, 'started', {
+                            paused: el.paused,
+                            muted: el.muted,
+                            readyState: el.readyState,
+                            videoTracks: s.getVideoTracks().length,
+                        }))
+                        .catch((error) => {
+                            console.warn('video.play() blocked:', error);
+                            reportVideoPlayback(source, 'failed', {
+                                errorName: error instanceof Error ? error.name : 'UnknownError',
+                                errorMessage: error instanceof Error ? error.message : String(error),
+                                paused: el.paused,
+                                muted: el.muted,
+                                readyState: el.readyState,
+                                videoTracks: s.getVideoTracks().length,
+                            });
+                        });
                 }
             }
         };
@@ -88,7 +108,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         };
         remoteStream.addEventListener('addtrack', onAddTrack);
         return () => remoteStream.removeEventListener('addtrack', onAddTrack);
-    }, [localStream, remoteStream, swapped]);
+    }, [localStream, remoteStream, swapped, reportVideoPlayback]);
 
     // Remote sound has its own element and never follows the video swap/mute state.
     // This prevents moving the student into PiP from muting the student's voice.
@@ -100,13 +120,33 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         if (!remoteStream) return;
 
         const play = () => {
+            if (remoteStream.getAudioTracks().length === 0) return;
             const result = audio.play();
             if (result && typeof result.catch === 'function') {
                 result
-                    .then(() => setAudioPlaybackBlocked(false))
+                    .then(() => {
+                        setAudioPlaybackBlocked(false);
+                        reportRemoteAudioPlayback('started', {
+                            paused: audio.paused,
+                            muted: audio.muted,
+                            volume: audio.volume,
+                            readyState: audio.readyState,
+                            remoteAudioTracks: remoteStream.getAudioTracks().length,
+                        });
+                    })
                     .catch((error) => {
                         console.warn('Remote audio playback blocked:', error);
-                        setAudioPlaybackBlocked(true);
+                        const blocked = error instanceof Error && error.name === 'NotAllowedError';
+                        setAudioPlaybackBlocked(blocked);
+                        reportRemoteAudioPlayback(blocked ? 'blocked' : 'failed', {
+                            errorName: error instanceof Error ? error.name : 'UnknownError',
+                            errorMessage: error instanceof Error ? error.message : String(error),
+                            paused: audio.paused,
+                            muted: audio.muted,
+                            volume: audio.volume,
+                            readyState: audio.readyState,
+                            remoteAudioTracks: remoteStream.getAudioTracks().length,
+                        });
                     });
             }
         };
@@ -125,12 +165,22 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
             remoteStream.removeEventListener('addtrack', handleTrack);
             remoteStream.getAudioTracks().forEach(track => track.removeEventListener('unmute', play));
         };
-    }, [remoteStream]);
+    }, [remoteStream, reportRemoteAudioPlayback]);
 
     const enableRemoteAudio = () => {
         remoteAudioRef.current?.play()
-            .then(() => setAudioPlaybackBlocked(false))
-            .catch(error => console.warn('Remote audio remains blocked:', error));
+            .then(() => {
+                setAudioPlaybackBlocked(false);
+                reportRemoteAudioPlayback('started', { source: 'user_gesture_retry' });
+            })
+            .catch(error => {
+                console.warn('Remote audio remains blocked:', error);
+                reportRemoteAudioPlayback('failed', {
+                    source: 'user_gesture_retry',
+                    errorName: error instanceof Error ? error.name : 'UnknownError',
+                    errorMessage: error instanceof Error ? error.message : String(error),
+                });
+            });
     };
 
     // Ringback tone: play a phone-like ringing sound for the caller while waiting for the other party

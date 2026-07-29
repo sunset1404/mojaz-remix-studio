@@ -144,6 +144,10 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             .then(() => processSignalingState(snapshot))
             .catch(error => {
                 console.error('Durable signaling failed:', error);
+                void diagnostics.current?.recordFailure('signaling_operation_failed', error, {
+                    signalingGeneration: snapshot.signaling_generation,
+                    sessionStatus: snapshot.status,
+                });
                 setCallState(prev => ({
                     ...prev,
                     isConnecting: false,
@@ -158,6 +162,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         if (initializedRef.current) return;
         initializedRef.current = true;
         endedRef.current = false;
+        let initializationStage = 'peer_connection';
 
         try {
             setCallState(prev => ({ ...prev, isConnecting: true, error: null }));
@@ -166,6 +171,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                 (stream) => {
                     console.log('Remote stream received:', stream.getTracks().map(track => track.kind));
                     setRemoteStream(stream);
+                    void diagnostics.current?.recordRemoteMedia(stream);
                 },
                 (state) => {
                     console.log('Peer connection state:', state);
@@ -241,26 +247,35 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
 
             // Subscribe before media permission prompts. Durable state plus a post-subscribe
             // read means accepting quickly can no longer lose the handshake.
+            initializationStage = 'signaling_connect';
             signalingService.current = new SignalingService(roomId, role, enqueueSignalingState);
             const initialSnapshot = await signalingService.current.connect();
             enqueueSignalingState(initialSnapshot);
 
+            initializationStage = 'media_capture';
             let stream: MediaStream;
+            let captureMode: 'audio_video' | 'audio_only_fallback' = 'audio_video';
             try {
                 stream = await webrtcManager.current.startLocalStream();
             } catch (mediaError) {
                 console.warn('Video + audio unavailable; trying audio only:', mediaError);
-                stream = await webrtcManager.current.startLocalStream({
-                    video: false,
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true,
-                    },
-                });
+                void diagnostics.current?.recordMediaCaptureFailure(mediaError, 'audio_video');
+                captureMode = 'audio_only_fallback';
+                try {
+                    stream = await webrtcManager.current.startLocalStream({
+                        video: false,
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                        },
+                    });
+                } catch (audioError) {
+                    await diagnostics.current?.recordMediaCaptureFailure(audioError, 'audio_only_fallback');
+                    throw audioError;
+                }
                 toast({ title: 'تنبيه', description: 'تعذر تشغيل الكاميرا، وتم تفعيل الصوت فقط' });
             }
-
             const audioTrack = stream.getAudioTracks()[0];
             if (!audioTrack || audioTrack.readyState !== 'live') {
                 stream.getTracks().forEach(track => track.stop());
@@ -281,10 +296,13 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             if (videoTrack) videoTrack.enabled = false;
             setLocalStream(stream);
             setCallState(prev => ({ ...prev, isVideoEnabled: false, isMuted: false }));
+            void diagnostics.current?.recordLocalMedia(stream, captureMode);
             localMediaReadyRef.current = true;
 
+            initializationStage = 'mark_ready';
             const readySnapshot = await signalingService.current.markReady();
             enqueueSignalingState(readySnapshot);
+            initializationStage = 'complete';
             toast({
                 title: 'جاهز للمكالمة',
                 description: 'الميكروفون يعمل. في انتظار اكتمال اتصال الطرف الآخر',
@@ -293,6 +311,11 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             console.error('Error initializing video call:', error);
             initializedRef.current = false;
             localMediaReadyRef.current = false;
+            await diagnostics.current?.recordFailure('call_initialization_failed', error, {
+                stage: initializationStage,
+            });
+            diagnostics.current?.stop();
+            diagnostics.current = null;
             webrtcManager.current?.cleanup();
             await signalingService.current?.disconnect().catch(disconnectError => {
                 console.warn('Failed to clean up signaling after initialization error:', disconnectError);
@@ -351,6 +374,21 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         if (stream) setLocalStream(new MediaStream(stream.getTracks()));
     }, []);
 
+    const reportRemoteAudioPlayback = useCallback((
+        state: 'started' | 'blocked' | 'failed',
+        details: Record<string, unknown> = {},
+    ) => {
+        void diagnostics.current?.recordPlayback(state, details);
+    }, []);
+
+    const reportVideoPlayback = useCallback((
+        source: 'local' | 'remote',
+        state: 'started' | 'failed',
+        details: Record<string, unknown> = {},
+    ) => {
+        void diagnostics.current?.recordVideoPlayback(source, state, details);
+    }, []);
+
     const endCall = useCallback(async () => {
         if (endedRef.current) return;
         endedRef.current = true;
@@ -403,6 +441,8 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         toggleMute,
         toggleVideo,
         switchCamera,
+        reportRemoteAudioPlayback,
+        reportVideoPlayback,
         endCall,
         initialize,
         dbStatus,
