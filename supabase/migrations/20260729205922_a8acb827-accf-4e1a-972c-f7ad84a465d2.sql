@@ -1,0 +1,5 @@
+DROP TRIGGER IF EXISTS sync_video_call_connected_status_trg ON public.video_call_sessions;
+CREATE TRIGGER sync_video_call_connected_status_trg
+BEFORE UPDATE ON public.video_call_sessions
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_video_call_connected_status();
