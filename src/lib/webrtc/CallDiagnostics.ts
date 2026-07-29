@@ -276,7 +276,9 @@ export class CallDiagnostics {
 
             console.log('[CallDiagnostics]', verdict, snapshot);
 
-            if (severity !== 'info') {
+            // Always persist the first sample so every call leaves a trace,
+            // then only distinct non-healthy verdicts afterwards.
+            if (severity !== 'info' || this.sampleCount === 1) {
                 await this.persist(snapshot, false);
             }
         } catch (error) {
