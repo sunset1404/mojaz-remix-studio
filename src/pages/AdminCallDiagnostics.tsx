@@ -130,11 +130,14 @@ const verdictLabel = (verdict: string): string => {
   return map[verdict] || verdict;
 };
 
+const SEVERITY_RANK: Record<string, number> = { info: 0, warning: 1, critical: 2 };
+
 const AdminCallDiagnostics = () => {
   const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [verdictFilter, setVerdictFilter] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedRoom, setExpandedRoom] = useState<string | null>(null);
 
   const { data: rows = [], isLoading, refetch } = useQuery({
     queryKey: ["admin_call_diagnostics"],
