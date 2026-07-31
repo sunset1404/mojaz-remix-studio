@@ -819,6 +819,7 @@ export class CallDiagnostics {
             };
 
             this.prev = current;
+            this.noteSelectedRoute(current);
             this.lastSnapshot = snapshot;
             console.log('[CallDiagnostics]', verdict, snapshot);
             await this.persist(snapshot, false);
@@ -895,7 +896,7 @@ export class CallDiagnostics {
                 connection_state: snapshot.connectionState,
                 gathered_candidate_types: snapshot.gatheredCandidateTypes,
                 user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-                details: snapshot.details as never,
+                details: sanitizeDetails(snapshot.details) as never,
             });
             if (insertError) {
                 this.loggedVerdicts.delete(snapshot.verdict);
