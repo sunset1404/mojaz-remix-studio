@@ -68,6 +68,43 @@ routing problem.
 No additional Supabase schema is required for diagnostic version 3. Extended
 evidence is stored in the existing `call_diagnostics.details` JSON field.
 
+## TURN, recovery and relay verdicts (diagnostic version 3)
+
+| Verdict | Meaning |
+| --- | --- |
+| `turn_credentials_fetch_started` | The client requested temporary coturn credentials from the `turn-credentials` function. |
+| `turn_credentials_fetch_succeeded` | Temporary credentials were received and validated. `details` carries only latency, TTL remaining, URL count and protocol booleans. |
+| `turn_credentials_fetch_failed` | Credentials could not be obtained (function unreachable, `turn_not_configured`, timeout, malformed response). The call continues with STUN only and is flagged degraded. |
+| `turn_credentials_expired` | The returned expiry was already in the past; credentials were discarded and STUN-only was used. |
+| `turn_configured` | The peer connection was created with TURN servers merged on top of the STUN defaults. |
+| `turn_configured_but_no_relay_candidate` | TURN was offered to the browser but no `relay` candidate was gathered — coturn is unreachable, blocked, or the shared secret does not match. |
+| `relay_candidate_gathered` | A `relay` candidate was gathered. This proves credential acceptance, not that relaying was selected. |
+| `connected_via_turn_udp` / `_tcp` / `_tls` | The selected candidate pair uses a relay candidate over the given transport. |
+| `turn_route_failed` | A relay route was selected but media does not flow through it. |
+| `camera_required_but_unavailable` | Video was required for this participant and capture failed. |
+| `local_video_reacquire_started` / `_succeeded` / `_failed` | Camera reacquisition attempt (`replaceTrack`, or add-track plus caller-owned renegotiation). |
+| `media_watchdog_stall_detected` | Three consecutive `getStats()` samples showed no RTP progress for expected live media while ICE stayed connected. |
+| `media_recovery_started` / `_succeeded` / `_failed` | One bounded recovery action (playback retry, video reacquire, ICE restart, rebuild) with `action` and `attempt`. |
+
+Distinct outcomes to compare when triaging: credential fetch failure
+(`turn_credentials_fetch_failed`), TURN offered but unusable
+(`turn_configured_but_no_relay_candidate`), relay gathered but not selected
+(`relay_candidate_gathered` without `connected_via_turn_*`), relay selected but
+mute (`turn_route_failed`), and media stalled while ICE stayed connected
+(`media_watchdog_stall_detected` versus `ice_failed_*`).
+
+## Forced-relay validation procedure
+
+1. Configure `TURN_URLS`, `TURN_SHARED_SECRET` and (optionally)
+   `TURN_TTL_SECONDS` as backend secrets.
+2. In a temporary build only, set `iceTransportPolicy: 'relay'` where the
+   `RTCPeerConnection` is created in `src/lib/webrtc/WebRTCManager.ts`.
+3. Place a call between two devices and confirm in Admin -> Call Diagnostics:
+   `turn_credentials_fetch_succeeded`, `turn_configured`,
+   `relay_candidate_gathered`, and one `connected_via_turn_udp|tcp|tls`.
+4. Confirm two-way audio and video.
+5. Revert the temporary build to `iceTransportPolicy: 'all'` before shipping.
+
 ## Status: coturn deployment — BLOCKED
 
 The application side is complete and verified with STUN-only fallback:
