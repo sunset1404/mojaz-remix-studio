@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MediaWatchdog, type WatchdogProbe } from './MediaWatchdog';
+import { MediaWatchdog, type RecoveryAction, type StallReport, type WatchdogProbe } from './MediaWatchdog';
 
 const liveTrack = { present: true, enabled: true, live: true, muted: false };
 
@@ -22,7 +22,12 @@ const build = (probes: WatchdogProbe[], options: {
     recover?: () => Promise<boolean>;
 } = {}) => {
     const events: Array<{ event: string; details: Record<string, unknown> }> = [];
-    const recover = vi.fn(options.recover ?? (async () => true));
+    const actions: RecoveryAction[] = [];
+    const baseRecover = options.recover ?? (async () => true);
+    const recover = vi.fn(async (report: StallReport) => {
+        actions.push(report.action);
+        return await baseRecover();
+    });
     let index = 0;
     let clock = 10_000_000;
     const watchdog = new MediaWatchdog({
@@ -36,6 +41,7 @@ const build = (probes: WatchdogProbe[], options: {
         watchdog,
         events,
         recover,
+        actions,
         advance: (ms: number) => { clock += ms; },
         async tick(times: number) {
             for (let i = 0; i < times; i += 1) await watchdog.tick();
@@ -81,7 +87,7 @@ describe('MediaWatchdog', () => {
         expect(harness.recover).not.toHaveBeenCalled();
         await harness.tick(3);
         expect(harness.recover).toHaveBeenCalledTimes(1);
-        expect(harness.recover.mock.calls[0][0].action).toBe('ice_restart');
+        expect(harness.actions[0]).toBe('ice_restart');
     });
 
     it('does not stack recovery attempts within the cooldown window', async () => {
@@ -100,7 +106,7 @@ describe('MediaWatchdog', () => {
         ]);
         await harness.tick(5);
         expect(harness.recover).toHaveBeenCalledTimes(1);
-        expect(harness.recover.mock.calls[0][0].action).toBe('retry_playback');
+        expect(harness.actions[0]).toBe('retry_playback');
     });
 
     it('reacquires a required camera track immediately when it has ended', async () => {
@@ -110,7 +116,7 @@ describe('MediaWatchdog', () => {
         })]);
         await harness.tick(1);
         expect(harness.recover).toHaveBeenCalledTimes(1);
-        expect(harness.recover.mock.calls[0][0].action).toBe('reacquire_video');
+        expect(harness.actions[0]).toBe('reacquire_video');
     });
 
     it('never renegotiates from the callee side', async () => {
@@ -126,7 +132,7 @@ describe('MediaWatchdog', () => {
             await harness.tick(3);
             harness.advance(25_000);
         }
-        const actions = harness.recover.mock.calls.map(call => call[0].action);
+        const actions = harness.actions;
         expect(actions.filter(action => action === 'ice_restart')).toHaveLength(3);
         expect(actions).toContain('rebuild_connection');
     });
