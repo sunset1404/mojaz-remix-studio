@@ -96,8 +96,12 @@ const verdictLabel = (verdict: string): string => {
     connected_via_turn_unknown_transport: "الاتصال عبر TURN (نقل غير محدد)",
     turn_route_failed: "مسار TURN متصل لكن لا يمرر الصوت",
     camera_required_but_unavailable: "الكاميرا مطلوبة وغير متاحة",
+    local_video_reacquire_started: "بدأت محاولة استعادة الكاميرا",
+    local_video_reacquire_succeeded: "تم استعادة الكاميرا",
+    local_video_reacquire_failed: "فشل استعادة الكاميرا",
     camera_reacquired: "تم استعادة الكاميرا",
     camera_reacquire_failed: "فشل استعادة الكاميرا",
+
     media_watchdog_stall_detected: "رصد توقف في تدفق الوسائط",
     media_recovery_started: "بدأت محاولة الاستعادة التلقائية",
     media_recovery_succeeded: "نجحت الاستعادة التلقائية",
