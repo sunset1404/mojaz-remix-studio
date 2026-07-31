@@ -473,9 +473,15 @@ const AdminCallDiagnostics = () => {
                     </div>
                   )}
                 </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
+
         )}
       </div>
     </div>
