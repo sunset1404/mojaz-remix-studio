@@ -106,6 +106,81 @@ export function useVideoCall({
         return outcome.iceServers;
     }, [linkToken, roomId]);
 
+    /**
+     * Reacquire the camera after a denial, an ended track, or a device change.
+     * replaceTrack needs no renegotiation; a newly added track does, and only
+     * the caller is allowed to publish that re-offer.
+     */
+    const retryCamera = useCallback(async (): Promise<boolean> => {
+        const manager = webrtcManager.current;
+        if (!manager) return false;
+        try {
+            const { mode, track } = await manager.reacquireVideoTrack();
+            if (mode === 'added' && role === 'caller') {
+                await manager.restartIce();
+            }
+            const stream = manager.getCurrentLocalStream();
+            if (stream) setLocalStream(new MediaStream(stream.getTracks()));
+            setCallState(prev => ({ ...prev, cameraUnavailable: false, isVideoEnabled: track.enabled }));
+            void diagnostics.current?.record('camera_reacquired', 'info', { mode, role }, true);
+            return true;
+        } catch (error) {
+            setCallState(prev => ({ ...prev, cameraUnavailable: true }));
+            void diagnostics.current?.record('camera_reacquire_failed', 'critical', {
+                errorName: error instanceof Error ? error.name : 'UnknownError',
+            }, true);
+            return false;
+        }
+    }, [role]);
+
+    const startWatchdog = useCallback(() => {
+        watchdog.current?.stop();
+        watchdog.current = new MediaWatchdog({
+            canInitiateRenegotiation: role === 'caller',
+            probe: async () => {
+                const pc = webrtcManager.current?.getPeerConnection();
+                if (!pc) return null;
+                return await probeFromPeerConnection(pc, {
+                    requireVideo: requireVideoRef.current,
+                    playbackBlocked: playbackBlockedRef.current,
+                });
+            },
+            onEvent: (event, details) => {
+                const severity = event === 'media_recovery_succeeded' || event === 'media_recovery_started'
+                    ? 'info'
+                    : event === 'media_recovery_failed'
+                        ? 'critical'
+                        : 'warning';
+                void diagnostics.current?.record(event, severity, details, true);
+                if (event === 'media_recovery_started') {
+                    setCallState(prev => ({ ...prev, isRecoveringMedia: true }));
+                }
+                if (event === 'media_recovery_succeeded' || event === 'media_recovery_failed') {
+                    setCallState(prev => ({ ...prev, isRecoveringMedia: false }));
+                }
+            },
+            recover: async (report: StallReport) => {
+                const manager = webrtcManager.current;
+                if (!manager) return false;
+                if (report.action === 'retry_playback') {
+                    playbackBlockedRef.current = false;
+                    setRemoteStream(prev => (prev ? new MediaStream(prev.getTracks()) : prev));
+                    return true;
+                }
+                if (report.action === 'reacquire_video') {
+                    return await retryCamera();
+                }
+                if (report.action === 'ice_restart' || report.action === 'rebuild_connection') {
+                    await manager.restartIce();
+                    return manager.getConnectionState() !== 'failed';
+                }
+                return false;
+            },
+        });
+        watchdog.current.start();
+    }, [retryCamera, role]);
+
+
 
     const clearConnectionTimeout = useCallback(() => {
         if (connectionTimeoutRef.current) {
