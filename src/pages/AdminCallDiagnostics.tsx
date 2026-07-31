@@ -161,6 +161,36 @@ const AdminCallDiagnostics = () => {
     return matchSearch && matchSeverity && matchVerdict;
   });
 
+  // Group filtered rows by call (room_id)
+  const groups = (() => {
+    const map = new Map<string, DiagnosticRow[]>();
+    for (const r of filtered) {
+      const list = map.get(r.room_id);
+      if (list) list.push(r);
+      else map.set(r.room_id, [r]);
+    }
+    return Array.from(map.entries())
+      .map(([roomId, items]) => {
+        const sorted = [...items].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        const worst = sorted.reduce(
+          (acc, r) => ((SEVERITY_RANK[r.severity] ?? 0) > (SEVERITY_RANK[acc] ?? 0) ? r.severity : acc),
+          "info"
+        );
+        return {
+          roomId,
+          items: sorted,
+          worst,
+          latest: sorted[0].created_at,
+          criticals: sorted.filter((r) => r.severity === "critical").length,
+          warnings: sorted.filter((r) => r.severity === "warning").length,
+          userIds: Array.from(new Set(sorted.map((r) => r.user_id).filter(Boolean))) as string[],
+        };
+      })
+      .sort((a, b) => new Date(b.latest).getTime() - new Date(a.latest).getTime());
+  })();
+
   const totalRows = rows.length;
   const criticalCount = rows.filter((r) => r.severity === "critical").length;
   const warningCount = rows.filter((r) => r.severity === "warning").length;
