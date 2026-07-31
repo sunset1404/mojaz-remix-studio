@@ -367,6 +367,9 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         return null;
     };
 
+    return (
+        <div className="absolute inset-0 z-50 bg-black">
+
             <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
             {renderStatusBadge()}
 
