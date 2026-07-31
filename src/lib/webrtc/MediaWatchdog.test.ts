@@ -129,7 +129,7 @@ describe('MediaWatchdog', () => {
     it('bounds automatic ICE recovery and escalates to a rebuild', async () => {
         const harness = build([probe()], { recover: async () => false });
         for (let attempt = 0; attempt < 4; attempt += 1) {
-            await harness.tick(3);
+            await harness.tick(4);
             harness.advance(25_000);
         }
         const actions = harness.actions;
@@ -139,7 +139,7 @@ describe('MediaWatchdog', () => {
 
     it('emits recovery lifecycle events for diagnostics', async () => {
         const harness = build([probe()]);
-        await harness.tick(3);
+        await harness.tick(4);
         const names = harness.events.map(e => e.event);
         expect(names).toContain('media_watchdog_stall_detected');
         expect(names).toContain('media_recovery_started');
