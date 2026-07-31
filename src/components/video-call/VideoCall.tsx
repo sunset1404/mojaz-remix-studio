@@ -319,11 +319,54 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
             );
         }
 
+        if (callState.isRecoveringMedia) {
+            return (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 border border-gold/40 bg-gold/15 backdrop-blur-sm text-foreground px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium safe-top"
+                >
+                    <Loader2 className="w-4 h-4 animate-spin text-gold" />
+                    جاري استعادة الصوت والصورة...
+                </motion.div>
+            );
+        }
+
+        if (callState.cameraUnavailable) {
+            return (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-destructive/15 border border-destructive/30 backdrop-blur-sm text-foreground px-4 py-2 rounded-2xl text-sm font-medium max-w-[90%] text-center safe-top"
+                >
+                    <div>تعذر تشغيل الكاميرا</div>
+                    <button
+                        type="button"
+                        onClick={() => void retryCamera()}
+                        className="mt-2 rounded-full bg-card/90 px-4 py-1.5 text-xs text-foreground"
+                    >
+                        إعادة تشغيل الكاميرا
+                    </button>
+                </motion.div>
+            );
+        }
+
+        if (callState.connectivityDegraded && !callState.isConnected) {
+            return (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 border border-gold/40 bg-gold/10 backdrop-blur-sm text-foreground px-4 py-2 rounded-full flex items-center gap-2 text-xs font-medium safe-top"
+                >
+                    <WifiOff className="w-4 h-4 text-gold" />
+                    جودة الاتصال قد تتأثر على بعض الشبكات
+                </motion.div>
+            );
+        }
+
         return null;
     };
 
-    return (
-        <div className="absolute inset-0 z-50 bg-black">
             <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
             {renderStatusBadge()}
 
