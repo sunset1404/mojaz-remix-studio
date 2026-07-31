@@ -282,8 +282,9 @@ const AdminCallDiagnostics = () => {
             </SelectContent>
           </Select>
           <Badge variant="outline" className="rounded-full px-3 py-1.5">
-            {filtered.length} تسجيل
+            {groups.length} مكالمة / {filtered.length} تسجيل
           </Badge>
+
         </div>
 
         {/* Diagnostics List */}
