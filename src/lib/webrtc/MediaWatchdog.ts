@@ -239,3 +239,63 @@ export class MediaWatchdog {
         return this.attempts;
     }
 }
+
+const trackState = (track: MediaStreamTrack | null | undefined): WatchdogTrackState => ({
+    present: Boolean(track),
+    enabled: Boolean(track?.enabled),
+    live: track?.readyState === 'live',
+    muted: Boolean(track?.muted),
+});
+
+/** Builds a watchdog probe from live getStats() output. */
+export async function probeFromPeerConnection(
+    pc: RTCPeerConnection,
+    context: { requireVideo: boolean; playbackBlocked: boolean },
+): Promise<WatchdogProbe> {
+    let inboundAudioPackets = 0;
+    let outboundAudioPackets = 0;
+    let selectedRouteType: string | null = null;
+
+    const stats = await pc.getStats();
+    const byId = new Map<string, Record<string, unknown>>();
+    stats.forEach(report => byId.set((report as { id: string }).id, report as unknown as Record<string, unknown>));
+
+    const selectedPairId = Array.from(byId.values())
+        .find(report => report.type === 'transport' && report.selectedCandidatePairId)
+        ?.selectedCandidatePairId as string | undefined;
+
+    stats.forEach(rawReport => {
+        const report = rawReport as unknown as Record<string, unknown>;
+        const kind = (report.kind ?? report.mediaType) as string | undefined;
+        if (report.type === 'inbound-rtp' && kind === 'audio' && typeof report.packetsReceived === 'number') {
+            inboundAudioPackets += report.packetsReceived;
+        }
+        if (report.type === 'outbound-rtp' && kind === 'audio' && typeof report.packetsSent === 'number') {
+            outboundAudioPackets += report.packetsSent;
+        }
+        const isSelected = report.type === 'candidate-pair'
+            && (report.id === selectedPairId || report.selected === true
+                || (report.nominated === true && report.state === 'succeeded'));
+        if (isSelected) {
+            const local = byId.get(report.localCandidateId as string);
+            selectedRouteType = (local?.candidateType as string | undefined) ?? selectedRouteType;
+        }
+    });
+
+    const localAudio = pc.getSenders().find(sender => sender.track?.kind === 'audio')?.track ?? null;
+    const localVideo = pc.getSenders().find(sender => sender.track?.kind === 'video')?.track ?? null;
+    const remoteAudio = pc.getReceivers().find(receiver => receiver.track?.kind === 'audio')?.track ?? null;
+
+    return {
+        connectionState: pc.connectionState,
+        inboundAudioPackets,
+        outboundAudioPackets,
+        localAudio: trackState(localAudio),
+        localVideo: trackState(localVideo),
+        remoteAudioExpected: Boolean(remoteAudio && remoteAudio.readyState === 'live'),
+        playbackBlocked: context.playbackBlocked,
+        documentHidden: typeof document !== 'undefined' && document.visibilityState === 'hidden',
+        requireVideo: context.requireVideo,
+        selectedRouteType,
+    };
+}
