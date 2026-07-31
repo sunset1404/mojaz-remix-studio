@@ -7,8 +7,10 @@ import {
     credentialsExpiringSoon,
     fetchTurnCredentials,
     mergeIceServers,
+    turnDiagnosticEvent,
     type TurnFetchOutcome,
 } from '@/lib/webrtc/iceServers';
+
 
 import { CallSignalingState, CallState, VideoCallSession } from '@/types/video-call';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +19,7 @@ interface UseVideoCallOptions {
     roomId: string;
     role: 'caller' | 'callee';
     autoStart?: boolean;
-    /** Reciters must always publish video; students may keep the camera off. */
+    /** Reciters and students both start with a live camera; it can be muted manually afterwards. */
     requireVideo?: boolean;
     /** Public call-link token, used to authorize TURN credentials without a session. */
     linkToken?: string | null;
@@ -79,29 +81,30 @@ export function useVideoCall({
      * connection as degraded and records why in diagnostics.
      */
     const loadIceServers = useCallback(async (reason: 'initial' | 'ice_restart'): Promise<RTCIceServer[]> => {
+        void diagnostics.current?.record('turn_credentials_fetch_started', 'info', { reason }, true);
         let outcome: TurnFetchOutcome;
         try {
             outcome = await fetchTurnCredentials({ roomId, linkToken });
         } catch {
             turnExpiresAtRef.current = null;
-            void diagnostics.current?.record('turn_credentials_unavailable', 'warning', { reason }, true);
+            void diagnostics.current?.record('turn_credentials_fetch_failed', 'warning', {
+                reason,
+                errorCode: 'turn_credentials_request_failed',
+            }, true);
+            setCallState(prev => ({ ...prev, connectivityDegraded: true }));
             return mergeIceServers([]);
         }
 
         turnExpiresAtRef.current = outcome.expiresAt;
-        void diagnostics.current?.record(
-            outcome.turnAvailable ? 'turn_credentials_obtained' : 'turn_credentials_unavailable',
-            outcome.turnAvailable ? 'info' : 'warning',
-            {
+        const event = turnDiagnosticEvent(outcome, reason);
+        void diagnostics.current?.record(event.verdict, event.severity, event.details, true);
+        if (outcome.turnAvailable) {
+            void diagnostics.current?.record('turn_configured', 'info', {
                 reason,
-                errorCode: outcome.errorCode,
-                latencyMs: outcome.latencyMs,
                 urlCount: outcome.urlCount,
                 protocols: outcome.protocols,
-                expiresAt: outcome.expiresAt,
-            },
-            true,
-        );
+            }, true);
+        }
         setCallState(prev => ({ ...prev, connectivityDegraded: !outcome.turnAvailable }));
         return outcome.iceServers;
     }, [linkToken, roomId]);
@@ -114,6 +117,7 @@ export function useVideoCall({
     const retryCamera = useCallback(async (): Promise<boolean> => {
         const manager = webrtcManager.current;
         if (!manager) return false;
+        void diagnostics.current?.record('local_video_reacquire_started', 'info', { role }, true);
         try {
             const { mode, track } = await manager.reacquireVideoTrack();
             if (mode === 'added' && role === 'caller') {
@@ -122,15 +126,16 @@ export function useVideoCall({
             const stream = manager.getCurrentLocalStream();
             if (stream) setLocalStream(new MediaStream(stream.getTracks()));
             setCallState(prev => ({ ...prev, cameraUnavailable: false, isVideoEnabled: track.enabled }));
-            void diagnostics.current?.record('camera_reacquired', 'info', { mode, role }, true);
+            void diagnostics.current?.record('local_video_reacquire_succeeded', 'info', { mode, role }, true);
             return true;
         } catch (error) {
             setCallState(prev => ({ ...prev, cameraUnavailable: true }));
-            void diagnostics.current?.record('camera_reacquire_failed', 'critical', {
+            void diagnostics.current?.record('local_video_reacquire_failed', 'critical', {
                 errorName: error instanceof Error ? error.name : 'UnknownError',
             }, true);
             return false;
         }
+
     }, [role]);
 
     const startWatchdog = useCallback(() => {

@@ -135,3 +135,38 @@ export function credentialsExpiringSoon(expiresAt: string | null, marginMs = 120
     if (Number.isNaN(parsed)) return true;
     return parsed - Date.now() <= marginMs;
 }
+
+export interface TurnDiagnosticEvent {
+    verdict:
+        | 'turn_credentials_fetch_succeeded'
+        | 'turn_credentials_fetch_failed'
+        | 'turn_credentials_expired';
+    severity: 'info' | 'warning' | 'critical';
+    /** Safe metadata only: never credentials, usernames, tokens or URLs. */
+    details: Record<string, unknown>;
+}
+
+/**
+ * Maps a fetch outcome onto the canonical diagnostic verdicts so the
+ * hook stays free of naming logic and the mapping is directly testable.
+ */
+export function turnDiagnosticEvent(
+    outcome: TurnFetchOutcome,
+    reason: 'initial' | 'ice_restart',
+): TurnDiagnosticEvent {
+    const details = {
+        reason,
+        errorCode: outcome.errorCode,
+        latencyMs: outcome.latencyMs,
+        urlCount: outcome.urlCount,
+        protocols: outcome.protocols,
+        ttlRemainingMs: outcome.expiresAt ? Math.max(0, Date.parse(outcome.expiresAt) - Date.now()) : null,
+    };
+    if (outcome.turnAvailable) {
+        return { verdict: 'turn_credentials_fetch_succeeded', severity: 'info', details };
+    }
+    if (outcome.errorCode === 'turn_credentials_expired') {
+        return { verdict: 'turn_credentials_expired', severity: 'critical', details };
+    }
+    return { verdict: 'turn_credentials_fetch_failed', severity: 'warning', details };
+}

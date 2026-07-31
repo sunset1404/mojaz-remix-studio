@@ -457,7 +457,7 @@ const VideoCallPage = () => {
                 onOtherPartyEnded={handleOtherPartyEnded}
                 autoStartCall={callRole === "caller"}
                 confirmOnEnd={!isReciter}
-                requireVideo={isReciter}
+                requireVideo
                 extraControls={isReciter ? (
                     <>
                         {examId && (
