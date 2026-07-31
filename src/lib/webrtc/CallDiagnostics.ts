@@ -110,7 +110,33 @@ export interface DiagnosticSnapshot {
 
 const SAMPLE_INTERVAL_MS = 5000;
 const GRACE_SAMPLES = 3;
-const DIAGNOSTIC_VERSION = 2;
+const DIAGNOSTIC_VERSION = 3;
+
+/**
+ * Diagnostics are admin-readable. Anything that could carry a TURN credential,
+ * call-link token, or authorization header is dropped before persisting, and
+ * TURN URLs are reduced to their scheme+host so query data never leaks.
+ */
+const FORBIDDEN_DETAIL_KEYS = /^(username|credential|password|secret|sharedsecret|token|linktoken|accesstoken|access_token|authorization|apikey|api_key|jwt)$/i;
+
+export const sanitizeDetails = (value: unknown, depth = 0): unknown => {
+    if (depth > 8) return null;
+    if (Array.isArray(value)) return value.map(item => sanitizeDetails(item, depth + 1));
+    if (value && typeof value === 'object') {
+        const result: Record<string, unknown> = {};
+        for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+            if (FORBIDDEN_DETAIL_KEYS.test(key)) continue;
+            result[key] = sanitizeDetails(item, depth + 1);
+        }
+        return result;
+    }
+    if (typeof value === 'string' && /^turns?:/i.test(value)) {
+        return value.replace(/[?#].*$/, '').replace(/^(turns?:\/\/?)?([^:/?#]+).*$/i, (_m, scheme, host) =>
+            `${(scheme ?? '').toLowerCase()}${host}`);
+    }
+    return value;
+};
+
 
 const numberOrNull = (value: unknown): number | null =>
     typeof value === 'number' && Number.isFinite(value) ? value : null;
