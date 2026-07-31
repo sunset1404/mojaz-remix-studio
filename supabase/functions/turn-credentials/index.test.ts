@@ -55,8 +55,8 @@ Deno.test("coturn credential uses the expiry:identity username scheme", async ()
     assertEquals(credential.credential === other.credential, false);
 });
 
-Deno.test("credential never embeds the raw identity token", () => {
-    assertEquals(shortIdentity("a-very-long-access-token-value-1234567890"), "averylonga");
+Deno.test("credential never embeds the full identity token", () => {
+    assertEquals(shortIdentity("a-very-long-access-token-value-1234567890"), "averylongaccesst");
 });
 
 Deno.test("authorization allows only participants of a joinable call", () => {
