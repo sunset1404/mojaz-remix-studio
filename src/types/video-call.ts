@@ -51,4 +51,11 @@ export interface CallState {
     isMuted: boolean;
     isVideoEnabled: boolean;
     error: string | null;
+    /** True when the call runs without any usable TURN relay available. */
+    connectivityDegraded: boolean;
+    /** True when the camera is required but could not be captured. */
+    cameraUnavailable: boolean;
+    /** True while an automatic media recovery attempt is in flight. */
+    isRecoveringMedia: boolean;
 }
+
