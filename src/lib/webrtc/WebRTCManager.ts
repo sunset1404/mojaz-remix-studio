@@ -428,7 +428,59 @@ export class WebRTCManager {
         }
     }
 
+    /** True when a live camera track exists on the local stream. */
+    hasLiveVideoTrack(): boolean {
+        const track = this.localStream?.getVideoTracks()[0];
+        return Boolean(track && track.readyState === 'live');
+    }
+
+    /** True when a video sender is actually attached to the peer connection. */
+    isSendingVideo(): boolean {
+        const sender = this.peerConnection?.getSenders().find(s => s.track?.kind === 'video');
+        return Boolean(sender?.track && sender.track.readyState === 'live');
+    }
+
+    /**
+     * Reacquire the camera after a denied permission, an ended track, or a device
+     * change. Uses replaceTrack when a video sender exists (no renegotiation) and
+     * falls back to addTrack, which the caller must follow with a re-offer.
+     */
+    async reacquireVideoTrack(): Promise<{ mode: 'replaced' | 'added'; track: MediaStreamTrack }> {
+        if (!this.peerConnection || !this.localStream) {
+            throw new Error('Peer connection not initialized');
+        }
+
+        const newStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+            audio: false,
+        });
+        const newTrack = newStream.getVideoTracks()[0];
+        if (!newTrack) {
+            newStream.getTracks().forEach(track => track.stop());
+            throw new DOMException('No camera track available', 'NotFoundError');
+        }
+        newTrack.enabled = true;
+
+        const oldTrack = this.localStream.getVideoTracks()[0];
+        if (oldTrack) {
+            this.localStream.removeTrack(oldTrack);
+            oldTrack.stop();
+        }
+        this.localStream.addTrack(newTrack);
+
+        const sender = this.peerConnection.getSenders().find(s => s.track?.kind === 'video')
+            ?? this.peerConnection.getSenders().find(s => !s.track);
+        if (sender && typeof sender.replaceTrack === 'function') {
+            await sender.replaceTrack(newTrack);
+            return { mode: 'replaced', track: newTrack };
+        }
+
+        this.peerConnection.addTrack(newTrack, this.localStream);
+        return { mode: 'added', track: newTrack };
+    }
+
     cleanup(): void {
+
         this.stopKeepalive();
         this.clearReconnectTimer();
 
