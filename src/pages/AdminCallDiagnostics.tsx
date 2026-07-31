@@ -298,18 +298,78 @@ const AdminCallDiagnostics = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {filtered.map((row) => {
-              const severityInfo = SEVERITY_MAP[row.severity] || SEVERITY_MAP.info;
-              const SeverityIcon = severityInfo.icon;
-              const isExpanded = expandedId === row.id;
-              const createdAt = new Date(row.created_at).toLocaleString("ar-SA");
-              const details = row.details ? (row.details as Record<string, unknown>) : null;
-
+            {groups.map((group) => {
+              const gInfo = SEVERITY_MAP[group.worst] || SEVERITY_MAP.info;
+              const GIcon = gInfo.icon;
+              const groupOpen = expandedRoom === group.roomId;
               return (
+                <div key={group.roomId} className="bg-card rounded-2xl border border-border/50 overflow-hidden">
+                  <div
+                    className="p-4 flex items-center gap-4 cursor-pointer"
+                    onClick={() => setExpandedRoom(groupOpen ? null : group.roomId)}
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${gInfo.color}`}>
+                      <GIcon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <p className="font-bold text-foreground truncate max-w-[240px]" title={group.roomId}>
+                          {group.roomId}
+                        </p>
+                        <Badge variant="outline" className={`text-[10px] rounded-full ${gInfo.color}`}>
+                          {gInfo.label}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] rounded-full">
+                          {group.items.length} سجل
+                        </Badge>
+                        {group.criticals > 0 && (
+                          <Badge variant="outline" className="text-[10px] rounded-full bg-destructive/10 text-destructive border-destructive/20">
+                            {group.criticals} حرج
+                          </Badge>
+                        )}
+                        {group.warnings > 0 && (
+                          <Badge variant="outline" className="text-[10px] rounded-full bg-amber-500/10 text-amber-600 border-amber-200">
+                            {group.warnings} تحذير
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <CalendarDays className="w-3 h-3" />
+                          {new Date(group.latest).toLocaleString("ar-SA")}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Wifi className="w-3 h-3" />
+                          {verdictLabel(group.items[0].verdict)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Info className="w-3 h-3" />
+                          {group.userIds.length} مستخدم
+                        </span>
+                      </div>
+                    </div>
+                    {groupOpen ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                  </div>
+
+                  {groupOpen && (
+                    <div className="px-3 pb-3 space-y-2 border-t border-border/30 pt-3">
+                      {group.items.map((row) => {
+                        const severityInfo = SEVERITY_MAP[row.severity] || SEVERITY_MAP.info;
+                        const SeverityIcon = severityInfo.icon;
+                        const isExpanded = expandedId === row.id;
+                        const createdAt = new Date(row.created_at).toLocaleString("ar-SA");
+                        const details = row.details ? (row.details as Record<string, unknown>) : null;
+
+                        return (
                 <div
                   key={row.id}
-                  className="bg-card rounded-2xl border border-border/50 overflow-hidden transition-all hover:border-primary/20"
+                  className="bg-muted/10 rounded-2xl border border-border/50 overflow-hidden transition-all hover:border-primary/20"
                 >
+
                   <div
                     className="p-4 flex items-center gap-4 cursor-pointer"
                     onClick={() => setExpandedId(isExpanded ? null : row.id)}
