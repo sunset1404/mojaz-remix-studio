@@ -7,8 +7,10 @@ import {
     credentialsExpiringSoon,
     fetchTurnCredentials,
     mergeIceServers,
+    turnDiagnosticEvent,
     type TurnFetchOutcome,
 } from '@/lib/webrtc/iceServers';
+
 
 import { CallSignalingState, CallState, VideoCallSession } from '@/types/video-call';
 import { useToast } from '@/hooks/use-toast';
