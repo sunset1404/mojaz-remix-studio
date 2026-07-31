@@ -363,12 +363,26 @@ export function useVideoCall({
                 console.log('Local microphone track unmuted');
             });
 
+            // Reciters must be visible; students keep the camera off until they choose.
             const videoTrack = stream.getVideoTracks()[0];
-            if (videoTrack) videoTrack.enabled = false;
+            const videoOn = requireVideo && Boolean(videoTrack);
+            if (videoTrack) videoTrack.enabled = videoOn;
             setLocalStream(stream);
-            setCallState(prev => ({ ...prev, isVideoEnabled: false, isMuted: false }));
+            setCallState(prev => ({
+                ...prev,
+                isVideoEnabled: videoOn,
+                isMuted: false,
+                cameraUnavailable: requireVideo && !videoTrack,
+            }));
+            if (requireVideo && !videoTrack) {
+                void diagnostics.current?.record('camera_required_but_unavailable', 'critical', {
+                    captureMode,
+                }, true);
+            }
             void diagnostics.current?.recordLocalMedia(stream, captureMode);
             localMediaReadyRef.current = true;
+            startWatchdog();
+
 
             initializationStage = 'mark_ready';
             const readySnapshot = await signalingService.current.markReady();
