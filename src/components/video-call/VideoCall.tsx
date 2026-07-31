@@ -23,9 +23,13 @@ interface VideoCallProps {
     autoStartCall?: boolean;
     confirmOnEnd?: boolean;
     extraControls?: React.ReactNode;
+    /** Reciters must publish video; students may stay audio-only. */
+    requireVideo?: boolean;
+    /** Public call-link token, forwarded so TURN credentials can be authorized. */
+    linkToken?: string | null;
 }
 
-export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false, confirmOnEnd = false, extraControls }: VideoCallProps) {
+export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherPartyEnded, autoStartCall = false, confirmOnEnd = false, extraControls, requireVideo = false, linkToken = null }: VideoCallProps) {
     const { setCallBusy } = useReciterAvailability();
     const {
         localStream,
@@ -34,12 +38,14 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         toggleMute,
         toggleVideo,
         switchCamera,
+        retryCamera,
         reportRemoteAudioPlayback,
         reportVideoPlayback,
         retryCall,
         endCall,
         dbStatus,
-    } = useVideoCall({ roomId, role, autoStart: true });
+    } = useVideoCall({ roomId, role, autoStart: true, requireVideo, linkToken });
+
 
     const pipVideoRef = useRef<HTMLVideoElement>(null);
     const mainVideoRef = useRef<HTMLVideoElement>(null);
