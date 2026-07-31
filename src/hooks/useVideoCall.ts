@@ -220,12 +220,23 @@ export function useVideoCall({
         if (initializedRef.current) return;
         initializedRef.current = true;
         endedRef.current = false;
-        let initializationStage = 'peer_connection';
+        let initializationStage = 'turn_credentials';
 
         try {
             setCallState(prev => ({ ...prev, isConnecting: true, error: null }));
 
+            // Diagnostics exist before the peer connection so TURN acquisition
+            // problems are recorded even when the call never starts.
+            diagnostics.current = new CallDiagnostics(
+                () => webrtcManager.current?.getPeerConnection() ?? null,
+                roomId,
+                role,
+            );
+            const iceServers = await loadIceServers('initial');
+
+            initializationStage = 'peer_connection';
             webrtcManager.current = new WebRTCManager(
+
                 (stream) => {
                     console.log('Remote stream received:', stream.getTracks().map(track => track.kind));
                     setRemoteStream(stream);
