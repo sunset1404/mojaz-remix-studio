@@ -630,6 +630,7 @@ export class CallDiagnostics {
                     tcpType: report.tcpType ?? null,
                 };
                 this.candidateObservations.set(JSON.stringify(observation), observation);
+                if (observation.type === 'relay') this.noteRelayCandidate(observation);
             }
         });
 
@@ -703,8 +704,13 @@ export class CallDiagnostics {
             return { verdict: 'local_video_enabled_but_not_encoding', severity: 'critical' };
         }
         if (this.stalledInboundAudio >= GRACE_SAMPLES && this.stalledOutboundAudio >= GRACE_SAMPLES) {
+            // A relayed pair that carries no RTP is a TURN route problem, not a NAT one.
+            if (current.localCandidateType === 'relay' || current.remoteCandidateType === 'relay') {
+                return { verdict: 'turn_route_failed', severity: 'critical' };
+            }
             return { verdict: 'selected_pair_but_no_audio_rtp', severity: 'critical' };
         }
+
         if (this.stalledInboundAudio >= GRACE_SAMPLES) {
             return { verdict: 'no_inbound_audio_rtp', severity: 'critical' };
         }
