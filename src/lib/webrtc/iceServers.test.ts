@@ -6,6 +6,7 @@ import {
     fetchTurnCredentials,
     mergeIceServers,
     sanitizeTurnServers,
+    turnDiagnosticEvent,
 } from './iceServers';
 import { sanitizeDetails } from './CallDiagnostics';
 
@@ -95,5 +96,55 @@ describe('TURN credential handling', () => {
         expect(serialized).not.toContain('Bearer');
         expect(serialized).not.toContain('transport=tcp');
         expect(serialized).toContain('"keep":1');
+    });
+});
+
+describe('canonical TURN diagnostic verdicts', () => {
+    const base = {
+        iceServers: DEFAULT_STUN_SERVERS,
+        latencyMs: 42,
+        urlCount: 3,
+        protocols: { udp: true, tcp: true, tls: true },
+    };
+
+    it('maps a successful fetch to turn_credentials_fetch_succeeded with safe metadata only', () => {
+        const event = turnDiagnosticEvent(
+            { ...base, turnAvailable: true, expiresAt: new Date(Date.now() + 600_000).toISOString(), errorCode: null },
+            'initial',
+        );
+        expect(event.verdict).toBe('turn_credentials_fetch_succeeded');
+        expect(event.severity).toBe('info');
+        expect(Object.keys(event.details).sort()).toEqual(
+            ['errorCode', 'latencyMs', 'protocols', 'reason', 'ttlRemainingMs', 'urlCount'],
+        );
+        expect(event.details.ttlRemainingMs as number).toBeGreaterThan(0);
+        expect(JSON.stringify(event.details)).not.toMatch(/username|credential|token|authorization/i);
+    });
+
+    it('maps a failed fetch to turn_credentials_fetch_failed', () => {
+        const event = turnDiagnosticEvent(
+            { ...base, turnAvailable: false, expiresAt: null, errorCode: 'turn_credentials_request_failed', urlCount: 0 },
+            'ice_restart',
+        );
+        expect(event.verdict).toBe('turn_credentials_fetch_failed');
+        expect(event.severity).toBe('warning');
+        expect(event.details.reason).toBe('ice_restart');
+    });
+
+    it('maps expired credentials to turn_credentials_expired', () => {
+        const event = turnDiagnosticEvent(
+            { ...base, turnAvailable: false, expiresAt: null, errorCode: 'turn_credentials_expired', urlCount: 0 },
+            'ice_restart',
+        );
+        expect(event.verdict).toBe('turn_credentials_expired');
+        expect(event.severity).toBe('critical');
+    });
+
+    it('keeps sanitized diagnostic details free of credentials', () => {
+        const event = turnDiagnosticEvent(
+            { ...base, turnAvailable: true, expiresAt: new Date(Date.now() + 60_000).toISOString(), errorCode: null },
+            'initial',
+        );
+        expect(sanitizeDetails({ ...event.details, username: 'x', credential: 'y' })).toEqual(event.details);
     });
 });
