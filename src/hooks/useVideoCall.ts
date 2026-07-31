@@ -499,7 +499,7 @@ export function useVideoCall({
             setCallState(prev => ({ ...prev, isConnecting: false, error: errorMessage }));
             toast({ title: 'خطأ', description: errorMessage, variant: 'destructive' });
         }
-    }, [clearConnectionTimeout, enqueueSignalingState, role, roomId, toast]);
+    }, [clearConnectionTimeout, enqueueSignalingState, loadIceServers, requireVideo, role, roomId, startWatchdog, toast]);
 
     const retryCall = useCallback(async () => {
         if (!initializedRef.current || !webrtcManager.current || !signalingService.current) {
