@@ -391,6 +391,19 @@ export class CallDiagnostics {
         return this.lastSnapshot;
     }
 
+    /**
+     * Public channel for TURN, camera and recovery events raised outside this
+     * class. Details are scrubbed of credentials before they are persisted.
+     */
+    async record(
+        verdict: string,
+        severity: DiagnosticSeverity,
+        details: Record<string, unknown> = {},
+        force = false,
+    ): Promise<void> {
+        await this.recordEvent(verdict, severity, details, force);
+    }
+
     private trackCandidate = (event: RTCPeerConnectionIceEvent) => {
         const candidate = event.candidate;
         if (!candidate) return;
@@ -403,6 +416,7 @@ export class CallDiagnostics {
         };
         if (observation.type) this.gathered.add(observation.type);
         this.candidateObservations.set(JSON.stringify(observation), observation);
+        if (observation.type === 'relay') this.noteRelayCandidate(observation);
     };
 
     private trackCandidateError = (event: Event) => {
@@ -422,13 +436,58 @@ export class CallDiagnostics {
 
     private trackIceGatheringState = () => {
         if (this.peerConnection?.iceGatheringState !== 'complete') return;
+        const iceConfiguration = this.getIceConfiguration();
         void this.recordEvent('ice_gathering_complete', 'info', {
             gatheredCandidates: Array.from(this.candidateObservations.values()),
             gatheredCandidateTypes: Array.from(this.gathered),
             candidateErrors: this.candidateErrors,
-            iceConfiguration: this.getIceConfiguration(),
+            iceConfiguration,
         }, true);
+
+        // TURN was offered to the browser but produced no relay candidate: the
+        // exact condition that separates "no TURN" from "TURN unreachable".
+        if (iceConfiguration.hasTurn && !this.gathered.has('relay')) {
+            void this.recordEvent('turn_configured_but_no_relay_candidate', 'critical', {
+                gatheredCandidateTypes: Array.from(this.gathered),
+                candidateErrors: this.candidateErrors,
+                iceConfiguration,
+            }, true);
+        }
     };
+
+    private noteRelayCandidate(observation: CandidateObservation): void {
+        if (this.relayCandidateSeen) return;
+        this.relayCandidateSeen = true;
+        void this.recordEvent('relay_candidate_gathered', 'info', {
+            relayProtocol: observation.relayProtocol,
+            protocol: observation.protocol,
+            tcpType: observation.tcpType,
+        }, true);
+    }
+
+    /** Distinguishes a direct route from a relayed one, and UDP/TCP/TLS relaying. */
+    private noteSelectedRoute(current: Sample): void {
+        if (current.localCandidateType !== 'relay') return;
+        const relayProtocol = (current.candidateRelayProtocol ?? current.candidateProtocol ?? '').toLowerCase();
+        const verdict = relayProtocol === 'tls'
+            ? 'connected_via_turn_tls'
+            : relayProtocol === 'tcp'
+                ? 'connected_via_turn_tcp'
+                : relayProtocol === 'udp'
+                    ? 'connected_via_turn_udp'
+                    : 'connected_via_turn_unknown_transport';
+        if (this.reportedRouteVerdict === verdict) return;
+        this.reportedRouteVerdict = verdict;
+        void this.recordEvent(verdict, 'warning', {
+            selectedRouteType: 'relay',
+            relayProtocol: relayProtocol || null,
+            remoteCandidateType: current.remoteCandidateType,
+            networkType: current.networkType,
+            roundTripTime: current.roundTripTime,
+        }, true);
+    }
+
+
 
     private getIceConfiguration(): Record<string, unknown> {
         const config = this.peerConnection?.getConfiguration?.();
