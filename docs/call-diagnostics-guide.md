@@ -5,7 +5,7 @@ call. Compare the `caller` and `callee` rows for the same `room_id`.
 
 ## Controlled test
 
-1. Confirm both devices are running the build containing diagnostic version 2.
+1. Confirm both devices are running the build containing diagnostic version 3.
 2. Start a call and allow camera and microphone access on both devices.
 3. Explicitly enable the camera; the application starts calls with video off.
 4. Keep both applications in the foreground.
@@ -65,5 +65,5 @@ would be required to prove that relaying resolves that route. The browser also
 cannot reliably report physical speaker volume or every OS/Bluetooth output
 routing problem.
 
-No additional Supabase schema is required for diagnostic version 2. Extended
+No additional Supabase schema is required for diagnostic version 3. Extended
 evidence is stored in the existing `call_diagnostics.details` JSON field.

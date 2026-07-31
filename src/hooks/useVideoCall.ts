@@ -2,6 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { WebRTCManager } from '@/lib/webrtc/WebRTCManager';
 import { CallDiagnostics } from '@/lib/webrtc/CallDiagnostics';
 import { SignalingService } from '@/lib/webrtc/SignalingService';
+import { MediaWatchdog, probeFromPeerConnection, type StallReport } from '@/lib/webrtc/MediaWatchdog';
+import {
+    credentialsExpiringSoon,
+    fetchTurnCredentials,
+    mergeIceServers,
+    type TurnFetchOutcome,
+} from '@/lib/webrtc/iceServers';
 
 import { CallSignalingState, CallState, VideoCallSession } from '@/types/video-call';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +17,10 @@ interface UseVideoCallOptions {
     roomId: string;
     role: 'caller' | 'callee';
     autoStart?: boolean;
+    /** Reciters must always publish video; students may keep the camera off. */
+    requireVideo?: boolean;
+    /** Public call-link token, used to authorize TURN credentials without a session. */
+    linkToken?: string | null;
 }
 
 const INITIAL_CALL_STATE: CallState = {
@@ -19,6 +30,9 @@ const INITIAL_CALL_STATE: CallState = {
     isMuted: false,
     isVideoEnabled: false,
     error: null,
+    connectivityDegraded: false,
+    cameraUnavailable: false,
+    isRecoveringMedia: false,
 };
 
 
@@ -26,7 +40,13 @@ const INITIAL_CALL_STATE: CallState = {
  * Owns the media connection and the durable Supabase-backed negotiation state.
  * Critical SDP is stored in Postgres; Realtime only accelerates state delivery.
  */
-export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOptions) {
+export function useVideoCall({
+    roomId,
+    role,
+    autoStart = false,
+    requireVideo = false,
+    linkToken = null,
+}: UseVideoCallOptions) {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
     const [callState, setCallState] = useState<CallState>(INITIAL_CALL_STATE);
@@ -35,6 +55,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
     const webrtcManager = useRef<WebRTCManager | null>(null);
     const signalingService = useRef<SignalingService | null>(null);
     const diagnostics = useRef<CallDiagnostics | null>(null);
+    const watchdog = useRef<MediaWatchdog | null>(null);
 
     const endedRef = useRef(false);
     const initializedRef = useRef(false);
@@ -47,7 +68,119 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
     const processingRef = useRef<Promise<void>>(Promise.resolve());
     const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const endCallRef = useRef<() => Promise<void>>(async () => {});
+    const turnExpiresAtRef = useRef<string | null>(null);
+    const playbackBlockedRef = useRef(false);
+    const requireVideoRef = useRef(requireVideo);
+    requireVideoRef.current = requireVideo;
     const { toast } = useToast();
+
+    /**
+     * TURN is best-effort: a failure never blocks the call, it only marks the
+     * connection as degraded and records why in diagnostics.
+     */
+    const loadIceServers = useCallback(async (reason: 'initial' | 'ice_restart'): Promise<RTCIceServer[]> => {
+        let outcome: TurnFetchOutcome;
+        try {
+            outcome = await fetchTurnCredentials({ roomId, linkToken });
+        } catch {
+            turnExpiresAtRef.current = null;
+            void diagnostics.current?.record('turn_credentials_unavailable', 'warning', { reason }, true);
+            return mergeIceServers([]);
+        }
+
+        turnExpiresAtRef.current = outcome.expiresAt;
+        void diagnostics.current?.record(
+            outcome.turnAvailable ? 'turn_credentials_obtained' : 'turn_credentials_unavailable',
+            outcome.turnAvailable ? 'info' : 'warning',
+            {
+                reason,
+                errorCode: outcome.errorCode,
+                latencyMs: outcome.latencyMs,
+                urlCount: outcome.urlCount,
+                protocols: outcome.protocols,
+                expiresAt: outcome.expiresAt,
+            },
+            true,
+        );
+        setCallState(prev => ({ ...prev, connectivityDegraded: !outcome.turnAvailable }));
+        return outcome.iceServers;
+    }, [linkToken, roomId]);
+
+    /**
+     * Reacquire the camera after a denial, an ended track, or a device change.
+     * replaceTrack needs no renegotiation; a newly added track does, and only
+     * the caller is allowed to publish that re-offer.
+     */
+    const retryCamera = useCallback(async (): Promise<boolean> => {
+        const manager = webrtcManager.current;
+        if (!manager) return false;
+        try {
+            const { mode, track } = await manager.reacquireVideoTrack();
+            if (mode === 'added' && role === 'caller') {
+                await manager.restartIce();
+            }
+            const stream = manager.getCurrentLocalStream();
+            if (stream) setLocalStream(new MediaStream(stream.getTracks()));
+            setCallState(prev => ({ ...prev, cameraUnavailable: false, isVideoEnabled: track.enabled }));
+            void diagnostics.current?.record('camera_reacquired', 'info', { mode, role }, true);
+            return true;
+        } catch (error) {
+            setCallState(prev => ({ ...prev, cameraUnavailable: true }));
+            void diagnostics.current?.record('camera_reacquire_failed', 'critical', {
+                errorName: error instanceof Error ? error.name : 'UnknownError',
+            }, true);
+            return false;
+        }
+    }, [role]);
+
+    const startWatchdog = useCallback(() => {
+        watchdog.current?.stop();
+        watchdog.current = new MediaWatchdog({
+            canInitiateRenegotiation: role === 'caller',
+            probe: async () => {
+                const pc = webrtcManager.current?.getPeerConnection();
+                if (!pc) return null;
+                return await probeFromPeerConnection(pc, {
+                    requireVideo: requireVideoRef.current,
+                    playbackBlocked: playbackBlockedRef.current,
+                });
+            },
+            onEvent: (event, details) => {
+                const severity = event === 'media_recovery_succeeded' || event === 'media_recovery_started'
+                    ? 'info'
+                    : event === 'media_recovery_failed'
+                        ? 'critical'
+                        : 'warning';
+                void diagnostics.current?.record(event, severity, details, true);
+                if (event === 'media_recovery_started') {
+                    setCallState(prev => ({ ...prev, isRecoveringMedia: true }));
+                }
+                if (event === 'media_recovery_succeeded' || event === 'media_recovery_failed') {
+                    setCallState(prev => ({ ...prev, isRecoveringMedia: false }));
+                }
+            },
+            recover: async (report: StallReport) => {
+                const manager = webrtcManager.current;
+                if (!manager) return false;
+                if (report.action === 'retry_playback') {
+                    playbackBlockedRef.current = false;
+                    setRemoteStream(prev => (prev ? new MediaStream(prev.getTracks()) : prev));
+                    return true;
+                }
+                if (report.action === 'reacquire_video') {
+                    return await retryCamera();
+                }
+                if (report.action === 'ice_restart' || report.action === 'rebuild_connection') {
+                    await manager.restartIce();
+                    return manager.getConnectionState() !== 'failed';
+                }
+                return false;
+            },
+        });
+        watchdog.current.start();
+    }, [retryCamera, role]);
+
+
 
     const clearConnectionTimeout = useCallback(() => {
         if (connectionTimeoutRef.current) {
@@ -162,12 +295,23 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         if (initializedRef.current) return;
         initializedRef.current = true;
         endedRef.current = false;
-        let initializationStage = 'peer_connection';
+        let initializationStage = 'turn_credentials';
 
         try {
             setCallState(prev => ({ ...prev, isConnecting: true, error: null }));
 
+            // Diagnostics exist before the peer connection so TURN acquisition
+            // problems are recorded even when the call never starts.
+            diagnostics.current = new CallDiagnostics(
+                () => webrtcManager.current?.getPeerConnection() ?? null,
+                roomId,
+                role,
+            );
+            const iceServers = await loadIceServers('initial');
+
+            initializationStage = 'peer_connection';
             webrtcManager.current = new WebRTCManager(
+
                 (stream) => {
                     console.log('Remote stream received:', stream.getTracks().map(track => track.kind));
                     setRemoteStream(stream);
@@ -231,18 +375,20 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                     }
                 },
                 role === 'caller',
-                
+                iceServers,
+                // Refresh short-lived TURN credentials right before re-gathering.
+                async () => {
+                    if (!credentialsExpiringSoon(turnExpiresAtRef.current)) return null;
+                    return await loadIceServers('ice_restart');
+                },
             );
             await webrtcManager.current.initialize();
 
             // Capture the real reason a call degrades (one-way audio, blocked RTP,
             // ICE failure) instead of guessing that a TURN server is required.
-            diagnostics.current = new CallDiagnostics(
-                () => webrtcManager.current?.getPeerConnection() ?? null,
-                roomId,
-                role,
-            );
             diagnostics.current.start();
+
+
 
 
             // Subscribe before media permission prompts. Durable state plus a post-subscribe
@@ -292,12 +438,26 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
                 console.log('Local microphone track unmuted');
             });
 
+            // Reciters must be visible; students keep the camera off until they choose.
             const videoTrack = stream.getVideoTracks()[0];
-            if (videoTrack) videoTrack.enabled = false;
+            const videoOn = requireVideo && Boolean(videoTrack);
+            if (videoTrack) videoTrack.enabled = videoOn;
             setLocalStream(stream);
-            setCallState(prev => ({ ...prev, isVideoEnabled: false, isMuted: false }));
+            setCallState(prev => ({
+                ...prev,
+                isVideoEnabled: videoOn,
+                isMuted: false,
+                cameraUnavailable: requireVideo && !videoTrack,
+            }));
+            if (requireVideo && !videoTrack) {
+                void diagnostics.current?.record('camera_required_but_unavailable', 'critical', {
+                    captureMode,
+                }, true);
+            }
             void diagnostics.current?.recordLocalMedia(stream, captureMode);
             localMediaReadyRef.current = true;
+            startWatchdog();
+
 
             initializationStage = 'mark_ready';
             const readySnapshot = await signalingService.current.markReady();
@@ -314,6 +474,8 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             await diagnostics.current?.recordFailure('call_initialization_failed', error, {
                 stage: initializationStage,
             });
+            watchdog.current?.stop();
+            watchdog.current = null;
             diagnostics.current?.stop();
             diagnostics.current = null;
             webrtcManager.current?.cleanup();
@@ -337,7 +499,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
             setCallState(prev => ({ ...prev, isConnecting: false, error: errorMessage }));
             toast({ title: 'خطأ', description: errorMessage, variant: 'destructive' });
         }
-    }, [clearConnectionTimeout, enqueueSignalingState, role, roomId, toast]);
+    }, [clearConnectionTimeout, enqueueSignalingState, loadIceServers, requireVideo, role, roomId, startWatchdog, toast]);
 
     const retryCall = useCallback(async () => {
         if (!initializedRef.current || !webrtcManager.current || !signalingService.current) {
@@ -378,6 +540,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         state: 'started' | 'blocked' | 'failed',
         details: Record<string, unknown> = {},
     ) => {
+        playbackBlockedRef.current = state !== 'started';
         void diagnostics.current?.recordPlayback(state, details);
     }, []);
 
@@ -396,6 +559,8 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         localMediaReadyRef.current = false;
         clearConnectionTimeout();
 
+        watchdog.current?.stop();
+        watchdog.current = null;
         await diagnostics.current?.flush('call_ended').catch(() => {});
         diagnostics.current?.stop();
         diagnostics.current = null;
@@ -413,19 +578,30 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
     endCallRef.current = endCall;
 
     useEffect(() => {
+        // A network change or a return from background triggers a health check,
+        // never an unconditional re-offer: only a genuinely stalled call recovers.
         const handleOnline = () => {
-            if (role === 'caller') void retryCall();
+            if (!initializedRef.current) return;
+            void diagnostics.current?.record('network_change_health_check', 'info', { trigger: 'online' }, true);
+            void watchdog.current?.healthCheck();
         };
         const handleOffline = () => {
             setCallState(prev => ({ ...prev, isConnected: false, isReconnecting: true }));
         };
+        const handleVisibility = () => {
+            if (document.visibilityState !== 'visible' || !initializedRef.current) return;
+            void diagnostics.current?.record('foreground_health_check', 'info', { trigger: 'visibility' }, true);
+            void watchdog.current?.healthCheck();
+        };
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
+        document.addEventListener('visibilitychange', handleVisibility);
         return () => {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
+            document.removeEventListener('visibilitychange', handleVisibility);
         };
-    }, [retryCall, role]);
+    }, []);
 
     useEffect(() => {
         if (autoStart) void initialize();
@@ -441,10 +617,12 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
         toggleMute,
         toggleVideo,
         switchCamera,
+        retryCamera,
         reportRemoteAudioPlayback,
         reportVideoPlayback,
         endCall,
         initialize,
         dbStatus,
     };
+
 }

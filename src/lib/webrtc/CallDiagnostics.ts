@@ -110,7 +110,33 @@ export interface DiagnosticSnapshot {
 
 const SAMPLE_INTERVAL_MS = 5000;
 const GRACE_SAMPLES = 3;
-const DIAGNOSTIC_VERSION = 2;
+const DIAGNOSTIC_VERSION = 3;
+
+/**
+ * Diagnostics are admin-readable. Anything that could carry a TURN credential,
+ * call-link token, or authorization header is dropped before persisting, and
+ * TURN URLs are reduced to their scheme+host so query data never leaks.
+ */
+const FORBIDDEN_DETAIL_KEYS = /^(username|credential|password|secret|sharedsecret|token|linktoken|accesstoken|access_token|authorization|apikey|api_key|jwt)$/i;
+
+export const sanitizeDetails = (value: unknown, depth = 0): unknown => {
+    if (depth > 8) return null;
+    if (Array.isArray(value)) return value.map(item => sanitizeDetails(item, depth + 1));
+    if (value && typeof value === 'object') {
+        const result: Record<string, unknown> = {};
+        for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+            if (FORBIDDEN_DETAIL_KEYS.test(key)) continue;
+            result[key] = sanitizeDetails(item, depth + 1);
+        }
+        return result;
+    }
+    if (typeof value === 'string' && /^turns?:/i.test(value)) {
+        return value.replace(/[?#].*$/, '').replace(/^(turns?:\/\/?)?([^:/?#]+).*$/i, (_m, scheme, host) =>
+            `${(scheme ?? '').toLowerCase()}${host}`);
+    }
+    return value;
+};
+
 
 const numberOrNull = (value: unknown): number | null =>
     typeof value === 'number' && Number.isFinite(value) ? value : null;
@@ -242,6 +268,8 @@ export class CallDiagnostics {
     private loggedVerdicts = new Set<string>();
     private lastSnapshot: DiagnosticSnapshot | null = null;
     private playbackState: RemoteAudioPlaybackState = 'not_attempted';
+    private relayCandidateSeen = false;
+    private reportedRouteVerdict: string | null = null;
     private startedAt = Date.now();
 
     constructor(
@@ -365,6 +393,19 @@ export class CallDiagnostics {
         return this.lastSnapshot;
     }
 
+    /**
+     * Public channel for TURN, camera and recovery events raised outside this
+     * class. Details are scrubbed of credentials before they are persisted.
+     */
+    async record(
+        verdict: string,
+        severity: DiagnosticSeverity,
+        details: Record<string, unknown> = {},
+        force = false,
+    ): Promise<void> {
+        await this.recordEvent(verdict, severity, details, force);
+    }
+
     private trackCandidate = (event: RTCPeerConnectionIceEvent) => {
         const candidate = event.candidate;
         if (!candidate) return;
@@ -377,6 +418,7 @@ export class CallDiagnostics {
         };
         if (observation.type) this.gathered.add(observation.type);
         this.candidateObservations.set(JSON.stringify(observation), observation);
+        if (observation.type === 'relay') this.noteRelayCandidate(observation);
     };
 
     private trackCandidateError = (event: Event) => {
@@ -396,13 +438,58 @@ export class CallDiagnostics {
 
     private trackIceGatheringState = () => {
         if (this.peerConnection?.iceGatheringState !== 'complete') return;
+        const iceConfiguration = this.getIceConfiguration();
         void this.recordEvent('ice_gathering_complete', 'info', {
             gatheredCandidates: Array.from(this.candidateObservations.values()),
             gatheredCandidateTypes: Array.from(this.gathered),
             candidateErrors: this.candidateErrors,
-            iceConfiguration: this.getIceConfiguration(),
+            iceConfiguration,
         }, true);
+
+        // TURN was offered to the browser but produced no relay candidate: the
+        // exact condition that separates "no TURN" from "TURN unreachable".
+        if (iceConfiguration.hasTurn && !this.gathered.has('relay')) {
+            void this.recordEvent('turn_configured_but_no_relay_candidate', 'critical', {
+                gatheredCandidateTypes: Array.from(this.gathered),
+                candidateErrors: this.candidateErrors,
+                iceConfiguration,
+            }, true);
+        }
     };
+
+    private noteRelayCandidate(observation: CandidateObservation): void {
+        if (this.relayCandidateSeen) return;
+        this.relayCandidateSeen = true;
+        void this.recordEvent('relay_candidate_gathered', 'info', {
+            relayProtocol: observation.relayProtocol,
+            protocol: observation.protocol,
+            tcpType: observation.tcpType,
+        }, true);
+    }
+
+    /** Distinguishes a direct route from a relayed one, and UDP/TCP/TLS relaying. */
+    private noteSelectedRoute(current: Sample): void {
+        if (current.localCandidateType !== 'relay') return;
+        const relayProtocol = (current.candidateRelayProtocol ?? current.candidateProtocol ?? '').toLowerCase();
+        const verdict = relayProtocol === 'tls'
+            ? 'connected_via_turn_tls'
+            : relayProtocol === 'tcp'
+                ? 'connected_via_turn_tcp'
+                : relayProtocol === 'udp'
+                    ? 'connected_via_turn_udp'
+                    : 'connected_via_turn_unknown_transport';
+        if (this.reportedRouteVerdict === verdict) return;
+        this.reportedRouteVerdict = verdict;
+        void this.recordEvent(verdict, 'warning', {
+            selectedRouteType: 'relay',
+            relayProtocol: relayProtocol || null,
+            remoteCandidateType: current.remoteCandidateType,
+            networkType: current.networkType,
+            roundTripTime: current.roundTripTime,
+        }, true);
+    }
+
+
 
     private getIceConfiguration(): Record<string, unknown> {
         const config = this.peerConnection?.getConfiguration?.();
@@ -543,6 +630,7 @@ export class CallDiagnostics {
                     tcpType: report.tcpType ?? null,
                 };
                 this.candidateObservations.set(JSON.stringify(observation), observation);
+                if (observation.type === 'relay') this.noteRelayCandidate(observation);
             }
         });
 
@@ -616,8 +704,13 @@ export class CallDiagnostics {
             return { verdict: 'local_video_enabled_but_not_encoding', severity: 'critical' };
         }
         if (this.stalledInboundAudio >= GRACE_SAMPLES && this.stalledOutboundAudio >= GRACE_SAMPLES) {
+            // A relayed pair that carries no RTP is a TURN route problem, not a NAT one.
+            if (current.localCandidateType === 'relay' || current.remoteCandidateType === 'relay') {
+                return { verdict: 'turn_route_failed', severity: 'critical' };
+            }
             return { verdict: 'selected_pair_but_no_audio_rtp', severity: 'critical' };
         }
+
         if (this.stalledInboundAudio >= GRACE_SAMPLES) {
             return { verdict: 'no_inbound_audio_rtp', severity: 'critical' };
         }
@@ -726,6 +819,7 @@ export class CallDiagnostics {
             };
 
             this.prev = current;
+            this.noteSelectedRoute(current);
             this.lastSnapshot = snapshot;
             console.log('[CallDiagnostics]', verdict, snapshot);
             await this.persist(snapshot, false);
@@ -802,7 +896,7 @@ export class CallDiagnostics {
                 connection_state: snapshot.connectionState,
                 gathered_candidate_types: snapshot.gatheredCandidateTypes,
                 user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-                details: snapshot.details as never,
+                details: sanitizeDetails(snapshot.details) as never,
             });
             if (insertError) {
                 this.loggedVerdicts.delete(snapshot.verdict);
