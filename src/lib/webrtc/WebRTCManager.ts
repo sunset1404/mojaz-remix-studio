@@ -233,8 +233,19 @@ export class WebRTCManager {
         }
 
         try {
+            if (this.onBeforeIceRestart) {
+                try {
+                    const refreshed = await this.onBeforeIceRestart();
+                    if (refreshed?.length) this.setIceServers(refreshed);
+                } catch (error) {
+                    console.warn('Could not refresh ICE servers before restart:', error);
+                }
+            }
+
             console.log('Restarting ICE...');
             this.peerConnection.restartIce();
+
+
 
             const offer = await this.peerConnection.createOffer({ iceRestart: true });
             await this.peerConnection.setLocalDescription(offer);
