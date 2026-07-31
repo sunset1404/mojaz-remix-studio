@@ -25,7 +25,7 @@ export class WebRTCManager {
         { urls: 'stun:stun3.l.google.com:19302' },
     ];
 
-    private readonly iceServers: RTCIceServer[];
+    private iceServers: RTCIceServer[];
 
     constructor(
         private onRemoteStream: (stream: MediaStream) => void,
@@ -33,9 +33,33 @@ export class WebRTCManager {
         private onNeedsReOffer?: (offer: RTCSessionDescriptionInit) => void,
         private canInitiateRecovery = false,
         iceServers?: RTCIceServer[],
+        /**
+         * Optional hook to refresh TURN credentials right before an ICE restart.
+         * Returning a list applies it with setConfiguration() before gathering.
+         */
+        private onBeforeIceRestart?: () => Promise<RTCIceServer[] | null>,
     ) {
         this.iceServers = iceServers?.length ? iceServers : WebRTCManager.DEFAULT_ICE_SERVERS;
     }
+
+    /** Apply refreshed ICE servers (e.g. new TURN credentials) without tearing down the call. */
+    setIceServers(iceServers: RTCIceServer[]): void {
+        if (!iceServers?.length) return;
+        this.iceServers = iceServers;
+        try {
+            this.peerConnection?.setConfiguration?.({
+                iceServers: this.iceServers,
+                iceCandidatePoolSize: 4,
+            });
+        } catch (error) {
+            console.warn('setConfiguration failed; keeping previous ICE servers:', error);
+        }
+    }
+
+    getIceServers(): RTCIceServer[] {
+        return this.iceServers;
+    }
+
 
     /**
      * Initialize the peer connection with event handlers
