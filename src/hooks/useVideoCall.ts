@@ -300,18 +300,20 @@ export function useVideoCall({
                     }
                 },
                 role === 'caller',
-                
+                iceServers,
+                // Refresh short-lived TURN credentials right before re-gathering.
+                async () => {
+                    if (!credentialsExpiringSoon(turnExpiresAtRef.current)) return null;
+                    return await loadIceServers('ice_restart');
+                },
             );
             await webrtcManager.current.initialize();
 
             // Capture the real reason a call degrades (one-way audio, blocked RTP,
             // ICE failure) instead of guessing that a TURN server is required.
-            diagnostics.current = new CallDiagnostics(
-                () => webrtcManager.current?.getPeerConnection() ?? null,
-                roomId,
-                role,
-            );
             diagnostics.current.start();
+
+
 
 
             // Subscribe before media permission prompts. Durable state plus a post-subscribe
