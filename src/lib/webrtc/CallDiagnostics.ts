@@ -268,6 +268,8 @@ export class CallDiagnostics {
     private loggedVerdicts = new Set<string>();
     private lastSnapshot: DiagnosticSnapshot | null = null;
     private playbackState: RemoteAudioPlaybackState = 'not_attempted';
+    private relayCandidateSeen = false;
+    private reportedRouteVerdict: string | null = null;
     private startedAt = Date.now();
 
     constructor(
