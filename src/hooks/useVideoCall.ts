@@ -474,6 +474,8 @@ export function useVideoCall({
             await diagnostics.current?.recordFailure('call_initialization_failed', error, {
                 stage: initializationStage,
             });
+            watchdog.current?.stop();
+            watchdog.current = null;
             diagnostics.current?.stop();
             diagnostics.current = null;
             webrtcManager.current?.cleanup();
@@ -538,6 +540,7 @@ export function useVideoCall({
         state: 'started' | 'blocked' | 'failed',
         details: Record<string, unknown> = {},
     ) => {
+        playbackBlockedRef.current = state !== 'started';
         void diagnostics.current?.recordPlayback(state, details);
     }, []);
 
@@ -556,6 +559,8 @@ export function useVideoCall({
         localMediaReadyRef.current = false;
         clearConnectionTimeout();
 
+        watchdog.current?.stop();
+        watchdog.current = null;
         await diagnostics.current?.flush('call_ended').catch(() => {});
         diagnostics.current?.stop();
         diagnostics.current = null;
