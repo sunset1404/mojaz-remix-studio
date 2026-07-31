@@ -19,7 +19,7 @@ interface UseVideoCallOptions {
     roomId: string;
     role: 'caller' | 'callee';
     autoStart?: boolean;
-    /** Reciters must always publish video; students may keep the camera off. */
+    /** Reciters and students both start with a live camera; it can be muted manually afterwards. */
     requireVideo?: boolean;
     /** Public call-link token, used to authorize TURN credentials without a session. */
     linkToken?: string | null;
