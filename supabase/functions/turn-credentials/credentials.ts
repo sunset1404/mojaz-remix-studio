@@ -37,9 +37,7 @@ export function parseTurnUrls(raw: string | undefined | null): string[] {
 function base64(bytes: Uint8Array): string {
     let binary = '';
     for (const byte of bytes) binary += String.fromCharCode(byte);
-    if (typeof btoa === 'function') return btoa(binary);
-    // Node fallback
-    return Buffer.from(bytes).toString('base64');
+    return btoa(binary);
 }
 
 /**

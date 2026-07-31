@@ -67,3 +67,20 @@ routing problem.
 
 No additional Supabase schema is required for diagnostic version 3. Extended
 evidence is stored in the existing `call_diagnostics.details` JSON field.
+
+## Status: coturn deployment — BLOCKED
+
+The application side is complete and verified with STUN-only fallback:
+
+- `turn-credentials` is deployed and returns `503 turn_not_configured` while
+  `TURN_URLS` / `TURN_SHARED_SECRET` are unset;
+- the client then records `turn_credentials_unavailable`, keeps the existing
+  STUN configuration, and the call proceeds exactly as before.
+
+Blocked until the owner supplies the real values (no placeholders are used):
+
+1. coturn host deployment and `static-auth-secret`;
+2. the `TURN_URLS` and `TURN_SHARED_SECRET` secrets;
+3. real relay verification — confirming `relay_candidate_gathered` and
+   `connected_via_turn_udp/tcp/tls` from an out-of-Saudi client, which is the
+   only way to prove relaying fixes the one-way-audio cases.
