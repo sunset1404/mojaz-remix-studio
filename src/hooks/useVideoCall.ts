@@ -578,19 +578,30 @@ export function useVideoCall({
     endCallRef.current = endCall;
 
     useEffect(() => {
+        // A network change or a return from background triggers a health check,
+        // never an unconditional re-offer: only a genuinely stalled call recovers.
         const handleOnline = () => {
-            if (role === 'caller') void retryCall();
+            if (!initializedRef.current) return;
+            void diagnostics.current?.record('network_change_health_check', 'info', { trigger: 'online' }, true);
+            void watchdog.current?.healthCheck();
         };
         const handleOffline = () => {
             setCallState(prev => ({ ...prev, isConnected: false, isReconnecting: true }));
         };
+        const handleVisibility = () => {
+            if (document.visibilityState !== 'visible' || !initializedRef.current) return;
+            void diagnostics.current?.record('foreground_health_check', 'info', { trigger: 'visibility' }, true);
+            void watchdog.current?.healthCheck();
+        };
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
+        document.addEventListener('visibilitychange', handleVisibility);
         return () => {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
+            document.removeEventListener('visibilitychange', handleVisibility);
         };
-    }, [retryCall, role]);
+    }, []);
 
     useEffect(() => {
         if (autoStart) void initialize();
@@ -606,10 +617,12 @@ export function useVideoCall({
         toggleMute,
         toggleVideo,
         switchCamera,
+        retryCamera,
         reportRemoteAudioPlayback,
         reportVideoPlayback,
         endCall,
         initialize,
         dbStatus,
     };
+
 }
