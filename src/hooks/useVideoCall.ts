@@ -2,6 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { WebRTCManager } from '@/lib/webrtc/WebRTCManager';
 import { CallDiagnostics } from '@/lib/webrtc/CallDiagnostics';
 import { SignalingService } from '@/lib/webrtc/SignalingService';
+import { MediaWatchdog, probeFromPeerConnection, type StallReport } from '@/lib/webrtc/MediaWatchdog';
+import {
+    credentialsExpiringSoon,
+    fetchTurnCredentials,
+    mergeIceServers,
+    type TurnFetchOutcome,
+} from '@/lib/webrtc/iceServers';
 
 import { CallSignalingState, CallState, VideoCallSession } from '@/types/video-call';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +17,10 @@ interface UseVideoCallOptions {
     roomId: string;
     role: 'caller' | 'callee';
     autoStart?: boolean;
+    /** Reciters must always publish video; students may keep the camera off. */
+    requireVideo?: boolean;
+    /** Public call-link token, used to authorize TURN credentials without a session. */
+    linkToken?: string | null;
 }
 
 const INITIAL_CALL_STATE: CallState = {
@@ -19,6 +30,9 @@ const INITIAL_CALL_STATE: CallState = {
     isMuted: false,
     isVideoEnabled: false,
     error: null,
+    connectivityDegraded: false,
+    cameraUnavailable: false,
+    isRecoveringMedia: false,
 };
 
 
@@ -26,7 +40,13 @@ const INITIAL_CALL_STATE: CallState = {
  * Owns the media connection and the durable Supabase-backed negotiation state.
  * Critical SDP is stored in Postgres; Realtime only accelerates state delivery.
  */
-export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOptions) {
+export function useVideoCall({
+    roomId,
+    role,
+    autoStart = false,
+    requireVideo = false,
+    linkToken = null,
+}: UseVideoCallOptions) {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
     const [callState, setCallState] = useState<CallState>(INITIAL_CALL_STATE);
@@ -35,6 +55,7 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
     const webrtcManager = useRef<WebRTCManager | null>(null);
     const signalingService = useRef<SignalingService | null>(null);
     const diagnostics = useRef<CallDiagnostics | null>(null);
+    const watchdog = useRef<MediaWatchdog | null>(null);
 
     const endedRef = useRef(false);
     const initializedRef = useRef(false);
@@ -47,7 +68,44 @@ export function useVideoCall({ roomId, role, autoStart = false }: UseVideoCallOp
     const processingRef = useRef<Promise<void>>(Promise.resolve());
     const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const endCallRef = useRef<() => Promise<void>>(async () => {});
+    const turnExpiresAtRef = useRef<string | null>(null);
+    const playbackBlockedRef = useRef(false);
+    const requireVideoRef = useRef(requireVideo);
+    requireVideoRef.current = requireVideo;
     const { toast } = useToast();
+
+    /**
+     * TURN is best-effort: a failure never blocks the call, it only marks the
+     * connection as degraded and records why in diagnostics.
+     */
+    const loadIceServers = useCallback(async (reason: 'initial' | 'ice_restart'): Promise<RTCIceServer[]> => {
+        let outcome: TurnFetchOutcome;
+        try {
+            outcome = await fetchTurnCredentials({ roomId, linkToken });
+        } catch {
+            turnExpiresAtRef.current = null;
+            void diagnostics.current?.record('turn_credentials_unavailable', 'warning', { reason }, true);
+            return mergeIceServers([]);
+        }
+
+        turnExpiresAtRef.current = outcome.expiresAt;
+        void diagnostics.current?.record(
+            outcome.turnAvailable ? 'turn_credentials_obtained' : 'turn_credentials_unavailable',
+            outcome.turnAvailable ? 'info' : 'warning',
+            {
+                reason,
+                errorCode: outcome.errorCode,
+                latencyMs: outcome.latencyMs,
+                urlCount: outcome.urlCount,
+                protocols: outcome.protocols,
+                expiresAt: outcome.expiresAt,
+            },
+            true,
+        );
+        setCallState(prev => ({ ...prev, connectivityDegraded: !outcome.turnAvailable }));
+        return outcome.iceServers;
+    }, [linkToken, roomId]);
+
 
     const clearConnectionTimeout = useCallback(() => {
         if (connectionTimeoutRef.current) {
