@@ -179,6 +179,7 @@ const PublicVideoCall = () => {
                 role="caller"
                 onEndCall={handleEndCall}
                 confirmOnEnd
+                linkToken={token ?? null}
             />
         </div>
     );
