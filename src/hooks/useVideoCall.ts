@@ -72,6 +72,8 @@ export function useVideoCall({
     const processingRef = useRef<Promise<void>>(Promise.resolve());
     const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const endCallRef = useRef<() => Promise<void>>(async () => {});
+    const rebuildConnectionRef = useRef<() => Promise<boolean>>(async () => false);
+
     const turnExpiresAtRef = useRef<string | null>(null);
     const playbackBlockedRef = useRef(false);
     const requireVideoRef = useRef(requireVideo);
