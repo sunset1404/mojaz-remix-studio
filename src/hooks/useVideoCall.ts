@@ -537,7 +537,13 @@ export function useVideoCall({
             await initialize();
             return;
         }
-        setCallState(prev => ({ ...prev, isConnecting: true, isReconnecting: true, error: null }));
+        setCallState(prev => ({
+            ...prev,
+            isConnecting: true,
+            isReconnecting: true,
+            error: null,
+            manualRetryRequired: false,
+        }));
         clearConnectionTimeout();
         ensureConnectionTimeout();
         if (role === 'caller') {
@@ -547,6 +553,61 @@ export function useVideoCall({
             if (snapshot) enqueueSignalingState(snapshot);
         }
     }, [clearConnectionTimeout, enqueueSignalingState, ensureConnectionTimeout, initialize, role]);
+
+    /**
+     * Real final recovery: tear the peer connection, diagnostics and signaling
+     * subscription down and negotiate a brand new connection from scratch. This
+     * is not another ICE restart.
+     */
+    const rebuildConnection = useCallback(async (): Promise<boolean> => {
+        if (endedRef.current) return false;
+        void diagnostics.current?.record('connection_rebuild_started', 'warning', { role }, true);
+
+        watchdog.current?.stop();
+        watchdog.current = null;
+        await diagnostics.current?.flush('connection_rebuild').catch(() => {});
+        diagnostics.current?.stop();
+        diagnostics.current = null;
+        webrtcManager.current?.cleanup();
+        await signalingService.current?.disconnect().catch(error => {
+            console.warn('Failed to disconnect signaling during rebuild:', error);
+        });
+        webrtcManager.current = null;
+        signalingService.current = null;
+        setLocalStream(null);
+        setRemoteStream(null);
+
+        initializedRef.current = false;
+        localMediaReadyRef.current = false;
+        latestGenerationRef.current = 0;
+        offerPublishingGenerationRef.current = 0;
+        offerAppliedGenerationRef.current = 0;
+        answerAppliedGenerationRef.current = 0;
+        answerPublishingGenerationRef.current = 0;
+        playbackBlockedRef.current = false;
+        clearConnectionTimeout();
+        setCallState(prev => ({ ...prev, isConnected: false, isConnecting: true, isReconnecting: true, error: null }));
+
+        await initialize();
+        const rebuilt = Boolean(webrtcManager.current) && initializedRef.current;
+        void diagnostics.current?.record(
+            rebuilt ? 'connection_rebuild_completed' : 'connection_rebuild_failed',
+            rebuilt ? 'info' : 'critical',
+            { role },
+            true,
+        );
+        return rebuilt;
+    }, [clearConnectionTimeout, initialize, role]);
+    rebuildConnectionRef.current = rebuildConnection;
+
+    /** User-triggered reconnect after automatic recovery has been exhausted. */
+    const manualReconnect = useCallback(async () => {
+        setCallState(prev => ({ ...prev, manualRetryRequired: false, isRecoveringMedia: true }));
+        void diagnostics.current?.record('manual_reconnect_requested', 'warning', { role }, true);
+        const ok = await rebuildConnection();
+        setCallState(prev => ({ ...prev, isRecoveringMedia: false, manualRetryRequired: !ok }));
+    }, [rebuildConnection, role]);
+
 
     const toggleMute = useCallback(() => {
         if (!webrtcManager.current) return;
