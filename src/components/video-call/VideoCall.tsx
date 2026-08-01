@@ -39,6 +39,8 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         toggleVideo,
         switchCamera,
         retryCamera,
+        manualReconnect,
+
         reportRemoteAudioPlayback,
         reportVideoPlayback,
         retryCall,
