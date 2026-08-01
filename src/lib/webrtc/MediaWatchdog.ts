@@ -28,7 +28,7 @@ export interface WatchdogProbe {
     outboundAudioPackets: number;
     localAudio: WatchdogTrackState;
     localVideo: WatchdogTrackState;
-    /** Remote peer is expected to be sending audio (a remote audio track exists). */
+    /** Remote peer is expected to be sending audio (a live, unmuted remote audio track exists). */
     remoteAudioExpected: boolean;
     playbackBlocked: boolean;
     documentHidden: boolean;
@@ -51,13 +51,21 @@ const MAX_AUTOMATIC_ATTEMPTS = 3;
 
 export interface MediaWatchdogOptions {
     probe: () => Promise<WatchdogProbe | null>;
-    /** Perform a recovery action. Resolve true when it is considered successful. */
+    /**
+     * Perform a recovery action. Resolving true only means the action ran; the
+     * watchdog independently verifies that media actually flows again.
+     */
     recover: (report: StallReport) => Promise<boolean>;
     onEvent?: (event: string, details: Record<string, unknown>) => void;
     canInitiateRenegotiation: boolean;
     now?: () => number;
     intervalMs?: number;
+    /** How many verification probes to take after a recovery action. */
+    verifyAttempts?: number;
+    verifyIntervalMs?: number;
+    wait?: (ms: number) => Promise<void>;
 }
+
 
 export class MediaWatchdog {
     private timer: ReturnType<typeof setInterval> | null = null;
