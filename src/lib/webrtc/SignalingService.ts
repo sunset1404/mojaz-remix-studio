@@ -132,6 +132,25 @@ export class SignalingService {
         }, current.signaling_generation);
     }
 
+    /**
+     * Ask the caller for a fresh negotiation cycle. The callee may never publish
+     * an offer, so it bumps the generation and clears the stale SDP; the caller
+     * reacts by creating and publishing a new offer for that generation.
+     */
+    async requestRenegotiation(reason: string): Promise<CallSignalingState> {
+        const current = await this.refresh();
+        const nextGeneration = current.signaling_generation + 1;
+        console.log(`Requesting renegotiation (${reason}) -> generation ${nextGeneration}`);
+        return this.update({
+            signaling_generation: nextGeneration,
+            offer_sdp: null,
+            offer_generation: null,
+            answer_sdp: null,
+            answer_generation: null,
+            failure_code: null,
+        }, current.signaling_generation);
+    }
+
     async updateConnectionState(state: RTCPeerConnectionState, failureCode?: string): Promise<CallSignalingState> {
         return this.update({
             [this.role === 'caller' ? 'caller_connection_state' : 'callee_connection_state']: state,
