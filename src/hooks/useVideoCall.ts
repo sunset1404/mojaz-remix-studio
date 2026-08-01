@@ -35,6 +35,8 @@ const INITIAL_CALL_STATE: CallState = {
     connectivityDegraded: false,
     cameraUnavailable: false,
     isRecoveringMedia: false,
+    manualRetryRequired: false,
+
 };
 
 
