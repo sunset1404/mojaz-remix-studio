@@ -127,9 +127,10 @@ export class MediaWatchdog {
         if (probe.requireVideo && (!probe.localVideo.present || !probe.localVideo.live)) {
             await this.attempt('reacquire_video', 'required_video_track_missing_or_ended', 0, {
                 localVideo: probe.localVideo,
-            });
+            }, probe);
             return;
         }
+
 
         if (!prev) return;
 
