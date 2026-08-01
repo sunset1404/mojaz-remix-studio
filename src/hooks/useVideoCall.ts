@@ -615,11 +615,25 @@ export function useVideoCall({
         setCallState(prev => ({ ...prev, isMuted }));
     }, []);
 
-    const toggleVideo = useCallback(() => {
-        if (!webrtcManager.current) return;
-        const isVideoEnabled = webrtcManager.current.toggleVideo();
+    /**
+     * Turning the camera on after the initial capture failed (denied permission,
+     * busy device, audio-only fallback) must reacquire a real track first, then
+     * renegotiate. Otherwise a simple enable/disable toggle is enough.
+     */
+    const toggleVideo = useCallback(async () => {
+        const manager = webrtcManager.current;
+        if (!manager) return;
+        const hasLiveVideo = manager.getCurrentLocalStream()
+            ?.getVideoTracks()
+            .some(track => track.readyState === 'live') ?? false;
+        if (!hasLiveVideo) {
+            await retryCamera();
+            return;
+        }
+        const isVideoEnabled = manager.toggleVideo();
         setCallState(prev => ({ ...prev, isVideoEnabled }));
-    }, []);
+    }, [retryCamera]);
+
 
     const switchCamera = useCallback(async () => {
         if (!webrtcManager.current) return;
