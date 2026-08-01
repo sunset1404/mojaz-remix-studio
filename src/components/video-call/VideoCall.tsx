@@ -486,7 +486,7 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
                         initial={{ y: 30, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.3 }}
-                        onClick={toggleVideo}
+                        onClick={() => void toggleVideo()}
                         className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border ${!callState.isVideoEnabled
                             ? 'bg-destructive text-destructive-foreground border-destructive/60'
                             : 'bg-card/80 text-foreground border-border hover:bg-card'
