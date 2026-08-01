@@ -113,22 +113,31 @@ export function useVideoCall({
 
     /**
      * Reacquire the camera after a denial, an ended track, or a device change.
-     * replaceTrack needs no renegotiation; a newly added track does, and only
-     * the caller is allowed to publish that re-offer.
+     * replaceTrack alone needs no renegotiation, but a newly added track or a
+     * transceiver that was not sending does: the caller re-offers directly, the
+     * callee asks the caller for a new negotiation cycle.
      */
     const retryCamera = useCallback(async (): Promise<boolean> => {
         const manager = webrtcManager.current;
         if (!manager) return false;
         void diagnostics.current?.record('local_video_reacquire_started', 'info', { role }, true);
         try {
-            const { mode, track } = await manager.reacquireVideoTrack();
-            if (mode === 'added' && role === 'caller') {
-                await manager.restartIce();
+            const { mode, track, needsRenegotiation } = await manager.reacquireVideoTrack();
+            if (needsRenegotiation) {
+                if (role === 'caller') {
+                    await manager.restartIce();
+                } else {
+                    await signalingService.current?.requestRenegotiation('callee_video_reacquired');
+                }
             }
             const stream = manager.getCurrentLocalStream();
             if (stream) setLocalStream(new MediaStream(stream.getTracks()));
             setCallState(prev => ({ ...prev, cameraUnavailable: false, isVideoEnabled: track.enabled }));
-            void diagnostics.current?.record('local_video_reacquire_succeeded', 'info', { mode, role }, true);
+            void diagnostics.current?.record('local_video_reacquire_succeeded', 'info', {
+                mode,
+                role,
+                renegotiated: needsRenegotiation,
+            }, true);
             return true;
         } catch (error) {
             setCallState(prev => ({ ...prev, cameraUnavailable: true }));
@@ -162,8 +171,15 @@ export function useVideoCall({
                 if (event === 'media_recovery_started') {
                     setCallState(prev => ({ ...prev, isRecoveringMedia: true }));
                 }
-                if (event === 'media_recovery_succeeded' || event === 'media_recovery_failed') {
-                    setCallState(prev => ({ ...prev, isRecoveringMedia: false }));
+                if (event === 'media_recovery_succeeded') {
+                    setCallState(prev => ({ ...prev, isRecoveringMedia: false, manualRetryRequired: false }));
+                }
+                if (event === 'media_recovery_failed') {
+                    setCallState(prev => ({
+                        ...prev,
+                        isRecoveringMedia: false,
+                        manualRetryRequired: details.manual === true ? true : prev.manualRetryRequired,
+                    }));
                 }
             },
             recover: async (report: StallReport) => {
@@ -177,15 +193,21 @@ export function useVideoCall({
                 if (report.action === 'reacquire_video') {
                     return await retryCamera();
                 }
-                if (report.action === 'ice_restart' || report.action === 'rebuild_connection') {
+                if (report.action === 'ice_restart') {
                     await manager.restartIce();
                     return manager.getConnectionState() !== 'failed';
+                }
+                if (report.action === 'rebuild_connection') {
+                    // A real rebuild: tear the peer connection down and negotiate
+                    // a brand new one instead of repeating an ICE restart.
+                    return await rebuildConnectionRef.current();
                 }
                 return false;
             },
         });
         watchdog.current.start();
     }, [retryCamera, role]);
+
 
 
 
