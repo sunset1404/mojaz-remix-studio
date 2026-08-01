@@ -162,13 +162,13 @@ export class MediaWatchdog {
 
         // 1) RTP is arriving but the browser refused playback.
         if (probe.playbackBlocked && inboundDelta > 0) {
-            await this.attempt('retry_playback', 'inbound_rtp_present_playback_blocked', consecutive, details);
+            await this.attempt('retry_playback', 'inbound_rtp_present_playback_blocked', consecutive, details, probe);
             return;
         }
 
         // 2) A required local track is not being sent.
         if (probe.requireVideo && probe.localVideo.present && !probe.localVideo.live) {
-            await this.attempt('reacquire_video', 'required_video_track_not_live', consecutive, details);
+            await this.attempt('reacquire_video', 'required_video_track_not_live', consecutive, details, probe);
             return;
         }
 
@@ -188,11 +188,42 @@ export class MediaWatchdog {
                 'bounded_ice_recovery_exhausted',
                 consecutive,
                 details,
+                probe,
             );
             return;
         }
 
-        await this.attempt('ice_restart', 'media_rtp_stalled_while_ice_connected', consecutive, details);
+        await this.attempt('ice_restart', 'media_rtp_stalled_while_ice_connected', consecutive, details, probe);
+    }
+
+    /**
+     * A recovery action is only "successful" once the connection is back to
+     * `connected` and media actually moves again (or, for local-media actions,
+     * the local track/playback is genuinely usable).
+     */
+    private async confirm(action: RecoveryAction, baseline: WatchdogProbe): Promise<boolean> {
+        const attempts = this.options.verifyAttempts ?? 3;
+        const intervalMs = this.options.verifyIntervalMs ?? 2000;
+        const wait = this.options.wait ?? ((ms: number) => new Promise<void>(r => setTimeout(r, ms)));
+
+        for (let i = 0; i < attempts; i += 1) {
+            await wait(intervalMs);
+            const probe = await this.options.probe();
+            if (!probe) continue;
+            if (action === 'reacquire_video') {
+                if (probe.localVideo.present && probe.localVideo.live) return true;
+                continue;
+            }
+            if (action === 'retry_playback') {
+                if (!probe.playbackBlocked) return true;
+                continue;
+            }
+            if (probe.connectionState !== 'connected') continue;
+            const flowing = probe.inboundAudioPackets > baseline.inboundAudioPackets
+                || probe.outboundAudioPackets > baseline.outboundAudioPackets;
+            if (flowing) return true;
+        }
+        return false;
     }
 
     private async attempt(
@@ -200,6 +231,7 @@ export class MediaWatchdog {
         reason: string,
         consecutive: number,
         details: Record<string, unknown>,
+        baseline: WatchdogProbe,
     ): Promise<void> {
         if (this.busy) return;
         if (this.now - this.lastRecoveryAt < COOLDOWN_MS) return;
@@ -217,28 +249,42 @@ export class MediaWatchdog {
         this.options.onEvent?.('media_recovery_started', { reason, action, attempt: this.attempts });
 
         try {
-            const succeeded = await this.options.recover(report);
+            const ran = await this.options.recover(report);
+            const confirmed = ran ? await this.confirm(action, baseline) : false;
             this.options.onEvent?.(
-                succeeded ? 'media_recovery_succeeded' : 'media_recovery_failed',
-                { reason, action, attempt: this.attempts },
+                confirmed ? 'media_recovery_succeeded' : 'media_recovery_failed',
+                { reason, action, attempt: this.attempts, actionRan: ran, confirmed },
             );
-            if (succeeded) {
+            if (confirmed) {
                 this.attempts = 0;
+                this.manualRequired = false;
                 this.reset();
             } else if (action === 'rebuild_connection') {
                 this.manualRequired = true;
+                this.options.onEvent?.('media_recovery_failed', {
+                    reason: 'rebuild_connection_failed',
+                    action: 'manual_retry_required',
+                    manual: true,
+                });
             }
         } catch (error) {
+            if (action === 'rebuild_connection') this.manualRequired = true;
             this.options.onEvent?.('media_recovery_failed', {
                 reason,
                 action,
                 attempt: this.attempts,
+                manual: action === 'rebuild_connection',
                 errorName: error instanceof Error ? error.name : 'UnknownError',
             });
         } finally {
             this.busy = false;
         }
     }
+
+    isManualRetryRequired(): boolean {
+        return this.manualRequired;
+    }
+
 
     isRecovering(): boolean {
         return this.busy;
