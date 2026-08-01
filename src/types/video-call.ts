@@ -57,5 +57,8 @@ export interface CallState {
     cameraUnavailable: boolean;
     /** True while an automatic media recovery attempt is in flight. */
     isRecoveringMedia: boolean;
+    /** True when automatic recovery is exhausted and the user must reconnect manually. */
+    manualRetryRequired: boolean;
+
 }
 

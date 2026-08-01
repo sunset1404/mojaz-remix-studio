@@ -442,10 +442,15 @@ export class WebRTCManager {
 
     /**
      * Reacquire the camera after a denied permission, an ended track, or a device
-     * change. Uses replaceTrack when a video sender exists (no renegotiation) and
-     * falls back to addTrack, which the caller must follow with a re-offer.
+     * change. Uses replaceTrack on an existing video transceiver when possible;
+     * a newly added track, or a transceiver that was not sending, requires the
+     * caller to publish a re-offer (`needsRenegotiation`).
      */
-    async reacquireVideoTrack(): Promise<{ mode: 'replaced' | 'added'; track: MediaStreamTrack }> {
+    async reacquireVideoTrack(): Promise<{
+        mode: 'replaced' | 'added';
+        track: MediaStreamTrack;
+        needsRenegotiation: boolean;
+    }> {
         if (!this.peerConnection || !this.localStream) {
             throw new Error('Peer connection not initialized');
         }
@@ -468,16 +473,34 @@ export class WebRTCManager {
         }
         this.localStream.addTrack(newTrack);
 
-        const sender = this.peerConnection.getSenders().find(s => s.track?.kind === 'video')
+        const transceivers = this.peerConnection.getTransceivers?.() ?? [];
+        const videoTransceiver = transceivers.find(t => t.sender?.track?.kind === 'video')
+            ?? transceivers.find(t => t.receiver?.track?.kind === 'video')
+            ?? transceivers.find(t => !t.sender?.track && !t.receiver?.track);
+
+        const sender = videoTransceiver?.sender
+            ?? this.peerConnection.getSenders().find(s => s.track?.kind === 'video')
             ?? this.peerConnection.getSenders().find(s => !s.track);
+
         if (sender && typeof sender.replaceTrack === 'function') {
             await sender.replaceTrack(newTrack);
-            return { mode: 'replaced', track: newTrack };
+            let needsRenegotiation = false;
+            if (videoTransceiver && videoTransceiver.direction !== 'sendrecv') {
+                try {
+                    videoTransceiver.direction = 'sendrecv';
+                    needsRenegotiation = true;
+                } catch (error) {
+                    console.warn('Could not set video transceiver to sendrecv:', error);
+                    needsRenegotiation = true;
+                }
+            }
+            return { mode: 'replaced', track: newTrack, needsRenegotiation };
         }
 
         this.peerConnection.addTrack(newTrack, this.localStream);
-        return { mode: 'added', track: newTrack };
+        return { mode: 'added', track: newTrack, needsRenegotiation: true };
     }
+
 
     cleanup(): void {
 

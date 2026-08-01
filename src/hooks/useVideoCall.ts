@@ -35,6 +35,8 @@ const INITIAL_CALL_STATE: CallState = {
     connectivityDegraded: false,
     cameraUnavailable: false,
     isRecoveringMedia: false,
+    manualRetryRequired: false,
+
 };
 
 
@@ -70,6 +72,8 @@ export function useVideoCall({
     const processingRef = useRef<Promise<void>>(Promise.resolve());
     const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const endCallRef = useRef<() => Promise<void>>(async () => {});
+    const rebuildConnectionRef = useRef<() => Promise<boolean>>(async () => false);
+
     const turnExpiresAtRef = useRef<string | null>(null);
     const playbackBlockedRef = useRef(false);
     const requireVideoRef = useRef(requireVideo);
@@ -111,22 +115,31 @@ export function useVideoCall({
 
     /**
      * Reacquire the camera after a denial, an ended track, or a device change.
-     * replaceTrack needs no renegotiation; a newly added track does, and only
-     * the caller is allowed to publish that re-offer.
+     * replaceTrack alone needs no renegotiation, but a newly added track or a
+     * transceiver that was not sending does: the caller re-offers directly, the
+     * callee asks the caller for a new negotiation cycle.
      */
     const retryCamera = useCallback(async (): Promise<boolean> => {
         const manager = webrtcManager.current;
         if (!manager) return false;
         void diagnostics.current?.record('local_video_reacquire_started', 'info', { role }, true);
         try {
-            const { mode, track } = await manager.reacquireVideoTrack();
-            if (mode === 'added' && role === 'caller') {
-                await manager.restartIce();
+            const { mode, track, needsRenegotiation } = await manager.reacquireVideoTrack();
+            if (needsRenegotiation) {
+                if (role === 'caller') {
+                    await manager.restartIce();
+                } else {
+                    await signalingService.current?.requestRenegotiation('callee_video_reacquired');
+                }
             }
             const stream = manager.getCurrentLocalStream();
             if (stream) setLocalStream(new MediaStream(stream.getTracks()));
             setCallState(prev => ({ ...prev, cameraUnavailable: false, isVideoEnabled: track.enabled }));
-            void diagnostics.current?.record('local_video_reacquire_succeeded', 'info', { mode, role }, true);
+            void diagnostics.current?.record('local_video_reacquire_succeeded', 'info', {
+                mode,
+                role,
+                renegotiated: needsRenegotiation,
+            }, true);
             return true;
         } catch (error) {
             setCallState(prev => ({ ...prev, cameraUnavailable: true }));
@@ -160,8 +173,15 @@ export function useVideoCall({
                 if (event === 'media_recovery_started') {
                     setCallState(prev => ({ ...prev, isRecoveringMedia: true }));
                 }
-                if (event === 'media_recovery_succeeded' || event === 'media_recovery_failed') {
-                    setCallState(prev => ({ ...prev, isRecoveringMedia: false }));
+                if (event === 'media_recovery_succeeded') {
+                    setCallState(prev => ({ ...prev, isRecoveringMedia: false, manualRetryRequired: false }));
+                }
+                if (event === 'media_recovery_failed') {
+                    setCallState(prev => ({
+                        ...prev,
+                        isRecoveringMedia: false,
+                        manualRetryRequired: details.manual === true ? true : prev.manualRetryRequired,
+                    }));
                 }
             },
             recover: async (report: StallReport) => {
@@ -175,15 +195,21 @@ export function useVideoCall({
                 if (report.action === 'reacquire_video') {
                     return await retryCamera();
                 }
-                if (report.action === 'ice_restart' || report.action === 'rebuild_connection') {
+                if (report.action === 'ice_restart') {
                     await manager.restartIce();
                     return manager.getConnectionState() !== 'failed';
+                }
+                if (report.action === 'rebuild_connection') {
+                    // A real rebuild: tear the peer connection down and negotiate
+                    // a brand new one instead of repeating an ICE restart.
+                    return await rebuildConnectionRef.current();
                 }
                 return false;
             },
         });
         watchdog.current.start();
     }, [retryCamera, role]);
+
 
 
 
@@ -511,7 +537,13 @@ export function useVideoCall({
             await initialize();
             return;
         }
-        setCallState(prev => ({ ...prev, isConnecting: true, isReconnecting: true, error: null }));
+        setCallState(prev => ({
+            ...prev,
+            isConnecting: true,
+            isReconnecting: true,
+            error: null,
+            manualRetryRequired: false,
+        }));
         clearConnectionTimeout();
         ensureConnectionTimeout();
         if (role === 'caller') {
@@ -522,17 +554,86 @@ export function useVideoCall({
         }
     }, [clearConnectionTimeout, enqueueSignalingState, ensureConnectionTimeout, initialize, role]);
 
+    /**
+     * Real final recovery: tear the peer connection, diagnostics and signaling
+     * subscription down and negotiate a brand new connection from scratch. This
+     * is not another ICE restart.
+     */
+    const rebuildConnection = useCallback(async (): Promise<boolean> => {
+        if (endedRef.current) return false;
+        void diagnostics.current?.record('connection_rebuild_started', 'warning', { role }, true);
+
+        watchdog.current?.stop();
+        watchdog.current = null;
+        await diagnostics.current?.flush('connection_rebuild').catch(() => {});
+        diagnostics.current?.stop();
+        diagnostics.current = null;
+        webrtcManager.current?.cleanup();
+        await signalingService.current?.disconnect().catch(error => {
+            console.warn('Failed to disconnect signaling during rebuild:', error);
+        });
+        webrtcManager.current = null;
+        signalingService.current = null;
+        setLocalStream(null);
+        setRemoteStream(null);
+
+        initializedRef.current = false;
+        localMediaReadyRef.current = false;
+        latestGenerationRef.current = 0;
+        offerPublishingGenerationRef.current = 0;
+        offerAppliedGenerationRef.current = 0;
+        answerAppliedGenerationRef.current = 0;
+        answerPublishingGenerationRef.current = 0;
+        playbackBlockedRef.current = false;
+        clearConnectionTimeout();
+        setCallState(prev => ({ ...prev, isConnected: false, isConnecting: true, isReconnecting: true, error: null }));
+
+        await initialize();
+        const rebuilt = Boolean(webrtcManager.current) && initializedRef.current;
+        void diagnostics.current?.record(
+            rebuilt ? 'connection_rebuild_completed' : 'connection_rebuild_failed',
+            rebuilt ? 'info' : 'critical',
+            { role },
+            true,
+        );
+        return rebuilt;
+    }, [clearConnectionTimeout, initialize, role]);
+    rebuildConnectionRef.current = rebuildConnection;
+
+    /** User-triggered reconnect after automatic recovery has been exhausted. */
+    const manualReconnect = useCallback(async () => {
+        setCallState(prev => ({ ...prev, manualRetryRequired: false, isRecoveringMedia: true }));
+        void diagnostics.current?.record('manual_reconnect_requested', 'warning', { role }, true);
+        const ok = await rebuildConnection();
+        setCallState(prev => ({ ...prev, isRecoveringMedia: false, manualRetryRequired: !ok }));
+    }, [rebuildConnection, role]);
+
+
     const toggleMute = useCallback(() => {
         if (!webrtcManager.current) return;
         const isMuted = webrtcManager.current.toggleMute();
         setCallState(prev => ({ ...prev, isMuted }));
     }, []);
 
-    const toggleVideo = useCallback(() => {
-        if (!webrtcManager.current) return;
-        const isVideoEnabled = webrtcManager.current.toggleVideo();
+    /**
+     * Turning the camera on after the initial capture failed (denied permission,
+     * busy device, audio-only fallback) must reacquire a real track first, then
+     * renegotiate. Otherwise a simple enable/disable toggle is enough.
+     */
+    const toggleVideo = useCallback(async () => {
+        const manager = webrtcManager.current;
+        if (!manager) return;
+        const hasLiveVideo = manager.getCurrentLocalStream()
+            ?.getVideoTracks()
+            .some(track => track.readyState === 'live') ?? false;
+        if (!hasLiveVideo) {
+            await retryCamera();
+            return;
+        }
+        const isVideoEnabled = manager.toggleVideo();
         setCallState(prev => ({ ...prev, isVideoEnabled }));
-    }, []);
+    }, [retryCamera]);
+
 
     const switchCamera = useCallback(async () => {
         if (!webrtcManager.current) return;
@@ -623,6 +724,8 @@ export function useVideoCall({
         toggleVideo,
         switchCamera,
         retryCamera,
+        manualReconnect,
+
         reportRemoteAudioPlayback,
         reportVideoPlayback,
         endCall,
