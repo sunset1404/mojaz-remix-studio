@@ -724,6 +724,8 @@ export function useVideoCall({
         toggleVideo,
         switchCamera,
         retryCamera,
+        manualReconnect,
+
         reportRemoteAudioPlayback,
         reportVideoPlayback,
         endCall,
