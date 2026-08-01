@@ -334,6 +334,27 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
             );
         }
 
+        if (callState.manualRetryRequired) {
+            return (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-destructive/15 border border-destructive/30 backdrop-blur-sm text-foreground px-4 py-2 rounded-2xl text-sm font-medium max-w-[90%] text-center safe-top"
+                >
+                    <div>تعذرت استعادة الاتصال تلقائيًا</div>
+                    <button
+                        type="button"
+                        onClick={() => void manualReconnect()}
+                        className="mt-2 rounded-full bg-card/90 px-4 py-1.5 text-xs text-foreground"
+                    >
+                        إعادة الاتصال الآن
+                    </button>
+                </motion.div>
+            );
+        }
+
+
+
         if (callState.cameraUnavailable) {
             return (
                 <motion.div
