@@ -347,7 +347,10 @@ export async function probeFromPeerConnection(
         outboundAudioPackets,
         localAudio: trackState(localAudio),
         localVideo: trackState(localVideo),
-        remoteAudioExpected: Boolean(remoteAudio && remoteAudio.readyState === 'live'),
+        // A remote track that is muted means the peer stopped sending on purpose
+        // (intentional mute), which must never be treated as a broken call.
+        remoteAudioExpected: Boolean(remoteAudio && remoteAudio.readyState === 'live' && !remoteAudio.muted),
+
         playbackBlocked: context.playbackBlocked,
         documentHidden: typeof document !== 'undefined' && document.visibilityState === 'hidden',
         requireVideo: context.requireVideo,
