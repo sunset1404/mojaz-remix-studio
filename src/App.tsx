@@ -59,6 +59,9 @@ import AdminSessions from "./pages/AdminSessions";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminAchievements from "./pages/AdminAchievements";
 import AdminGhuyufRahman from "./pages/AdminGhuyufRahman";
+import AdminSurveys from "./pages/AdminSurveys";
+import AdminSurveyEditor from "./pages/AdminSurveyEditor";
+import PublicSurvey from "./pages/PublicSurvey";
 import GhuyufRahmanSurvey from "./pages/GhuyufRahmanSurvey";
 import AdminRewards from "./pages/AdminRewards";
 import AdminPopupMessages from "./pages/AdminPopupMessages";
@@ -124,6 +127,7 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/verify/:id" element={<VerifyCertificate />} />
     <Route path="/ghuyuf-rahman/survey" element={<GhuyufRahmanSurvey />} />
+    <Route path="/survey/:code" element={<PublicSurvey />} />
     <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
     <Route path="/signup" element={<AuthRoute><Signup /></AuthRoute>} />
     <Route path="/signup/reciter" element={<AuthRoute><ReciterSignup /></AuthRoute>} />
@@ -167,6 +171,8 @@ const AppRoutes = () => (
     <Route path="/admin/plans" element={<AdminRoute><AdminPlans /></AdminRoute>} />
     <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
     <Route path="/admin/grant-requests" element={<AdminRoute><AdminGrantRequests /></AdminRoute>} />
+    <Route path="/admin/surveys" element={<AdminRoute><AdminSurveys /></AdminRoute>} />
+    <Route path="/admin/surveys/:id" element={<AdminRoute><AdminSurveyEditor /></AdminRoute>} />
     <Route path="/admin/call-diagnostics" element={<AdminRoute><AdminCallDiagnostics /></AdminRoute>} />
 
     {/* Student-only routes */}
