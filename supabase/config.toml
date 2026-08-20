@@ -1,6 +1,8 @@
 project_id = "cfihcvudcwujylipqngk"
 
 [functions]
+  [functions.submit-survey]
+    verify_jwt = false
   [functions.auth-email-hook]
     verify_jwt = false
   [functions.create-partner]

@@ -1600,6 +1600,163 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_questions: {
+        Row: {
+          created_at: string
+          id: string
+          is_required: boolean
+          options: Json | null
+          order_index: number
+          placeholder: string | null
+          question_text: string
+          question_type: string
+          survey_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          order_index?: number
+          placeholder?: string | null
+          question_text: string
+          question_type: string
+          survey_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          order_index?: number
+          placeholder?: string | null
+          question_text?: string
+          question_type?: string
+          survey_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_questions_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_responses: {
+        Row: {
+          answer_text: string | null
+          created_at: string
+          id: string
+          question_id: string
+          submission_id: string
+        }
+        Insert: {
+          answer_text?: string | null
+          created_at?: string
+          id?: string
+          question_id: string
+          submission_id: string
+        }
+        Update: {
+          answer_text?: string | null
+          created_at?: string
+          id?: string
+          question_id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "survey_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_responses_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "survey_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_submissions: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          survey_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          survey_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_submissions_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surveys: {
+        Row: {
+          completion_message: string | null
+          created_at: string
+          description: string | null
+          external_link_code: string
+          id: string
+          inactive_message: string | null
+          is_active: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completion_message?: string | null
+          created_at?: string
+          description?: string | null
+          external_link_code?: string
+          id?: string
+          inactive_message?: string | null
+          is_active?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completion_message?: string | null
+          created_at?: string
+          description?: string | null
+          external_link_code?: string
+          id?: string
+          inactive_message?: string | null
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: string
