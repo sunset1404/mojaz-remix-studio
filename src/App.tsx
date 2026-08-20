@@ -230,7 +230,7 @@ const AppLayout = () => {
   const isAdmin = !loading && role === "admin" && !isNative;
 
   // Standalone public/full-width routes (no sidebar, no mobile frame)
-  const standalonePaths = ["/ghuyuf-rahman/survey"];
+  const standalonePaths = ["/ghuyuf-rahman/survey", "/survey/"];
   if (standalonePaths.some((p) => location.pathname.startsWith(p))) {
     return <AppRoutes />;
   }
