@@ -104,7 +104,7 @@ const AdminIjazahStudents = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const CACHE_KEY = "admin_ijazah_students_cache_v1";
+  const CACHE_KEY = "admin_ijazah_students_cache_v2";
 
   useEffect(() => { fetchData(); }, []);
 
