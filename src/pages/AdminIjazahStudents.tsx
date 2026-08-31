@@ -122,7 +122,7 @@ const AdminIjazahStudents = () => {
     try {
       const [accRes, recRes, achRes] = await Promise.all([
         supabase.functions.invoke("list-student-accounts", { body: { track: "ijazah" } }),
-        supabase.from("reciter_profiles").select("user_id, full_name, preferred_track, gender").eq("status", "approved"),
+        supabase.from("reciter_profiles").select("user_id, full_name, preferred_track, gender, status"),
         supabase.from("student_achievements").select("*"),
       ]);
       if (accRes.error) throw accRes.error;
