@@ -22,6 +22,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { ReciterPicker } from "@/components/admin/ReciterPicker";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -103,7 +104,7 @@ const AdminIjazahStudents = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const CACHE_KEY = "admin_ijazah_students_cache_v1";
+  const CACHE_KEY = "admin_ijazah_students_cache_v2";
 
   useEffect(() => { fetchData(); }, []);
 
@@ -122,7 +123,7 @@ const AdminIjazahStudents = () => {
     try {
       const [accRes, recRes, achRes] = await Promise.all([
         supabase.functions.invoke("list-student-accounts", { body: { track: "ijazah" } }),
-        supabase.from("reciter_profiles").select("user_id, full_name, preferred_track, gender").eq("status", "approved"),
+        supabase.from("reciter_profiles").select("user_id, full_name, preferred_track, gender, status"),
         supabase.from("student_achievements").select("*"),
       ]);
       if (accRes.error) throw accRes.error;
@@ -518,16 +519,11 @@ const AdminIjazahStudents = () => {
                                         </SelectContent>
                                       </Select>
                                       <h4 className="text-xs font-bold text-primary mt-2">تسكين مقرئ</h4>
-                                      <Select value={student.assigned_reciter_id || ""} onValueChange={(val) => assignReciter(student.id, val)}>
-                                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="اختر المقرئ" /></SelectTrigger>
-                                        <SelectContent className="z-[100] max-h-60">
-                                          {recitersFor(student.gender).length === 0 ? (
-                                            <div className="px-3 py-2 text-xs text-muted-foreground">لا يوجد مقرئون معتمدون مطابقون لجنس الطالب</div>
-                                          ) : recitersFor(student.gender).map(r => (
-                                            <SelectItem key={r.user_id} value={r.user_id} className="text-xs">{r.full_name}</SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
+                                      <ReciterPicker
+                                        reciters={reciters as any}
+                                        value={student.assigned_reciter_id}
+                                        onChange={(val) => assignReciter(student.id, val)}
+                                      />
                                     </div>
                                   )}
                                   <div className="space-y-1.5 text-xs">
