@@ -518,16 +518,11 @@ const AdminIjazahStudents = () => {
                                         </SelectContent>
                                       </Select>
                                       <h4 className="text-xs font-bold text-primary mt-2">تسكين مقرئ</h4>
-                                      <Select value={student.assigned_reciter_id || ""} onValueChange={(val) => assignReciter(student.id, val)}>
-                                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="اختر المقرئ" /></SelectTrigger>
-                                        <SelectContent className="z-[100] max-h-60">
-                                          {recitersFor(student.gender).length === 0 ? (
-                                            <div className="px-3 py-2 text-xs text-muted-foreground">لا يوجد مقرئون معتمدون مطابقون لجنس الطالب</div>
-                                          ) : recitersFor(student.gender).map(r => (
-                                            <SelectItem key={r.user_id} value={r.user_id} className="text-xs">{r.full_name}</SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
+                                      <ReciterPicker
+                                        reciters={reciters as any}
+                                        value={student.assigned_reciter_id}
+                                        onChange={(val) => assignReciter(student.id, val)}
+                                      />
                                     </div>
                                   )}
                                   <div className="space-y-1.5 text-xs">
