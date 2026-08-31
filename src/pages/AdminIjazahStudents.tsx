@@ -238,6 +238,18 @@ const AdminIjazahStudents = () => {
   const getAchievement = (uid: string) => achievements.find((a) => a.student_id === uid);
   const getReciterName = (rid: string | null) => !rid ? "غير مُسكَّن" : reciters.find(r => r.user_id === rid)?.full_name || "غير معروف";
 
+  const normGender = (g?: string | null) => {
+    const v = (g || "").trim();
+    if (["male", "ذكر", "رجل", "m"].includes(v)) return "male";
+    if (["female", "أنثى", "انثى", "f"].includes(v)) return "female";
+    return "";
+  };
+  const recitersFor = (studentGender?: string | null) => {
+    const sg = normGender(studentGender);
+    if (!sg) return reciters;
+    return reciters.filter(r => normGender((r as any).gender) === sg);
+  };
+
   const updateStudentStatus = async (studentId: string | null, newStatus: string) => {
     if (!studentId) return;
     try {
