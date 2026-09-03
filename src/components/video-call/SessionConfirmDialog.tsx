@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, FileText, CheckCircle2, ClipboardList } from 'lucide-react';
+import { BookOpen, FileText, CheckCircle2, ClipboardList, Star } from 'lucide-react';
 import { SessionNoteData } from './ReciterSessionPanel';
 import { SurahSelect } from './SurahSelect';
 import { RubricScoring } from './RubricScoring';
