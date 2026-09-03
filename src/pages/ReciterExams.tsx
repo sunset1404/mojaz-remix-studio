@@ -72,50 +72,6 @@ export default function ReciterExams() {
   const upcoming = exams.filter((e) => e.status === "scheduled");
   const done = exams.filter((e) => e.status === "completed" || e.status === "cancelled");
 
-  const startCall = (exam: Exam) => {
-    if (!exam.student_id) {
-      toast({
-        title: "لا يمكن بدء المكالمة",
-        description: "لم يتم تحديد طالب لهذا الاختبار. يُرجى التواصل مع الإدارة.",
-        variant: "destructive",
-      });
-      return;
-    }
-    navigate("/call/new", {
-      state: {
-        studentId: exam.student_id,
-        studentName: exam.student_name || "الطالب",
-        examId: exam.id,
-      },
-    });
-  };
-
-  const openResult = (exam: Exam) => {
-    setResultValue("passed");
-    setResultNotes(exam.notes || "");
-    setResultDialog(exam);
-  };
-
-  const saveResult = async () => {
-    if (!resultDialog) return;
-    setSaving(true);
-    const { error } = await (supabase as any)
-      .from("exams")
-      .update({
-        status: "completed",
-        result: resultValue,
-        notes: resultNotes || null,
-      })
-      .eq("id", resultDialog.id);
-    setSaving(false);
-    if (error) {
-      toast({ title: "خطأ", description: "فشل حفظ النتيجة", variant: "destructive" });
-      return;
-    }
-    toast({ title: "تم", description: "تم تسجيل نتيجة الاختبار" });
-    setResultDialog(null);
-    fetchExams();
-  };
 
   const renderCard = (exam: Exam, isUpcoming: boolean) => (
     <motion.div
