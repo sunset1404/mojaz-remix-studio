@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ChevronRight, Calendar, Clock, Users,
-  Loader2, CheckCircle2, XCircle, GraduationCap,
+  Phone, Loader2, CheckCircle2, XCircle, GraduationCap,
 } from "lucide-react";
 
 type ExamType = "admission" | "eligibility";
