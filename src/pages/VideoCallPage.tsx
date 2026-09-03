@@ -44,15 +44,36 @@ const VideoCallPage = () => {
     const [callClosed, setCallClosed] = useState(false);
 
     // Return the user exactly where they came from (fallback to role home)
+    const exitedRef = useRef(false);
+    const mountedRef = useRef(true);
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => { mountedRef.current = false; };
+    }, []);
     const exitCall = () => {
+        if (exitedRef.current) return;
+        exitedRef.current = true;
+        const home = isReciter ? "/my-students" : "/";
         const before = window.location.pathname;
-        navigate(-1);
+        try {
+            navigate(-1);
+        } catch {
+            // ignore
+        }
+        // If history navigation didn't take us away, force a hard route change
         setTimeout(() => {
-            if (window.location.pathname === before) {
-                navigate(isReciter ? "/my-students" : "/", { replace: true });
+            if (mountedRef.current && window.location.pathname === before) {
+                navigate(home, { replace: true });
             }
-        }, 300);
+        }, 400);
+        // Final safety net: never leave the user stuck on a spinner
+        setTimeout(() => {
+            if (mountedRef.current && window.location.pathname === before) {
+                window.location.replace(home);
+            }
+        }, 1200);
     };
+
     const [showStudentPopup, setShowStudentPopup] = useState(false);
     const [sessionFeedback, setSessionFeedback] = useState<{ rating: number; notes: string }>({ rating: 0, notes: '' });
     const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
