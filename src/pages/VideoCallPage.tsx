@@ -81,6 +81,7 @@ const VideoCallPage = () => {
     const [notesOpen, setNotesOpen] = useState(false);
     const [scoringOpen, setScoringOpen] = useState(false);
     const [examScores, setExamScores] = useState<Record<string, number>>({});
+    const [examNotes, setExamNotes] = useState("");
     const [examId, setExamId] = useState<string | null>(navState?.examId || null);
     const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, scores: {}, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
 
