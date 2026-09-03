@@ -6,4 +6,4 @@
 - [x] Constrain Sonner toasts inside mobile viewport, short duration, close button.
 - [x] Notifications page: remove green back arrow, keep global back arrow centered on the right.
 - [x] Remove video icon from call button everywhere (student & reciter apps).
-- [ ] Add 5-star session rating to the session evaluation form.
+- [x] Add 5-star session rating to the session evaluation form.
