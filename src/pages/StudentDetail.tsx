@@ -42,6 +42,8 @@ const StudentDetail = () => {
   const openEdit = (session: any) => {
     setEditSession(session);
     setForm({
+      date: session.date || "",
+      time: session.time || "",
       duration: session.duration || "",
       notes: session.notes || "",
       rating: session.rating ? String(session.rating) : "",
