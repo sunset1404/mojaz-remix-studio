@@ -142,27 +142,6 @@ export default function ReciterExams() {
           </p>
         )}
 
-        {isUpcoming && (
-          <div className="flex gap-2 mt-3">
-            <Button
-              size="sm"
-              onClick={() => startCall(exam)}
-              className="gap-2 flex-1"
-            >
-              <Phone className="w-4 h-4" />
-              اتصال بالطالب
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => openResult(exam)}
-              className="gap-2 flex-1"
-            >
-              <ClipboardList className="w-4 h-4" />
-              تسجيل النتيجة
-            </Button>
-          </div>
-        )}
 
       </Card>
     </motion.div>
