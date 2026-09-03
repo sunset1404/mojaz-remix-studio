@@ -22,11 +22,13 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
   const [notes, setNotes] = useState(data.notes);
   const [startMaxAyahs, setStartMaxAyahs] = useState(0);
   const [endMaxAyahs, setEndMaxAyahs] = useState(0);
+  const [rating, setRating] = useState<number>(data.rating || 0);
 
   const handleConfirm = () => {
-    const total = computeTotalScore(scores);
-    const rating = Math.max(0, Math.min(5, Math.round((total / 100) * 5)));
-    onConfirm({ rating, scores, startSurah, startAyah, endSurah, endAyah, notes });
+    const finalRating = isExam
+      ? Math.max(rating, Math.max(0, Math.min(5, Math.round((computeTotalScore(scores) / 100) * 5))))
+      : rating;
+    onConfirm({ rating: finalRating, scores, startSurah, startAyah, endSurah, endAyah, notes });
   };
 
 
