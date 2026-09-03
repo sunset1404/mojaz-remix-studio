@@ -25,10 +25,12 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
   const [rating, setRating] = useState<number>(data.rating || 0);
 
   const handleConfirm = () => {
-    const finalRating = isExam
-      ? Math.max(rating, Math.max(0, Math.min(5, Math.round((computeTotalScore(scores) / 100) * 5))))
-      : rating;
-    onConfirm({ rating: finalRating, scores, startSurah, startAyah, endSurah, endAyah, notes });
+    if (isExam) {
+      const scoreRating = Math.max(0, Math.min(5, Math.round((computeTotalScore(scores) / 100) * 5)));
+      onConfirm({ rating: scoreRating, scores, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes });
+      return;
+    }
+    onConfirm({ rating, scores, startSurah, startAyah, endSurah, endAyah, notes });
   };
 
 
