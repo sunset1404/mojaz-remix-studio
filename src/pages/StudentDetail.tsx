@@ -16,6 +16,7 @@ const StudentDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [student, setStudent] = useState<any>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [achievements, setAchievements] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,10 +45,22 @@ const StudentDetail = () => {
         .eq("user_id", studentId)
         .order("created_at", { ascending: false })
         .limit(5),
-    ]).then(([profileRes, achRes, sessionsRes]) => {
+      supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", studentId)
+        .maybeSingle(),
+    ]).then(([profileRes, achRes, sessionsRes, avatarRes]) => {
       setStudent(profileRes.data);
       setAchievements(achRes.data);
       setSessions(sessionsRes.data || []);
+      const path = avatarRes.data?.avatar_url;
+      if (path) {
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+        setAvatarUrl(urlData?.publicUrl || null);
+      } else {
+        setAvatarUrl(null);
+      }
       setLoading(false);
     });
   }, [user, studentId]);
