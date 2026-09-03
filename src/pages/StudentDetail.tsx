@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import {
-  ArrowRight, User, BookOpen, Clock, Trophy, Award,
+  User, BookOpen, Clock, Trophy, Award,
   Star, Calendar, Phone, Video, MapPin, GraduationCap,
   Target, TrendingUp
 } from "lucide-react";
@@ -95,12 +95,6 @@ const StudentDetail = () => {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="gradient-primary px-6 pt-10 pb-10 rounded-b-[2.5rem] relative">
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-10 right-5 w-10 h-10 rounded-full bg-white/15 flex items-center justify-center"
-        >
-          <ArrowRight className="w-5 h-5 text-primary-foreground" />
-        </button>
 
         <motion.div
           initial={{ y: -10, opacity: 0 }}

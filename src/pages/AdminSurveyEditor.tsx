@@ -19,7 +19,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  ArrowRight, Plus, Pencil, Trash2, Save, Loader2, ChevronUp, ChevronDown,
+  Plus, Pencil, Trash2, Save, Loader2, ChevronUp, ChevronDown,
   Copy, ExternalLink, Download,
 } from "lucide-react";
 
@@ -259,9 +259,6 @@ const AdminSurveyEditor = () => {
     <div dir="rtl" className="p-4 md:p-6 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/admin/surveys")}>
-            <ArrowRight className="w-5 h-5" />
-          </Button>
           <div>
             <h1 className="text-2xl font-extrabold text-foreground">{survey.title}</h1>
             <p className="text-xs text-muted-foreground">{publicUrl}</p>

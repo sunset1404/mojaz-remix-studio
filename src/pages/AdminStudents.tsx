@@ -277,9 +277,6 @@ const AdminStudents = () => {
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="gap-1 text-muted-foreground hover:text-foreground">
-              <ArrowRight className="w-4 h-4" />
-            </Button>
             <div>
               <h1 className="text-lg font-bold text-foreground">طلاب الإقراء</h1>
               <p className="text-xs text-muted-foreground">إدارة كل حسابات طلاب الإقراء بكل التصنيفات</p>

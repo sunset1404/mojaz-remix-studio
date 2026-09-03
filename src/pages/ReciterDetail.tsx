@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, User, Phone, Video, MapPin, Briefcase, BookOpen, GraduationCap, Calendar, Clock } from "lucide-react";
+import { User, Phone, Video, MapPin, Briefcase, BookOpen, GraduationCap, Calendar, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,10 +104,7 @@ const ReciterDetail = () => {
     <div className="min-h-screen bg-background pb-24" dir="rtl">
       {/* Header */}
       <div className="gradient-primary px-6 pt-12 pb-20 rounded-b-[2.5rem] relative">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-primary-foreground/20 flex items-center justify-center">
-            <ArrowRight className="w-5 h-5 text-primary-foreground" />
-          </button>
+        <div className="flex items-center justify-end mb-4">
           <motion.h1
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}

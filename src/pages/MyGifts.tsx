@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Gift, ArrowRight, Clock, CheckCircle, Send, DollarSign, Calendar } from "lucide-react";
+import { Gift, Clock, CheckCircle, Send, DollarSign, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
@@ -54,10 +54,6 @@ const MyGifts = () => {
     <div className="min-h-screen bg-background pb-10">
       {/* Header */}
       <div className="bg-gradient-to-br from-[hsl(43,74%,49%)] to-[hsl(43,74%,38%)] px-6 pt-12 pb-8">
-        <button onClick={() => navigate("/profile")} className="flex items-center gap-2 text-white/80 hover:text-white mb-4 text-sm">
-          <ArrowRight className="w-4 h-4" />
-          العودة
-        </button>
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
             <Gift className="w-6 h-6 text-white" />

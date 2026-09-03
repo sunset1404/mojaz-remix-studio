@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Mail, ShieldCheck, ArrowRight } from "lucide-react";
+import { Mail, ShieldCheck } from "lucide-react";
 import logoMojaz from "@/assets/logo-mojaz.webp";
 
 const VerifySignupOtp = () => {
@@ -65,16 +65,6 @@ const VerifySignupOtp = () => {
     <div className="min-h-screen flex flex-col relative overflow-hidden"
       style={{ background: "linear-gradient(170deg, hsl(174 42% 28%) 0%, hsl(174 42% 35%) 30%, hsl(174 38% 40%) 55%, hsl(174 35% 38%) 80%, hsl(174 30% 32%) 100%)" }}>
       <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10">
-        <motion.button
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          onClick={() => navigate("/signup")}
-          className="absolute top-6 right-6 z-20 flex items-center gap-1.5 text-primary-foreground font-semibold text-sm hover:text-[#d2ac4b] transition-colors"
-        >
-          <ArrowRight className="w-5 h-5" />
-          رجوع
-        </motion.button>
 
         <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, type: "spring" }} className="mb-6">
