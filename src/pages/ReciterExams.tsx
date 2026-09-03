@@ -181,19 +181,19 @@ export default function ReciterExams() {
   return (
     <div className="min-h-screen bg-background pb-24" dir="rtl">
       {/* Header */}
-      <div className="px-5 pt-8 pb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <h1 className="text-lg font-bold text-foreground text-right">اختبارات القبول والاستحقاق</h1>
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-primary" />
-          </div>
-        </div>
+      <div className="px-5 pt-8 pb-4 flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center"
+          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0"
         >
           <ChevronRight className="w-5 h-5 text-foreground" />
         </button>
+        <h1 className="flex-1 text-lg font-bold text-foreground text-center truncate">
+          اختبارات القبول والاستحقاق
+        </h1>
+        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+          <GraduationCap className="w-5 h-5 text-primary" />
+        </div>
       </div>
 
 
