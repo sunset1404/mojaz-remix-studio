@@ -25,7 +25,52 @@ const StudentDetail = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCalling, setIsCalling] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editSession, setEditSession] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    duration: "",
+    notes: "",
+    rating: "",
+    parts_reached: "",
+    pages_reached: "",
+  });
   const { toast } = useToast();
+
+  const openEdit = (session: any) => {
+    setEditSession(session);
+    setForm({
+      duration: session.duration || "",
+      notes: session.notes || "",
+      rating: session.rating ? String(session.rating) : "",
+      parts_reached: session.parts_reached != null ? String(session.parts_reached) : "",
+      pages_reached: session.pages_reached != null ? String(session.pages_reached) : "",
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editSession) return;
+    setSaving(true);
+    const payload = {
+      duration: form.duration,
+      notes: form.notes || null,
+      rating: form.rating ? Number(form.rating) : null,
+      parts_reached: form.parts_reached ? Number(form.parts_reached) : null,
+      pages_reached: form.pages_reached ? Number(form.pages_reached) : null,
+    };
+    const { error } = await supabase
+      .from("session_records")
+      .update(payload)
+      .eq("id", editSession.id);
+    setSaving(false);
+    if (error) {
+      toast({ title: "خطأ", description: "لم يتم حفظ التعديلات", variant: "destructive" });
+      return;
+    }
+    setSessions((prev) => prev.map((s) => (s.id === editSession.id ? { ...s, ...payload } : s)));
+    setEditSession(null);
+    toast({ title: "تم الحفظ", description: "تم تحديث سجل الجلسة" });
+  };
 
   useEffect(() => {
     if (!user || !studentId) return;
