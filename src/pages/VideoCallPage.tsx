@@ -42,6 +42,17 @@ const VideoCallPage = () => {
     const [isReciter, setIsReciter] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [callClosed, setCallClosed] = useState(false);
+
+    // Return the user exactly where they came from (fallback to role home)
+    const exitCall = () => {
+        const before = window.location.pathname;
+        navigate(-1);
+        setTimeout(() => {
+            if (window.location.pathname === before) {
+                navigate(isReciter ? "/my-students" : "/", { replace: true });
+            }
+        }, 300);
+    };
     const [showStudentPopup, setShowStudentPopup] = useState(false);
     const [sessionFeedback, setSessionFeedback] = useState<{ rating: number; notes: string }>({ rating: 0, notes: '' });
     const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
@@ -212,7 +223,7 @@ const VideoCallPage = () => {
     useEffect(() => {
         if (pageState === "ended") {
             toast({ title: "انتهت المكالمة", description: "هذه الجلسة انتهت مسبقاً" });
-            navigate(-1);
+            exitCall();
         }
     }, [pageState]);
 
@@ -263,7 +274,7 @@ const VideoCallPage = () => {
             // Otherwise save whatever notes/rating were entered and exit
             await saveAndEnd();
             toast({ title: "انتهت المكالمة", description: "تم إنهاء الجلسة" });
-            navigate(-1);
+            exitCall();
         }
     };
 
@@ -383,13 +394,13 @@ const VideoCallPage = () => {
             }
         }
         toast({ title: "انتهت المكالمة", description: "تم إنهاء الجلسة بنجاح" });
-        navigate(-1);
+        exitCall();
     };
 
     const handleStudentPopupClose = () => {
         setShowStudentPopup(false);
         toast({ title: "انتهت المكالمة", description: "تم إنهاء الجلسة بنجاح" });
-        navigate(-1);
+        exitCall();
     };
 
     // ── Render ──
