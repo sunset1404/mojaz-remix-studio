@@ -283,7 +283,7 @@ const StudentDetail = () => {
           {sessions.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-4">لا توجد جلسات مسجلة</p>
           ) : (
-            <div className="space-y-2">
+            <div className="h-[21rem] overflow-y-auto overscroll-contain space-y-2 pr-1">
               {sessions.map((session) => {
                 const expanded = expandedId === session.id;
                 return (
