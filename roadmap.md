@@ -10,3 +10,4 @@
 - [x] Replace session evaluation with unified admission/eligibility exam scoring for exam calls (inside call and post-call), matching the attached evaluation-criteria UI.
 - [x] Prefill post-call exam evaluation with data entered during the call.
 - [x] ReciterExams header: single global back button, icon at right next to it, RTL title.
+- [x] Exam card committee section: RTL order, icon on the right.

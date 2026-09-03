@@ -140,11 +140,11 @@ export default function ReciterExams() {
         </div>
 
         <div className="mt-3 pt-3 border-t border-border/40">
-          <div className="flex items-center gap-1.5 mb-1.5 justify-end">
-            <span className="text-xs font-semibold text-foreground">أعضاء اللجنة</span>
+          <div dir="rtl" className="flex items-center gap-1.5 mb-1.5 justify-start">
             <Users className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-semibold text-foreground">أعضاء اللجنة</span>
           </div>
-          <div className="flex flex-wrap gap-1.5 justify-end">
+          <div dir="rtl" className="flex flex-wrap gap-1.5 justify-start">
             {[exam.committee_member_1_name, exam.committee_member_2_name, exam.committee_member_3_name]
               .filter(Boolean)
               .map((n, i) => (
