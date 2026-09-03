@@ -538,7 +538,7 @@ const VideoCallPage = () => {
                 ) : undefined}
             />
             )}
-            {!callClosed && isReciter && (
+            {!callClosed && isReciter && !examId && (
                 <ReciterSessionPanel
                     onDataChange={(data) => { sessionNoteRef.current = data; }}
                     scores={examScores}
@@ -550,11 +550,16 @@ const VideoCallPage = () => {
             {!callClosed && isReciter && examId && (
                 <ExamScoringPanel
                     scores={examScores}
+                    notes={examNotes}
                     onScoresChange={(scores) => {
                         setExamScores(scores);
                         const total = computeTotalScore(scores);
                         const rating = Math.max(0, Math.min(5, Math.round((total / 100) * 5)));
                         sessionNoteRef.current = { ...sessionNoteRef.current, scores, rating };
+                    }}
+                    onNotesChange={(notes) => {
+                        setExamNotes(notes);
+                        sessionNoteRef.current = { ...sessionNoteRef.current, notes };
                     }}
                     isOpen={scoringOpen}
                     onOpenChange={setScoringOpen}
