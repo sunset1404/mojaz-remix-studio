@@ -249,10 +249,12 @@ const AppLayout = () => {
     );
   }
 
+  const isNotifications = location.pathname === "/notifications";
+
   return (
     <SidebarProvider>
       <div className="w-full sm:max-w-md mx-auto relative min-h-screen bg-background sm:shadow-2xl">
-        <GlobalBackButton />
+        <GlobalBackButton className={isNotifications ? "top-6" : ""} />
         <AppRoutes />
       </div>
     </SidebarProvider>

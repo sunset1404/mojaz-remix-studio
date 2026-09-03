@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Routes where the global back button should NOT appear
 const HIDE_ON_EXACT = new Set<string>([
@@ -16,7 +17,11 @@ const HIDE_ON_PREFIX = [
   "/verify/",
 ];
 
-const GlobalBackButton = () => {
+type GlobalBackButtonProps = {
+  className?: string;
+};
+
+const GlobalBackButton = ({ className }: GlobalBackButtonProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const path = location.pathname;
@@ -34,7 +39,10 @@ const GlobalBackButton = () => {
       type="button"
       onClick={handleBack}
       aria-label="رجوع"
-      className="fixed top-3 right-3 z-50 sm:absolute sm:top-4 sm:right-4 bg-background/90 backdrop-blur border border-border shadow-md rounded-full p-2 hover:bg-accent transition-colors"
+      className={cn(
+        "fixed top-3 right-3 z-50 sm:absolute sm:top-4 sm:right-4 bg-background/90 backdrop-blur border border-border shadow-md rounded-full p-2 hover:bg-accent transition-colors",
+        className
+      )}
     >
       <ArrowRight className="w-5 h-5 text-foreground" />
     </button>
