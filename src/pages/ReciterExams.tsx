@@ -203,62 +203,6 @@ export default function ReciterExams() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Result dialog */}
-      <Dialog open={!!resultDialog} onOpenChange={(o) => !o && setResultDialog(null)}>
-        <DialogContent dir="rtl" className="max-w-sm text-right">
-          <DialogHeader>
-            <DialogTitle className="text-right">تسجيل نتيجة الاختبار</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>النتيجة</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setResultValue("passed")}
-                  className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
-                    resultValue === "passed"
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30"
-                      : "border-border"
-                  }`}
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  ناجح
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setResultValue("failed")}
-                  className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
-                    resultValue === "failed"
-                      ? "border-destructive bg-destructive/10 text-destructive"
-                      : "border-border"
-                  }`}
-                >
-                  <XCircle className="w-4 h-4" />
-                  راسب
-                </button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>ملاحظات</Label>
-              <Textarea
-                value={resultNotes}
-                onChange={(e) => setResultNotes(e.target.value)}
-                rows={3}
-                placeholder="ملاحظات حول أداء الطالب..."
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setResultDialog(null)}>إلغاء</Button>
-            <Button onClick={saveResult} disabled={saving} className="gap-2">
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              حفظ النتيجة
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
