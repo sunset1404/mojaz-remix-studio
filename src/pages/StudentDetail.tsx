@@ -288,9 +288,11 @@ const StudentDetail = () => {
                 const expanded = expandedId === session.id;
                 return (
                   <div key={session.id} className="bg-muted/30 rounded-xl overflow-hidden">
-                    <button
+                    <Button
+                      type="button"
+                      variant="ghost"
                       onClick={() => setExpandedId(expanded ? null : session.id)}
-                      className="w-full flex items-center justify-between p-3 text-right"
+                      className="w-full h-auto flex items-center justify-between p-3 text-right hover:bg-transparent"
                     >
                       <div>
                         <p className="text-sm font-semibold text-foreground">{session.date}</p>
