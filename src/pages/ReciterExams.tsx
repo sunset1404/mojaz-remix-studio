@@ -37,7 +37,6 @@ interface Exam {
 export default function ReciterExams() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("upcoming");
