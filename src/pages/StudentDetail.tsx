@@ -56,6 +56,8 @@ const StudentDetail = () => {
     if (!editSession) return;
     setSaving(true);
     const payload = {
+      date: form.date,
+      time: form.time,
       duration: form.duration,
       notes: form.notes || null,
       rating: form.rating ? Number(form.rating) : null,
