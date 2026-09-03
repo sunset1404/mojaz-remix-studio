@@ -1,0 +1,1 @@
+- [ ] End the video call before showing the session evaluation form; keep the connection closed while the reciter fills it.
