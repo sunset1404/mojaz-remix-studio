@@ -29,6 +29,8 @@ const StudentDetail = () => {
   const [editSession, setEditSession] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
+    date: "",
+    time: "",
     duration: "",
     notes: "",
     rating: "",
