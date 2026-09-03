@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Star, Phone, Video, Search, Heart, Users, BookOpen, User } from "lucide-react";
+import { Star, Phone, Search, Heart, Users, BookOpen, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
