@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones, Phone, Video, User, Gift, CreditCard } from "lucide-react";
+import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Mic, Bell, Award, Headphones, Phone, User, Gift, CreditCard } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -536,19 +536,13 @@ const Index = () => {
                         </div>
                       </div>
 
-                      {/* Call buttons */}
+                      {/* Call button */}
                       <div className="flex gap-2 shrink-0">
                         <button
                           onClick={() => isOnline && navigate(`/reciters/${assignedReciter.user_id}`)}
                           className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isOnline ? 'bg-primary/10 hover:bg-primary/20 active:scale-95' : 'bg-muted/50 opacity-40 cursor-not-allowed'}`}
                           disabled={!isOnline}>
                           <Phone className="w-5 h-5 text-primary" />
-                        </button>
-                        <button
-                          onClick={() => isOnline && navigate(`/reciters/${assignedReciter.user_id}`)}
-                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isOnline ? 'bg-gold/15 hover:bg-gold/25 active:scale-95' : 'bg-muted/50 opacity-40 cursor-not-allowed'}`}
-                          disabled={!isOnline}>
-                          <Video className="w-5 h-5 text-gold" />
                         </button>
                       </div>
                     </div>
@@ -605,9 +599,6 @@ const Index = () => {
                         </span>
                       </Link>
                       <div className="flex items-center gap-2 w-full justify-center">
-                        <button className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
-                          <Video className="w-4 h-4 text-primary" />
-                        </button>
                         <button className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all">
                           <Phone className="w-4 h-4 text-primary" />
                         </button>

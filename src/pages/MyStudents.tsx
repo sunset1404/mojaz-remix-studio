@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Star, Phone, Video, Search, Heart, Users, BookOpen, User } from "lucide-react";
+import { Star, Phone, Search, Heart, Users, BookOpen, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -171,15 +171,6 @@ const MyStudents = () => {
                   className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
                 >
                   <Phone className="w-4 h-4 text-primary" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate("/call/new", { state: { studentId: student.user_id, studentName: student.full_name } });
-                  }}
-                  className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
-                >
-                  <Video className="w-4 h-4 text-primary" />
                 </button>
               </div>
             </div>

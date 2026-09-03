@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Users, Bell, Award, Headphones, Phone, Video, User, Wifi, WifiOff, Loader2 } from "lucide-react";
+import { BookOpen, Star, Calendar, Trophy, ChevronLeft, CalendarDays, Users, Bell, Award, Headphones, Phone, User, Wifi, WifiOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -455,16 +455,6 @@ const ReciterHome = () => {
                       <span className="text-[10px] font-bold text-foreground">{student.preferred_riwaya || student.preferred_track}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          navigate("/call/new", { state: { studentId: student.user_id, studentName: student.full_name } });
-                        }}
-                        className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all"
-                      >
-                        <Video className="w-4.5 h-4.5 text-primary" />
-                      </button>
                       <button
                         onClick={(e) => {
                           e.preventDefault();
