@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 const StudentDetail = () => {
   const { studentId } = useParams();
@@ -98,8 +99,7 @@ const StudentDetail = () => {
         .from("session_records")
         .select("*")
         .eq("user_id", studentId)
-        .order("created_at", { ascending: false })
-        .limit(5),
+        .order("created_at", { ascending: false }),
       supabase
         .from("profiles")
         .select("avatar_url")
@@ -387,6 +387,16 @@ const StudentDetail = () => {
             <DialogTitle>تعديل سجل الجلسة</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">التاريخ</Label>
+                <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">الوقت</Label>
+                <Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
+              </div>
+            </div>
             <div>
               <Label className="text-xs">مدة الاتصال</Label>
               <Input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
@@ -413,11 +423,19 @@ const StudentDetail = () => {
               <Label className="text-xs">التقييم</Label>
               <div className="flex items-center gap-1 mt-1">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <button key={i} type="button" onClick={() => setForm({ ...form, rating: String(i + 1) })}>
+                  <Button
+                    key={i}
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`التقييم ${i + 1} من 5`}
+                    onClick={() => setForm({ ...form, rating: String(i + 1) })}
+                    className="h-8 w-8"
+                  >
                     <Star
                       className={`w-6 h-6 ${i < Number(form.rating || 0) ? "text-gold fill-current" : "text-muted-foreground/40"}`}
                     />
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -430,13 +448,13 @@ const StudentDetail = () => {
                 placeholder="ملاحظات المقرئ على الجلسة"
               />
             </div>
-            <button
+            <Button
               onClick={saveEdit}
               disabled={saving}
-              className="w-full gradient-primary text-primary-foreground py-3 rounded-xl font-semibold disabled:opacity-60"
+              className="w-full gradient-primary text-primary-foreground py-3 rounded-xl font-semibold"
             >
               {saving ? "جاري الحفظ..." : "حفظ التعديلات"}
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
