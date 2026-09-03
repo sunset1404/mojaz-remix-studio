@@ -19,7 +19,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  ArrowRight, Plus, Pencil, Trash2, Save, Loader2, ChevronUp, ChevronDown,
+  Plus, Pencil, Trash2, Save, Loader2, ChevronUp, ChevronDown,
   Copy, ExternalLink, Download,
 } from "lucide-react";
 

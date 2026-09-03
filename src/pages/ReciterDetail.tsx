@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, User, Phone, Video, MapPin, Briefcase, BookOpen, GraduationCap, Calendar, Clock } from "lucide-react";
+import { User, Phone, Video, MapPin, Briefcase, BookOpen, GraduationCap, Calendar, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";

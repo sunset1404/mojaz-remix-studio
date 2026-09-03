@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import {
-  ArrowRight, User, BookOpen, Clock, Trophy, Award,
+  User, BookOpen, Clock, Trophy, Award,
   Star, Calendar, Phone, Video, MapPin, GraduationCap,
   Target, TrendingUp
 } from "lucide-react";

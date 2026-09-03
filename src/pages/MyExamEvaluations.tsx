@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Award } from "lucide-react";
+import { Award } from "lucide-react";
 import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";
 
 const MyExamEvaluations = () => {
