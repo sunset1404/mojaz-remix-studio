@@ -453,7 +453,22 @@ const VideoCallPage = () => {
     if (pageState === "ended") return null;
 
     return (
-        <div className="relative w-full h-screen bg-black">
+        <div
+            className="relative w-full h-screen"
+            dir="rtl"
+            style={callClosed ? { background: "radial-gradient(circle at 50% 12%, hsl(var(--primary) / 0.25), hsl(var(--background)) 58%)" } : { background: "#000" }}
+        >
+            {callClosed && !showConfirm && !showStudentPopup && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <PhoneOff className="w-8 h-8 text-primary" />
+                    </div>
+                    <p className="text-foreground font-semibold">انتهت المكالمة</p>
+                    <button onClick={() => navigate(-1)} className="gradient-primary text-primary-foreground rounded-xl px-6 py-3 text-sm font-semibold">
+                        العودة
+                    </button>
+                </div>
+            )}
             {!callClosed && (
             <VideoCall
                 roomId={roomId!}
@@ -462,7 +477,7 @@ const VideoCallPage = () => {
                 onEndCall={handleEndCall}
                 onOtherPartyEnded={handleOtherPartyEnded}
                 autoStartCall={callRole === "caller"}
-                confirmOnEnd={!isReciter}
+                confirmOnEnd
                 extraControls={isReciter ? (
                     <>
                         {examId && (

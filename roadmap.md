@@ -1,2 +1,5 @@
 - [x] End the video call before showing the session evaluation form; keep the connection closed while the reciter fills it.
 - [x] Constrain the session log to a fixed-height box showing five sessions, with internal scrolling for the remaining history.
+
+- [ ] تأكيد إنهاء المكالمة للمقرئ أيضًا
+- [ ] معالجة الشاشة السوداء بعد التقييم
