@@ -38,9 +38,13 @@ Deno.serve(async (req: Request) => {
         const turnUrls = parseTurnUrls(Deno.env.get("TURN_URLS"));
         const sharedSecret = Deno.env.get("TURN_SHARED_SECRET") ?? "";
         if (turnUrls.length === 0 || !sharedSecret) {
-            // Client keeps its STUN-only configuration and marks the call degraded.
-            return fail("turn_not_configured", 503);
+            // Not an error: client keeps its STUN-only configuration and marks the call degraded.
+            return new Response(
+                JSON.stringify({ turnAvailable: false, reason: "turn_not_configured", iceServers: [] }),
+                { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
         }
+
         const ttlSeconds = normalizeTtl(Deno.env.get("TURN_TTL_SECONDS"));
 
         const body = await req.json().catch(() => ({}));
