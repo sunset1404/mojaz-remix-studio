@@ -38,9 +38,28 @@ interface Exam {
 export default function ReciterExams() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("upcoming");
+
+  const startCall = (exam: Exam) => {
+    if (!exam.student_id) {
+      toast({
+        title: "لا يمكن بدء المكالمة",
+        description: "لم يتم تحديد طالب لهذا الاختبار. يُرجى التواصل مع الإدارة.",
+        variant: "destructive",
+      });
+      return;
+    }
+    navigate("/call/new", {
+      state: {
+        studentId: exam.student_id,
+        studentName: exam.student_name || "الطالب",
+        examId: exam.id,
+      },
+    });
+  };
 
   const fetchExams = async () => {
     if (!user) return;
