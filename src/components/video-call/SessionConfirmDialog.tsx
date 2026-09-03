@@ -96,35 +96,36 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
             </div>
           )}
 
-          {/* Start point */}
-
-          <div className="space-y-1.5">
-            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5 text-primary" />
-              بدأ من
-            </label>
-            <div className="flex gap-2">
-              <SurahSelect
-                value={startSurah}
-                onChange={(name, maxAyahs) => {
-                  setStartSurah(name);
-                  setStartMaxAyahs(maxAyahs);
-                }}
-              />
-              <input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={startMaxAyahs || undefined}
-                placeholder="الآية"
-                value={startAyah}
-                onChange={(e) => setStartAyah(e.target.value)}
-                className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
+          {/* Start point — not for acceptance/eligibility exams */}
+          {!isExam && (
+            <div className="space-y-1.5">
+              <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-primary" />
+                بدأ من
+              </label>
+              <div className="flex gap-2">
+                <SurahSelect
+                  value={startSurah}
+                  onChange={(name, maxAyahs) => {
+                    setStartSurah(name);
+                    setStartMaxAyahs(maxAyahs);
+                  }}
+                />
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={startMaxAyahs || undefined}
+                  placeholder="الآية"
+                  value={startAyah}
+                  onChange={(e) => setStartAyah(e.target.value)}
+                  className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* End point */}
+          {/* End point — not for acceptance/eligibility exams */}
           <div className="space-y-1.5">
             <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-gold" />
