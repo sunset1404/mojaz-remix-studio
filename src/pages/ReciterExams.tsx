@@ -41,10 +41,6 @@ export default function ReciterExams() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("upcoming");
-  const [resultDialog, setResultDialog] = useState<Exam | null>(null);
-  const [resultValue, setResultValue] = useState<"passed" | "failed">("passed");
-  const [resultNotes, setResultNotes] = useState("");
-  const [saving, setSaving] = useState(false);
 
   const fetchExams = async () => {
     if (!user) return;
