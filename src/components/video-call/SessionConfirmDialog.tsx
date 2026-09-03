@@ -126,31 +126,33 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
           )}
 
           {/* End point — not for acceptance/eligibility exams */}
-          <div className="space-y-1.5">
-            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5 text-gold" />
-              انتهى عند
-            </label>
-            <div className="flex gap-2">
-              <SurahSelect
-                value={endSurah}
-                onChange={(name, maxAyahs) => {
-                  setEndSurah(name);
-                  setEndMaxAyahs(maxAyahs);
-                }}
-              />
-              <input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={endMaxAyahs || undefined}
-                placeholder="الآية"
-                value={endAyah}
-                onChange={(e) => setEndAyah(e.target.value)}
-                className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
+          {!isExam && (
+            <div className="space-y-1.5">
+              <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-gold" />
+                انتهى عند
+              </label>
+              <div className="flex gap-2">
+                <SurahSelect
+                  value={endSurah}
+                  onChange={(name, maxAyahs) => {
+                    setEndSurah(name);
+                    setEndMaxAyahs(maxAyahs);
+                  }}
+                />
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={endMaxAyahs || undefined}
+                  placeholder="الآية"
+                  value={endAyah}
+                  onChange={(e) => setEndAyah(e.target.value)}
+                  className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Notes */}
           <div className="space-y-1.5">
