@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { User, Phone, Video, MapPin, Briefcase, BookOpen, GraduationCap, Calendar, Clock } from "lucide-react";
+import { User, Phone, MapPin, Briefcase, BookOpen, GraduationCap, Calendar, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -148,15 +148,7 @@ const ReciterDetail = () => {
               className="flex items-center gap-2 px-6 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-30"
             >
               <Phone className="w-5 h-5" />
-              اتصال صوتي
-            </button>
-            <button
-              onClick={handleCall}
-              disabled={callingId === reciter.user_id || !isOnline}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-all disabled:opacity-30"
-            >
-              <Video className="w-5 h-5" />
-              مكالمة فيديو
+              اتصال
             </button>
           </div>
         </motion.div>

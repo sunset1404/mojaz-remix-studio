@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, Clock, User, Video, Phone, Timer, Loader2 } from "lucide-react";
+import { Users, Clock, User, Phone, Timer, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -204,7 +204,7 @@ const Sessions = () => {
                   onClick={() => handleAcceptStudent(item)}
                   className="flex-1 h-10 rounded-xl gradient-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2"
                 >
-                  <Video className="w-4 h-4" /> بدء الجلسة
+                  <Phone className="w-4 h-4" /> بدء الجلسة
                 </button>
                 <button
                   onClick={() => handleRejectStudent(item)}

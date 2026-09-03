@@ -168,6 +168,25 @@
   }
 }
 
+/* Sonner toast constrained to mobile viewport */
+[data-sonner-toaster] {
+  --offset-right: 1rem !important;
+  --offset-left: 1rem !important;
+  --offset-top: 1rem !important;
+  --offset-bottom: 1rem !important;
+  --width: calc(100% - 2rem) !important;
+  max-width: calc(100% - 2rem) !important;
+}
+
+@media (min-width: 640px) {
+  [data-sonner-toaster][data-x-position="center"] {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    --width: 28rem !important;
+    max-width: 28rem !important;
+  }
+}
+
 /* Moyasar payment form brand overrides */
 .mysr-form .mysr-form-button,
 .mysr-form button[type="submit"] {

@@ -1,4 +1,4 @@
-import { ChevronRight, Bell, CheckCheck, Calendar, BookOpen, CheckCircle2, MessageCircle, Award, Users, Loader2 } from "lucide-react";
+import { Bell, CheckCheck, Calendar, BookOpen, CheckCircle2, MessageCircle, Award, Users, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -77,12 +77,7 @@ const NotificationsList = () => {
         style={{ background: "linear-gradient(160deg, hsl(var(--primary)) 0%, hsl(var(--turquoise-dark)) 60%, hsl(var(--primary) / 0.8) 100%)" }}
       >
         <div className="flex items-center justify-between mb-1">
-          <button
-            onClick={() => navigate("/")}
-            className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform"
-          >
-            <ChevronRight className="w-5 h-5 text-white" />
-          </button>
+          <div className="w-9 h-9" aria-hidden="true" />
 
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-2">

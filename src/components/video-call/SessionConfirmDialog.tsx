@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, FileText, CheckCircle2, ClipboardList } from 'lucide-react';
+import { BookOpen, FileText, CheckCircle2, ClipboardList, Star } from 'lucide-react';
 import { SessionNoteData } from './ReciterSessionPanel';
 import { SurahSelect } from './SurahSelect';
 import { RubricScoring } from './RubricScoring';
@@ -22,11 +22,13 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
   const [notes, setNotes] = useState(data.notes);
   const [startMaxAyahs, setStartMaxAyahs] = useState(0);
   const [endMaxAyahs, setEndMaxAyahs] = useState(0);
+  const [rating, setRating] = useState<number>(data.rating || 0);
 
   const handleConfirm = () => {
-    const total = computeTotalScore(scores);
-    const rating = Math.max(0, Math.min(5, Math.round((total / 100) * 5)));
-    onConfirm({ rating, scores, startSurah, startAyah, endSurah, endAyah, notes });
+    const finalRating = isExam
+      ? Math.max(rating, Math.max(0, Math.min(5, Math.round((computeTotalScore(scores) / 100) * 5))))
+      : rating;
+    onConfirm({ rating: finalRating, scores, startSurah, startAyah, endSurah, endAyah, notes });
   };
 
 
@@ -66,6 +68,29 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
               <RubricScoring scores={scores} onChange={setScores} />
             </div>
           )}
+
+          {/* Session star rating */}
+          <div className="space-y-1.5">
+            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 text-gold" />
+              تقييم الجلسة
+            </label>
+            <div className="flex items-center gap-1" dir="ltr">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                  aria-label={`تقييم ${star} من 5`}
+                >
+                  <Star
+                    className={`w-7 h-7 ${star <= rating ? 'fill-gold text-gold' : 'text-muted-foreground/40'}`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Start point */}
 
