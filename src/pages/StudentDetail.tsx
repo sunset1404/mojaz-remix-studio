@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   User, BookOpen, Clock, Trophy, Award,
-  Star, Calendar, Phone, Video, MapPin, GraduationCap,
+  Star, Calendar, Phone, MapPin, GraduationCap,
   Target, TrendingUp, ChevronDown, Pencil
 } from "lucide-react";
 import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";

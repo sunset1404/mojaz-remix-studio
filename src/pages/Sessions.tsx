@@ -204,7 +204,7 @@ const Sessions = () => {
                   onClick={() => handleAcceptStudent(item)}
                   className="flex-1 h-10 rounded-xl gradient-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2"
                 >
-                  <Video className="w-4 h-4" /> بدء الجلسة
+                  <Phone className="w-4 h-4" /> بدء الجلسة
                 </button>
                 <button
                   onClick={() => handleRejectStudent(item)}
