@@ -7,3 +7,4 @@
 - [x] Notifications page: remove green back arrow, keep global back arrow centered on the right.
 - [x] Remove video icon from call button everywhere (student & reciter apps).
 - [x] Add 5-star session rating to the session evaluation form.
+- [ ] Replace session evaluation with unified admission/eligibility exam scoring for exam calls (inside call and post-call), matching the attached evaluation-criteria UI.
