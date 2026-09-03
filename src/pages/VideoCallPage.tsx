@@ -228,11 +228,13 @@ const VideoCallPage = () => {
     };
 
     const handleEndCall = async () => {
+        // The media layer is already closed by VideoCall before this callback runs.
+        // Persist the ended state before opening any feedback/evaluation UI.
+        await saveSessionAsEnded();
         if (isReciter) {
             setShowConfirm(true);
             return;
         }
-        await saveSessionAsEnded();
         const feedback = await fetchSessionFeedback();
         setSessionFeedback(feedback);
         setShowStudentPopup(true);

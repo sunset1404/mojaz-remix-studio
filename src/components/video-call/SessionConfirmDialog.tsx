@@ -52,8 +52,8 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
             <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--gold) / 0.15))" }}>
               <CheckCircle2 className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="text-lg font-bold text-foreground">تأكيد بيانات الجلسة</h3>
-            <p className="text-xs text-muted-foreground">أدخل أو عدّل البيانات قبل حفظها</p>
+            <h3 className="text-lg font-bold text-foreground">تقييم الجلسة</h3>
+            <p className="text-xs text-muted-foreground">انتهى الاتصال، أدخل أو عدّل البيانات قبل حفظها</p>
           </div>
 
           {/* Rubric scoring — only for exams */}
@@ -139,13 +139,13 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
 
           {/* Buttons */}
           <div className="flex gap-3 pt-1">
-            <button
-              onClick={handleConfirm}
-              className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all hover:brightness-110 shadow-lg"
-              style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--gold)))" }}
-            >
-              تأكيد وإنهاء
-            </button>
+             <button
+               onClick={handleConfirm}
+               className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all hover:brightness-110 shadow-lg"
+               style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--gold)))" }}
+             >
+               حفظ التقييم
+             </button>
             <button
               onClick={onCancel}
               className="px-5 py-3 rounded-xl font-semibold text-sm text-foreground bg-muted hover:bg-muted/80 transition-colors border border-border"

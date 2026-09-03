@@ -7,9 +7,14 @@ import { useToast } from "@/hooks/use-toast";
 import {
   User, BookOpen, Clock, Trophy, Award,
   Star, Calendar, Phone, Video, MapPin, GraduationCap,
-  Target, TrendingUp
+  Target, TrendingUp, ChevronDown, Pencil
 } from "lucide-react";
 import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 const StudentDetail = () => {
   const { studentId } = useParams();
@@ -21,7 +26,58 @@ const StudentDetail = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCalling, setIsCalling] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editSession, setEditSession] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    date: "",
+    time: "",
+    duration: "",
+    notes: "",
+    rating: "",
+    parts_reached: "",
+    pages_reached: "",
+  });
   const { toast } = useToast();
+
+  const openEdit = (session: any) => {
+    setEditSession(session);
+    setForm({
+      date: session.date || "",
+      time: session.time || "",
+      duration: session.duration || "",
+      notes: session.notes || "",
+      rating: session.rating ? String(session.rating) : "",
+      parts_reached: session.parts_reached != null ? String(session.parts_reached) : "",
+      pages_reached: session.pages_reached != null ? String(session.pages_reached) : "",
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editSession) return;
+    setSaving(true);
+    const payload = {
+      date: form.date,
+      time: form.time,
+      duration: form.duration,
+      notes: form.notes || null,
+      rating: form.rating ? Number(form.rating) : null,
+      parts_reached: form.parts_reached ? Number(form.parts_reached) : null,
+      pages_reached: form.pages_reached ? Number(form.pages_reached) : null,
+    };
+    const { error } = await supabase
+      .from("session_records")
+      .update(payload)
+      .eq("id", editSession.id);
+    setSaving(false);
+    if (error) {
+      toast({ title: "خطأ", description: "لم يتم حفظ التعديلات", variant: "destructive" });
+      return;
+    }
+    setSessions((prev) => prev.map((s) => (s.id === editSession.id ? { ...s, ...payload } : s)));
+    setEditSession(null);
+    toast({ title: "تم الحفظ", description: "تم تحديث سجل الجلسة" });
+  };
 
   useEffect(() => {
     if (!user || !studentId) return;
@@ -43,8 +99,7 @@ const StudentDetail = () => {
         .from("session_records")
         .select("*")
         .eq("user_id", studentId)
-        .order("created_at", { ascending: false })
-        .limit(5),
+        .order("created_at", { ascending: false }),
       supabase
         .from("profiles")
         .select("avatar_url")
@@ -213,7 +268,7 @@ const StudentDetail = () => {
         </motion.div>
       </div>
 
-      {/* Recent Sessions */}
+      {/* Sessions Log */}
       <div className="px-5 mt-4">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -223,36 +278,189 @@ const StudentDetail = () => {
         >
           <h2 className="font-bold text-foreground mb-3 flex items-center gap-2">
             <Calendar className="w-4 h-4 text-primary" />
-            آخر الجلسات
+            سجل الجلسات
           </h2>
           {sessions.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-4">لا توجد جلسات مسجلة</p>
           ) : (
-            <div className="space-y-2">
-              {sessions.map((session) => (
-                <div key={session.id} className="flex items-center justify-between bg-muted/30 rounded-xl p-3">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{session.date}</p>
-                    <p className="text-xs text-muted-foreground">{session.duration} • {session.status}</p>
-                  </div>
-                  <div className="text-left">
-                    {session.parts_reached && (
-                      <p className="text-xs text-primary">جزء {session.parts_reached}</p>
-                    )}
-                    {session.rating && (
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: session.rating }).map((_, i) => (
-                          <Star key={i} className="w-3 h-3 text-gold fill-current" />
-                        ))}
+            <div className="h-[21rem] overflow-y-auto overscroll-contain space-y-2 pr-1">
+              {sessions.map((session) => {
+                const expanded = expandedId === session.id;
+                return (
+                  <div key={session.id} className="bg-muted/30 rounded-xl overflow-hidden">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setExpandedId(expanded ? null : session.id)}
+                      className="w-full h-auto flex items-center justify-between p-3 text-right hover:bg-transparent"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{session.date}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {session.time ? `${session.time} • ` : ""}{session.duration} • {session.status}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-left">
+                          {session.parts_reached && (
+                            <p className="text-xs text-primary">جزء {session.parts_reached}</p>
+                          )}
+                          {session.rating && (
+                            <div className="flex items-center gap-0.5">
+                              {Array.from({ length: session.rating }).map((_, i) => (
+                                <Star key={i} className="w-3 h-3 text-gold fill-current" />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <ChevronDown
+                          className={`w-4 h-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+                        />
+                      </div>
+                    </Button>
+
+                    {expanded && (
+                      <div className="px-3 pb-3 space-y-2 border-t border-border/50 pt-3">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Calendar className="w-3.5 h-3.5" /> التاريخ
+                            <span className="text-foreground font-semibold">{session.date || "—"}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Clock className="w-3.5 h-3.5" /> الوقت
+                            <span className="text-foreground font-semibold">{session.time || "—"}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Clock className="w-3.5 h-3.5" /> مدة الاتصال
+                            <span className="text-foreground font-semibold">{session.duration || "—"}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <BookOpen className="w-3.5 h-3.5" /> الأجزاء / الصفحات
+                            <span className="text-foreground font-semibold">
+                              {session.parts_reached || 0} / {session.pages_reached || 0}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">التقييم</p>
+                          <div className="flex items-center gap-1">
+                            {session.rating ? (
+                              Array.from({ length: 5 }).map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${i < session.rating ? "text-gold fill-current" : "text-muted-foreground/40"}`}
+                                />
+                              ))
+                            ) : (
+                              <span className="text-xs text-muted-foreground">لا يوجد تقييم</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">ملاحظات المقرئ</p>
+                          <p className="text-sm text-foreground whitespace-pre-wrap">
+                            {session.notes || "لا توجد ملاحظات"}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => openEdit(session)}
+                          className="w-full bg-primary/10 text-primary py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+                        >
+                          <Pencil className="w-4 h-4" />
+                          تعديل السجل
+                        </button>
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </motion.div>
       </div>
+
+      {/* Edit session dialog */}
+      <Dialog open={!!editSession} onOpenChange={(o) => !o && setEditSession(null)}>
+        <DialogContent className="max-w-sm" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تعديل سجل الجلسة</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">التاريخ</Label>
+                <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">الوقت</Label>
+                <Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">مدة الاتصال</Label>
+              <Input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">الأجزاء</Label>
+                <Input
+                  type="number"
+                  value={form.parts_reached}
+                  onChange={(e) => setForm({ ...form, parts_reached: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">الصفحات</Label>
+                <Input
+                  type="number"
+                  value={form.pages_reached}
+                  onChange={(e) => setForm({ ...form, pages_reached: e.target.value })}
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">التقييم</Label>
+              <div className="flex items-center gap-1 mt-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Button
+                    key={i}
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`التقييم ${i + 1} من 5`}
+                    onClick={() => setForm({ ...form, rating: String(i + 1) })}
+                    className="h-8 w-8"
+                  >
+                    <Star
+                      className={`w-6 h-6 ${i < Number(form.rating || 0) ? "text-gold fill-current" : "text-muted-foreground/40"}`}
+                    />
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">الملاحظات</Label>
+              <Textarea
+                rows={4}
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                placeholder="ملاحظات المقرئ على الجلسة"
+              />
+            </div>
+            <Button
+              onClick={saveEdit}
+              disabled={saving}
+              className="w-full gradient-primary text-primary-foreground py-3 rounded-xl font-semibold"
+            >
+              {saving ? "جاري الحفظ..." : "حفظ التعديلات"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Exam Evaluations */}
       <div className="px-5 mt-4">
