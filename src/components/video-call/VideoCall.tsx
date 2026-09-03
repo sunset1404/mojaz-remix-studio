@@ -525,21 +525,21 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
             </div>
 
             <AlertDialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
-                <AlertDialogContent dir="rtl" className="text-right">
+                <AlertDialogContent dir="rtl" className="text-right max-w-sm w-[calc(100%-2rem)] mx-auto rounded-2xl p-5">
                     <AlertDialogHeader className="text-right sm:text-right">
                         <AlertDialogTitle className="text-right">إنهاء المكالمة</AlertDialogTitle>
                         <AlertDialogDescription className="text-right">
                             هل أنت متأكد من إنهاء المكالمة الآن؟
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="flex-row-reverse sm:flex-row-reverse sm:justify-start gap-2">
+                    <AlertDialogFooter className="flex flex-row-reverse justify-start gap-2 sm:flex-row-reverse sm:justify-start">
                         <AlertDialogAction
                             onClick={() => { setShowEndConfirm(false); handleEndCall(); }}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 flex-1 sm:flex-none"
                         >
                             نعم، إنهاء
                         </AlertDialogAction>
-                        <AlertDialogCancel className="mt-0">تراجع</AlertDialogCancel>
+                        <AlertDialogCancel className="mt-0 flex-1 sm:flex-none">تراجع</AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
