@@ -7,9 +7,13 @@ import { useToast } from "@/hooks/use-toast";
 import {
   User, BookOpen, Clock, Trophy, Award,
   Star, Calendar, Phone, Video, MapPin, GraduationCap,
-  Target, TrendingUp
+  Target, TrendingUp, ChevronDown, Pencil
 } from "lucide-react";
 import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 const StudentDetail = () => {
   const { studentId } = useParams();
