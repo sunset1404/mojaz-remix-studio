@@ -41,6 +41,7 @@ const VideoCallPage = () => {
     const [otherUserName, setOtherUserName] = useState<string>(navState?.reciterName || "");
     const [isReciter, setIsReciter] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [callClosed, setCallClosed] = useState(false);
     const [showStudentPopup, setShowStudentPopup] = useState(false);
     const [sessionFeedback, setSessionFeedback] = useState<{ rating: number; notes: string }>({ rating: 0, notes: '' });
     const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
@@ -228,6 +229,7 @@ const VideoCallPage = () => {
     };
 
     const handleEndCall = async () => {
+        setCallClosed(true);
         // The media layer is already closed by VideoCall before this callback runs.
         // Persist the ended state before opening any feedback/evaluation UI.
         await saveSessionAsEnded();
@@ -247,6 +249,7 @@ const VideoCallPage = () => {
     };
 
     const handleOtherPartyEnded = async () => {
+        setCallClosed(true);
         if (!isReciter) {
             const feedback = await fetchSessionFeedback();
             setSessionFeedback(feedback);
@@ -450,7 +453,8 @@ const VideoCallPage = () => {
     if (pageState === "ended") return null;
 
     return (
-        <div className="relative w-full h-screen">
+        <div className="relative w-full h-screen bg-black">
+            {!callClosed && (
             <VideoCall
                 roomId={roomId!}
                 role={callRole}
@@ -488,7 +492,8 @@ const VideoCallPage = () => {
                     </>
                 ) : undefined}
             />
-            {isReciter && (
+            )}
+            {!callClosed && isReciter && (
                 <ReciterSessionPanel
                     onDataChange={(data) => { sessionNoteRef.current = data; }}
                     scores={examScores}
@@ -497,7 +502,7 @@ const VideoCallPage = () => {
                     hideToggle
                 />
             )}
-            {isReciter && examId && (
+            {!callClosed && isReciter && examId && (
                 <ExamScoringPanel
                     scores={examScores}
                     onScoresChange={(scores) => {
