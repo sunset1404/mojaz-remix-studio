@@ -1,23 +1,48 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, ClipboardList } from 'lucide-react';
-import { RubricScoring } from './RubricScoring';
+import { ExamEvaluationForm } from './ExamEvaluationForm';
 
 interface ExamScoringPanelProps {
   scores: Record<string, number>;
+  notes?: string;
   onScoresChange: (scores: Record<string, number>) => void;
+  onNotesChange?: (notes: string) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideToggle?: boolean;
 }
 
-export function ExamScoringPanel({ scores, onScoresChange, isOpen: controlledOpen, onOpenChange, hideToggle }: ExamScoringPanelProps) {
+export function ExamScoringPanel({
+  scores,
+  notes = '',
+  onScoresChange,
+  onNotesChange,
+  isOpen: controlledOpen,
+  onOpenChange,
+  hideToggle,
+}: ExamScoringPanelProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
   const isOpen = isControlled ? controlledOpen : internalOpen;
   const setIsOpen = (v: boolean) => {
     if (!isControlled) setInternalOpen(v);
     onOpenChange?.(v);
+  };
+
+  const [localNotes, setLocalNotes] = useState(notes);
+  const [localScores, setLocalScores] = useState(scores);
+
+  const handleSave = () => {
+    onScoresChange(localScores);
+    onNotesChange?.(localNotes);
+    setIsOpen(false);
+  };
+
+  const handleCancel = () => {
+    setLocalScores(scores);
+    setLocalNotes(notes);
+    setIsOpen(false);
   };
 
   return (
@@ -48,7 +73,19 @@ export function ExamScoringPanel({ scores, onScoresChange, isOpen: controlledOpe
           >
             <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--primary)))" }} />
             <div className="p-4">
-              <RubricScoring scores={scores} onChange={onScoresChange} />
+              <ExamEvaluationForm
+                scores={localScores}
+                notes={localNotes}
+                onScoresChange={setLocalScores}
+                onNotesChange={setLocalNotes}
+                onSave={handleSave}
+                onCancel={handleCancel}
+                title="تقييم الاختبار"
+                subtitle="أدخل معايير التقييم والملاحظات"
+                hideHeader
+                saveLabel="حفظ التقييم"
+                cancelLabel="رجوع"
+              />
             </div>
           </motion.div>
         )}
