@@ -3,19 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  ChevronRight, ClipboardList, Calendar, Clock, Users,
-  Phone, Loader2, CheckCircle2, XCircle, GraduationCap,
+  ChevronRight, Calendar, Clock, Users,
+  Loader2, CheckCircle2, XCircle, GraduationCap,
 } from "lucide-react";
 
 type ExamType = "admission" | "eligibility";
@@ -43,14 +37,9 @@ interface Exam {
 export default function ReciterExams() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("upcoming");
-  const [resultDialog, setResultDialog] = useState<Exam | null>(null);
-  const [resultValue, setResultValue] = useState<"passed" | "failed">("passed");
-  const [resultNotes, setResultNotes] = useState("");
-  const [saving, setSaving] = useState(false);
 
   const fetchExams = async () => {
     if (!user) return;
@@ -82,50 +71,6 @@ export default function ReciterExams() {
   const upcoming = exams.filter((e) => e.status === "scheduled");
   const done = exams.filter((e) => e.status === "completed" || e.status === "cancelled");
 
-  const startCall = (exam: Exam) => {
-    if (!exam.student_id) {
-      toast({
-        title: "لا يمكن بدء المكالمة",
-        description: "لم يتم تحديد طالب لهذا الاختبار. يُرجى التواصل مع الإدارة.",
-        variant: "destructive",
-      });
-      return;
-    }
-    navigate("/call/new", {
-      state: {
-        studentId: exam.student_id,
-        studentName: exam.student_name || "الطالب",
-        examId: exam.id,
-      },
-    });
-  };
-
-  const openResult = (exam: Exam) => {
-    setResultValue("passed");
-    setResultNotes(exam.notes || "");
-    setResultDialog(exam);
-  };
-
-  const saveResult = async () => {
-    if (!resultDialog) return;
-    setSaving(true);
-    const { error } = await (supabase as any)
-      .from("exams")
-      .update({
-        status: "completed",
-        result: resultValue,
-        notes: resultNotes || null,
-      })
-      .eq("id", resultDialog.id);
-    setSaving(false);
-    if (error) {
-      toast({ title: "خطأ", description: "فشل حفظ النتيجة", variant: "destructive" });
-      return;
-    }
-    toast({ title: "تم", description: "تم تسجيل نتيجة الاختبار" });
-    setResultDialog(null);
-    fetchExams();
-  };
 
   const renderCard = (exam: Exam, isUpcoming: boolean) => (
     <motion.div
@@ -196,27 +141,6 @@ export default function ReciterExams() {
           </p>
         )}
 
-        {isUpcoming && (
-          <div className="flex gap-2 mt-3">
-            <Button
-              size="sm"
-              onClick={() => startCall(exam)}
-              className="gap-2 flex-1"
-            >
-              <Phone className="w-4 h-4" />
-              اتصال بالطالب
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => openResult(exam)}
-              className="gap-2 flex-1"
-            >
-              <ClipboardList className="w-4 h-4" />
-              تسجيل النتيجة
-            </Button>
-          </div>
-        )}
 
       </Card>
     </motion.div>
@@ -229,7 +153,7 @@ export default function ReciterExams() {
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-bold text-foreground text-right">اختبارات القبول والاستحقاق</h1>
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <ClipboardList className="w-5 h-5 text-primary" />
+            <GraduationCap className="w-5 h-5 text-primary" />
           </div>
         </div>
         <button
@@ -278,62 +202,6 @@ export default function ReciterExams() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Result dialog */}
-      <Dialog open={!!resultDialog} onOpenChange={(o) => !o && setResultDialog(null)}>
-        <DialogContent dir="rtl" className="max-w-sm text-right">
-          <DialogHeader>
-            <DialogTitle className="text-right">تسجيل نتيجة الاختبار</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>النتيجة</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setResultValue("passed")}
-                  className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
-                    resultValue === "passed"
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30"
-                      : "border-border"
-                  }`}
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  ناجح
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setResultValue("failed")}
-                  className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
-                    resultValue === "failed"
-                      ? "border-destructive bg-destructive/10 text-destructive"
-                      : "border-border"
-                  }`}
-                >
-                  <XCircle className="w-4 h-4" />
-                  راسب
-                </button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>ملاحظات</Label>
-              <Textarea
-                value={resultNotes}
-                onChange={(e) => setResultNotes(e.target.value)}
-                rows={3}
-                placeholder="ملاحظات حول أداء الطالب..."
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setResultDialog(null)}>إلغاء</Button>
-            <Button onClick={saveResult} disabled={saving} className="gap-2">
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              حفظ النتيجة
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

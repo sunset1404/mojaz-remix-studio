@@ -81,6 +81,7 @@ const VideoCallPage = () => {
     const [notesOpen, setNotesOpen] = useState(false);
     const [scoringOpen, setScoringOpen] = useState(false);
     const [examScores, setExamScores] = useState<Record<string, number>>({});
+    const [examNotes, setExamNotes] = useState("");
     const [examId, setExamId] = useState<string | null>(navState?.examId || null);
     const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, scores: {}, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
 
@@ -520,22 +521,24 @@ const VideoCallPage = () => {
                                 <ClipboardList className="w-5 h-5" />
                             </button>
                         )}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setNotesOpen((v) => !v);
-                                setScoringOpen(false);
-                            }}
-                            aria-label="ملاحظات الجلسة"
-                            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border ${notesOpen ? 'bg-primary text-primary-foreground border-primary/60' : 'bg-card/80 text-foreground border-border hover:bg-card'}`}
-                        >
-                            <FileText className="w-5 h-5" />
-                        </button>
+                        {!examId && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setNotesOpen((v) => !v);
+                                    setScoringOpen(false);
+                                }}
+                                aria-label="ملاحظات الجلسة"
+                                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border ${notesOpen ? 'bg-primary text-primary-foreground border-primary/60' : 'bg-card/80 text-foreground border-border hover:bg-card'}`}
+                            >
+                                <FileText className="w-5 h-5" />
+                            </button>
+                        )}
                     </>
                 ) : undefined}
             />
             )}
-            {!callClosed && isReciter && (
+            {!callClosed && isReciter && !examId && (
                 <ReciterSessionPanel
                     onDataChange={(data) => { sessionNoteRef.current = data; }}
                     scores={examScores}
@@ -547,11 +550,16 @@ const VideoCallPage = () => {
             {!callClosed && isReciter && examId && (
                 <ExamScoringPanel
                     scores={examScores}
+                    notes={examNotes}
                     onScoresChange={(scores) => {
                         setExamScores(scores);
                         const total = computeTotalScore(scores);
                         const rating = Math.max(0, Math.min(5, Math.round((total / 100) * 5)));
                         sessionNoteRef.current = { ...sessionNoteRef.current, scores, rating };
+                    }}
+                    onNotesChange={(notes) => {
+                        setExamNotes(notes);
+                        sessionNoteRef.current = { ...sessionNoteRef.current, notes };
                     }}
                     isOpen={scoringOpen}
                     onOpenChange={setScoringOpen}
