@@ -16,6 +16,7 @@ const StudentDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [student, setStudent] = useState<any>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [achievements, setAchievements] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,10 +45,22 @@ const StudentDetail = () => {
         .eq("user_id", studentId)
         .order("created_at", { ascending: false })
         .limit(5),
-    ]).then(([profileRes, achRes, sessionsRes]) => {
+      supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", studentId)
+        .maybeSingle(),
+    ]).then(([profileRes, achRes, sessionsRes, avatarRes]) => {
       setStudent(profileRes.data);
       setAchievements(achRes.data);
       setSessions(sessionsRes.data || []);
+      const path = avatarRes.data?.avatar_url;
+      if (path) {
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+        setAvatarUrl(urlData?.publicUrl || null);
+      } else {
+        setAvatarUrl(null);
+      }
       setLoading(false);
     });
   }, [user, studentId]);
@@ -94,8 +107,12 @@ const StudentDetail = () => {
           animate={{ y: 0, opacity: 1 }}
           className="flex flex-col items-center pt-4"
         >
-          <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-3">
-            <User className="w-10 h-10 text-primary-foreground" />
+          <div className="w-20 h-20 rounded-full bg-white/20 overflow-hidden flex items-center justify-center mb-3">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={student.full_name} className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-10 h-10 text-primary-foreground" />
+            )}
           </div>
           <h1 className="text-xl font-bold text-primary-foreground">{student.full_name}</h1>
           <p className="text-sm text-primary-foreground/75 mt-1">
