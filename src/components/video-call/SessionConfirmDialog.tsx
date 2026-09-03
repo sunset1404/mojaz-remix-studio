@@ -25,10 +25,12 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
   const [rating, setRating] = useState<number>(data.rating || 0);
 
   const handleConfirm = () => {
-    const finalRating = isExam
-      ? Math.max(rating, Math.max(0, Math.min(5, Math.round((computeTotalScore(scores) / 100) * 5))))
-      : rating;
-    onConfirm({ rating: finalRating, scores, startSurah, startAyah, endSurah, endAyah, notes });
+    if (isExam) {
+      const scoreRating = Math.max(0, Math.min(5, Math.round((computeTotalScore(scores) / 100) * 5)));
+      onConfirm({ rating: scoreRating, scores, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes });
+      return;
+    }
+    onConfirm({ rating, scores, startSurah, startAyah, endSurah, endAyah, notes });
   };
 
 
@@ -69,83 +71,88 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
             </div>
           )}
 
-          {/* Session star rating */}
-          <div className="space-y-1.5">
-            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-              <Star className="w-3.5 h-3.5 text-gold" />
-              تقييم الجلسة
-            </label>
-            <div className="flex items-center gap-1" dir="ltr">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  className="p-1 transition-transform hover:scale-110 focus:outline-none"
-                  aria-label={`تقييم ${star} من 5`}
-                >
-                  <Star
-                    className={`w-7 h-7 ${star <= rating ? 'fill-gold text-gold' : 'text-muted-foreground/40'}`}
-                  />
-                </button>
-              ))}
+          {/* Session star rating — not for acceptance/eligibility exams */}
+          {!isExam && (
+            <div className="space-y-1.5">
+              <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+                <Star className="w-3.5 h-3.5 text-gold" />
+                تقييم الجلسة
+              </label>
+              <div className="flex items-center gap-1" dir="ltr">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                    aria-label={`تقييم ${star} من 5`}
+                  >
+                    <Star
+                      className={`w-7 h-7 ${star <= rating ? 'fill-gold text-gold' : 'text-muted-foreground/40'}`}
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Start point */}
-
-          <div className="space-y-1.5">
-            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5 text-primary" />
-              بدأ من
-            </label>
-            <div className="flex gap-2">
-              <SurahSelect
-                value={startSurah}
-                onChange={(name, maxAyahs) => {
-                  setStartSurah(name);
-                  setStartMaxAyahs(maxAyahs);
-                }}
-              />
-              <input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={startMaxAyahs || undefined}
-                placeholder="الآية"
-                value={startAyah}
-                onChange={(e) => setStartAyah(e.target.value)}
-                className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
+          {/* Start point — not for acceptance/eligibility exams */}
+          {!isExam && (
+            <div className="space-y-1.5">
+              <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-primary" />
+                بدأ من
+              </label>
+              <div className="flex gap-2">
+                <SurahSelect
+                  value={startSurah}
+                  onChange={(name, maxAyahs) => {
+                    setStartSurah(name);
+                    setStartMaxAyahs(maxAyahs);
+                  }}
+                />
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={startMaxAyahs || undefined}
+                  placeholder="الآية"
+                  value={startAyah}
+                  onChange={(e) => setStartAyah(e.target.value)}
+                  className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* End point */}
-          <div className="space-y-1.5">
-            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5 text-gold" />
-              انتهى عند
-            </label>
-            <div className="flex gap-2">
-              <SurahSelect
-                value={endSurah}
-                onChange={(name, maxAyahs) => {
-                  setEndSurah(name);
-                  setEndMaxAyahs(maxAyahs);
-                }}
-              />
-              <input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={endMaxAyahs || undefined}
-                placeholder="الآية"
-                value={endAyah}
-                onChange={(e) => setEndAyah(e.target.value)}
-                className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
+          {/* End point — not for acceptance/eligibility exams */}
+          {!isExam && (
+            <div className="space-y-1.5">
+              <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-gold" />
+                انتهى عند
+              </label>
+              <div className="flex gap-2">
+                <SurahSelect
+                  value={endSurah}
+                  onChange={(name, maxAyahs) => {
+                    setEndSurah(name);
+                    setEndMaxAyahs(maxAyahs);
+                  }}
+                />
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={endMaxAyahs || undefined}
+                  placeholder="الآية"
+                  value={endAyah}
+                  onChange={(e) => setEndAyah(e.target.value)}
+                  className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Notes */}
           <div className="space-y-1.5">
