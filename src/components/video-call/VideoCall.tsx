@@ -263,15 +263,18 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
         }
     };
 
-    // Call ended by other party — notify parent
+    // Call ended by other party — release media before notifying the parent.
     useEffect(() => {
-        if (showEndedScreen) {
+        if (!showEndedScreen) return;
+        void (async () => {
+            await endCall();
             if (onOtherPartyEnded) {
                 onOtherPartyEnded();
             } else {
                 onEndCall?.();
             }
-        }
+        })();
+        // The callback is intentionally fired once when the ended screen appears.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [showEndedScreen]);
 
