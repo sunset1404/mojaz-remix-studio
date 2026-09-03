@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ChevronRight, Calendar, Clock, Users,
+  Calendar, Clock, Users,
   Phone, Loader2, CheckCircle2, XCircle, GraduationCap,
 } from "lucide-react";
 
@@ -181,19 +181,13 @@ export default function ReciterExams() {
   return (
     <div className="min-h-screen bg-background pb-24" dir="rtl">
       {/* Header */}
-      <div className="px-5 pt-8 pb-4 flex items-center gap-3">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0"
-        >
-          <ChevronRight className="w-5 h-5 text-foreground" />
-        </button>
-        <h1 className="flex-1 text-lg font-bold text-foreground text-center truncate">
-          اختبارات القبول والاستحقاق
-        </h1>
+      <div className="px-5 pt-8 pb-4 pr-16 flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
           <GraduationCap className="w-5 h-5 text-primary" />
         </div>
+        <h1 className="flex-1 text-lg font-bold text-foreground truncate">
+          اختبارات القبول والاستحقاق
+        </h1>
       </div>
 
 
