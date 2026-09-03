@@ -154,7 +154,7 @@ export default function ReciterExams() {
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-bold text-foreground text-right">اختبارات القبول والاستحقاق</h1>
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <ClipboardList className="w-5 h-5 text-primary" />
+            <GraduationCap className="w-5 h-5 text-primary" />
           </div>
         </div>
         <button
