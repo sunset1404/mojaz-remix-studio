@@ -463,16 +463,6 @@ const ReciterHome = () => {
                         }}
                         className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all"
                       >
-                        <Video className="w-4.5 h-4.5 text-primary" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          navigate("/call/new", { state: { studentId: student.user_id, studentName: student.full_name } });
-                        }}
-                        className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all"
-                      >
                         <Phone className="w-4.5 h-4.5 text-primary" />
                       </button>
                     </div>
