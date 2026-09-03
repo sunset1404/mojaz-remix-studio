@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ChevronRight, Calendar, Clock, Users,
-  Loader2, CheckCircle2, XCircle, GraduationCap,
+  Phone, Loader2, CheckCircle2, XCircle, GraduationCap,
 } from "lucide-react";
 
 type ExamType = "admission" | "eligibility";
@@ -37,9 +38,28 @@ interface Exam {
 export default function ReciterExams() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("upcoming");
+
+  const startCall = (exam: Exam) => {
+    if (!exam.student_id) {
+      toast({
+        title: "لا يمكن بدء المكالمة",
+        description: "لم يتم تحديد طالب لهذا الاختبار. يُرجى التواصل مع الإدارة.",
+        variant: "destructive",
+      });
+      return;
+    }
+    navigate("/call/new", {
+      state: {
+        studentId: exam.student_id,
+        studentName: exam.student_name || "الطالب",
+        examId: exam.id,
+      },
+    });
+  };
 
   const fetchExams = async () => {
     if (!user) return;
@@ -141,6 +161,18 @@ export default function ReciterExams() {
           </p>
         )}
 
+        {isUpcoming && (
+          <div className="flex gap-2 mt-3">
+            <Button
+              size="sm"
+              onClick={() => startCall(exam)}
+              className="gap-2 flex-1"
+            >
+              <Phone className="w-4 h-4" />
+              اتصال بالطالب
+            </Button>
+          </div>
+        )}
 
       </Card>
     </motion.div>
@@ -149,19 +181,19 @@ export default function ReciterExams() {
   return (
     <div className="min-h-screen bg-background pb-24" dir="rtl">
       {/* Header */}
-      <div className="px-5 pt-8 pb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <h1 className="text-lg font-bold text-foreground text-right">اختبارات القبول والاستحقاق</h1>
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-primary" />
-          </div>
-        </div>
+      <div className="px-5 pt-8 pb-4 flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center"
+          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0"
         >
           <ChevronRight className="w-5 h-5 text-foreground" />
         </button>
+        <h1 className="flex-1 text-lg font-bold text-foreground text-center truncate">
+          اختبارات القبول والاستحقاق
+        </h1>
+        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+          <GraduationCap className="w-5 h-5 text-primary" />
+        </div>
       </div>
 
 
