@@ -69,6 +69,29 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
             </div>
           )}
 
+          {/* Session star rating */}
+          <div className="space-y-1.5">
+            <label className="text-foreground text-xs font-semibold flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 text-gold" />
+              تقييم الجلسة
+            </label>
+            <div className="flex items-center gap-1" dir="ltr">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                  aria-label={`تقييم ${star} من 5`}
+                >
+                  <Star
+                    className={`w-7 h-7 ${star <= rating ? 'fill-gold text-gold' : 'text-muted-foreground/40'}`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Start point */}
 
           <div className="space-y-1.5">
