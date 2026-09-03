@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ChevronRight, Calendar, Clock, Users,
+  Calendar, Clock, Users,
   Phone, Loader2, CheckCircle2, XCircle, GraduationCap,
 } from "lucide-react";
 
@@ -140,11 +140,11 @@ export default function ReciterExams() {
         </div>
 
         <div className="mt-3 pt-3 border-t border-border/40">
-          <div className="flex items-center gap-1.5 mb-1.5 justify-end">
-            <span className="text-xs font-semibold text-foreground">أعضاء اللجنة</span>
+          <div dir="rtl" className="flex items-center gap-1.5 mb-1.5 justify-start">
             <Users className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-semibold text-foreground">أعضاء اللجنة</span>
           </div>
-          <div className="flex flex-wrap gap-1.5 justify-end">
+          <div dir="rtl" className="flex flex-wrap gap-1.5 justify-start">
             {[exam.committee_member_1_name, exam.committee_member_2_name, exam.committee_member_3_name]
               .filter(Boolean)
               .map((n, i) => (
@@ -181,19 +181,13 @@ export default function ReciterExams() {
   return (
     <div className="min-h-screen bg-background pb-24" dir="rtl">
       {/* Header */}
-      <div className="px-5 pt-8 pb-4 flex items-center gap-3">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0"
-        >
-          <ChevronRight className="w-5 h-5 text-foreground" />
-        </button>
-        <h1 className="flex-1 text-lg font-bold text-foreground text-center truncate">
-          اختبارات القبول والاستحقاق
-        </h1>
+      <div className="px-5 pt-8 pb-4 pr-16 flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
           <GraduationCap className="w-5 h-5 text-primary" />
         </div>
+        <h1 className="flex-1 text-lg font-bold text-foreground truncate">
+          اختبارات القبول والاستحقاق
+        </h1>
       </div>
 
 

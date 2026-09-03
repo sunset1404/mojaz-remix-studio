@@ -569,7 +569,9 @@ const VideoCallPage = () => {
             <AnimatePresence>
                 {showConfirm && isReciter && (
                     <SessionConfirmDialog
-                        data={sessionNoteRef.current}
+                        data={examId
+                            ? { ...sessionNoteRef.current, scores: examScores, notes: examNotes }
+                            : sessionNoteRef.current}
                         onConfirm={handleConfirmEnd}
                         onCancel={() => setShowConfirm(false)}
                         isExam={!!examId}
