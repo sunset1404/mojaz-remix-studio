@@ -249,8 +249,9 @@ export function VideoCall({ roomId, role, otherUserName, onEndCall, onOtherParty
 
 
 
-    const handleEndCall = () => {
-        endCall();
+    const handleEndCall = async () => {
+        // Fully release media, watchdogs, and signaling before showing any post-call form.
+        await endCall();
         onEndCall?.();
     };
 

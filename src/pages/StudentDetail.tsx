@@ -317,7 +317,7 @@ const StudentDetail = () => {
                           className={`w-4 h-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
                         />
                       </div>
-                    </button>
+                    </Button>
 
                     {expanded && (
                       <div className="px-3 pb-3 space-y-2 border-t border-border/50 pt-3">
