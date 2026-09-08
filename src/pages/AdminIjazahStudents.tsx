@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ReciterPicker } from "@/components/admin/ReciterPicker";
+import ProgramAssignSelect, { useProgramsList } from "@/components/admin/ProgramAssignSelect";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
