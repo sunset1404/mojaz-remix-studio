@@ -10,6 +10,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import CertificateViewer from "@/components/CertificateViewer";
+import {
+  fetchExternalIjazat,
+  fetchExternalIjazaHtml,
+  externalIjazaViewUrl,
+  type ExternalIjaza,
+} from "@/lib/externalIjazat";
 
 // Wrapper that scales the 920px certificate to fit within its container
 const CertificateScaled = forwardRef<HTMLDivElement, {
@@ -81,6 +87,33 @@ const Certificates = () => {
   const [viewCert, setViewCert] = useState<Certificate | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const certRef = useRef<HTMLDivElement>(null);
+  const [extIjazat, setExtIjazat] = useState<ExternalIjaza[]>([]);
+  const [extLoading, setExtLoading] = useState(true);
+  const [extHtml, setExtHtml] = useState<string | null>(null);
+  const [extOpen, setExtOpen] = useState(false);
+  const [extLoadingId, setExtLoadingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchExternalIjazat()
+      .then(setExtIjazat)
+      .catch(() => setExtIjazat([]))
+      .finally(() => setExtLoading(false));
+  }, []);
+
+  const openExternal = async (ij: ExternalIjaza) => {
+    const code = ij.barcode_data || ij.license_number;
+    setExtLoadingId(ij.id);
+    try {
+      const html = await fetchExternalIjazaHtml(code);
+      setExtHtml(html);
+      setExtOpen(true);
+    } catch {
+      window.open(externalIjazaViewUrl(code), "_blank");
+    } finally {
+      setExtLoadingId(null);
+    }
+  };
+
 
   useEffect(() => {
     if (!user) return;
@@ -400,6 +433,81 @@ const Certificates = () => {
             </motion.div>
           </div>
 
+          {/* External Ijazat (نظام الإجازات المعتمد) */}
+          <div className="px-4 mt-7">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-foreground text-sm flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl bg-gold/15 flex items-center justify-center">
+                  <GraduationCap className="w-3.5 h-3.5 text-gold" />
+                </div>
+                الإجازات المعتمدة
+              </h2>
+              <Badge variant="secondary" className="text-[10px] bg-gold/10 text-gold border-gold/20">
+                {extIjazat.length}
+              </Badge>
+            </div>
+            {extLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+              </div>
+            ) : extIjazat.length === 0 ? (
+              <Card className="border-dashed border-border/60 bg-muted/20">
+                <CardContent className="p-8 text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-3">
+                    <Sparkles className="w-5 h-5 text-gold" />
+                  </div>
+                  <p className="text-muted-foreground text-sm font-medium">لا توجد إجازات معتمدة</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {extIjazat.map((ij) => (
+                  <Card key={ij.id} className="border-border/50 shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-11 h-11 rounded-2xl bg-gold/15 text-gold flex items-center justify-center shrink-0">
+                          <GraduationCap className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-bold text-foreground text-sm leading-snug">{ij.student_name}</h3>
+                            <Badge variant="secondary" className="text-[10px] font-bold px-2 py-0.5 shrink-0 bg-gold/15 text-gold border-gold/20">
+                              {ij.status}
+                            </Badge>
+                          </div>
+                          {ij.qiraa && (
+                            <p className="text-xs text-muted-foreground mt-1 truncate">
+                              {ij.qiraa}{ij.riwaya ? ` - ${ij.riwaya}` : ""}
+                            </p>
+                          )}
+                          <p className="text-[11px] text-muted-foreground/80 mt-0.5 font-mono">{ij.license_number}</p>
+                          <p className="text-[10px] text-muted-foreground/70 mt-1">{ij.issue_date}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-border/40">
+                        <button
+                          onClick={() => openExternal(ij)}
+                          disabled={extLoadingId === ij.id}
+                          className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-accent/40 hover:bg-accent/70 text-foreground text-[11px] font-semibold transition-colors disabled:opacity-50"
+                        >
+                          {extLoadingId === ij.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                          معاينة
+                        </button>
+                        <button
+                          onClick={() => window.open(externalIjazaViewUrl(ij.barcode_data || ij.license_number), "_blank")}
+                          className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-gold/10 hover:bg-gold/15 text-gold text-[11px] font-semibold transition-colors"
+                        >
+                          <Share2 className="w-4 h-4" />
+                          فتح الإجازة
+                        </button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Certificates Section */}
           <div className="px-4 mt-7">
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
@@ -447,6 +555,24 @@ const Certificates = () => {
               cert={viewCert}
               reciterSignatureUrl={(viewCert as any).reciter_signature_url}
               reciterStampUrl={(viewCert as any).reciter_stamp_url}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* External Ijaza Dialog - original design, untouched */}
+      <Dialog open={extOpen} onOpenChange={(o) => { setExtOpen(o); if (!o) setExtHtml(null); }}>
+        <DialogContent className="w-[calc(100vw-16px)] max-w-[1000px] max-h-[92vh] overflow-hidden p-2 sm:p-3">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold">معاينة الإجازة</DialogTitle>
+            <DialogDescription className="text-xs">الإجازة بتصميمها الرسمي الأصلي</DialogDescription>
+          </DialogHeader>
+          {extHtml && (
+            <iframe
+              title="الإجازة"
+              srcDoc={extHtml}
+              className="w-full rounded-lg border border-border/50 bg-white"
+              style={{ height: "78vh" }}
             />
           )}
         </DialogContent>
