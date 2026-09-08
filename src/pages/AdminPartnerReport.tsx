@@ -539,6 +539,8 @@ const AdminPartnerReport = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
