@@ -70,10 +70,11 @@ const AdminProgramDetail = () => {
   const fetchAll = async () => {
     setLoading(true);
     try {
+      const db = supabase as any;
       const [pRes, sRes, oRes] = await Promise.all([
-        supabase.from("programs" as any).select("*").eq("id", id!).maybeSingle(),
-        supabase.from("student_profiles").select("*").eq("program_id" as any, id!),
-        supabase.from("student_profiles").select("*").is("program_id" as any, null),
+        db.from("programs").select("*").eq("id", id!).maybeSingle(),
+        db.from("student_profiles").select("*").eq("program_id", id!),
+        db.from("student_profiles").select("*").is("program_id", null),
       ]);
       if (pRes.error) throw pRes.error;
       setProgram(pRes.data as any);
