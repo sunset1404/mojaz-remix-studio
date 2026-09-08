@@ -23,6 +23,7 @@ import {
   Wallet, Clock, UserPlus, X, Loader2, BookMarked, BarChart3
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -247,12 +248,12 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
     setCopied(false);
   };
 
-  const openAssignDialog = async (partnerId: string, partnerName: string, initialProgram: string = "all") => {
+  const openAssignDialog = async (partnerId: string, partnerName: string) => {
     setAssignDialog({ open: true, partnerId, partnerName });
     setSelectedStudentIds(new Set());
     setStudentSearch("");
     setTrackFilter("all");
-    setProgramFilter(initialProgram === "program" ? "all" : initialProgram);
+    setProgramFilter("all");
     setLoadingStudents(true);
     try {
       const [{ data }, progRes] = await Promise.all([
@@ -262,7 +263,6 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
       setAllStudents((data as any[]) || []);
       const progs = (((progRes as any)?.data as any[]) || []) as { id: string; name: string }[];
       setPrograms(progs);
-      if (initialProgram === "program" && progs.length) setProgramFilter(progs[0].id);
     } catch {
       toast({ title: "خطأ في تحميل الطلاب", variant: "destructive" });
     } finally {
@@ -736,15 +736,6 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                                     >
                                       <UserPlus className="w-4 h-4" />
                                       إضافة طلاب على هذا الداعم
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="gap-2"
-                                      onClick={(e) => { e.stopPropagation(); openAssignDialog(partner.user_id, partner.full_name, "program"); }}
-                                    >
-                                      <BookMarked className="w-4 h-4" />
-                                      إضافة طلاب برنامج
                                     </Button>
                                     <Button
                                       size="sm"
