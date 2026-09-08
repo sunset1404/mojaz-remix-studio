@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 interface StudentProfile {
+  program_id?: string | null;
   id: string | null;
   user_id: string;
   full_name: string;
@@ -100,6 +101,7 @@ const AdminIjazahStudents = () => {
   const [form, setForm] = useState<any>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [activatingId, setActivatingId] = useState<string | null>(null);
+  const programs = useProgramsList();
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -520,6 +522,12 @@ const AdminIjazahStudents = () => {
                                         reciters={reciters as any}
                                         value={student.assigned_reciter_id}
                                         onChange={(val) => assignReciter(student.id, val)}
+                                      />
+                                      <h4 className="text-xs font-bold text-primary mt-2">تسكين على برنامج</h4>
+                                      <ProgramAssignSelect
+                                        userId={student.user_id}
+                                        value={student.program_id}
+                                        programs={programs}
                                       />
                                     </div>
                                   )}
