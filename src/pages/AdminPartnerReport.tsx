@@ -70,6 +70,9 @@ const AdminPartnerReport = () => {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [usage, setUsage] = useState<{ student_id: string; minutes_used: number; session_date: string }[]>([]);
   const [certificates, setCertificates] = useState<{ user_id: string; created_at: string }[]>([]);
+  const [assignments, setAssignments] = useState<{ id: string; student_id: string; status: string; assigned_at: string; name: string; phone: string | null; track: string | null; program_name: string | null }[]>([]);
+  const [savingId, setSavingId] = useState<string | null>(null);
+
 
   const today = toISO(new Date());
   const yearAgo = (() => { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return toISO(d); })();
