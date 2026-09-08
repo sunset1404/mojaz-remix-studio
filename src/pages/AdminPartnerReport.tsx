@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, BarChart3, Clock, Users, BookOpen, Award, FileSpreadsheet, Loader2, RefreshCw, Trash2, UserMinus, UserCheck } from "lucide-react";
+import { BarChart3, Clock, Users, BookOpen, Award, FileSpreadsheet, Loader2, RefreshCw, Trash2, UserMinus, UserCheck } from "lucide-react";
 
 type Grouping = "month" | "week" | "day";
 
@@ -60,7 +60,6 @@ const periodLabel = (key: string, grouping: Grouping) => {
 
 const AdminPartnerReport = () => {
   const { partnerId } = useParams<{ partnerId: string }>();
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -300,15 +299,12 @@ const AdminPartnerReport = () => {
 
   return (
     <div className="p-4 md:p-6 space-y-5" dir="rtl">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-row-reverse">
         <SidebarTrigger />
-        <Button variant="ghost" size="sm" className="gap-1" onClick={() => navigate("/admin/partners")}>
-          <ArrowRight className="w-4 h-4" /> رجوع
-        </Button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg md:text-xl font-bold truncate flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-primary" />
+        <div className="flex-1 min-w-0 text-right">
+          <h1 className="text-lg md:text-xl font-bold truncate flex items-center justify-end gap-2">
             تقرير منجزات: {partner?.full_name}
+            <BarChart3 className="w-5 h-5 text-primary" />
           </h1>
           {partner?.organization_name && (
             <p className="text-xs text-muted-foreground truncate">{partner.organization_name}</p>
@@ -328,7 +324,7 @@ const AdminPartnerReport = () => {
         <TabsContent value="students" className="space-y-3">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
+              <CardTitle className="text-sm flex items-center gap-2 flex-row-reverse justify-end">
                 <Users className="w-4 h-4 text-primary" />
                 الطلاب المسكّنون على الداعم
                 <Badge variant="secondary">{assignments.filter(a => a.status === "active").length} نشط</Badge>
@@ -339,9 +335,9 @@ const AdminPartnerReport = () => {
                 <p className="text-sm text-muted-foreground text-center py-6">لا يوجد طلاب مسكّنون على هذا الداعم</p>
               ) : (
                 assignments.map(a => (
-                  <div key={a.id} className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-card">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                  <div key={a.id} className="flex flex-row-reverse items-center gap-3 p-3 rounded-lg border border-border/40 bg-card">
+                    <div className="flex-1 min-w-0 text-right">
+                      <div className="flex items-center justify-end gap-2 flex-wrap">
                         <p className="font-medium text-sm truncate">{a.name}</p>
                         <Badge variant={a.status === "active" ? "default" : "secondary"} className="text-[10px]">
                           {a.status === "active" ? "نشط" : "موقوف"}
@@ -354,6 +350,15 @@ const AdminPartnerReport = () => {
                       </p>
                     </div>
                     <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      disabled={savingId === a.id}
+                      onClick={() => removeAssignment(a.id, a.name)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
                       variant="outline"
                       size="sm"
                       className="gap-1"
@@ -362,15 +367,6 @@ const AdminPartnerReport = () => {
                     >
                       {savingId === a.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : a.status === "active" ? <UserMinus className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
                       {a.status === "active" ? "إيقاف" : "تفعيل"}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive"
-                      disabled={savingId === a.id}
-                      onClick={() => removeAssignment(a.id, a.name)}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 ))
@@ -382,22 +378,22 @@ const AdminPartnerReport = () => {
         <TabsContent value="report" className="space-y-5">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">تصفية البيانات</CardTitle>
+          <CardTitle className="text-sm text-right">تصفية البيانات</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-right">
             <div className="space-y-1">
-              <Label className="text-xs">من</Label>
-              <Input type="date" value={from} onChange={e => setFrom(e.target.value)} />
+              <Label className="text-xs block text-right">من</Label>
+              <Input type="date" value={from} onChange={e => setFrom(e.target.value)} className="text-right" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">إلى</Label>
-              <Input type="date" value={to} onChange={e => setTo(e.target.value)} />
+              <Label className="text-xs block text-right">إلى</Label>
+              <Input type="date" value={to} onChange={e => setTo(e.target.value)} className="text-right" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">التصنيف</Label>
+              <Label className="text-xs block text-right">التصنيف</Label>
               <Select value={grouping} onValueChange={(v) => setGrouping(v as Grouping)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="text-right"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="month">شهري</SelectItem>
                   <SelectItem value="week">أسبوعي</SelectItem>
@@ -406,9 +402,9 @@ const AdminPartnerReport = () => {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">الطالب</Label>
+              <Label className="text-xs block text-right">الطالب</Label>
               <Select value={studentFilter} onValueChange={setStudentFilter}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="text-right"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">كل الطلاب</SelectItem>
                   {students.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
