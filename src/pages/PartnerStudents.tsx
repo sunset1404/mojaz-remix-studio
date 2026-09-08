@@ -8,8 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 interface StudentRow {
   student_id: string;
   assigned_at: string;
-  name: string;
-  minutes: number;
+  firstName: string;
+  secondName: string;
+  country: string;
+  hours: number;
 }
 
 const PartnerStudents = () => {
@@ -29,10 +31,10 @@ const PartnerStudents = () => {
 
       const rows: StudentRow[] = [];
       for (const s of ps) {
-        // Get student name
+        // Get student profile
         const { data: profile } = await supabase
           .from("student_profiles")
-          .select("full_name")
+          .select("full_name, nationality")
           .eq("user_id", s.student_id)
           .maybeSingle();
 
@@ -44,12 +46,15 @@ const PartnerStudents = () => {
           .eq("student_id", s.student_id);
 
         const totalMin = logs?.reduce((sum, l) => sum + Number(l.minutes_used), 0) || 0;
+        const nameParts = (profile?.full_name || "").trim().split(/\s+/);
 
         rows.push({
           student_id: s.student_id,
           assigned_at: s.assigned_at,
-          name: profile?.full_name || "طالب",
-          minutes: totalMin,
+          firstName: nameParts[0] || "طالب",
+          secondName: nameParts[1] || "",
+          country: profile?.nationality || "",
+          hours: Number((totalMin / 60).toFixed(1)),
         });
       }
       setStudents(rows);
@@ -90,7 +95,9 @@ const PartnerStudents = () => {
                 <User className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-foreground text-sm truncate">{student.name}</p>
+                <p className="font-bold text-foreground text-sm truncate">
+                  {student.firstName} {student.secondName}
+                </p>
                 <div className="flex items-center gap-3 mt-1">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 text-muted-foreground" />
@@ -100,9 +107,10 @@ const PartnerStudents = () => {
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3 text-gold" />
-                    <span className="text-[10px] text-gold font-semibold">{student.minutes.toFixed(0)} دقيقة</span>
+                    <span className="text-[10px] text-gold font-semibold">{student.hours} ساعة</span>
                   </div>
                 </div>
+                <p className="text-[10px] text-muted-foreground mt-1 truncate">{student.country}</p>
               </div>
             </motion.div>
           ))
