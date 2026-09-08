@@ -147,13 +147,35 @@ const AdminCertificates = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [certsRes, studentsRes, recitersRes, recCertsRes] = await Promise.all([
+      const [certsRes, studentsRes, recitersRes, recCertsRes, extIjazat] = await Promise.all([
         supabase.from("certificates").select("*").order("created_at", { ascending: false }),
         supabase.from("student_profiles").select("id, user_id, full_name, phone, email, preferred_riwaya, assigned_reciter_id, ijazah_status, preferred_track"),
         supabase.from("reciter_profiles").select("user_id, full_name, signature_url, stamp_url").eq("status", "approved"),
         supabase.from("reciter_certifications").select("reciter_id, type, riwaya, certification_text"),
+        fetchExternalIjazat().catch(() => []),
       ]);
-      setCertificates(certsRes.data || []);
+      const extRows: CertificateRow[] = extIjazat.map((ij) => ({
+        id: `ext-${ij.id}`,
+        user_id: "",
+        title: `إجازة قرآنية - ${ij.license_number}`,
+        type: "ijaza",
+        sheikh_name: null,
+        issuer: "نظام الإجازات المعتمد",
+        date: ij.issue_date,
+        status: ij.status,
+        riwaya: ij.riwaya || ij.qiraa,
+        notes: ij.notes,
+        student_name: ij.student_name,
+        reciter_name: null,
+        certificate_text: null,
+        student_phone: ij.student_phone,
+        student_email: ij.student_email,
+        reciter_id: null,
+        created_at: ij.issue_date,
+        external: true,
+        externalCode: ij.barcode_data || ij.license_number,
+      }));
+      setCertificates([...(certsRes.data || []), ...extRows]);
       setStudents(studentsRes.data || []);
       setReciters(recitersRes.data || []);
       setReciterCerts(recCertsRes.data || []);
