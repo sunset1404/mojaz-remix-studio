@@ -667,26 +667,35 @@ const AdminCertificates = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
-                              onClick={() => setViewCert(cert)} title="معاينة">
-                              <Eye className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-                              onClick={() => handleDownload(cert)} disabled={downloadingId === cert.id} title="تحميل PDF">
-                              {downloadingId === cert.id
-                                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                : <Download className="w-3.5 h-3.5" />}
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-                              onClick={() => handleSendWhatsApp(cert)} disabled={preparingWaId === cert.id} title="إرسال عبر واتساب">
-                              {preparingWaId === cert.id
-                                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                : <MessageCircle className="w-3.5 h-3.5" />}
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDelete(cert.id)} title="حذف">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                            {cert.external ? (
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
+                                onClick={() => window.open(externalIjazaViewUrl(cert.externalCode || ""), "_blank")} title="معاينة الإجازة">
+                                <Eye className="w-3.5 h-3.5" />
+                              </Button>
+                            ) : (
+                              <>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
+                                  onClick={() => setViewCert(cert)} title="معاينة">
+                                  <Eye className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                                  onClick={() => handleDownload(cert)} disabled={downloadingId === cert.id} title="تحميل PDF">
+                                  {downloadingId === cert.id
+                                    ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    : <Download className="w-3.5 h-3.5" />}
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                                  onClick={() => handleSendWhatsApp(cert)} disabled={preparingWaId === cert.id} title="إرسال عبر واتساب">
+                                  {preparingWaId === cert.id
+                                    ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    : <MessageCircle className="w-3.5 h-3.5" />}
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleDelete(cert.id)} title="حذف">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
