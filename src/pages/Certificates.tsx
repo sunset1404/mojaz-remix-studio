@@ -559,6 +559,24 @@ const Certificates = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* External Ijaza Dialog - original design, untouched */}
+      <Dialog open={extOpen} onOpenChange={(o) => { setExtOpen(o); if (!o) setExtHtml(null); }}>
+        <DialogContent className="w-[calc(100vw-16px)] max-w-[1000px] max-h-[92vh] overflow-hidden p-2 sm:p-3">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold">معاينة الإجازة</DialogTitle>
+            <DialogDescription className="text-xs">الإجازة بتصميمها الرسمي الأصلي</DialogDescription>
+          </DialogHeader>
+          {extHtml && (
+            <iframe
+              title="الإجازة"
+              srcDoc={extHtml}
+              className="w-full rounded-lg border border-border/50 bg-white"
+              style={{ height: "78vh" }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
