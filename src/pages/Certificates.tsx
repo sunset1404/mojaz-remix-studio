@@ -134,7 +134,7 @@ const Certificates = () => {
     fetchData();
   }, [user]);
 
-  const total = ijazat.length + certificates.length;
+  const total = ijazat.length + extIjazat.length + certificates.length;
 
   const handleDownload = useCallback(async (cert: Certificate) => {
     setDownloadingId(cert.id);
