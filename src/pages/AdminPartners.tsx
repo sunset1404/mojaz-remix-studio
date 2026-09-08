@@ -252,7 +252,7 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
     setSelectedStudentIds(new Set());
     setStudentSearch("");
     setTrackFilter("all");
-    setProgramFilter(initialProgram);
+    setProgramFilter(initialProgram === "program" ? "all" : initialProgram);
     setLoadingStudents(true);
     try {
       const [{ data }, progRes] = await Promise.all([
@@ -260,7 +260,9 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
         (supabase as any).from("programs").select("id, name").order("created_at", { ascending: false }),
       ]);
       setAllStudents((data as any[]) || []);
-      setPrograms(((progRes as any)?.data as any[]) || []);
+      const progs = (((progRes as any)?.data as any[]) || []) as { id: string; name: string }[];
+      setPrograms(progs);
+      if (initialProgram === "program" && progs.length) setProgramFilter(progs[0].id);
     } catch {
       toast({ title: "خطأ في تحميل الطلاب", variant: "destructive" });
     } finally {
