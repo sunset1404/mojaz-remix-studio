@@ -89,28 +89,36 @@ const PartnerStudents = () => {
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: i * 0.08 }}
-              className="glass-card rounded-2xl p-4 flex items-center gap-4"
+              className="glass-card rounded-2xl p-3 flex items-center gap-3"
             >
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <User className="w-6 h-6 text-primary" />
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <User className="w-5 h-5 text-primary" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-foreground text-sm truncate">
-                  {student.firstName} {student.secondName}
-                </p>
-                <div className="flex items-center gap-3 mt-1">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground">
-                      {new Date(student.assigned_at).toLocaleDateString("ar-SA")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-gold" />
-                    <span className="text-[10px] text-gold font-semibold">{student.hours} ساعة</span>
-                  </div>
+              <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <span className="text-sm font-bold text-foreground whitespace-nowrap">
+                  {student.firstName || "—"}
+                </span>
+                {student.secondName ? (
+                  <span className="text-sm font-bold text-foreground whitespace-nowrap">
+                    {student.secondName}
+                  </span>
+                ) : null}
+                <span className="h-4 w-px bg-border shrink-0" />
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {student.country || "—"}
+                </span>
+                <span className="h-4 w-px bg-border shrink-0" />
+                <div className="flex items-center gap-1 text-gold whitespace-nowrap">
+                  <Clock className="w-3 h-3" />
+                  <span className="text-xs font-semibold">{student.hours} س</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1 truncate">{student.country}</p>
+                <span className="h-4 w-px bg-border shrink-0" />
+                <div className="flex items-center gap-1 text-muted-foreground whitespace-nowrap">
+                  <Calendar className="w-3 h-3" />
+                  <span className="text-xs">
+                    {new Date(student.assigned_at).toLocaleDateString("ar-SA")}
+                  </span>
+                </div>
               </div>
             </motion.div>
           ))
