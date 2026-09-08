@@ -319,6 +319,67 @@ const AdminPartnerReport = () => {
         </Button>
       </div>
 
+      <Tabs defaultValue="report" className="space-y-5">
+        <TabsList>
+          <TabsTrigger value="report">تقرير المنجزات</TabsTrigger>
+          <TabsTrigger value="students">الطلاب المسكّنون ({assignments.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="students" className="space-y-3">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Users className="w-4 h-4 text-primary" />
+                الطلاب المسكّنون على الداعم
+                <Badge variant="secondary">{assignments.filter(a => a.status === "active").length} نشط</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {assignments.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">لا يوجد طلاب مسكّنون على هذا الداعم</p>
+              ) : (
+                assignments.map(a => (
+                  <div key={a.id} className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-card">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium text-sm truncate">{a.name}</p>
+                        <Badge variant={a.status === "active" ? "default" : "secondary"} className="text-[10px]">
+                          {a.status === "active" ? "نشط" : "موقوف"}
+                        </Badge>
+                        {a.program_name && <Badge variant="outline" className="text-[10px]">{a.program_name}</Badge>}
+                        {a.track && <Badge variant="outline" className="text-[10px]">{a.track}</Badge>}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        تاريخ التسكين: {a.assigned_at?.slice(0, 10)}{a.phone ? ` · ${a.phone}` : ""}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      disabled={savingId === a.id}
+                      onClick={() => toggleAssignment(a.id, a.status)}
+                    >
+                      {savingId === a.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : a.status === "active" ? <UserMinus className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+                      {a.status === "active" ? "إيقاف" : "تفعيل"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      disabled={savingId === a.id}
+                      onClick={() => removeAssignment(a.id, a.name)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="report" className="space-y-5">
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">تصفية البيانات</CardTitle>
