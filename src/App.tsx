@@ -51,6 +51,7 @@ import ResetPassword from "./pages/ResetPassword";
 import AdminStudents from "./pages/AdminStudents";
 import AdminReciters from "./pages/AdminReciters";
 import AdminPartners from "./pages/AdminPartners";
+import AdminPartnerReport from "./pages/AdminPartnerReport";
 import AdminIjazahStudents from "./pages/AdminIjazahStudents";
 import AdminPrograms from "./pages/AdminPrograms";
 import AdminProgramDetail from "./pages/AdminProgramDetail";
@@ -159,6 +160,7 @@ const AppRoutes = () => (
     <Route path="/admin/programs/:id" element={<AdminRoute><AdminProgramDetail /></AdminRoute>} />
     <Route path="/admin/reciters" element={<AdminRoute><AdminReciters /></AdminRoute>} />
     <Route path="/admin/partners" element={<AdminRoute><AdminPartners /></AdminRoute>} />
+    <Route path="/admin/partners/:partnerId/report" element={<AdminRoute><AdminPartnerReport /></AdminRoute>} />
     <Route path="/admin/certificates" element={<AdminRoute><AdminCertificates /></AdminRoute>} />
     <Route path="/admin/certificate-templates" element={<AdminRoute><AdminCertificateTemplates /></AdminRoute>} />
     <Route path="/admin/exams" element={<AdminRoute><AdminExams /></AdminRoute>} />

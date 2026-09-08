@@ -20,7 +20,7 @@ import {
   TrendingUp, DollarSign, Users, Building2,
   RefreshCw, ChevronDown, ChevronUp,
   ArrowRight, Plus, Copy, Check, Eye, EyeOff,
-  Wallet, Clock, UserPlus, X, Loader2, BookMarked
+  Wallet, Clock, UserPlus, X, Loader2, BookMarked, BarChart3
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
@@ -745,6 +745,15 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                                     >
                                       <BookMarked className="w-4 h-4" />
                                       إضافة طلاب برنامج
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="gap-2"
+                                      onClick={(e) => { e.stopPropagation(); navigate(`/admin/partners/${partner.user_id}/report`); }}
+                                    >
+                                      <BarChart3 className="w-4 h-4" />
+                                      تقرير المنجزات
                                     </Button>
                                   </div>
 
