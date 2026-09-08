@@ -42,8 +42,11 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import CertificateViewer from "@/components/CertificateViewer";
 import SendCertificateWhatsAppDialog from "@/components/SendCertificateWhatsAppDialog";
+import { fetchExternalIjazat, externalIjazaViewUrl } from "@/lib/externalIjazat";
 
 interface CertificateRow {
+  external?: boolean;
+  externalCode?: string;
   id: string;
   user_id: string;
   title: string;
