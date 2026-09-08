@@ -52,6 +52,8 @@ import AdminStudents from "./pages/AdminStudents";
 import AdminReciters from "./pages/AdminReciters";
 import AdminPartners from "./pages/AdminPartners";
 import AdminIjazahStudents from "./pages/AdminIjazahStudents";
+import AdminPrograms from "./pages/AdminPrograms";
+import AdminProgramDetail from "./pages/AdminProgramDetail";
 import AdminCertificates from "./pages/AdminCertificates";
 import AdminCertificateTemplates from "./pages/AdminCertificateTemplates";
 import AdminExams from "./pages/AdminExams";
@@ -153,6 +155,8 @@ const AppRoutes = () => (
     {/* Admin routes */}
     <Route path="/admin/students" element={<AdminRoute><AdminStudents /></AdminRoute>} />
     <Route path="/admin/ijazah-students" element={<AdminRoute><AdminIjazahStudents /></AdminRoute>} />
+    <Route path="/admin/programs" element={<AdminRoute><AdminPrograms /></AdminRoute>} />
+    <Route path="/admin/programs/:id" element={<AdminRoute><AdminProgramDetail /></AdminRoute>} />
     <Route path="/admin/reciters" element={<AdminRoute><AdminReciters /></AdminRoute>} />
     <Route path="/admin/partners" element={<AdminRoute><AdminPartners /></AdminRoute>} />
     <Route path="/admin/certificates" element={<AdminRoute><AdminCertificates /></AdminRoute>} />
