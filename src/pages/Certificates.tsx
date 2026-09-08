@@ -10,6 +10,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import CertificateViewer from "@/components/CertificateViewer";
+import {
+  fetchExternalIjazat,
+  fetchExternalIjazaHtml,
+  externalIjazaViewUrl,
+  type ExternalIjaza,
+} from "@/lib/externalIjazat";
 
 // Wrapper that scales the 920px certificate to fit within its container
 const CertificateScaled = forwardRef<HTMLDivElement, {
