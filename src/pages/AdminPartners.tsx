@@ -281,9 +281,11 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
     let list = allStudents.filter(s => !globallyAssignedIds.has(s.user_id));
     if (trackFilter === "ijazah") list = list.filter(s => s.preferred_track === "إجازة");
     else if (trackFilter === "general") list = list.filter(s => s.preferred_track !== "إجازة");
+    if (programFilter === "none") list = list.filter(s => !s.program_id);
+    else if (programFilter !== "all") list = list.filter(s => s.program_id === programFilter);
     if (studentSearch) list = list.filter(s => s.full_name.includes(studentSearch) || s.phone.includes(studentSearch));
     return list;
-  }, [allStudents, studentSearch, trackFilter, globallyAssignedIds]);
+  }, [allStudents, studentSearch, trackFilter, programFilter, globallyAssignedIds]);
 
   const toggleStudent = (id: string) => {
     setSelectedStudentIds(prev => {
