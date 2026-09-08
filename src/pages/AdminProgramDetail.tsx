@@ -51,7 +51,7 @@ interface Achievement {
   completions: number;
 }
 
-const TRACK_LABELS: Record<string, string> = { general: "إقراء عام", ijazah: "إجازات", mixed: "مشترك" };
+const TRACK_LABELS: Record<string, string> = { general: "إقراء عام", ijazah: "إجازات", mutoon: "حفظ متون الإقراء", mixed: "مشترك" };
 
 const AdminProgramDetail = () => {
   const { id } = useParams<{ id: string }>();

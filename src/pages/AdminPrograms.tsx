@@ -37,6 +37,7 @@ interface Program {
 const TRACKS = [
   { value: "general", label: "إقراء عام" },
   { value: "ijazah", label: "إجازات" },
+  { value: "mutoon", label: "حفظ متون الإقراء" },
   { value: "mixed", label: "مشترك" },
 ];
 
