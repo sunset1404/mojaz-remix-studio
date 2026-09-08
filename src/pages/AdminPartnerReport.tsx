@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, BarChart3, Clock, Users, BookOpen, Award, FileSpreadsheet, Loader2, RefreshCw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowRight, BarChart3, Clock, Users, BookOpen, Award, FileSpreadsheet, Loader2, RefreshCw, Trash2, UserMinus, UserCheck } from "lucide-react";
 
 type Grouping = "month" | "week" | "day";
 
