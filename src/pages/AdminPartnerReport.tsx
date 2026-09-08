@@ -300,15 +300,12 @@ const AdminPartnerReport = () => {
 
   return (
     <div className="p-4 md:p-6 space-y-5" dir="rtl">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-row-reverse">
         <SidebarTrigger />
-        <Button variant="ghost" size="sm" className="gap-1" onClick={() => navigate("/admin/partners")}>
-          <ArrowRight className="w-4 h-4" /> رجوع
-        </Button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg md:text-xl font-bold truncate flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-primary" />
+        <div className="flex-1 min-w-0 text-right">
+          <h1 className="text-lg md:text-xl font-bold truncate flex items-center justify-end gap-2">
             تقرير منجزات: {partner?.full_name}
+            <BarChart3 className="w-5 h-5 text-primary" />
           </h1>
           {partner?.organization_name && (
             <p className="text-xs text-muted-foreground truncate">{partner.organization_name}</p>
