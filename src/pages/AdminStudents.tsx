@@ -26,6 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";
+import ProgramAssignSelect, { useProgramsList } from "@/components/admin/ProgramAssignSelect";
 
 interface StudentProfile {
   id: string | null;
@@ -45,6 +46,7 @@ interface StudentProfile {
   created_at: string;
   auth_email?: string | null;
   email_confirmed_at?: string | null;
+  program_id?: string | null;
   account_state?: string; // active | unconfirmed | incomplete
   is_orphan?: boolean;
 }
@@ -91,6 +93,7 @@ const AdminStudents = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const programs = useProgramsList();
 
   const CACHE_KEY = "admin_students_cache_v1";
 
@@ -446,7 +449,7 @@ const AdminStudents = () => {
                           {isExpanded && (
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                               <div className="px-4 pb-4 border-t border-border/20 pt-3">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                   <div className="space-y-1.5 text-xs">
                                     <h4 className="text-xs font-bold text-primary mb-1">البيانات</h4>
                                     <div className="flex justify-between"><span className="text-muted-foreground">البريد:</span><span className="text-foreground">{student.auth_email || student.email || "—"}</span></div>
@@ -471,6 +474,17 @@ const AdminStudents = () => {
                                       </>
                                     ) : <p className="text-muted-foreground">لا توجد بيانات أداء بعد</p>}
                                   </div>
+                                  {!student.is_orphan && (
+                                    <div className="space-y-2">
+                                      <h4 className="text-xs font-bold text-primary">تسكين على برنامج</h4>
+                                      <ProgramAssignSelect
+                                        userId={student.user_id}
+                                        value={student.program_id}
+                                        programs={programs}
+                                        onChanged={(pid) => setStudents(prev => prev.map(x => x.user_id === student.user_id ? { ...x, program_id: pid } : x))}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-border/20">
                                   <ExamEvaluationsSection studentId={student.user_id} />

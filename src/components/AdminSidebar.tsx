@@ -1,6 +1,6 @@
 import { 
   Users, GraduationCap, UserCheck, Clock, Award, Gift, 
-  LayoutDashboard, LogOut, ChevronRight, Palette, ClipboardList, Bell, Trophy, Star, MessageSquareText, MessageCircle, CreditCard, Package, Shield, Sparkles, HandHeart, Activity, FileText
+  LayoutDashboard, LogOut, ChevronRight, Palette, ClipboardList, Bell, Trophy, Star, MessageSquareText, MessageCircle, CreditCard, Package, Shield, Sparkles, HandHeart, Activity, FileText, BookMarked
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -24,6 +24,7 @@ const mainMenuItems = [
   { title: "لوحة التحكم", icon: LayoutDashboard, id: "dashboard", path: "/" },
   { title: "طلاب الإقراء", icon: Users, id: "students", path: "/admin/students" },
   { title: "طلاب الإجازات", icon: Award, id: "ijazah-students", path: "/admin/ijazah-students" },
+  { title: "البرامج", icon: BookMarked, id: "programs", path: "/admin/programs" },
   { title: "المقرئين", icon: GraduationCap, id: "reciters", path: "/admin/reciters" },
   { title: "الشركاء", icon: UserCheck, id: "partners", path: "/admin/partners" },
   { title: "الجلسات", icon: Clock, id: "sessions", path: "/admin/sessions" },
