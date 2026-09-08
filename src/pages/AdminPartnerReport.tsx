@@ -336,9 +336,9 @@ const AdminPartnerReport = () => {
                 <p className="text-sm text-muted-foreground text-center py-6">لا يوجد طلاب مسكّنون على هذا الداعم</p>
               ) : (
                 assignments.map(a => (
-                  <div key={a.id} className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-card">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                  <div key={a.id} className="flex flex-row-reverse items-center gap-3 p-3 rounded-lg border border-border/40 bg-card">
+                    <div className="flex-1 min-w-0 text-right">
+                      <div className="flex items-center justify-end gap-2 flex-wrap">
                         <p className="font-medium text-sm truncate">{a.name}</p>
                         <Badge variant={a.status === "active" ? "default" : "secondary"} className="text-[10px]">
                           {a.status === "active" ? "نشط" : "موقوف"}
@@ -351,6 +351,15 @@ const AdminPartnerReport = () => {
                       </p>
                     </div>
                     <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      disabled={savingId === a.id}
+                      onClick={() => removeAssignment(a.id, a.name)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
                       variant="outline"
                       size="sm"
                       className="gap-1"
@@ -359,15 +368,6 @@ const AdminPartnerReport = () => {
                     >
                       {savingId === a.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : a.status === "active" ? <UserMinus className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
                       {a.status === "active" ? "إيقاف" : "تفعيل"}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive"
-                      disabled={savingId === a.id}
-                      onClick={() => removeAssignment(a.id, a.name)}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 ))
