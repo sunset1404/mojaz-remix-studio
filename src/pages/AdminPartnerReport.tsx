@@ -379,22 +379,22 @@ const AdminPartnerReport = () => {
         <TabsContent value="report" className="space-y-5">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">تصفية البيانات</CardTitle>
+          <CardTitle className="text-sm text-right">تصفية البيانات</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-right">
             <div className="space-y-1">
-              <Label className="text-xs">من</Label>
-              <Input type="date" value={from} onChange={e => setFrom(e.target.value)} />
+              <Label className="text-xs block text-right">من</Label>
+              <Input type="date" value={from} onChange={e => setFrom(e.target.value)} className="text-right" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">إلى</Label>
-              <Input type="date" value={to} onChange={e => setTo(e.target.value)} />
+              <Label className="text-xs block text-right">إلى</Label>
+              <Input type="date" value={to} onChange={e => setTo(e.target.value)} className="text-right" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">التصنيف</Label>
+              <Label className="text-xs block text-right">التصنيف</Label>
               <Select value={grouping} onValueChange={(v) => setGrouping(v as Grouping)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="text-right"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="month">شهري</SelectItem>
                   <SelectItem value="week">أسبوعي</SelectItem>
@@ -403,9 +403,9 @@ const AdminPartnerReport = () => {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">الطالب</Label>
+              <Label className="text-xs block text-right">الطالب</Label>
               <Select value={studentFilter} onValueChange={setStudentFilter}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="text-right"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">كل الطلاب</SelectItem>
                   {students.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
