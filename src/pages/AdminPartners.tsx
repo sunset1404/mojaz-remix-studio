@@ -247,17 +247,20 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
     setCopied(false);
   };
 
-  const openAssignDialog = async (partnerId: string, partnerName: string) => {
+  const openAssignDialog = async (partnerId: string, partnerName: string, initialProgram: string = "all") => {
     setAssignDialog({ open: true, partnerId, partnerName });
     setSelectedStudentIds(new Set());
     setStudentSearch("");
     setTrackFilter("all");
+    setProgramFilter(initialProgram);
     setLoadingStudents(true);
     try {
-      const { data } = await supabase
-        .from("student_profiles")
-        .select("user_id, full_name, phone, preferred_track");
-      setAllStudents(data || []);
+      const [{ data }, progRes] = await Promise.all([
+        supabase.from("student_profiles").select("user_id, full_name, phone, preferred_track, program_id"),
+        (supabase as any).from("programs").select("id, name").order("created_at", { ascending: false }),
+      ]);
+      setAllStudents((data as any[]) || []);
+      setPrograms(((progRes as any)?.data as any[]) || []);
     } catch {
       toast({ title: "خطأ في تحميل الطلاب", variant: "destructive" });
     } finally {
