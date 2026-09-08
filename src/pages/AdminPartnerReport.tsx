@@ -86,12 +86,33 @@ const AdminPartnerReport = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [pRes, psRes] = await Promise.all([
+      const [pRes, psRes, progRes] = await Promise.all([
         supabase.from("partner_profiles").select("full_name, organization_name, cost_per_minute, total_support_amount").eq("user_id", partnerId!).maybeSingle(),
-        supabase.from("partner_students").select("student_id, status").eq("partner_id", partnerId!),
+        supabase.from("partner_students").select("id, student_id, status, assigned_at").eq("partner_id", partnerId!).order("assigned_at", { ascending: false }),
+        supabase.from("programs").select("id, name"),
       ]);
       if (pRes.error) throw pRes.error;
       setPartner(pRes.data as any);
+
+      const allIds = (psRes.data || []).map(s => s.student_id);
+      const allProfRes = allIds.length
+        ? await supabase.from("student_profiles").select("user_id, full_name, phone, preferred_track, program_id").in("user_id", allIds)
+        : { data: [] as any[] };
+      const programMap = new Map((progRes.data || []).map(p => [p.id, p.name]));
+      const profMap = new Map((allProfRes.data || []).map((p: any) => [p.user_id, p]));
+      setAssignments((psRes.data || []).map(a => {
+        const p: any = profMap.get(a.student_id);
+        return {
+          id: a.id,
+          student_id: a.student_id,
+          status: a.status,
+          assigned_at: a.assigned_at,
+          name: p?.full_name || "طالب",
+          phone: p?.phone || null,
+          track: p?.preferred_track || null,
+          program_name: p?.program_id ? (programMap.get(p.program_id) || null) : null,
+        };
+      }));
 
       const studentIds = (psRes.data || []).filter(s => s.status === "active").map(s => s.student_id);
       if (studentIds.length === 0) {
