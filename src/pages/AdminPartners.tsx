@@ -726,7 +726,7 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                                   </div>
 
                                   {/* Assign Students Button */}
-                                  <div className="mt-4 pt-3 border-t border-border/20">
+                                  <div className="mt-4 pt-3 border-t border-border/20 flex flex-wrap items-center gap-2">
                                     <Button
                                       size="sm"
                                       className="gap-2"
@@ -734,6 +734,15 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                                     >
                                       <UserPlus className="w-4 h-4" />
                                       إضافة طلاب على هذا الداعم
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="gap-2"
+                                      onClick={(e) => { e.stopPropagation(); openAssignDialog(partner.user_id, partner.full_name, "program"); }}
+                                    >
+                                      <BookMarked className="w-4 h-4" />
+                                      إضافة طلاب برنامج
                                     </Button>
                                   </div>
 
