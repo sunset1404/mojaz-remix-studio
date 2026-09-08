@@ -138,6 +138,37 @@ const AdminPartnerReport = () => {
     }
   };
 
+  const toggleAssignment = async (id: string, current: string) => {
+    const next = current === "active" ? "inactive" : "active";
+    try {
+      setSavingId(id);
+      const { error } = await supabase.from("partner_students").update({ status: next }).eq("id", id);
+      if (error) throw error;
+      toast({ title: next === "active" ? "تم تفعيل التسكين" : "تم إيقاف التسكين" });
+      await fetchData();
+    } catch (error: any) {
+      toast({ title: "تعذر تحديث التسكين", description: error.message, variant: "destructive" });
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const removeAssignment = async (id: string, name: string) => {
+    if (!window.confirm(`حذف تسكين الطالب "${name}" من هذا الداعم؟`)) return;
+    try {
+      setSavingId(id);
+      const { error } = await supabase.from("partner_students").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "تم حذف التسكين" });
+      await fetchData();
+    } catch (error: any) {
+      toast({ title: "تعذر حذف التسكين", description: error.message, variant: "destructive" });
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+
   const inRange = (iso: string) => !!iso && iso >= from && iso <= to;
   const matchStudent = (id: string) => studentFilter === "all" || studentFilter === id;
 
