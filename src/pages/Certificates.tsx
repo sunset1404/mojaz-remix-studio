@@ -134,7 +134,7 @@ const Certificates = () => {
     fetchData();
   }, [user]);
 
-  const total = ijazat.length + certificates.length;
+  const total = ijazat.length + extIjazat.length + certificates.length;
 
   const handleDownload = useCallback(async (cert: Certificate) => {
     setDownloadingId(cert.id);
@@ -330,7 +330,7 @@ const Certificates = () => {
 
   const stats = [
     { label: "إجمالي الشهادات", value: total, icon: FileText, bg: "bg-primary/10", iconColor: "text-primary" },
-    { label: "الإجازات القرآنية", value: ijazat.length, icon: GraduationCap, bg: "bg-gold/15", iconColor: "text-gold" },
+    { label: "الإجازات القرآنية", value: ijazat.length + extIjazat.length, icon: GraduationCap, bg: "bg-gold/15", iconColor: "text-gold" },
     { label: "شهادات الختم", value: certificates.length, icon: Award, bg: "bg-primary/10", iconColor: "text-primary" },
   ];
 
@@ -412,10 +412,10 @@ const Certificates = () => {
                   الإجازات القرآنية
                 </h2>
                 <Badge variant="secondary" className="text-[10px] bg-gold/10 text-gold border-gold/20">
-                  {ijazat.length}
+                  {ijazat.length + extIjazat.length}
                 </Badge>
               </div>
-              {ijazat.length === 0 ? (
+              {ijazat.length === 0 && extIjazat.length === 0 && !extLoading ? (
                 <Card className="border-dashed border-border/60 bg-muted/20">
                   <CardContent className="p-8 text-center">
                     <div className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-3">
@@ -428,84 +428,61 @@ const Certificates = () => {
               ) : (
                 <div className="space-y-3">
                   {ijazat.map((ij, i) => <CertCard key={ij.id} cert={ij} i={i} delay={0.3} accent="gold" />)}
+                  {extIjazat.map((ij, i) => (
+                    <motion.div
+                      key={`ext-${ij.id}`}
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.3 + (ijazat.length + i) * 0.08 }}
+                    >
+                      <Card className="border-border/50 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="w-11 h-11 rounded-2xl bg-gold/15 text-gold flex items-center justify-center shrink-0 shadow-sm">
+                              <GraduationCap className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="font-bold text-foreground text-sm leading-snug line-clamp-2">
+                                  إجازة قرآنية - {ij.student_name}
+                                </h3>
+                                <Badge variant="secondary" className="text-[10px] font-bold px-2 py-0.5 shrink-0 bg-gold/15 text-gold border-gold/20">
+                                  {ij.status}
+                                </Badge>
+                              </div>
+                              {ij.qiraa && (
+                                <p className="text-xs text-muted-foreground mt-1 truncate">
+                                  {ij.qiraa}{ij.riwaya ? ` - ${ij.riwaya}` : ""}
+                                </p>
+                              )}
+                              <p className="text-[11px] text-muted-foreground/80 mt-0.5 font-mono">{ij.license_number}</p>
+                              <p className="text-[10px] text-muted-foreground/70 mt-1">{ij.issue_date}</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-border/40">
+                            <button
+                              onClick={() => openExternal(ij)}
+                              disabled={extLoadingId === ij.id}
+                              className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-accent/40 hover:bg-accent/70 text-foreground text-[11px] font-semibold transition-colors disabled:opacity-50"
+                            >
+                              {extLoadingId === ij.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                              معاينة
+                            </button>
+                            <button
+                              onClick={() => window.open(externalIjazaViewUrl(ij.barcode_data || ij.license_number), "_blank")}
+                              className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-gold/10 hover:bg-gold/15 text-gold text-[11px] font-semibold transition-colors"
+                            >
+                              <Share2 className="w-4 h-4" />
+                              فتح الإجازة
+                            </button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
                 </div>
               )}
             </motion.div>
-          </div>
-
-          {/* External Ijazat (نظام الإجازات المعتمد) */}
-          <div className="px-4 mt-7">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-foreground text-sm flex items-center gap-2">
-                <div className="w-7 h-7 rounded-xl bg-gold/15 flex items-center justify-center">
-                  <GraduationCap className="w-3.5 h-3.5 text-gold" />
-                </div>
-                الإجازات المعتمدة
-              </h2>
-              <Badge variant="secondary" className="text-[10px] bg-gold/10 text-gold border-gold/20">
-                {extIjazat.length}
-              </Badge>
-            </div>
-            {extLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 text-primary animate-spin" />
-              </div>
-            ) : extIjazat.length === 0 ? (
-              <Card className="border-dashed border-border/60 bg-muted/20">
-                <CardContent className="p-8 text-center">
-                  <div className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-3">
-                    <Sparkles className="w-5 h-5 text-gold" />
-                  </div>
-                  <p className="text-muted-foreground text-sm font-medium">لا توجد إجازات معتمدة</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {extIjazat.map((ij) => (
-                  <Card key={ij.id} className="border-border/50 shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-11 h-11 rounded-2xl bg-gold/15 text-gold flex items-center justify-center shrink-0">
-                          <GraduationCap className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <h3 className="font-bold text-foreground text-sm leading-snug">{ij.student_name}</h3>
-                            <Badge variant="secondary" className="text-[10px] font-bold px-2 py-0.5 shrink-0 bg-gold/15 text-gold border-gold/20">
-                              {ij.status}
-                            </Badge>
-                          </div>
-                          {ij.qiraa && (
-                            <p className="text-xs text-muted-foreground mt-1 truncate">
-                              {ij.qiraa}{ij.riwaya ? ` - ${ij.riwaya}` : ""}
-                            </p>
-                          )}
-                          <p className="text-[11px] text-muted-foreground/80 mt-0.5 font-mono">{ij.license_number}</p>
-                          <p className="text-[10px] text-muted-foreground/70 mt-1">{ij.issue_date}</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-border/40">
-                        <button
-                          onClick={() => openExternal(ij)}
-                          disabled={extLoadingId === ij.id}
-                          className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-accent/40 hover:bg-accent/70 text-foreground text-[11px] font-semibold transition-colors disabled:opacity-50"
-                        >
-                          {extLoadingId === ij.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-                          معاينة
-                        </button>
-                        <button
-                          onClick={() => window.open(externalIjazaViewUrl(ij.barcode_data || ij.license_number), "_blank")}
-                          className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-gold/10 hover:bg-gold/15 text-gold text-[11px] font-semibold transition-colors"
-                        >
-                          <Share2 className="w-4 h-4" />
-                          فتح الإجازة
-                        </button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Certificates Section */}

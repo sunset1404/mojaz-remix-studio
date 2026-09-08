@@ -42,8 +42,11 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import CertificateViewer from "@/components/CertificateViewer";
 import SendCertificateWhatsAppDialog from "@/components/SendCertificateWhatsAppDialog";
+import { fetchExternalIjazat, externalIjazaViewUrl } from "@/lib/externalIjazat";
 
 interface CertificateRow {
+  external?: boolean;
+  externalCode?: string;
   id: string;
   user_id: string;
   title: string;
@@ -144,13 +147,35 @@ const AdminCertificates = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [certsRes, studentsRes, recitersRes, recCertsRes] = await Promise.all([
+      const [certsRes, studentsRes, recitersRes, recCertsRes, extIjazat] = await Promise.all([
         supabase.from("certificates").select("*").order("created_at", { ascending: false }),
         supabase.from("student_profiles").select("id, user_id, full_name, phone, email, preferred_riwaya, assigned_reciter_id, ijazah_status, preferred_track"),
         supabase.from("reciter_profiles").select("user_id, full_name, signature_url, stamp_url").eq("status", "approved"),
         supabase.from("reciter_certifications").select("reciter_id, type, riwaya, certification_text"),
+        fetchExternalIjazat().catch(() => []),
       ]);
-      setCertificates(certsRes.data || []);
+      const extRows: CertificateRow[] = extIjazat.map((ij) => ({
+        id: `ext-${ij.id}`,
+        user_id: "",
+        title: `إجازة قرآنية - ${ij.license_number}`,
+        type: "ijaza",
+        sheikh_name: null,
+        issuer: "نظام الإجازات المعتمد",
+        date: ij.issue_date,
+        status: ij.status,
+        riwaya: ij.riwaya || ij.qiraa,
+        notes: ij.notes,
+        student_name: ij.student_name,
+        reciter_name: null,
+        certificate_text: null,
+        student_phone: ij.student_phone,
+        student_email: ij.student_email,
+        reciter_id: null,
+        created_at: ij.issue_date,
+        external: true,
+        externalCode: ij.barcode_data || ij.license_number,
+      }));
+      setCertificates([...(certsRes.data || []), ...extRows]);
       setStudents(studentsRes.data || []);
       setReciters(recitersRes.data || []);
       setReciterCerts(recCertsRes.data || []);
@@ -642,26 +667,35 @@ const AdminCertificates = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
-                              onClick={() => setViewCert(cert)} title="معاينة">
-                              <Eye className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-                              onClick={() => handleDownload(cert)} disabled={downloadingId === cert.id} title="تحميل PDF">
-                              {downloadingId === cert.id
-                                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                : <Download className="w-3.5 h-3.5" />}
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-                              onClick={() => handleSendWhatsApp(cert)} disabled={preparingWaId === cert.id} title="إرسال عبر واتساب">
-                              {preparingWaId === cert.id
-                                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                : <MessageCircle className="w-3.5 h-3.5" />}
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDelete(cert.id)} title="حذف">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                            {cert.external ? (
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
+                                onClick={() => window.open(externalIjazaViewUrl(cert.externalCode || ""), "_blank")} title="معاينة الإجازة">
+                                <Eye className="w-3.5 h-3.5" />
+                              </Button>
+                            ) : (
+                              <>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
+                                  onClick={() => setViewCert(cert)} title="معاينة">
+                                  <Eye className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                                  onClick={() => handleDownload(cert)} disabled={downloadingId === cert.id} title="تحميل PDF">
+                                  {downloadingId === cert.id
+                                    ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    : <Download className="w-3.5 h-3.5" />}
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                                  onClick={() => handleSendWhatsApp(cert)} disabled={preparingWaId === cert.id} title="إرسال عبر واتساب">
+                                  {preparingWaId === cert.id
+                                    ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    : <MessageCircle className="w-3.5 h-3.5" />}
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleDelete(cert.id)} title="حذف">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
