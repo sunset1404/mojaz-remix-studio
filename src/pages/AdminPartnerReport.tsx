@@ -325,7 +325,7 @@ const AdminPartnerReport = () => {
         <TabsContent value="students" className="space-y-3">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
+              <CardTitle className="text-sm flex items-center gap-2 flex-row-reverse justify-end">
                 <Users className="w-4 h-4 text-primary" />
                 الطلاب المسكّنون على الداعم
                 <Badge variant="secondary">{assignments.filter(a => a.status === "active").length} نشط</Badge>
