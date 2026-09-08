@@ -330,7 +330,7 @@ const Certificates = () => {
 
   const stats = [
     { label: "إجمالي الشهادات", value: total, icon: FileText, bg: "bg-primary/10", iconColor: "text-primary" },
-    { label: "الإجازات القرآنية", value: ijazat.length, icon: GraduationCap, bg: "bg-gold/15", iconColor: "text-gold" },
+    { label: "الإجازات القرآنية", value: ijazat.length + extIjazat.length, icon: GraduationCap, bg: "bg-gold/15", iconColor: "text-gold" },
     { label: "شهادات الختم", value: certificates.length, icon: Award, bg: "bg-primary/10", iconColor: "text-primary" },
   ];
 
