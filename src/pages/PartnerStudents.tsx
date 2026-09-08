@@ -8,8 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 interface StudentRow {
   student_id: string;
   assigned_at: string;
-  name: string;
-  minutes: number;
+  firstName: string;
+  secondName: string;
+  country: string;
+  hours: number;
 }
 
 const PartnerStudents = () => {
