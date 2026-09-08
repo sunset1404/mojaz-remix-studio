@@ -1056,6 +1056,51 @@ export type Database = {
         }
         Relationships: []
       }
+      programs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          max_students: number | null
+          name: string
+          notes: string | null
+          start_date: string | null
+          status: string
+          track_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          max_students?: number | null
+          name: string
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          track_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          max_students?: number | null
+          name?: string
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          track_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reciter_certifications: {
         Row: {
           certification_text: string
@@ -1328,6 +1373,7 @@ export type Database = {
           preferred_riwaya: string
           preferred_track: string
           profession: string
+          program_id: string | null
           quran_certifications: string | null
           residence_country: string
           selected_exam_id: string | null
@@ -1350,6 +1396,7 @@ export type Database = {
           preferred_riwaya?: string
           preferred_track?: string
           profession: string
+          program_id?: string | null
           quran_certifications?: string | null
           residence_country: string
           selected_exam_id?: string | null
@@ -1372,13 +1419,22 @@ export type Database = {
           preferred_riwaya?: string
           preferred_track?: string
           profession?: string
+          program_id?: string | null
           quran_certifications?: string | null
           residence_country?: string
           selected_exam_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "student_profiles_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_subscriptions: {
         Row: {
