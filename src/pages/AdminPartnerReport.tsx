@@ -60,7 +60,6 @@ const periodLabel = (key: string, grouping: Grouping) => {
 
 const AdminPartnerReport = () => {
   const { partnerId } = useParams<{ partnerId: string }>();
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
