@@ -31,10 +31,10 @@ const PartnerStudents = () => {
 
       const rows: StudentRow[] = [];
       for (const s of ps) {
-        // Get student name
+        // Get student profile
         const { data: profile } = await supabase
           .from("student_profiles")
-          .select("full_name")
+          .select("full_name, nationality")
           .eq("user_id", s.student_id)
           .maybeSingle();
 
@@ -46,12 +46,15 @@ const PartnerStudents = () => {
           .eq("student_id", s.student_id);
 
         const totalMin = logs?.reduce((sum, l) => sum + Number(l.minutes_used), 0) || 0;
+        const nameParts = (profile?.full_name || "").trim().split(/\s+/);
 
         rows.push({
           student_id: s.student_id,
           assigned_at: s.assigned_at,
-          name: profile?.full_name || "طالب",
-          minutes: totalMin,
+          firstName: nameParts[0] || "طالب",
+          secondName: nameParts[1] || "",
+          country: profile?.nationality || "",
+          hours: Number((totalMin / 60).toFixed(1)),
         });
       }
       setStudents(rows);
