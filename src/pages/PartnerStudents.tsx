@@ -94,26 +94,26 @@ const PartnerStudents = () => {
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <User className="w-5 h-5 text-primary" />
               </div>
-              <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
-                <span className="text-sm font-bold text-foreground whitespace-nowrap">
+              <div className="flex-1 min-w-0 flex items-center gap-2">
+                <span className="text-sm font-bold text-foreground truncate">
                   {student.firstName || "—"}
                 </span>
                 {student.secondName ? (
-                  <span className="text-sm font-bold text-foreground whitespace-nowrap">
+                  <span className="text-sm font-bold text-foreground truncate">
                     {student.secondName}
                   </span>
                 ) : null}
                 <span className="h-4 w-px bg-border shrink-0" />
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                <span className="text-xs text-muted-foreground truncate">
                   {student.country || "—"}
                 </span>
                 <span className="h-4 w-px bg-border shrink-0" />
-                <div className="flex items-center gap-1 text-gold whitespace-nowrap">
+                <div className="flex items-center gap-1 text-gold shrink-0">
                   <Clock className="w-3 h-3" />
                   <span className="text-xs font-semibold">{student.hours} س</span>
                 </div>
                 <span className="h-4 w-px bg-border shrink-0" />
-                <div className="flex items-center gap-1 text-muted-foreground whitespace-nowrap">
+                <div className="flex items-center gap-1 text-muted-foreground shrink-0">
                   <Calendar className="w-3 h-3" />
                   <span className="text-xs">
                     {new Date(student.assigned_at).toLocaleDateString("ar-SA")}
