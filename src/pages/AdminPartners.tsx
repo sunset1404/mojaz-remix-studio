@@ -20,7 +20,7 @@ import {
   TrendingUp, DollarSign, Users, Building2,
   RefreshCw, ChevronDown, ChevronUp,
   ArrowRight, Plus, Copy, Check, Eye, EyeOff,
-  Wallet, Clock, UserPlus, X, Loader2
+  Wallet, Clock, UserPlus, X, Loader2, BookMarked
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
@@ -83,7 +83,9 @@ const AdminPartners = () => {
 
   // Assign students dialog
   const [assignDialog, setAssignDialog] = useState<{ open: boolean; partnerId: string; partnerName: string }>({ open: false, partnerId: "", partnerName: "" });
-  const [allStudents, setAllStudents] = useState<{ user_id: string; full_name: string; phone: string; preferred_track: string }[]>([]);
+  const [allStudents, setAllStudents] = useState<{ user_id: string; full_name: string; phone: string; preferred_track: string; program_id?: string | null }[]>([]);
+  const [programs, setPrograms] = useState<{ id: string; name: string }[]>([]);
+  const [programFilter, setProgramFilter] = useState<string>("all");
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
   const [studentSearch, setStudentSearch] = useState("");
   const [trackFilter, setTrackFilter] = useState<"all" | "ijazah" | "general">("all");
@@ -245,17 +247,22 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
     setCopied(false);
   };
 
-  const openAssignDialog = async (partnerId: string, partnerName: string) => {
+  const openAssignDialog = async (partnerId: string, partnerName: string, initialProgram: string = "all") => {
     setAssignDialog({ open: true, partnerId, partnerName });
     setSelectedStudentIds(new Set());
     setStudentSearch("");
     setTrackFilter("all");
+    setProgramFilter(initialProgram === "program" ? "all" : initialProgram);
     setLoadingStudents(true);
     try {
-      const { data } = await supabase
-        .from("student_profiles")
-        .select("user_id, full_name, phone, preferred_track");
-      setAllStudents(data || []);
+      const [{ data }, progRes] = await Promise.all([
+        supabase.from("student_profiles").select("user_id, full_name, phone, preferred_track, program_id"),
+        (supabase as any).from("programs").select("id, name").order("created_at", { ascending: false }),
+      ]);
+      setAllStudents((data as any[]) || []);
+      const progs = (((progRes as any)?.data as any[]) || []) as { id: string; name: string }[];
+      setPrograms(progs);
+      if (initialProgram === "program" && progs.length) setProgramFilter(progs[0].id);
     } catch {
       toast({ title: "خطأ في تحميل الطلاب", variant: "destructive" });
     } finally {
@@ -276,9 +283,11 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
     let list = allStudents.filter(s => !globallyAssignedIds.has(s.user_id));
     if (trackFilter === "ijazah") list = list.filter(s => s.preferred_track === "إجازة");
     else if (trackFilter === "general") list = list.filter(s => s.preferred_track !== "إجازة");
+    if (programFilter === "none") list = list.filter(s => !s.program_id);
+    else if (programFilter !== "all") list = list.filter(s => s.program_id === programFilter);
     if (studentSearch) list = list.filter(s => s.full_name.includes(studentSearch) || s.phone.includes(studentSearch));
     return list;
-  }, [allStudents, studentSearch, trackFilter, globallyAssignedIds]);
+  }, [allStudents, studentSearch, trackFilter, programFilter, globallyAssignedIds]);
 
   const toggleStudent = (id: string) => {
     setSelectedStudentIds(prev => {
@@ -719,7 +728,7 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                                   </div>
 
                                   {/* Assign Students Button */}
-                                  <div className="mt-4 pt-3 border-t border-border/20">
+                                  <div className="mt-4 pt-3 border-t border-border/20 flex flex-wrap items-center gap-2">
                                     <Button
                                       size="sm"
                                       className="gap-2"
@@ -727,6 +736,15 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                                     >
                                       <UserPlus className="w-4 h-4" />
                                       إضافة طلاب على هذا الداعم
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="gap-2"
+                                      onClick={(e) => { e.stopPropagation(); openAssignDialog(partner.user_id, partner.full_name, "program"); }}
+                                    >
+                                      <BookMarked className="w-4 h-4" />
+                                      إضافة طلاب برنامج
                                     </Button>
                                   </div>
 
@@ -794,6 +812,27 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                 }`}
               >
                 {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Program Filter */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <BookMarked className="w-3.5 h-3.5" /> البرنامج:
+            </span>
+            {[{ key: "all", label: "الكل" }, { key: "none", label: "بدون برنامج" }, ...programs.map(p => ({ key: p.id, label: p.name }))].map(opt => (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => setProgramFilter(opt.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  programFilter === opt.key
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-accent/30 text-muted-foreground hover:bg-accent/50"
+                }`}
+              >
+                {opt.label}
               </button>
             ))}
           </div>
