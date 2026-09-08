@@ -816,6 +816,27 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
             ))}
           </div>
 
+          {/* Program Filter */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <BookMarked className="w-3.5 h-3.5" /> البرنامج:
+            </span>
+            {[{ key: "all", label: "الكل" }, { key: "none", label: "بدون برنامج" }, ...programs.map(p => ({ key: p.id, label: p.name }))].map(opt => (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => setProgramFilter(opt.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  programFilter === opt.key
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-accent/30 text-muted-foreground hover:bg-accent/50"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
           {/* Select all + count */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <button
