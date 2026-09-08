@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, BarChart3, Clock, Users, BookOpen, Award, FileSpreadsheet, Loader2, RefreshCw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowRight, BarChart3, Clock, Users, BookOpen, Award, FileSpreadsheet, Loader2, RefreshCw, Trash2, UserMinus, UserCheck } from "lucide-react";
 
 type Grouping = "month" | "week" | "day";
 
@@ -69,6 +70,9 @@ const AdminPartnerReport = () => {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [usage, setUsage] = useState<{ student_id: string; minutes_used: number; session_date: string }[]>([]);
   const [certificates, setCertificates] = useState<{ user_id: string; created_at: string }[]>([]);
+  const [assignments, setAssignments] = useState<{ id: string; student_id: string; status: string; assigned_at: string; name: string; phone: string | null; track: string | null; program_name: string | null }[]>([]);
+  const [savingId, setSavingId] = useState<string | null>(null);
+
 
   const today = toISO(new Date());
   const yearAgo = (() => { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return toISO(d); })();
@@ -82,12 +86,33 @@ const AdminPartnerReport = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [pRes, psRes] = await Promise.all([
+      const [pRes, psRes, progRes] = await Promise.all([
         supabase.from("partner_profiles").select("full_name, organization_name, cost_per_minute, total_support_amount").eq("user_id", partnerId!).maybeSingle(),
-        supabase.from("partner_students").select("student_id, status").eq("partner_id", partnerId!),
+        supabase.from("partner_students").select("id, student_id, status, assigned_at").eq("partner_id", partnerId!).order("assigned_at", { ascending: false }),
+        supabase.from("programs").select("id, name"),
       ]);
       if (pRes.error) throw pRes.error;
       setPartner(pRes.data as any);
+
+      const allIds = (psRes.data || []).map(s => s.student_id);
+      const allProfRes = allIds.length
+        ? await supabase.from("student_profiles").select("user_id, full_name, phone, preferred_track, program_id").in("user_id", allIds)
+        : { data: [] as any[] };
+      const programMap = new Map((progRes.data || []).map(p => [p.id, p.name]));
+      const profMap = new Map((allProfRes.data || []).map((p: any) => [p.user_id, p]));
+      setAssignments((psRes.data || []).map(a => {
+        const p: any = profMap.get(a.student_id);
+        return {
+          id: a.id,
+          student_id: a.student_id,
+          status: a.status,
+          assigned_at: a.assigned_at,
+          name: p?.full_name || "طالب",
+          phone: p?.phone || null,
+          track: p?.preferred_track || null,
+          program_name: p?.program_id ? (programMap.get(p.program_id) || null) : null,
+        };
+      }));
 
       const studentIds = (psRes.data || []).filter(s => s.status === "active").map(s => s.student_id);
       if (studentIds.length === 0) {
@@ -112,6 +137,37 @@ const AdminPartnerReport = () => {
       setLoading(false);
     }
   };
+
+  const toggleAssignment = async (id: string, current: string) => {
+    const next = current === "active" ? "inactive" : "active";
+    try {
+      setSavingId(id);
+      const { error } = await supabase.from("partner_students").update({ status: next }).eq("id", id);
+      if (error) throw error;
+      toast({ title: next === "active" ? "تم تفعيل التسكين" : "تم إيقاف التسكين" });
+      await fetchData();
+    } catch (error: any) {
+      toast({ title: "تعذر تحديث التسكين", description: error.message, variant: "destructive" });
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const removeAssignment = async (id: string, name: string) => {
+    if (!window.confirm(`حذف تسكين الطالب "${name}" من هذا الداعم؟`)) return;
+    try {
+      setSavingId(id);
+      const { error } = await supabase.from("partner_students").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "تم حذف التسكين" });
+      await fetchData();
+    } catch (error: any) {
+      toast({ title: "تعذر حذف التسكين", description: error.message, variant: "destructive" });
+    } finally {
+      setSavingId(null);
+    }
+  };
+
 
   const inRange = (iso: string) => !!iso && iso >= from && iso <= to;
   const matchStudent = (id: string) => studentFilter === "all" || studentFilter === id;
@@ -263,6 +319,67 @@ const AdminPartnerReport = () => {
         </Button>
       </div>
 
+      <Tabs defaultValue="report" className="space-y-5">
+        <TabsList>
+          <TabsTrigger value="report">تقرير المنجزات</TabsTrigger>
+          <TabsTrigger value="students">الطلاب المسكّنون ({assignments.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="students" className="space-y-3">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Users className="w-4 h-4 text-primary" />
+                الطلاب المسكّنون على الداعم
+                <Badge variant="secondary">{assignments.filter(a => a.status === "active").length} نشط</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {assignments.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">لا يوجد طلاب مسكّنون على هذا الداعم</p>
+              ) : (
+                assignments.map(a => (
+                  <div key={a.id} className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-card">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium text-sm truncate">{a.name}</p>
+                        <Badge variant={a.status === "active" ? "default" : "secondary"} className="text-[10px]">
+                          {a.status === "active" ? "نشط" : "موقوف"}
+                        </Badge>
+                        {a.program_name && <Badge variant="outline" className="text-[10px]">{a.program_name}</Badge>}
+                        {a.track && <Badge variant="outline" className="text-[10px]">{a.track}</Badge>}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        تاريخ التسكين: {a.assigned_at?.slice(0, 10)}{a.phone ? ` · ${a.phone}` : ""}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      disabled={savingId === a.id}
+                      onClick={() => toggleAssignment(a.id, a.status)}
+                    >
+                      {savingId === a.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : a.status === "active" ? <UserMinus className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+                      {a.status === "active" ? "إيقاف" : "تفعيل"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      disabled={savingId === a.id}
+                      onClick={() => removeAssignment(a.id, a.name)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="report" className="space-y-5">
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">تصفية البيانات</CardTitle>
@@ -422,6 +539,8 @@ const AdminPartnerReport = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
