@@ -87,6 +87,33 @@ const Certificates = () => {
   const [viewCert, setViewCert] = useState<Certificate | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const certRef = useRef<HTMLDivElement>(null);
+  const [extIjazat, setExtIjazat] = useState<ExternalIjaza[]>([]);
+  const [extLoading, setExtLoading] = useState(true);
+  const [extHtml, setExtHtml] = useState<string | null>(null);
+  const [extOpen, setExtOpen] = useState(false);
+  const [extLoadingId, setExtLoadingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchExternalIjazat()
+      .then(setExtIjazat)
+      .catch(() => setExtIjazat([]))
+      .finally(() => setExtLoading(false));
+  }, []);
+
+  const openExternal = async (ij: ExternalIjaza) => {
+    const code = ij.barcode_data || ij.license_number;
+    setExtLoadingId(ij.id);
+    try {
+      const html = await fetchExternalIjazaHtml(code);
+      setExtHtml(html);
+      setExtOpen(true);
+    } catch {
+      window.open(externalIjazaViewUrl(code), "_blank");
+    } finally {
+      setExtLoadingId(null);
+    }
+  };
+
 
   useEffect(() => {
     if (!user) return;
