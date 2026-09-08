@@ -83,7 +83,9 @@ const AdminPartners = () => {
 
   // Assign students dialog
   const [assignDialog, setAssignDialog] = useState<{ open: boolean; partnerId: string; partnerName: string }>({ open: false, partnerId: "", partnerName: "" });
-  const [allStudents, setAllStudents] = useState<{ user_id: string; full_name: string; phone: string; preferred_track: string }[]>([]);
+  const [allStudents, setAllStudents] = useState<{ user_id: string; full_name: string; phone: string; preferred_track: string; program_id?: string | null }[]>([]);
+  const [programs, setPrograms] = useState<{ id: string; name: string }[]>([]);
+  const [programFilter, setProgramFilter] = useState<string>("all");
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
   const [studentSearch, setStudentSearch] = useState("");
   const [trackFilter, setTrackFilter] = useState<"all" | "ijazah" | "general">("all");
