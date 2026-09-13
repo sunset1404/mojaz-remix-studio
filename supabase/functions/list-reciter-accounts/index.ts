@@ -77,13 +77,15 @@ Deno.serve(async (req) => {
       const u = authMap.get(p.user_id);
       const emailConfirmed = !!u?.email_confirmed_at;
       let account_state: string;
-      if (!emailConfirmed) account_state = "unconfirmed";
+      if (p.deleted_at) account_state = "deleted";
+      else if (!emailConfirmed) account_state = "unconfirmed";
       else if (p.status === "approved") account_state = "approved";
       else if (p.status === "rejected") account_state = "rejected";
       else account_state = "pending";
 
       result.push({
         ...p,
+        is_deleted: !!p.deleted_at,
         email: u?.email || null,
         email_confirmed_at: u?.email_confirmed_at || null,
         last_sign_in_at: u?.last_sign_in_at || null,
