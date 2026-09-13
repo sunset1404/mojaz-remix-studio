@@ -27,6 +27,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";
 import ProgramAssignSelect, { useProgramsList } from "@/components/admin/ProgramAssignSelect";
+import RestoreAccountButton from "@/components/admin/RestoreAccountButton";
 
 interface StudentProfile {
   id: string | null;
