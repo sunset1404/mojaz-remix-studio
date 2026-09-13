@@ -47,8 +47,10 @@ interface StudentProfile {
   auth_email?: string | null;
   email_confirmed_at?: string | null;
   program_id?: string | null;
-  account_state?: string; // active | unconfirmed | incomplete
+  account_state?: string; // active | unconfirmed | incomplete | deleted
   is_orphan?: boolean;
+  is_deleted?: boolean;
+  deleted_at?: string | null;
 }
 
 interface StudentAchievement {
@@ -66,6 +68,7 @@ const STATE_LABELS: Record<string, { label: string; color: string }> = {
   active: { label: "مفعّل", color: "bg-emerald-100 text-emerald-800 border-emerald-200" },
   unconfirmed: { label: "بريد غير مفعّل", color: "bg-amber-100 text-amber-800 border-amber-200" },
   incomplete: { label: "بيانات ناقصة", color: "bg-rose-100 text-rose-800 border-rose-200" },
+  deleted: { label: "حساب محذوف", color: "bg-zinc-200 text-zinc-800 border-zinc-300" },
 };
 
 const emptyForm = {
