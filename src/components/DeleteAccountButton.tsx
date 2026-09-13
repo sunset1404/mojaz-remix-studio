@@ -32,7 +32,7 @@ const DeleteAccountButton = () => {
       if (error || (data as any)?.error) {
         throw new Error((data as any)?.error || error?.message);
       }
-      toast({ title: "تم حذف الحساب", description: "تم حذف حسابك وبياناتك نهائيًا." });
+      toast({ title: "تم حذف الحساب", description: "تم حذف حسابك وإيقاف الدخول إليه." });
       await signOut();
       navigate("/login");
     } catch (e) {
@@ -72,7 +72,7 @@ const DeleteAccountButton = () => {
               <AlertDialogTitle className="text-right">حذف الحساب نهائيًا</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="text-right leading-relaxed">
-              سيتم حذف حسابك وجميع بياناتك (الملف الشخصي، الجلسات، الشهادات، الإشعارات، المدفوعات المرتبطة بحسابك) بشكل نهائي ولا يمكن استرجاعها.
+              سيتم حذف حسابك وإيقاف الدخول إليه نهائيًا، ولن تظهر بياناتك في التطبيق بعد ذلك. إن رغبت لاحقًا بإرجاع حسابك يمكنك التواصل معنا لاستعادته.
               <br />
               للتأكيد اكتب كلمة «{CONFIRM_WORD}» في الحقل التالي.
             </AlertDialogDescription>
