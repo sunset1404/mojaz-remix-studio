@@ -4,6 +4,7 @@ import { User, BookOpen, ChevronLeft, LogOut, Settings, Bell, Moon, Sun, Shield,
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import DeleteAccountButton from "@/components/DeleteAccountButton";
 
 const menuSections = [
   {
@@ -297,6 +298,9 @@ const Profile = () => {
           </div>
           <p className="font-semibold text-destructive text-sm">تسجيل الخروج</p>
         </button>
+
+        {/* Delete account */}
+        <DeleteAccountButton />
       </div>
 
       <p className="text-center text-[10px] text-muted-foreground mt-6">الإصدار 1.0.0</p>
