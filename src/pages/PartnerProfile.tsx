@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import DeleteAccountButton from "@/components/DeleteAccountButton";
 
 const PartnerProfile = () => {
   const { signOut, user } = useAuth();
@@ -118,6 +119,10 @@ const PartnerProfile = () => {
           </div>
           <p className="font-semibold text-destructive text-sm">تسجيل الخروج</p>
         </button>
+
+        <div className="mt-3">
+          <DeleteAccountButton />
+        </div>
       </div>
 
       <p className="text-center text-[10px] text-muted-foreground mt-6">الإصدار 1.0.0</p>
