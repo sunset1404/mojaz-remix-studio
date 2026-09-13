@@ -789,6 +789,9 @@ const AdminReciters = () => {
                             </div>
                             <div className="flex items-center gap-3">
                               {getStatusBadge(state)}
+                              {state === "deleted" && (
+                                <RestoreAccountButton userId={reciter.user_id} onRestored={fetchData} />
+                              )}
                               {/* Quick contact */}
                               {reciter.phone && (
                                 <div className="hidden md:flex items-center gap-1">
