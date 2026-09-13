@@ -797,6 +797,7 @@ export type Database = {
         Row: {
           cost_per_minute: number
           created_at: string
+          deleted_at: string | null
           email: string | null
           full_name: string
           id: string
@@ -809,6 +810,7 @@ export type Database = {
         Insert: {
           cost_per_minute?: number
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           full_name: string
           id?: string
@@ -821,6 +823,7 @@ export type Database = {
         Update: {
           cost_per_minute?: number
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           full_name?: string
           id?: string
@@ -1135,6 +1138,7 @@ export type Database = {
         Row: {
           city: string
           created_at: string
+          deleted_at: string | null
           full_name: string
           gender: string
           id: string
@@ -1160,6 +1164,7 @@ export type Database = {
         Insert: {
           city: string
           created_at?: string
+          deleted_at?: string | null
           full_name: string
           gender: string
           id?: string
@@ -1185,6 +1190,7 @@ export type Database = {
         Update: {
           city?: string
           created_at?: string
+          deleted_at?: string | null
           full_name?: string
           gender?: string
           id?: string
@@ -1360,6 +1366,7 @@ export type Database = {
         Row: {
           assigned_reciter_id: string | null
           created_at: string
+          deleted_at: string | null
           education_level: string
           email: string
           full_name: string
@@ -1383,6 +1390,7 @@ export type Database = {
         Insert: {
           assigned_reciter_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           education_level: string
           email: string
           full_name: string
@@ -1406,6 +1414,7 @@ export type Database = {
         Update: {
           assigned_reciter_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           education_level?: string
           email?: string
           full_name?: string
