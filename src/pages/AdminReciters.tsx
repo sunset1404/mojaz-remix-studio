@@ -65,8 +65,10 @@ interface ReciterProfile {
   signature_url: string | null;
   email?: string | null;
   email_confirmed_at?: string | null;
-  account_state?: string; // approved | pending | rejected | unconfirmed | incomplete
+  account_state?: string; // approved | pending | rejected | unconfirmed | incomplete | deleted
   is_orphan?: boolean;
+  is_deleted?: boolean;
+  deleted_at?: string | null;
 }
 
 interface ReciterCertification {
@@ -510,6 +512,8 @@ const AdminReciters = () => {
         return <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-xs gap-1"><Mail className="w-3 h-3" />بريد غير مفعل</Badge>;
       case "incomplete":
         return <Badge className="bg-zinc-100 text-zinc-700 border-zinc-200 text-xs gap-1"><Clock className="w-3 h-3" />بيانات ناقصة</Badge>;
+      case "deleted":
+        return <Badge className="bg-zinc-200 text-zinc-800 border-zinc-300 text-xs gap-1"><XCircle className="w-3 h-3" />حساب محذوف</Badge>;
       default:
         return <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs gap-1"><Clock className="w-3 h-3" />بانتظار الاعتماد</Badge>;
     }
@@ -693,6 +697,7 @@ const AdminReciters = () => {
                       { key: "unconfirmed", label: "بريد غير مفعل" },
                       { key: "incomplete", label: "بيانات ناقصة" },
                       { key: "rejected", label: "مرفوض" },
+                      { key: "deleted", label: "حسابات محذوفة" },
                     ].map((s) => (
                       <Button
                         key={s.key}
