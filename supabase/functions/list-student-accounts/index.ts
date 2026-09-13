@@ -78,9 +78,10 @@ Deno.serve(async (req) => {
       seenIds.add(p.user_id);
       const u = authMap.get(p.user_id);
       const emailConfirmed = !!u?.email_confirmed_at;
-      const account_state = !emailConfirmed ? "unconfirmed" : "active";
+      const account_state = p.deleted_at ? "deleted" : !emailConfirmed ? "unconfirmed" : "active";
       result.push({
         ...p,
+        is_deleted: !!p.deleted_at,
         auth_email: u?.email || null,
         email_confirmed_at: u?.email_confirmed_at || null,
         last_sign_in_at: u?.last_sign_in_at || null,

@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import RestoreAccountButton from "@/components/admin/RestoreAccountButton";
 
 interface PartnerProfile {
   id: string;
@@ -39,6 +40,7 @@ interface PartnerProfile {
   total_support_amount: number;
   cost_per_minute: number;
   created_at: string;
+  deleted_at?: string | null;
 }
 
 interface PartnerUsage {
@@ -627,7 +629,15 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                                   : <UserCheck className="w-4 h-4 text-primary" />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-sm text-foreground">{partner.full_name}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="font-semibold text-sm text-foreground">{partner.full_name}</p>
+                                  {partner.deleted_at && (
+                                    <>
+                                      <Badge className="bg-zinc-200 text-zinc-800 border-zinc-300 text-[10px]">حساب محذوف</Badge>
+                                      <RestoreAccountButton userId={partner.user_id} onRestored={fetchData} />
+                                    </>
+                                  )}
+                                </div>
                                 <p className="text-xs text-muted-foreground truncate">
                                   {partner.organization_name || "شريك فردي"} · {studentCount} طالب · {Math.round(usedMinutes)} دقيقة
                                 </p>

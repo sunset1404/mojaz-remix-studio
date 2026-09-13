@@ -13,8 +13,6 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const BAN_DURATION = "876000h"; // ~100 years, reversible from the admin panel
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -30,34 +28,33 @@ Deno.serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) return json({ error: "Unauthorized" }, 401);
-
-    // Only ever act on the caller's own account.
-    const userId = claimsData.claims.sub as string;
+    const callerUserId = claimsData.claims.sub;
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const now = new Date().toISOString();
+    const { data: roleData } = await admin
+      .from("user_roles").select("role")
+      .eq("user_id", callerUserId).eq("role", "admin").maybeSingle();
+    if (!roleData) return json({ error: "Admin access required" }, 403);
 
-    // Soft delete: keep all data + attachments so an admin can restore the account.
+    let body: any = {};
+    try { body = await req.json(); } catch (_) {}
+    const userId = typeof body?.user_id === "string" ? body.user_id : null;
+    if (!userId) return json({ error: "user_id required" }, 400);
+
     for (const table of ["student_profiles", "reciter_profiles", "partner_profiles"]) {
       try {
-        await admin.from(table).update({ deleted_at: now }).eq("user_id", userId);
+        await admin.from(table).update({ deleted_at: null }).eq("user_id", userId);
       } catch (_) { /* ignore */ }
     }
 
-    // Reciters must stop appearing as available.
-    try {
-      await admin.from("reciter_profiles").update({ is_available: false }).eq("user_id", userId);
-    } catch (_) { /* ignore */ }
-
-    // Block sign-in without destroying the auth user.
-    const { error: banError } = await admin.auth.admin.updateUserById(userId, {
-      ban_duration: BAN_DURATION,
+    const { error: unbanError } = await admin.auth.admin.updateUserById(userId, {
+      ban_duration: "none",
     });
-    if (banError) return json({ error: banError.message }, 500);
+    if (unbanError) return json({ error: unbanError.message }, 500);
 
     return json({ success: true });
   } catch (error) {

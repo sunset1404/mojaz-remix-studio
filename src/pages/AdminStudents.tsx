@@ -27,6 +27,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";
 import ProgramAssignSelect, { useProgramsList } from "@/components/admin/ProgramAssignSelect";
+import RestoreAccountButton from "@/components/admin/RestoreAccountButton";
 
 interface StudentProfile {
   id: string | null;
@@ -47,8 +48,10 @@ interface StudentProfile {
   auth_email?: string | null;
   email_confirmed_at?: string | null;
   program_id?: string | null;
-  account_state?: string; // active | unconfirmed | incomplete
+  account_state?: string; // active | unconfirmed | incomplete | deleted
   is_orphan?: boolean;
+  is_deleted?: boolean;
+  deleted_at?: string | null;
 }
 
 interface StudentAchievement {
@@ -66,6 +69,7 @@ const STATE_LABELS: Record<string, { label: string; color: string }> = {
   active: { label: "مفعّل", color: "bg-emerald-100 text-emerald-800 border-emerald-200" },
   unconfirmed: { label: "بريد غير مفعّل", color: "bg-amber-100 text-amber-800 border-amber-200" },
   incomplete: { label: "بيانات ناقصة", color: "bg-rose-100 text-rose-800 border-rose-200" },
+  deleted: { label: "حساب محذوف", color: "bg-zinc-200 text-zinc-800 border-zinc-300" },
 };
 
 const emptyForm = {
@@ -235,6 +239,7 @@ const AdminStudents = () => {
     const active = students.filter((s) => s.account_state === "active").length;
     const unconfirmed = students.filter((s) => s.account_state === "unconfirmed").length;
     const incomplete = students.filter((s) => s.account_state === "incomplete").length;
+    const deleted = students.filter((s) => s.account_state === "deleted").length;
     const nationalityMap: Record<string, number> = {};
     students.forEach((s) => { if (s.nationality) nationalityMap[s.nationality] = (nationalityMap[s.nationality] || 0) + 1; });
     const topNationalities = Object.entries(nationalityMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -244,7 +249,7 @@ const AdminStudents = () => {
     const totalMinutes = achievements.reduce((sum, a) => sum + a.total_minutes, 0);
     const avgCommitment = achievements.length > 0
       ? achievements.reduce((sum, a) => sum + Number(a.commitment_rate), 0) / achievements.length : 0;
-    return { total, males, females, active, unconfirmed, incomplete, topNationalities, trackMap, totalSessions, totalMinutes, avgCommitment };
+    return { total, males, females, active, unconfirmed, incomplete, deleted, topNationalities, trackMap, totalSessions, totalMinutes, avgCommitment };
   }, [students, achievements]);
 
   const filteredStudents = useMemo(() => {
@@ -272,6 +277,7 @@ const AdminStudents = () => {
     { v: "active", label: "مفعّل", count: stats.active },
     { v: "unconfirmed", label: "بريد غير مفعّل", count: stats.unconfirmed },
     { v: "incomplete", label: "بيانات ناقصة", count: stats.incomplete },
+    { v: "deleted", label: "حسابات محذوفة", count: stats.deleted },
   ];
 
   return (
@@ -418,6 +424,9 @@ const AdminStudents = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
+                            {student.account_state === "deleted" && (
+                              <RestoreAccountButton userId={student.user_id} onRestored={fetchData} />
+                            )}
                             {student.account_state === "unconfirmed" && (
                               <Button variant="ghost" size="sm" className="h-8 px-2 text-emerald-600 hover:bg-emerald-50 text-xs"
                                 disabled={activatingId === student.user_id}

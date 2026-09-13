@@ -136,7 +136,8 @@ const Reciters = () => {
       let query = supabase
         .from("reciter_profiles")
         .select("id, user_id, full_name, preferred_track, stamp_url")
-        .eq("status", "approved");
+        .eq("status", "approved")
+        .is("deleted_at", null);
 
       // Ijazah students only see their assigned reciter
       if (isIjazah && assignedReciterId) {
