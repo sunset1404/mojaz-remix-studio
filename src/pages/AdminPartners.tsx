@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import RestoreAccountButton from "@/components/admin/RestoreAccountButton";
 
 interface PartnerProfile {
   id: string;
