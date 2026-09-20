@@ -152,16 +152,11 @@ const ReciterSignup = () => {
     }
 
     if (step === 1) {
-      if (!fullName || !gender || !nationality || !idNumber || !phone || !city) {
-        toast({ title: "مطلوب", description: "يرجى ملء جميع الحقول", variant: "destructive" });return false;
+      if (!fullName) {
+        toast({ title: "مطلوب", description: "يرجى إدخال الاسم", variant: "destructive" });return false;
       }
-      if (phone.replace(/\D/g, '').length !== 9) {
+      if (phone.trim() && phone.replace(/\D/g, '').length !== 9) {
         setPhoneError("رقم الجوال يجب أن يتكون من 9 أرقام");return false;
-      }
-    }
-    if (step === 2) {
-      if (!profession || !qualifications || !quranCertifications || !teachingExperience) {
-        toast({ title: "مطلوب", description: "يرجى ملء جميع الحقول", variant: "destructive" });return false;
       }
     }
     if (step === 3) {
@@ -186,7 +181,7 @@ const ReciterSignup = () => {
     }
 
     // Check phone uniqueness on step 1 using SECURITY DEFINER function
-    if (step === 1) {
+    if (step === 1 && phone.trim()) {
       const fullPhone = `${phoneCode}${phone}`;
       const { data: phoneExists } = await (supabase as any).rpc("check_phone_exists", { p_phone: fullPhone });
       if (phoneExists) {
