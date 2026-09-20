@@ -139,8 +139,8 @@ const StudentSignup = () => {
     }
 
     if (step === 1) {
-      if (!fullName || !gender || !nationality || !phone || !educationLevel) {
-        toast({ title: "مطلوب", description: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });return false;
+      if (!fullName) {
+        toast({ title: "مطلوب", description: "يرجى إدخال الاسم", variant: "destructive" });return false;
       }
     }
     if (step === 2) {
@@ -168,7 +168,7 @@ const StudentSignup = () => {
       setEmailError("");
     }
 
-    if (step === 1) {
+    if (step === 1 && phone.trim()) {
       const fullPhone = `${phoneCode}${phone}`;
       const { data: phoneExists } = await (supabase as any).rpc("check_phone_exists", { p_phone: fullPhone });
       if (phoneExists) {
@@ -193,7 +193,7 @@ const StudentSignup = () => {
         full_name: fullName,
         gender,
         nationality,
-        phone: `${phoneCode}${phone}`,
+        phone: phone.trim() ? `${phoneCode}${phone}` : "",
         education_level: educationLevel,
         quran_certifications: hasPreviousCertifications === "yes" ? previousCertifications : "",
         preferred_riwaya: preferredRiwaya,
@@ -306,10 +306,10 @@ const StudentSignup = () => {
                 <Input placeholder="أدخل إجابتك هنا" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} required />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">2. الجنس *</Label>
+                <Label className="text-foreground text-xs font-semibold">2. الجنس (اختياري)</Label>
                 <select value={gender} onChange={(e) => setGender(e.target.value)}
                 className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
-                  <option value="" disabled>اختر إجابة</option>
+                  <option value="">تفضّل عدم الإفصاح</option>
                   <option value="male">ذكر</option>
                   <option value="female">أنثى</option>
                 </select>
@@ -317,11 +317,11 @@ const StudentSignup = () => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">3. الجنسية *</Label>
+                <Label className="text-foreground text-xs font-semibold">3. الجنسية (اختياري)</Label>
                 <CountrySelect value={nationality} onChange={(v) => {setNationality(v);if (COUNTRY_CODES[v]) setPhoneCode(COUNTRY_CODES[v]);}} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-foreground text-xs font-semibold">4. المؤهل الدراسي *</Label>
+                <Label className="text-foreground text-xs font-semibold">4. المؤهل الدراسي (اختياري)</Label>
                 <select value={educationLevel} onChange={(e) => setEducationLevel(e.target.value)}
                 className={`w-full ${inputClass} px-3 border border-primary/20 bg-card text-foreground`}>
                   <option value="" disabled>اختر إجابة</option>
@@ -330,10 +330,10 @@ const StudentSignup = () => {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-foreground text-xs font-semibold">5. رقم الجوال *</Label>
+              <Label className="text-foreground text-xs font-semibold">5. رقم الجوال (اختياري)</Label>
               <div className="flex gap-1.5">
                 <Input placeholder="5xxxxxxxx" value={phone} onChange={(e) => {setPhone(e.target.value.replace(/^0+/, ''));setPhoneError("");}}
-                className={`flex-1 ${inputClass} ${phoneError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" required />
+                className={`flex-1 ${inputClass} ${phoneError ? "border-destructive focus:border-destructive" : ""}`} dir="ltr" />
                 <PhoneCodeSelect value={phoneCode} onChange={setPhoneCode} />
               </div>
               {phoneError &&
