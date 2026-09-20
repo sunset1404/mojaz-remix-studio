@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
       email,
       residence_country: "",
       nationality: nationality || "",
-      phone: phone || null,
+      phone: phone || "",
       profession: "",
       education_level: education_level || "",
       quran_certifications: quran_certifications || "",
