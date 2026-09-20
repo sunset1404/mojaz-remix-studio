@@ -385,14 +385,14 @@ const ReciterSignup = () => {
               <textarea placeholder="اذكر الإجازات القرآنية الحاصل عليها" value={quranCertifications}
               onChange={(e) => setQuranCertifications(e.target.value)}
               className={`w-full min-h-[80px] px-3 py-2 rounded-xl border border-primary/20 bg-card focus:border-primary focus:bg-card transition-colors shadow-sm resize-none text-sm`}
-              required />
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="text-foreground text-xs font-semibold">أبرز المحطات التعليمية والخبرات</Label>
               <textarea placeholder="اذكر خبراتك في التعليم والإقراء" value={teachingExperience}
               onChange={(e) => setTeachingExperience(e.target.value)}
               className={`w-full min-h-[80px] px-3 py-2 rounded-xl border border-primary/20 bg-card focus:border-primary focus:bg-card transition-colors shadow-sm resize-none text-sm`}
-              required />
+              />
             </div>
           </div>);
 
