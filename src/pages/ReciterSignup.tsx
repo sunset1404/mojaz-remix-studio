@@ -208,7 +208,7 @@ const ReciterSignup = () => {
         gender,
         nationality,
         id_number: idNumber,
-        phone: `${phoneCode}${phone}`,
+        phone: phone.trim() ? `${phoneCode}${phone}` : "",
         city,
         profession,
         qualifications,
