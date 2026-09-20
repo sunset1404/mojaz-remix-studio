@@ -26,8 +26,8 @@ Deno.serve(async (req) => {
       preferred_days, preferred_times, preferred_track, reciter_type,
     } = body || {};
 
-    if (!email || !password || !full_name || !gender || !nationality || !id_number || !phone || !city) {
-      return json({ error: "missing_fields", message: "يرجى إكمال بيانات التسجيل المطلوبة" });
+    if (!email || !password || !full_name) {
+      return json({ error: "missing_fields", message: "يرجى إدخال الاسم والبريد وكلمة المرور" });
     }
 
     const admin = createClient(
@@ -84,11 +84,11 @@ Deno.serve(async (req) => {
     const { error: profileErr } = await admin.from("reciter_profiles").insert({
       user_id: userId,
       full_name,
-      gender,
-      nationality,
-      id_number,
-      phone,
-      city,
+      gender: gender || "",
+      nationality: nationality || "",
+      id_number: id_number || null,
+      phone: phone || null,
+      city: city || "",
       profession: profession || "",
       qualifications: qualifications || "",
       quran_certifications: quran_certifications || "",
