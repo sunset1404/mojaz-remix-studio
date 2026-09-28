@@ -167,6 +167,14 @@ const AdminPartners = () => {
       toast({ title: "تنبيه", description: "يرجى تعبئة الاسم والبريد وكلمة المرور", variant: "destructive" });
       return;
     }
+    if (newPartner.password.length < 6) {
+      toast({ title: "تنبيه", description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });
+      return;
+    }
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(newPartner.email.trim())) {
+      toast({ title: "تنبيه", description: "صيغة البريد الإلكتروني غير صحيحة", variant: "destructive" });
+      return;
+    }
     try {
       setCreating(true);
       const { data, error } = await supabase.functions.invoke("create-partner", {
@@ -179,7 +187,22 @@ const AdminPartners = () => {
           total_support_amount: parseFloat(newPartner.total_support_amount) || 0,
         },
       });
-      if (error) throw error;
+      if (error) {
+        let message = error.message || "تعذر إنشاء حساب الشريك";
+        const context = (error as any)?.context;
+        if (context && typeof context.clone === "function") {
+          try {
+            const payload = await context.clone().json();
+            message = payload?.error || payload?.message || message;
+          } catch {
+            try {
+              const text = await context.clone().text();
+              if (text) message = text;
+            } catch {}
+          }
+        }
+        throw new Error(message);
+      }
       if (data?.error) throw new Error(data.error);
 
       setCreatedCredentials({
