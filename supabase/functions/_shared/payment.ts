@@ -79,10 +79,15 @@ export async function processMoyasarPayment(params: {
   }
 
   // 2. Resolve payment ref and metadata row
-  const paymentRef =
-    params.payment_ref ||
+  const moyasarPaymentRef =
     safeString(payment?.metadata?.payment_ref) ||
     safeString(payment?.metadata?.paymentRef);
+
+  if (params.payment_ref && moyasarPaymentRef && params.payment_ref !== moyasarPaymentRef) {
+    return { success: false, error: "Payment reference mismatch" };
+  }
+
+  const paymentRef = params.payment_ref || moyasarPaymentRef;
 
   if (!paymentRef) {
     return { success: false, error: "Missing payment reference" };
