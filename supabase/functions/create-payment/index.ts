@@ -138,7 +138,9 @@ async function handler(req: Request): Promise<Response> {
       );
     }
 
-    // Check for existing pending payment to avoid duplicates
+    // Reuse only a very recent pending record. Old pending records are kept
+    // for audit/recovery but must not be recycled into a new payment attempt.
+    const recentPendingCutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
     const { data: existing } = await supabase
       .from("payment_invoice_metadata")
       .select("id, amount_sar")
@@ -147,6 +149,9 @@ async function handler(req: Request): Promise<Response> {
       .eq("amount_sar", amountSar)
       .eq("status", "pending")
       .eq("processed", false)
+      .gte("created_at", recentPendingCutoff)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (existing) {
