@@ -13,7 +13,16 @@ const json = (body: unknown, status = 200) =>
   });
 
 const clean = (value: unknown) => String(value ?? "").trim();
-const normalizeEmail = (value: unknown) => clean(value).toLowerCase();
+const normalizeEmail = (value: unknown) =>
+  clean(value)
+    .replace(/\s+/g, "")
+    .toLowerCase();
+
+const isReasonableEmail = (email: string) => {
+  const at = email.indexOf("@");
+  const dot = email.lastIndexOf(".");
+  return at > 0 && dot > at + 1 && dot < email.length - 1;
+};
 
 const translateAuthError = (message: string) => {
   const m = String(message || "").toLowerCase();
@@ -107,8 +116,8 @@ Deno.serve(async (req) => {
     if (!email || !password || !fullName) {
       return json({ error: "الاسم والبريد الإلكتروني وكلمة المرور مطلوبة" }, 400);
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return json({ error: "صيغة البريد الإلكتروني غير صحيحة" }, 400);
+    if (!isReasonableEmail(email)) {
+      return json({ error: "أدخل بريدًا إلكترونيًا مثل name@example.com" }, 400);
     }
     if (password.length < 6) {
       return json({ error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" }, 400);
