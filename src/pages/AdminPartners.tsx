@@ -190,17 +190,36 @@ const AdminPartners = () => {
       if (error) {
         let message = error.message || "تعذر إنشاء حساب الشريك";
         const context = (error as any)?.context;
-        if (context && typeof context.clone === "function") {
+
+        if (context) {
           try {
-            const payload = await context.clone().json();
-            message = payload?.error || payload?.message || message;
+            const response = typeof context.clone === "function" ? context.clone() : context;
+            if (typeof response.json === "function") {
+              const payload = await response.json();
+              message = payload?.error || payload?.message || message;
+            }
           } catch {
             try {
-              const text = await context.clone().text();
-              if (text) message = text;
+              const response = typeof context.clone === "function" ? context.clone() : context;
+              if (typeof response.text === "function") {
+                const raw = await response.text();
+                if (raw) {
+                  try {
+                    const parsed = JSON.parse(raw);
+                    message = parsed?.error || parsed?.message || raw;
+                  } catch {
+                    message = raw;
+                  }
+                }
+              }
             } catch {}
           }
         }
+
+        if (message === "Edge Function returned a non-2xx status code") {
+          message = "تعذر إنشاء حساب الشريك من الخادم. حدّث الصفحة وأعد المحاولة، وإن استمرت المشكلة راجع جاهزية وظيفة create-partner وقاعدة بيانات الشركاء.";
+        }
+
         throw new Error(message);
       }
       if (data?.error) throw new Error(data.error);
