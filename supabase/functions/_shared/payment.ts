@@ -43,6 +43,7 @@ export async function processMoyasarPayment(params: {
   payment_id: string;
   payment_ref?: string | null;
   expected_user_id?: string;
+  allow_payment_id_recovery?: boolean;
 }) {
   if (!MOYASAR_SECRET_KEY) {
     throw new Error("Missing MOYASSAR_SECRET_KEY");
@@ -102,7 +103,14 @@ export async function processMoyasarPayment(params: {
   }
 
   if (paymentRow.moyassar_payment_id && paymentRow.moyassar_payment_id !== params.payment_id) {
-    return { success: false, error: "Payment ID mismatch" };
+    const canRecover =
+      params.allow_payment_id_recovery === true &&
+      paymentRow.processed === false &&
+      paymentRow.status !== "paid";
+
+    if (!canRecover) {
+      return { success: false, error: "Payment ID mismatch" };
+    }
   }
 
   const expectedAmountHalalas = Math.round(Number(paymentRow.amount_sar) * 100);
