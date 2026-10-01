@@ -74,6 +74,27 @@ Deno.serve(async (req) => {
     }
     if (!roleData) return json({ error: "هذه العملية متاحة لمدير النظام فقط" }, 403);
 
+    // Fail early with a clear diagnosis when the partner role/schema was
+    // accidentally removed or a repair migration has not been applied yet.
+    const { data: partnerHealth, error: partnerHealthError } = await admin.rpc("partner_account_health");
+    if (partnerHealthError) {
+      console.error("create-partner: partner health check failed", partnerHealthError);
+      return json({
+        error: "بنية حسابات الشركاء غير مهيأة على الخادم. طبّق آخر تحديثات قاعدة البيانات ثم أعد المحاولة.",
+        code: "partner_schema_not_ready",
+      }, 503);
+    }
+
+    const health = (partnerHealth || {}) as Record<string, boolean>;
+    if (!health.partner_role || !health.partner_profiles) {
+      console.error("create-partner: partner infrastructure incomplete", health);
+      return json({
+        error: "صلاحية الشريك أو جدول حسابات الشركاء مفقود. تم تجهيز إصلاح له في آخر تحديث لقاعدة البيانات.",
+        code: "partner_schema_incomplete",
+        health,
+      }, 503);
+    }
+
     const body = await req.json();
     const email = normalizeEmail(body?.email);
     const password = String(body?.password ?? "");
@@ -147,7 +168,11 @@ Deno.serve(async (req) => {
     );
     if (partnerRoleError) {
       console.error("create-partner: role insert failed", partnerRoleError);
-      throw new Error(`تعذر إضافة صلاحية الشريك: ${partnerRoleError.message}`);
+      const roleMessage = String(partnerRoleError.message || "");
+      if (/app_role|enum|partner/i.test(roleMessage)) {
+        throw new Error("تعذر إضافة صلاحية الشريك لأن role=partner غير مهيأ في قاعدة البيانات. طبّق آخر migration ثم أعد المحاولة.");
+      }
+      throw new Error(`تعذر إضافة صلاحية الشريك: ${roleMessage}`);
     }
 
     const { error: partnerProfileError } = await admin.from("partner_profiles").upsert(
@@ -164,7 +189,11 @@ Deno.serve(async (req) => {
 
     if (partnerProfileError) {
       console.error("create-partner: partner profile failed", partnerProfileError);
-      throw new Error(`تعذر إنشاء ملف الشريك: ${partnerProfileError.message}`);
+      const profileMessage = String(partnerProfileError.message || "");
+      if (/partner_profiles|relation .* does not exist|column .* does not exist/i.test(profileMessage)) {
+        throw new Error("جدول حسابات الشركاء غير مكتمل في قاعدة البيانات. طبّق آخر migration ثم أعد المحاولة.");
+      }
+      throw new Error(`تعذر إنشاء ملف الشريك: ${profileMessage}`);
     }
 
     return json({
