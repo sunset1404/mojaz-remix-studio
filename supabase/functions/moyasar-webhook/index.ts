@@ -59,7 +59,6 @@ serve(async (req) => {
   const rawBody = await req.text();
 
   const webhookSecret = Deno.env.get("MOYASAR_WEBHOOK_SECRET") ?? "";
-  const allowInsecure = Deno.env.get("MOYASAR_ALLOW_INSECURE_WEBHOOKS") === "true";
   const signatureHeader =
     req.headers.get("x-moyasar-signature") ||
     req.headers.get("moyasar-signature") ||
@@ -81,11 +80,12 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-  } else if (!allowInsecure) {
-    return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  } else {
+    // If a signing secret is not configured, do not trust the webhook payload
+    // by itself. processMoyasarPayment always re-fetches the payment from
+    // Moyasar using the secret API key and validates status, amount, currency,
+    // and payment_ref before activating anything.
+    console.warn("Moyasar webhook signature secret is not configured; using API verification fallback.");
   }
 
   try {
