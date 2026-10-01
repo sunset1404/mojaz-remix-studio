@@ -62,28 +62,48 @@ const Subscription = () => {
 
   useEffect(() => {
     if (!user) { setActiveSubscriptions([]); return; }
-    supabase
-      .from("student_subscriptions")
-      .select("id, subscription_type, duration_months, start_date, end_date, amount")
-      .eq("student_id", user.id)
-      .eq("status", "active")
-      .gte("end_date", new Date().toISOString().split("T")[0])
-      .order("end_date", { ascending: false })
-      .then(({ data }) => {
-        if (data) {
-          setActiveSubscriptions(data.map(s => ({
-            id: s.id,
-            name: s.subscription_type,
-            durationMonths: s.duration_months,
-            startDate: s.start_date,
-            endDate: s.end_date,
-            amount: Number(s.amount) || 0,
-          })));
-        } else {
-          setActiveSubscriptions([]);
-        }
-      });
-  }, [user]);
+
+    let cancelled = false;
+
+    const loadActiveSubscriptions = async () => {
+      const { data } = await supabase
+        .from("student_subscriptions")
+        .select("id, subscription_type, duration_months, start_date, end_date, amount")
+        .eq("student_id", user.id)
+        .eq("status", "active")
+        .gte("end_date", new Date().toISOString().split("T")[0])
+        .order("end_date", { ascending: false });
+
+      if (cancelled) return;
+
+      if (data) {
+        setActiveSubscriptions(data.map(s => ({
+          id: s.id,
+          name: s.subscription_type,
+          durationMonths: s.duration_months,
+          startDate: s.start_date,
+          endDate: s.end_date,
+          amount: Number(s.amount) || 0,
+        })));
+      } else {
+        setActiveSubscriptions([]);
+      }
+    };
+
+    void loadActiveSubscriptions();
+
+    const onRecovered = () => {
+      void loadActiveSubscriptions();
+      toast.success("تم التحقق من دفعتك وتفعيل الباقة بنجاح");
+    };
+
+    window.addEventListener("mojaz:subscription-recovered", onRecovered);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("mojaz:subscription-recovered", onRecovered);
+    };
+  }, [user?.id]);
 
   const isSubscribedTo = (planName: string, durationMonths?: number) =>
     activeSubscriptions.some(s => s.name === planName && (durationMonths === undefined || s.durationMonths === durationMonths));

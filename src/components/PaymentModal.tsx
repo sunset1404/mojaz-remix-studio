@@ -188,6 +188,7 @@ const PaymentModal = ({
       if (!data?.success) throw new Error(data?.error || "فشل التحقق من الدفع");
 
       setPaymentState("success");
+      window.dispatchEvent(new CustomEvent("mojaz:subscription-recovered", { detail: { recovered: 1 } }));
       toast({ title: "تم الدفع بنجاح! 🎉" });
 
       // Auto-close after success animation

@@ -92,6 +92,7 @@ import { StudentIncomingCallListener } from "./components/video-call/StudentInco
 import { ReciterAvailabilityProvider } from "./contexts/ReciterAvailabilityContext";
 import GrantApprovedNotice from "./components/GrantApprovedNotice";
 import GlobalBackButton from "./components/GlobalBackButton";
+import PaymentRecoveryListener from "./components/PaymentRecoveryListener";
 
 const queryClient = new QueryClient();
 
@@ -283,6 +284,7 @@ const App = () => (
         <AuthProvider>
           <ReciterAvailabilityProvider>
             <ScrollToTop />
+            <PaymentRecoveryListener />
             <CallListeners />
             <GrantApprovedNotice />
             <AppLayout />
