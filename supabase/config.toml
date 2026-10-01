@@ -44,3 +44,6 @@ project_id = "cfihcvudcwujylipqngk"
   [functions.turn-credentials]
     verify_jwt = false
 
+
+  [functions.recover-subscription-payments]
+    verify_jwt = false
