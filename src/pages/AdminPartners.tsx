@@ -30,6 +30,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import RestoreAccountButton from "@/components/admin/RestoreAccountButton";
 
+const normalizePartnerEmail = (value: string) =>
+  value
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, "")
+    .replace(/\s+/g, "")
+    .replace(/[＠﹫]/g, "@")
+    .replace(/[。｡．﹒]/g, ".")
+    .toLowerCase();
+
+const isReasonableEmail = (value: string) => {
+  const email = normalizePartnerEmail(value);
+  const at = email.indexOf("@");
+  if (at <= 0 || at !== email.lastIndexOf("@")) return false;
+  const domain = email.slice(at + 1);
+  return domain.length >= 3 && domain.includes(".") && !domain.startsWith(".") && !domain.endsWith(".");
+};
+
 interface PartnerProfile {
   id: string;
   user_id: string;
@@ -171,15 +188,16 @@ const AdminPartners = () => {
       toast({ title: "تنبيه", description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });
       return;
     }
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(newPartner.email.trim())) {
-      toast({ title: "تنبيه", description: "صيغة البريد الإلكتروني غير صحيحة", variant: "destructive" });
+    const normalizedEmail = normalizePartnerEmail(newPartner.email);
+    if (!isReasonableEmail(normalizedEmail)) {
+      toast({ title: "تنبيه", description: "أدخل بريدًا إلكترونيًا مثل name@example.com", variant: "destructive" });
       return;
     }
     try {
       setCreating(true);
       const { data, error } = await supabase.functions.invoke("create-partner", {
         body: {
-          email: newPartner.email.trim(),
+          email: normalizedEmail,
           password: newPartner.password,
           full_name: newPartner.full_name.trim(),
           phone: newPartner.phone.trim(),
@@ -225,7 +243,7 @@ const AdminPartners = () => {
       if (data?.error) throw new Error(data.error);
 
       setCreatedCredentials({
-        email: newPartner.email.trim(),
+        email: normalizedEmail,
         password: newPartner.password,
         name: newPartner.full_name.trim(),
       });
@@ -424,7 +442,11 @@ _منصة مجاز - نظام إدارة إقراء القرآن_`;
                       <div className="space-y-2">
                         <Label>البريد الإلكتروني *</Label>
                         <Input
-                          type="email"
+                          type="text"
+                          inputMode="email"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
                           placeholder="email@example.com"
                           dir="ltr"
                           value={newPartner.email}
