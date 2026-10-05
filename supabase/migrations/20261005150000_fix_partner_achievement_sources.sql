@@ -155,9 +155,12 @@ BEGIN
     PERFORM public.recalculate_student_achievements(v_student_id);
   END IF;
 
-  RETURN COALESCE(NEW, OLD);
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+  RETURN NEW;
 END;
-$$;
+$;
 
 DROP TRIGGER IF EXISTS trg_achievements_on_video_call_insert ON public.video_call_sessions;
 CREATE TRIGGER trg_achievements_on_video_call_insert
@@ -178,12 +181,12 @@ FOR EACH ROW
 EXECUTE FUNCTION public.trigger_update_achievements_on_video_call();
 
 -- Refresh existing achievement rows using the corrected source of truth.
-DO $$
+DO $
 DECLARE
   r record;
 BEGIN
-  FOR r IN SELECT student_id FROM public.student_achievements LOOP
+  FOR r IN SELECT user_id AS student_id FROM public.student_profiles LOOP
     PERFORM public.recalculate_student_achievements(r.student_id);
   END LOOP;
 END;
-$$;
+$;
