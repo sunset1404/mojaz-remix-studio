@@ -200,38 +200,32 @@ const AdminPartnerReport = () => {
   const inRange = (iso: string) => !!iso && iso >= from && iso <= to;
   const matchStudent = (id: string) => studentFilter === "all" || studentFilter === id;
 
-  const assignmentStartMap = useMemo(
-    () => new Map(
-      assignments
-        .filter(assignment => assignment.status === "active")
-        .map(assignment => [assignment.student_id, assignment.assigned_at?.slice(0, 10) || "0000-00-00"])
-    ),
-    [assignments]
-  );
-
-  const belongsToPartnerPeriod = (studentId: string, date: string) => {
-    const assignedAt = assignmentStartMap.get(studentId);
-    return Boolean(assignedAt && date && date >= assignedAt);
-  };
-
   const filteredCalls = useMemo(
     () => calls.filter(call => {
       const date = callDate(call);
       return isStartedCall(call)
         && inRange(date)
-        && matchStudent(call.student_id)
-        && belongsToPartnerPeriod(call.student_id, date);
+        && matchStudent(call.student_id);
     }),
-    [calls, from, to, studentFilter, assignmentStartMap]
+    [calls, from, to, studentFilter]
   );
   const filteredCerts = useMemo(
     () => certificates.filter(c => {
       const date = c.created_at.slice(0, 10);
       return inRange(date)
-        && matchStudent(c.user_id)
-        && belongsToPartnerPeriod(c.user_id, date);
+        && matchStudent(c.user_id);
     }),
-    [certificates, from, to, studentFilter, assignmentStartMap]
+    [certificates, from, to, studentFilter]
+  );
+
+  // Full lifetime history for each student, independent of assignment date or date filters.
+  const lifetimeCalls = useMemo(
+    () => calls.filter(call => isStartedCall(call) && matchStudent(call.student_id)),
+    [calls, studentFilter]
+  );
+  const lifetimeCerts = useMemo(
+    () => certificates.filter(cert => matchStudent(cert.user_id)),
+    [certificates, studentFilter]
   );
 
   const achievementMap = useMemo(
@@ -245,23 +239,23 @@ const AdminPartnerReport = () => {
   );
 
   const summary = useMemo(() => {
-    const completedCalls = filteredCalls.filter(isCompletedCall);
+    const completedCalls = lifetimeCalls.filter(isCompletedCall);
     const minutes = completedCalls.reduce((sum, call) => sum + callMinutes(call), 0);
     const pages = selectedStudents.reduce((sum, student) => sum + metricNumber(achievementMap.get(student.id)?.pages_memorized), 0);
     const parts = selectedStudents.reduce((sum, student) => sum + metricNumber(achievementMap.get(student.id)?.parts_memorized), 0);
-    const activeStudents = new Set(filteredCalls.map(call => call.student_id)).size;
+    const activeStudents = new Set(lifetimeCalls.map(call => call.student_id)).size;
     const cost = minutes * Number(partner?.cost_per_minute || 0);
     return {
       minutes,
       pages,
       parts,
       completed: completedCalls.length,
-      sessions: filteredCalls.length,
+      sessions: lifetimeCalls.length,
       activeStudents,
-      certs: filteredCerts.length,
+      certs: lifetimeCerts.length,
       cost,
     };
-  }, [filteredCalls, filteredCerts, selectedStudents, achievementMap, partner]);
+  }, [lifetimeCalls, lifetimeCerts, selectedStudents, achievementMap, partner]);
 
   const byPeriod = useMemo(() => {
     const map = new Map<string, { sessions: number; completed: number; minutes: number; certs: number; students: Set<string> }>();
@@ -332,7 +326,7 @@ const AdminPartnerReport = () => {
       }
     });
 
-    filteredCerts.forEach(cert => {
+    lifetimeCerts.forEach(cert => {
       ensure(cert.user_id).certs += 1;
     });
 
@@ -343,7 +337,7 @@ const AdminPartnerReport = () => {
         ...value,
       }))
       .sort((a, b) => b.minutes - a.minutes || b.completed - a.completed);
-  }, [filteredCalls, filteredCerts, selectedStudents, achievementMap, students]);
+  }, [lifetimeCalls, lifetimeCerts, selectedStudents, achievementMap, students]);
 
   const applyPreset = (months: number) => {
     const d = new Date();
@@ -362,7 +356,8 @@ const AdminPartnerReport = () => {
         ["تقرير منجزات الداعم"],
         ["الداعم", partner?.full_name || ""],
         ["الجهة", partner?.organization_name || "-"],
-        ["الفترة", `${from} إلى ${to}`],
+        ["ملخص الطالب", "كامل التاريخ منذ البداية"],
+        ["فترة جدول التفصيل", `${from} إلى ${to}`],
         ["التصنيف", grouping === "month" ? "شهري" : grouping === "week" ? "أسبوعي" : "يومي"],
         [],
         ["إجمالي الجلسات", summary.sessions],
@@ -486,7 +481,10 @@ const AdminPartnerReport = () => {
         <TabsContent value="report" className="space-y-5">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-right">تصفية البيانات</CardTitle>
+          <CardTitle className="text-sm text-right">تصفية البيانات حسب الفترة</CardTitle>
+          <p className="text-[11px] leading-5 text-muted-foreground text-right">
+            التصفية تؤثر على جدول «المنجزات حسب الفترة» فقط. أما ملخص الصفحة وجدول «المنجزات حسب الطالب» فيعرضان كامل تاريخ الطالب.
+          </p>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-right">
@@ -542,10 +540,10 @@ const AdminPartnerReport = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "الجلسات", value: formatMetric(summary.sessions), sub: `${formatMetric(summary.completed)} مكتملة`, icon: BookOpen },
-          { label: "الدقائق", value: summary.minutes.toLocaleString("en-US", { maximumFractionDigits: 1 }), sub: "من وقت الاتصال الفعلي", icon: Clock },
-          { label: "الطلاب النشطون", value: formatMetric(summary.activeStudents), sub: `${formatMetric(students.length)} مسكّن`, icon: Users },
-          { label: "الشهادات", value: formatMetric(summary.certs), sub: `${formatMetric(summary.pages)} صفحة · ${formatMetric(summary.parts)} جزء`, icon: Award },
+          { label: "إجمالي الجلسات", value: formatMetric(summary.sessions), sub: `${formatMetric(summary.completed)} مكتملة منذ البداية`, icon: BookOpen },
+          { label: "إجمالي الدقائق", value: summary.minutes.toLocaleString("en-US", { maximumFractionDigits: 1 }), sub: "كامل وقت الاتصال الفعلي", icon: Clock },
+          { label: "الطلاب", value: formatMetric(summary.activeStudents), sub: `${formatMetric(students.length)} طالبًا مسكّنًا`, icon: Users },
+          { label: "إجمالي المنجز", value: formatMetric(summary.certs), sub: `${formatMetric(summary.pages)} صفحة · ${formatMetric(summary.parts)} جزء`, icon: Award },
         ].map((s, i) => (
           <Card key={i}>
             <CardContent className="p-4 space-y-1">
@@ -608,7 +606,7 @@ const AdminPartnerReport = () => {
             <Badge variant="secondary">{byStudent.length}</Badge>
           </CardTitle>
           <p className="text-[11px] leading-5 text-muted-foreground">
-            الجلسات والمكتملة والدقائق والشهادات حسب الفترة المحددة. الصفحات والأجزاء هي إجمالي الإنجاز التراكمي الحقيقي للطالب حتى الآن.
+            يعرض هذا الجدول كامل منجزات الطالب منذ البداية، حتى لو تحققت قبل تاريخ إضافته إلى الشريك: جميع الجلسات والمكتملة والدقائق والصفحات والأجزاء والشهادات.
           </p>
         </CardHeader>
         <CardContent className="p-0">
