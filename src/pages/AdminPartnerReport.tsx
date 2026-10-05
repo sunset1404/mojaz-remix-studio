@@ -317,7 +317,7 @@ const AdminPartnerReport = () => {
 
     selectedStudents.forEach(student => ensure(student.id));
 
-    filteredCalls.forEach(call => {
+    lifetimeCalls.forEach(call => {
       const entry = ensure(call.student_id);
       entry.sessions += 1;
       if (isCompletedCall(call)) {
@@ -611,7 +611,7 @@ const AdminPartnerReport = () => {
         </CardHeader>
         <CardContent className="p-0">
           {byStudent.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">لا توجد بيانات في هذه الفترة</p>
+            <p className="text-sm text-muted-foreground text-center py-6">لا توجد منجزات مسجلة للطلاب</p>
           ) : (
             <div className="w-full overflow-x-auto" dir="rtl">
               <table dir="rtl" className="w-full min-w-[760px] table-auto text-sm text-right">
