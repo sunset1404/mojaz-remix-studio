@@ -157,47 +157,36 @@ export function parseQuranRangeFromNotes(notes?: string | null) {
   return { firstAyahId: first, lastAyahId: last };
 }
 
-function mergeRanges(ranges: Array<[number, number]>) {
-  if (!ranges.length) return [];
-  const sorted = [...ranges].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  const merged: Array<[number, number]> = [sorted[0]];
+function completedBoundaryCount(boundaries: readonly number[], ayahId: number, maxParts: number) {
+  if (ayahId <= 0) return 0;
 
-  for (let index = 1; index < sorted.length; index += 1) {
-    const current = sorted[index];
-    const previous = merged[merged.length - 1];
+  const current = Math.min(maxParts, Math.max(1, boundaryIndex(boundaries, ayahId)));
+  const nextBoundary = boundaries[current + 1];
 
-    if (current[0] <= previous[1] + 1) {
-      previous[1] = Math.max(previous[1], current[1]);
-    } else {
-      merged.push([...current] as [number, number]);
-    }
-  }
-
-  return merged;
-}
-
-function rangeFullyCovered(merged: Array<[number, number]>, first: number, last: number) {
-  return merged.some(([start, end]) => start <= first && end >= last);
+  // If the recorded endpoint is the final ayah of the current page/juz,
+  // count that page/juz as completed; otherwise only previous ones are complete.
+  const completed = nextBoundary && ayahId >= nextBoundary - 1 ? current : current - 1;
+  return Math.min(maxParts, Math.max(0, completed));
 }
 
 /**
- * Calculates historical Quran progress from every completed session.
+ * Calculates cumulative Quran progress from the student's historical session notes.
  *
- * Pages:
- * - Each Mushaf page is counted once, even if reviewed in multiple sessions.
- * - A page touched by a recorded memorization range is considered achieved.
+ * Historical Mojaz records did not populate pages_reached / parts_reached. They
+ * did, however, save the actual Quran position in notes:
+ *   "بدأ من: النساء آية 148"
+ *   "انتهى عند: المائدة آية 28"
  *
- * Juz:
- * - A juz is counted only when its full ayah range is covered by the student's
- *   recorded memorization history.
+ * The furthest recorded ayah is therefore the authoritative cumulative position.
+ * Pages = fully completed Madinah Mushaf pages before/at that position (0..604).
+ * Parts = fully completed juz before/at that position (0..30).
  *
- * Existing explicit cumulative fields are retained as a floor so confirmed
- * progress is never lost.
+ * Explicit cumulative fields, when present in newer sessions, remain a floor.
  */
 export function calculateQuranProgress(sessions: QuranProgressSession[]): QuranProgressTotals {
-  const ranges: Array<[number, number]> = [];
   let explicitPages = 0;
   let explicitParts = 0;
+  let furthestAyahId = 0;
 
   for (const session of sessions) {
     if (session.status && session.status !== "مكتملة") continue;
@@ -206,37 +195,26 @@ export function calculateQuranProgress(sessions: QuranProgressSession[]): QuranP
     explicitParts = Math.max(explicitParts, Number(session.parts_reached || 0));
 
     const parsed = parseQuranRangeFromNotes(session.notes);
-    if (parsed) ranges.push([parsed.firstAyahId, parsed.lastAyahId]);
-  }
-
-  const merged = mergeRanges(ranges);
-  const coveredPageSet = new Set<number>();
-
-  for (const [first, last] of merged) {
-    const firstPage = pageForAyahId(first);
-    const lastPage = pageForAyahId(last);
-    for (let page = firstPage; page <= lastPage; page += 1) {
-      coveredPageSet.add(page);
+    if (parsed) {
+      furthestAyahId = Math.max(furthestAyahId, parsed.lastAyahId);
     }
   }
 
-  const completedJuz: number[] = [];
-  for (let juz = 1; juz <= 30; juz += 1) {
-    const firstAyahId = JUZ_STARTS[juz];
-    const lastAyahId = JUZ_STARTS[juz + 1] - 1;
-    if (rangeFullyCovered(merged, firstAyahId, lastAyahId)) {
-      completedJuz.push(juz);
-    }
-  }
+  const historicalPages = furthestAyahId
+    ? completedBoundaryCount(PAGE_STARTS, furthestAyahId, 604)
+    : 0;
+  const historicalParts = furthestAyahId
+    ? completedBoundaryCount(JUZ_STARTS, furthestAyahId, 30)
+    : 0;
 
-  const pages = Math.min(604, Math.max(explicitPages, coveredPageSet.size));
-  const parts = Math.min(30, Math.max(explicitParts, completedJuz.length));
+  const pages = Math.min(604, Math.max(explicitPages, historicalPages));
+  const parts = Math.min(30, Math.max(explicitParts, historicalParts));
 
   return {
     pages,
     parts,
-    coveredPages: [...coveredPageSet].sort((a, b) => a - b),
-    completedJuz,
+    coveredPages: pages > 0 ? Array.from({ length: pages }, (_, index) => index + 1) : [],
+    completedJuz: parts > 0 ? Array.from({ length: parts }, (_, index) => index + 1) : [],
   };
 }
 
