@@ -336,7 +336,12 @@ const VideoCallPage = () => {
     const saveAndEnd = async () => {
         if (roomId) {
             const noteData = sessionNoteRef.current;
-            const endedAt = new Date().toISOString();
+            const { data: existingSession } = await (supabase as any)
+                .from("video_call_sessions")
+                .select("student_id, reciter_id, started_at, ended_at, student_name, created_at")
+                .eq("room_id", roomId)
+                .maybeSingle();
+            const endedAt = existingSession?.ended_at || new Date().toISOString();
             const updatePayload: any = { status: "ended", ended_at: endedAt };
 
             if (isReciter) {
@@ -359,11 +364,11 @@ const VideoCallPage = () => {
 
             // Create session_record for the student to update achievements
             try {
-                const { data: session } = await (supabase as any)
+                const session = existingSession || (await (supabase as any)
                     .from("video_call_sessions")
-                    .select("student_id, reciter_id, started_at, student_name, created_at")
+                    .select("student_id, reciter_id, started_at, ended_at, student_name, created_at")
                     .eq("room_id", roomId)
-                    .maybeSingle();
+                    .maybeSingle()).data;
 
                 if (session) {
                     const startTime = session.started_at || session.created_at || endedAt;
