@@ -200,13 +200,38 @@ const AdminPartnerReport = () => {
   const inRange = (iso: string) => !!iso && iso >= from && iso <= to;
   const matchStudent = (id: string) => studentFilter === "all" || studentFilter === id;
 
+  const assignmentStartMap = useMemo(
+    () => new Map(
+      assignments
+        .filter(assignment => assignment.status === "active")
+        .map(assignment => [assignment.student_id, assignment.assigned_at?.slice(0, 10) || "0000-00-00"])
+    ),
+    [assignments]
+  );
+
+  const belongsToPartnerPeriod = (studentId: string, date: string) => {
+    const assignedAt = assignmentStartMap.get(studentId);
+    return Boolean(assignedAt && date && date >= assignedAt);
+  };
+
   const filteredCalls = useMemo(
-    () => calls.filter(call => isStartedCall(call) && inRange(callDate(call)) && matchStudent(call.student_id)),
-    [calls, from, to, studentFilter]
+    () => calls.filter(call => {
+      const date = callDate(call);
+      return isStartedCall(call)
+        && inRange(date)
+        && matchStudent(call.student_id)
+        && belongsToPartnerPeriod(call.student_id, date);
+    }),
+    [calls, from, to, studentFilter, assignmentStartMap]
   );
   const filteredCerts = useMemo(
-    () => certificates.filter(c => inRange(c.created_at.slice(0, 10)) && matchStudent(c.user_id)),
-    [certificates, from, to, studentFilter]
+    () => certificates.filter(c => {
+      const date = c.created_at.slice(0, 10);
+      return inRange(date)
+        && matchStudent(c.user_id)
+        && belongsToPartnerPeriod(c.user_id, date);
+    }),
+    [certificates, from, to, studentFilter, assignmentStartMap]
   );
 
   const achievementMap = useMemo(
