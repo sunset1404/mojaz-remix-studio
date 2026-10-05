@@ -4,13 +4,13 @@ import * as React from 'npm:react@18.3.1'
 
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
   Html,
-  Link,
+  Img,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -19,41 +19,39 @@ interface SignupEmailProps {
   siteUrl: string
   recipient: string
   confirmationUrl: string
+  token?: string
 }
 
-export const SignupEmail = ({
-  siteName,
-  siteUrl,
-  recipient,
-  confirmationUrl,
-}: SignupEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head>
-      <style>{darkModeCss}</style>
-    </Head>
-    <Preview>Confirm your email for {siteName}</Preview>
+const LOGO_URL =
+  'https://cfihcvudcwujylipqngk.supabase.co/storage/v1/object/public/reciter-assets/email%2Flogo-mojaz.png'
+
+export const SignupEmail = ({ token }: SignupEmailProps) => (
+  <Html lang="ar" dir="rtl">
+    <Head />
+    <Preview>رمز تفعيل حسابك في تطبيق مجاز</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email</Heading>
-        <Text style={text}>
-          Thanks for signing up for{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
-          </Link>
-          !
-        </Text>
-        <Text style={text}>
-          Please confirm your email address (
-          <Link href={`mailto:${recipient}`} style={link}>
-            {recipient}
-          </Link>
-          ) by clicking the button below:
-        </Text>
-        <Button className="dm-btn" style={button} href={confirmationUrl}>
-          Verify Email
-        </Button>
+        <Section style={header}>
+          <Img src={LOGO_URL} alt="مجاز" width="96" height="96" style={logo} />
+          <Heading style={brand}>مجاز</Heading>
+        </Section>
+        <Section style={card}>
+          <Heading style={h1}>مرحباً بك في مجاز</Heading>
+          <Text style={text}>
+            نشكر لك تسجيلك في تطبيق <strong>مجاز</strong> لتعليم وتلاوة القرآن الكريم.
+          </Text>
+          <Text style={text}>
+            استخدم الرمز التالي لتفعيل حسابك:
+          </Text>
+          <Section style={codeBox}>
+            <Text style={codeText}>{token || '------'}</Text>
+          </Section>
+          <Text style={hint}>
+            هذا الرمز صالح لمدة 60 دقيقة. إذا لم تقم بإنشاء حساب في مجاز، يمكنك تجاهل هذه الرسالة بأمان.
+          </Text>
+        </Section>
         <Text style={footer}>
-          If you didn't create an account, you can safely ignore this email.
+          © {new Date().getFullYear()} تطبيق مجاز · جميع الحقوق محفوظة
         </Text>
       </Container>
     </Body>
@@ -62,36 +60,37 @@ export const SignupEmail = ({
 
 export default SignupEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
+const main = { backgroundColor: '#ffffff', fontFamily: '"Cairo", "Tahoma", Arial, sans-serif', padding: '24px 0' }
+const container = { maxWidth: '560px', margin: '0 auto', padding: '0 16px' }
+const header = { textAlign: 'center' as const, padding: '8px 0 16px' }
+const logo = { display: 'inline-block', borderRadius: '16px' }
+const brand = { fontSize: '20px', color: '#0f766e', margin: '8px 0 0', fontWeight: 'bold' as const }
+const card = {
+  backgroundColor: '#ffffff',
+  border: '1px solid #e5f3f1',
+  borderTop: '4px solid #14b8a6',
+  borderRadius: '16px',
+  padding: '28px 24px',
+  textAlign: 'right' as const,
+  boxShadow: '0 4px 12px rgba(20, 184, 166, 0.08)',
+}
+const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 16px' }
+const text = { fontSize: '15px', color: '#334155', lineHeight: '1.8', margin: '0 0 16px' }
+const codeBox = {
+  backgroundColor: '#ecfdf5',
+  border: '2px dashed #14b8a6',
+  borderRadius: '14px',
+  padding: '20px',
+  textAlign: 'center' as const,
+  margin: '20px 0',
+}
+const codeText = {
+  fontSize: '34px',
   fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
+  color: '#0f766e',
+  letterSpacing: '10px',
+  margin: 0,
+  fontFamily: 'monospace',
 }
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const link = { color: 'inherit', textDecoration: 'underline' }
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  border: '1px solid #000000',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
-// Rendered as a text child, which React may HTML-escape: keep this CSS free of >, &, and quotes.
-const darkModeCss = `
-  @media (prefers-color-scheme: dark) {
-    .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
-  }
-  [data-ogsc] .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
-  [data-ogsb] .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
-`
+const hint = { fontSize: '13px', color: '#64748b', lineHeight: '1.7', margin: '20px 0 0' }
+const footer = { fontSize: '12px', color: '#94a3b8', textAlign: 'center' as const, margin: '24px 0 0' }
