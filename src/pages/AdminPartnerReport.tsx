@@ -221,9 +221,9 @@ const AdminPartnerReport = () => {
   }, [filteredSessions, filteredUsage, filteredCerts, partner]);
 
   const byPeriod = useMemo(() => {
-    const map = new Map<string, { sessions: number; completed: number; minutes: number; pages: number; parts: number; certs: number; students: Set<string> }>();
+    const map = new Map<string, { sessions: number; completed: number; minutes: number; usageMinutes: number; pages: number; parts: number; certs: number; students: Set<string> }>();
     const ensure = (k: string) => {
-      if (!map.has(k)) map.set(k, { sessions: 0, completed: 0, minutes: 0, pages: 0, parts: 0, certs: 0, students: new Set() });
+      if (!map.has(k)) map.set(k, { sessions: 0, completed: 0, minutes: 0, usageMinutes: 0, pages: 0, parts: 0, certs: 0, students: new Set() });
       return map.get(k)!;
     };
     filteredSessions.forEach(s => {
@@ -236,13 +236,18 @@ const AdminPartnerReport = () => {
       e.students.add(s.user_id);
     });
     filteredUsage.forEach(u => {
-      const e = ensure(periodKey(u.session_date, grouping));
-      if (e.minutes <= 0) e.minutes += metricNumber(u.minutes_used);
+      ensure(periodKey(u.session_date, grouping)).usageMinutes += metricNumber(u.minutes_used);
     });
     filteredCerts.forEach(c => { ensure(periodKey(c.created_at.slice(0, 10), grouping)).certs++; });
     return Array.from(map.entries())
       .sort((a, b) => (a[0] < b[0] ? 1 : -1))
-      .map(([key, v]) => ({ key, label: periodLabel(key, grouping), ...v, students: v.students.size }));
+      .map(([key, v]) => ({
+        key,
+        label: periodLabel(key, grouping),
+        ...v,
+        displayMinutes: v.minutes > 0 ? v.minutes : v.usageMinutes,
+        students: v.students.size,
+      }));
   }, [filteredSessions, filteredUsage, filteredCerts, grouping]);
 
   const byStudent = useMemo(() => {
@@ -520,7 +525,7 @@ const AdminPartnerReport = () => {
                       <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-foreground">{p.label}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.sessions)}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.completed)}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.minutes, true)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.displayMinutes, true)}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.pages)}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.parts)}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.certs)}</td>
