@@ -83,7 +83,18 @@ const VideoCallPage = () => {
     const [examScores, setExamScores] = useState<Record<string, number>>({});
     const [examNotes, setExamNotes] = useState("");
     const [examId, setExamId] = useState<string | null>(navState?.examId || null);
-    const sessionNoteRef = useRef<SessionNoteData>({ rating: 0, scores: {}, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes: '' });
+    const [sessionStudentId, setSessionStudentId] = useState<string | null>(navState?.studentId || null);
+    const sessionNoteRef = useRef<SessionNoteData>({
+        rating: 0,
+        scores: {},
+        startSurah: '',
+        startAyah: '',
+        endSurah: '',
+        endAyah: '',
+        pagesMemorized: 0,
+        partsMemorized: 0,
+        notes: '',
+    });
 
     // ── New call creation flow ──
     useEffect(() => {
@@ -146,6 +157,7 @@ const VideoCallPage = () => {
                 setRoomId(data.room_id);
                 setCallRole("caller");
                 setIsReciter(isReciterCall);
+                if (isReciterCall && navState?.studentId) setSessionStudentId(navState.studentId);
                 setOtherUserName(
                     isReciterCall
                         ? navState!.studentName || "الطالب"
@@ -197,6 +209,7 @@ const VideoCallPage = () => {
                 }
 
                 const isStudent = session.student_id === user.id;
+                setSessionStudentId(session.student_id);
                 setIsReciter(!isStudent);
                 if (session.exam_id) setExamId(session.exam_id);
                 const callerRole = session.caller_role || (isStudent ? "student" : "reciter");
@@ -261,12 +274,28 @@ const VideoCallPage = () => {
         return { rating: data?.rating || 0, notes: data?.notes || '' };
     };
 
+    const loadStudentProgress = async () => {
+        if (!sessionStudentId || examId) return;
+        const { data } = await (supabase as any)
+            .from("student_achievements")
+            .select("pages_memorized, parts_memorized")
+            .eq("student_id", sessionStudentId)
+            .maybeSingle();
+
+        sessionNoteRef.current = {
+            ...sessionNoteRef.current,
+            pagesMemorized: Number(data?.pages_memorized || 0),
+            partsMemorized: Number(data?.parts_memorized || 0),
+        };
+    };
+
     const handleEndCall = async () => {
         setCallClosed(true);
         // The media layer is already closed by VideoCall before this callback runs.
         // Persist the ended state before opening any feedback/evaluation UI.
         await saveSessionAsEnded();
         if (isReciter) {
+            await loadStudentProgress();
             setShowConfirm(true);
             return;
         }
@@ -288,15 +317,11 @@ const VideoCallPage = () => {
             setSessionFeedback(feedback);
             setShowStudentPopup(true);
         } else {
-            // Reciter side: if it's an exam, force the scoring/confirm dialog so the evaluation is saved.
-            if (examId) {
-                setShowConfirm(true);
-                return;
-            }
-            // Otherwise save whatever notes/rating were entered and exit
-            await saveAndEnd();
-            toast({ title: "انتهت المكالمة", description: "تم إنهاء الجلسة" });
-            exitCall();
+            // Every real reciter/student call ends through the confirmation dialog
+            // so Quran progress is captured before the completed session is saved.
+            await loadStudentProgress();
+            setShowConfirm(true);
+            return;
         }
     };
 
@@ -311,7 +336,12 @@ const VideoCallPage = () => {
     const saveAndEnd = async () => {
         if (roomId) {
             const noteData = sessionNoteRef.current;
-            const endedAt = new Date().toISOString();
+            const { data: existingSession } = await (supabase as any)
+                .from("video_call_sessions")
+                .select("student_id, reciter_id, started_at, ended_at, student_name, created_at")
+                .eq("room_id", roomId)
+                .maybeSingle();
+            const endedAt = existingSession?.ended_at || new Date().toISOString();
             const updatePayload: any = { status: "ended", ended_at: endedAt };
 
             if (isReciter) {
@@ -334,11 +364,11 @@ const VideoCallPage = () => {
 
             // Create session_record for the student to update achievements
             try {
-                const { data: session } = await (supabase as any)
+                const session = existingSession || (await (supabase as any)
                     .from("video_call_sessions")
-                    .select("student_id, reciter_id, started_at, student_name, created_at")
+                    .select("student_id, reciter_id, started_at, ended_at, student_name, created_at")
                     .eq("room_id", roomId)
-                    .maybeSingle();
+                    .maybeSingle()).data;
 
                 if (session) {
                     const startTime = session.started_at || session.created_at || endedAt;
@@ -372,6 +402,8 @@ const VideoCallPage = () => {
                             other_user_name: reciterName,
                             rating: noteData.rating > 0 ? noteData.rating : null,
                             notes: updatePayload.notes || null,
+                            pages_reached: !examId && noteData.pagesMemorized > 0 ? noteData.pagesMemorized : null,
+                            parts_reached: !examId && noteData.partsMemorized > 0 ? noteData.partsMemorized : null,
                             status: "مكتملة",
                         });
 

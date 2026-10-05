@@ -21,6 +21,8 @@ export interface SessionNoteData {
   startAyah: string;
   endSurah: string;
   endAyah: string;
+  pagesMemorized: number;
+  partsMemorized: number;
   notes: string;
 }
 
@@ -66,6 +68,8 @@ export function ReciterSessionPanel({ onDataChange, scores: externalScores = {},
       startAyah: updates.startAyah ?? startAyah,
       endSurah: updates.endSurah ?? endSurah,
       endAyah: updates.endAyah ?? endAyah,
+      pagesMemorized: updates.pagesMemorized ?? 0,
+      partsMemorized: updates.partsMemorized ?? 0,
       notes: updates.notes ?? notes,
     };
     onDataChange?.(data);
