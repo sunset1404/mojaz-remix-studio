@@ -9,9 +9,8 @@ import {
   Head,
   Heading,
   Html,
-  Img,
+  Link,
   Preview,
-  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -21,38 +20,33 @@ interface InviteEmailProps {
   confirmationUrl: string
 }
 
-const LOGO_URL =
-  'https://cfihcvudcwujylipqngk.supabase.co/storage/v1/object/public/reciter-assets/email%2Flogo-mojaz.png'
-
-export const InviteEmail = ({ confirmationUrl }: InviteEmailProps) => (
-  <Html lang="ar" dir="rtl">
-    <Head />
-    <Preview>دعوة للانضمام إلى تطبيق مجاز</Preview>
+export const InviteEmail = ({
+  siteName,
+  siteUrl,
+  confirmationUrl,
+}: InviteEmailProps) => (
+  <Html lang="en" dir="ltr">
+    <Head>
+      <style>{darkModeCss}</style>
+    </Head>
+    <Preview>You've been invited to join {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Section style={header}>
-          <Img src={LOGO_URL} alt="مجاز" width="96" height="96" style={logo} />
-          <Heading style={brand}>مجاز</Heading>
-        </Section>
-        <Section style={card}>
-          <Heading style={h1}>تمت دعوتك للانضمام</Heading>
-          <Text style={text}>
-            تمت دعوتك للانضمام إلى تطبيق <strong>مجاز</strong> لتعليم وتلاوة القرآن الكريم.
-          </Text>
-          <Text style={text}>
-            اضغط على الزر أدناه لقبول الدعوة وإنشاء حسابك:
-          </Text>
-          <Section style={buttonWrap}>
-            <Button style={button} href={confirmationUrl}>
-              قبول الدعوة
-            </Button>
-          </Section>
-          <Text style={hint}>
-            إذا لم تكن تتوقع هذه الدعوة، يمكنك تجاهل هذه الرسالة بأمان.
-          </Text>
-        </Section>
+        <Heading style={h1}>You've been invited</Heading>
+        <Text style={text}>
+          You've been invited to join{' '}
+          <Link href={siteUrl} style={link}>
+            <strong>{siteName}</strong>
+          </Link>
+          . Click the button below to accept the invitation and create your
+          account.
+        </Text>
+        <Button className="dm-btn" style={button} href={confirmationUrl}>
+          Accept Invitation
+        </Button>
         <Text style={footer}>
-          © {new Date().getFullYear()} تطبيق مجاز · جميع الحقوق محفوظة
+          If you weren't expecting this invitation, you can safely ignore this
+          email.
         </Text>
       </Container>
     </Body>
@@ -61,33 +55,36 @@ export const InviteEmail = ({ confirmationUrl }: InviteEmailProps) => (
 
 export default InviteEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: '"Cairo", "Tahoma", Arial, sans-serif', padding: '24px 0' }
-const container = { maxWidth: '560px', margin: '0 auto', padding: '0 16px' }
-const header = { textAlign: 'center' as const, padding: '8px 0 16px' }
-const logo = { display: 'inline-block', borderRadius: '16px' }
-const brand = { fontSize: '20px', color: '#0f766e', margin: '8px 0 0', fontWeight: 'bold' as const }
-const card = {
-  backgroundColor: '#ffffff',
-  border: '1px solid #e5f3f1',
-  borderTop: '4px solid #14b8a6',
-  borderRadius: '16px',
-  padding: '28px 24px',
-  textAlign: 'right' as const,
-  boxShadow: '0 4px 12px rgba(20, 184, 166, 0.08)',
-}
-const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 16px' }
-const text = { fontSize: '15px', color: '#334155', lineHeight: '1.8', margin: '0 0 16px' }
-const buttonWrap = { textAlign: 'center' as const, margin: '24px 0 16px' }
-const button = {
-  backgroundColor: '#14b8a6',
-  color: '#ffffff',
-  fontSize: '16px',
+const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
+const container = { padding: '20px 25px' }
+const h1 = {
+  fontSize: '22px',
   fontWeight: 'bold' as const,
-  borderRadius: '12px',
-  padding: '14px 36px',
-  textDecoration: 'none',
-  display: 'inline-block',
-  borderBottom: '3px solid #d4af37',
+  color: '#000000',
+  margin: '0 0 20px',
 }
-const hint = { fontSize: '13px', color: '#64748b', lineHeight: '1.7', margin: '20px 0 0' }
-const footer = { fontSize: '12px', color: '#94a3b8', textAlign: 'center' as const, margin: '24px 0 0' }
+const text = {
+  fontSize: '14px',
+  color: '#55575d',
+  lineHeight: '1.5',
+  margin: '0 0 25px',
+}
+const link = { color: 'inherit', textDecoration: 'underline' }
+const button = {
+  backgroundColor: '#000000',
+  color: '#ffffff',
+  fontSize: '14px',
+  border: '1px solid #000000',
+  borderRadius: '8px',
+  padding: '12px 20px',
+  textDecoration: 'none',
+}
+const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+// Rendered as a text child, which React may HTML-escape: keep this CSS free of >, &, and quotes.
+const darkModeCss = `
+  @media (prefers-color-scheme: dark) {
+    .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
+  }
+  [data-ogsc] .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
+  [data-ogsb] .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
+`

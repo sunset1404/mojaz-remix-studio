@@ -50,3 +50,6 @@ project_id = "cfihcvudcwujylipqngk"
 
   [functions.reconcile-subscription-payments]
     verify_jwt = false
+
+[functions.auth-email-hook]
+verify_jwt = false
