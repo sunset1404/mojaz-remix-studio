@@ -23,18 +23,43 @@ interface SessionRow {
   parts_reached: number | null;
 }
 
+const normalizeDigits = (value: string) =>
+  String(value || "")
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)));
+
 const parseMinutes = (duration: string): number => {
-  if (!duration) return 0;
-  const hours = duration.match(/(\d+)\s*ساعة/);
-  const mins = duration.match(/(\d+)\s*دقيقة/);
+  const normalized = normalizeDigits(duration).trim();
+  if (!normalized) return 0;
+
+  const hours = normalized.match(/(\d+(?:\.\d+)?)\s*(?:ساعة|ساعه|hour|hours|hr|hrs)/i);
+  const mins = normalized.match(/(\d+(?:\.\d+)?)\s*(?:دقيقة|دقيقه|minute|minutes|min|mins)/i);
+
   let total = 0;
-  if (hours) total += parseInt(hours[1]) * 60;
-  if (mins) total += parseInt(mins[1]);
-  if (!hours && !mins) {
-    const n = parseInt(duration);
-    if (!isNaN(n)) total = n;
+  if (hours) total += Number(hours[1]) * 60;
+  if (mins) total += Number(mins[1]);
+  if (total > 0) return total;
+
+  const clock = normalized.match(/^(\d{1,3}):(\d{1,2})(?::(\d{1,2}))?$/);
+  if (clock) {
+    if (clock[3] !== undefined) {
+      return Number(clock[1]) * 60 + Number(clock[2]) + Number(clock[3]) / 60;
+    }
+    return Number(clock[1]) * 60 + Number(clock[2]);
   }
-  return total;
+
+  const numeric = Number(normalized.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const metricNumber = (value: unknown): number => {
+  const numeric = Number(value ?? 0);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const formatMetric = (value: unknown, round = false) => {
+  const numeric = metricNumber(value);
+  return (round ? Math.round(numeric) : numeric).toLocaleString("en-US");
 };
 
 const toISO = (d: Date) => d.toISOString().slice(0, 10);
@@ -187,8 +212,8 @@ const AdminPartnerReport = () => {
   const summary = useMemo(() => {
     const minutes = filteredSessions.reduce((s, r) => s + parseMinutes(r.duration), 0);
     const usageMinutes = filteredUsage.reduce((s, r) => s + r.minutes_used, 0);
-    const pages = filteredSessions.reduce((s, r) => s + (r.pages_reached || 0), 0);
-    const parts = filteredSessions.reduce((s, r) => s + (r.parts_reached || 0), 0);
+    const pages = filteredSessions.reduce((s, r) => s + metricNumber(r.pages_reached), 0);
+    const parts = filteredSessions.reduce((s, r) => s + metricNumber(r.parts_reached), 0);
     const completed = filteredSessions.filter(r => r.status === "مكتملة").length;
     const activeStudents = new Set(filteredSessions.map(r => r.user_id)).size;
     const cost = usageMinutes * Number(partner?.cost_per_minute || 0);
@@ -206,20 +231,24 @@ const AdminPartnerReport = () => {
       e.sessions++;
       if (s.status === "مكتملة") e.completed++;
       e.minutes += parseMinutes(s.duration);
-      e.pages += s.pages_reached || 0;
-      e.parts += s.parts_reached || 0;
+      e.pages += metricNumber(s.pages_reached);
+      e.parts += metricNumber(s.parts_reached);
       e.students.add(s.user_id);
+    });
+    filteredUsage.forEach(u => {
+      const e = ensure(periodKey(u.session_date, grouping));
+      if (e.minutes <= 0) e.minutes += metricNumber(u.minutes_used);
     });
     filteredCerts.forEach(c => { ensure(periodKey(c.created_at.slice(0, 10), grouping)).certs++; });
     return Array.from(map.entries())
       .sort((a, b) => (a[0] < b[0] ? 1 : -1))
       .map(([key, v]) => ({ key, label: periodLabel(key, grouping), ...v, students: v.students.size }));
-  }, [filteredSessions, filteredCerts, grouping]);
+  }, [filteredSessions, filteredUsage, filteredCerts, grouping]);
 
   const byStudent = useMemo(() => {
-    const map = new Map<string, { sessions: number; completed: number; minutes: number; pages: number; parts: number; certs: number }>();
+    const map = new Map<string, { sessions: number; completed: number; minutes: number; usageMinutes: number; pages: number; parts: number; certs: number }>();
     const ensure = (k: string) => {
-      if (!map.has(k)) map.set(k, { sessions: 0, completed: 0, minutes: 0, pages: 0, parts: 0, certs: 0 });
+      if (!map.has(k)) map.set(k, { sessions: 0, completed: 0, minutes: 0, usageMinutes: 0, pages: 0, parts: 0, certs: 0 });
       return map.get(k)!;
     };
     filteredSessions.forEach(s => {
@@ -227,14 +256,22 @@ const AdminPartnerReport = () => {
       e.sessions++;
       if (s.status === "مكتملة") e.completed++;
       e.minutes += parseMinutes(s.duration);
-      e.pages += s.pages_reached || 0;
-      e.parts += s.parts_reached || 0;
+      e.pages += metricNumber(s.pages_reached);
+      e.parts += metricNumber(s.parts_reached);
+    });
+    filteredUsage.forEach(u => {
+      ensure(u.student_id).usageMinutes += metricNumber(u.minutes_used);
     });
     filteredCerts.forEach(c => { ensure(c.user_id).certs++; });
     return Array.from(map.entries())
-      .map(([id, v]) => ({ id, name: students.find(s => s.id === id)?.name || "طالب", ...v }))
-      .sort((a, b) => b.minutes - a.minutes);
-  }, [filteredSessions, filteredCerts, students]);
+      .map(([id, v]) => ({
+        id,
+        name: students.find(s => s.id === id)?.name || "طالب",
+        ...v,
+        displayMinutes: v.minutes > 0 ? v.minutes : v.usageMinutes,
+      }))
+      .sort((a, b) => b.displayMinutes - a.displayMinutes);
+  }, [filteredSessions, filteredUsage, filteredCerts, students]);
 
   const applyPreset = (months: number) => {
     const d = new Date();
@@ -434,10 +471,10 @@ const AdminPartnerReport = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "الجلسات", value: summary.sessions.toLocaleString(), sub: `${summary.completed} مكتملة`, icon: BookOpen },
-          { label: "الدقائق", value: Math.round(summary.minutes).toLocaleString(), sub: `${Math.round(summary.usageMinutes).toLocaleString()} على الدعم`, icon: Clock },
-          { label: "الطلاب النشطون", value: summary.activeStudents.toLocaleString(), sub: `${students.length} مسكّن`, icon: Users },
-          { label: "الشهادات", value: summary.certs.toLocaleString(), sub: `${summary.pages} صفحة · ${summary.parts} جزء`, icon: Award },
+          { label: "الجلسات", value: formatMetric(summary.sessions), sub: `${formatMetric(summary.completed)} مكتملة`, icon: BookOpen },
+          { label: "الدقائق", value: formatMetric(summary.minutes > 0 ? summary.minutes : summary.usageMinutes, true), sub: `${formatMetric(summary.usageMinutes, true)} على الدعم`, icon: Clock },
+          { label: "الطلاب النشطون", value: formatMetric(summary.activeStudents), sub: `${formatMetric(students.length)} مسكّن`, icon: Users },
+          { label: "الشهادات", value: formatMetric(summary.certs), sub: `${formatMetric(summary.pages)} صفحة · ${formatMetric(summary.parts)} جزء`, icon: Award },
         ].map((s, i) => (
           <Card key={i}>
             <CardContent className="p-4 space-y-1">
@@ -459,38 +496,40 @@ const AdminPartnerReport = () => {
             <Badge variant="secondary">{byPeriod.length}</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent className="p-0">
           {byPeriod.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">لا توجد بيانات في هذه الفترة</p>
           ) : (
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-muted-foreground border-b border-border/40">
-                  <th className="text-right py-2">الفترة</th>
-                  <th className="text-right py-2">الجلسات</th>
-                  <th className="text-right py-2">المكتملة</th>
-                  <th className="text-right py-2">الدقائق</th>
-                  <th className="text-right py-2">الصفحات</th>
-                  <th className="text-right py-2">الأجزاء</th>
-                  <th className="text-right py-2">الشهادات</th>
-                  <th className="text-right py-2">الطلاب</th>
-                </tr>
-              </thead>
-              <tbody>
-                {byPeriod.map(p => (
-                  <tr key={p.key} className="border-b border-border/20">
-                    <td className="py-2 font-medium">{p.label}</td>
-                    <td className="py-2">{p.sessions}</td>
-                    <td className="py-2">{p.completed}</td>
-                    <td className="py-2">{Math.round(p.minutes)}</td>
-                    <td className="py-2">{p.pages}</td>
-                    <td className="py-2">{p.parts}</td>
-                    <td className="py-2">{p.certs}</td>
-                    <td className="py-2">{p.students}</td>
+            <div className="w-full overflow-x-auto" dir="rtl">
+              <table dir="rtl" className="w-full min-w-[820px] table-auto text-sm text-right">
+                <thead className="bg-muted/25">
+                  <tr className="border-b border-border/60 text-foreground">
+                    <th className="min-w-[150px] whitespace-nowrap px-4 py-3 text-right font-bold">الفترة</th>
+                    <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">الجلسات</th>
+                    <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">المكتملة</th>
+                    <th className="min-w-[95px] whitespace-nowrap px-3 py-3 text-center font-bold">الدقائق</th>
+                    <th className="min-w-[95px] whitespace-nowrap px-3 py-3 text-center font-bold">الصفحات</th>
+                    <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">الأجزاء</th>
+                    <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">الشهادات</th>
+                    <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">الطلاب</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {byPeriod.map(p => (
+                    <tr key={p.key} className="border-b border-border/30 last:border-0 hover:bg-muted/15">
+                      <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-foreground">{p.label}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.sessions)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.completed)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.minutes, true)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.pages)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.parts)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.certs)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.students)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -502,36 +541,38 @@ const AdminPartnerReport = () => {
             <Badge variant="secondary">{byStudent.length}</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent className="p-0">
           {byStudent.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">لا توجد بيانات في هذه الفترة</p>
           ) : (
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-muted-foreground border-b border-border/40">
-                  <th className="text-right py-2">الطالب</th>
-                  <th className="text-right py-2">الجلسات</th>
-                  <th className="text-right py-2">المكتملة</th>
-                  <th className="text-right py-2">الدقائق</th>
-                  <th className="text-right py-2">الصفحات</th>
-                  <th className="text-right py-2">الأجزاء</th>
-                  <th className="text-right py-2">الشهادات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {byStudent.map(s => (
-                  <tr key={s.id} className="border-b border-border/20">
-                    <td className="py-2 font-medium">{s.name}</td>
-                    <td className="py-2">{s.sessions}</td>
-                    <td className="py-2">{s.completed}</td>
-                    <td className="py-2">{Math.round(s.minutes)}</td>
-                    <td className="py-2">{s.pages}</td>
-                    <td className="py-2">{s.parts}</td>
-                    <td className="py-2">{s.certs}</td>
+            <div className="w-full overflow-x-auto" dir="rtl">
+              <table dir="rtl" className="w-full min-w-[760px] table-auto text-sm text-right">
+                <thead className="bg-muted/25">
+                  <tr className="border-b border-border/60 text-foreground">
+                    <th className="sticky right-0 z-10 min-w-[190px] whitespace-nowrap bg-muted/95 px-4 py-3 text-right font-bold">الطالب</th>
+                    <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">الجلسات</th>
+                    <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">المكتملة</th>
+                    <th className="min-w-[100px] whitespace-nowrap px-3 py-3 text-center font-bold">الدقائق</th>
+                    <th className="min-w-[100px] whitespace-nowrap px-3 py-3 text-center font-bold">الصفحات</th>
+                    <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">الأجزاء</th>
+                    <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">الشهادات</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {byStudent.map(s => (
+                    <tr key={s.id} className="border-b border-border/30 last:border-0 hover:bg-muted/15">
+                      <td className="sticky right-0 z-[1] whitespace-nowrap bg-card px-4 py-3 text-right font-bold text-foreground">{s.name}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.sessions)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.completed)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.displayMinutes, true)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.pages)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.parts)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.certs)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardContent>
       </Card>
