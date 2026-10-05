@@ -14,43 +14,38 @@ import { BarChart3, Clock, Users, BookOpen, Award, FileSpreadsheet, Loader2, Ref
 
 type Grouping = "month" | "week" | "day";
 
-interface SessionRow {
-  user_id: string;
-  date: string;
-  status: string;
-  duration: string;
-  pages_reached: number | null;
-  parts_reached: number | null;
+interface CallRow {
+  id: string;
+  student_id: string;
+  reciter_id: string;
+  status: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  created_at: string | null;
 }
 
-const normalizeDigits = (value: string) =>
-  String(value || "")
-    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)));
+interface AchievementRow {
+  student_id: string;
+  pages_memorized: number;
+  parts_memorized: number;
+  sessions_count: number;
+  total_minutes: number;
+  certificates_count: number;
+}
 
-const parseMinutes = (duration: string): number => {
-  const normalized = normalizeDigits(duration).trim();
-  if (!normalized) return 0;
+const callDate = (call: CallRow) => (call.started_at || call.created_at || "").slice(0, 10);
 
-  const hours = normalized.match(/(\d+(?:\.\d+)?)\s*(?:ساعة|ساعه|hour|hours|hr|hrs)/i);
-  const mins = normalized.match(/(\d+(?:\.\d+)?)\s*(?:دقيقة|دقيقه|minute|minutes|min|mins)/i);
-
-  let total = 0;
-  if (hours) total += Number(hours[1]) * 60;
-  if (mins) total += Number(mins[1]);
-  if (total > 0) return total;
-
-  const clock = normalized.match(/^(\d{1,3}):(\d{1,2})(?::(\d{1,2}))?$/);
-  if (clock) {
-    if (clock[3] !== undefined) {
-      return Number(clock[1]) * 60 + Number(clock[2]) + Number(clock[3]) / 60;
-    }
-    return Number(clock[1]) * 60 + Number(clock[2]);
-  }
-
-  const numeric = Number(normalized.replace(/[^0-9.]/g, ""));
-  return Number.isFinite(numeric) ? numeric : 0;
+const callMinutes = (call: CallRow) => {
+  if (!call.started_at || !call.ended_at) return 0;
+  const started = new Date(call.started_at).getTime();
+  const ended = new Date(call.ended_at).getTime();
+  if (!Number.isFinite(started) || !Number.isFinite(ended) || ended <= started) return 0;
+  return (ended - started) / 60000;
 };
+
+const isStartedCall = (call: CallRow) => Boolean(call.started_at);
+const isCompletedCall = (call: CallRow) =>
+  Boolean(call.started_at && call.ended_at && new Date(call.ended_at).getTime() >= new Date(call.started_at).getTime());
 
 const metricNumber = (value: unknown): number => {
   const numeric = Number(value ?? 0);
@@ -91,8 +86,8 @@ const AdminPartnerReport = () => {
   const [exporting, setExporting] = useState(false);
   const [partner, setPartner] = useState<{ full_name: string; organization_name: string | null; cost_per_minute: number; total_support_amount: number } | null>(null);
   const [students, setStudents] = useState<{ id: string; name: string }[]>([]);
-  const [sessions, setSessions] = useState<SessionRow[]>([]);
-  const [usage, setUsage] = useState<{ student_id: string; minutes_used: number; session_date: string }[]>([]);
+  const [calls, setCalls] = useState<CallRow[]>([]);
+  const [achievements, setAchievements] = useState<AchievementRow[]>([]);
   const [certificates, setCertificates] = useState<{ user_id: string; created_at: string }[]>([]);
   const [assignments, setAssignments] = useState<{ id: string; student_id: string; status: string; assigned_at: string; name: string; phone: string | null; track: string | null; program_name: string | null }[]>([]);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -140,20 +135,29 @@ const AdminPartnerReport = () => {
 
       const studentIds = (psRes.data || []).filter(s => s.status === "active").map(s => s.student_id);
       if (studentIds.length === 0) {
-        setStudents([]); setSessions([]); setUsage([]); setCertificates([]);
+        setStudents([]); setCalls([]); setAchievements([]); setCertificates([]);
         return;
       }
 
-      const [profRes, sesRes, usageRes, certRes] = await Promise.all([
+      const [profRes, callRes, achievementRes, certRes] = await Promise.all([
         supabase.from("student_profiles").select("user_id, full_name").in("user_id", studentIds),
-        supabase.from("session_records").select("user_id, date, status, duration, pages_reached, parts_reached").in("user_id", studentIds),
-        supabase.from("partner_usage_logs").select("student_id, minutes_used, session_date").eq("partner_id", partnerId!),
+        supabase
+          .from("video_call_sessions")
+          .select("id, student_id, reciter_id, status, started_at, ended_at, created_at")
+          .in("student_id", studentIds),
+        supabase
+          .from("student_achievements")
+          .select("student_id, pages_memorized, parts_memorized, sessions_count, total_minutes, certificates_count")
+          .in("student_id", studentIds),
         supabase.from("certificates").select("user_id, created_at").in("user_id", studentIds),
       ]);
 
+      if (callRes.error) throw callRes.error;
+      if (achievementRes.error) throw achievementRes.error;
+
       setStudents((profRes.data || []).map(p => ({ id: p.user_id, name: p.full_name })));
-      setSessions((sesRes.data || []) as SessionRow[]);
-      setUsage((usageRes.data || []).map(u => ({ ...u, minutes_used: Number(u.minutes_used) })));
+      setCalls((callRes.data || []) as CallRow[]);
+      setAchievements((achievementRes.data || []) as AchievementRow[]);
       setCertificates(certRes.data || []);
     } catch (error: any) {
       toast({ title: "خطأ في تحميل التقرير", description: error.message, variant: "destructive" });
@@ -196,87 +200,125 @@ const AdminPartnerReport = () => {
   const inRange = (iso: string) => !!iso && iso >= from && iso <= to;
   const matchStudent = (id: string) => studentFilter === "all" || studentFilter === id;
 
-  const filteredSessions = useMemo(
-    () => sessions.filter(s => inRange(s.date) && matchStudent(s.user_id)),
-    [sessions, from, to, studentFilter]
-  );
-  const filteredUsage = useMemo(
-    () => usage.filter(u => inRange(u.session_date) && matchStudent(u.student_id)),
-    [usage, from, to, studentFilter]
+  const filteredCalls = useMemo(
+    () => calls.filter(call => isStartedCall(call) && inRange(callDate(call)) && matchStudent(call.student_id)),
+    [calls, from, to, studentFilter]
   );
   const filteredCerts = useMemo(
     () => certificates.filter(c => inRange(c.created_at.slice(0, 10)) && matchStudent(c.user_id)),
     [certificates, from, to, studentFilter]
   );
 
+  const achievementMap = useMemo(
+    () => new Map(achievements.map(item => [item.student_id, item])),
+    [achievements]
+  );
+
+  const selectedStudents = useMemo(
+    () => students.filter(student => matchStudent(student.id)),
+    [students, studentFilter]
+  );
+
   const summary = useMemo(() => {
-    const minutes = filteredSessions.reduce((s, r) => s + parseMinutes(r.duration), 0);
-    const usageMinutes = filteredUsage.reduce((s, r) => s + r.minutes_used, 0);
-    const pages = filteredSessions.reduce((s, r) => s + metricNumber(r.pages_reached), 0);
-    const parts = filteredSessions.reduce((s, r) => s + metricNumber(r.parts_reached), 0);
-    const completed = filteredSessions.filter(r => r.status === "مكتملة").length;
-    const activeStudents = new Set(filteredSessions.map(r => r.user_id)).size;
-    const cost = usageMinutes * Number(partner?.cost_per_minute || 0);
-    return { minutes, usageMinutes, pages, parts, completed, sessions: filteredSessions.length, activeStudents, certs: filteredCerts.length, cost };
-  }, [filteredSessions, filteredUsage, filteredCerts, partner]);
+    const completedCalls = filteredCalls.filter(isCompletedCall);
+    const minutes = completedCalls.reduce((sum, call) => sum + callMinutes(call), 0);
+    const pages = selectedStudents.reduce((sum, student) => sum + metricNumber(achievementMap.get(student.id)?.pages_memorized), 0);
+    const parts = selectedStudents.reduce((sum, student) => sum + metricNumber(achievementMap.get(student.id)?.parts_memorized), 0);
+    const activeStudents = new Set(filteredCalls.map(call => call.student_id)).size;
+    const cost = minutes * Number(partner?.cost_per_minute || 0);
+    return {
+      minutes,
+      pages,
+      parts,
+      completed: completedCalls.length,
+      sessions: filteredCalls.length,
+      activeStudents,
+      certs: filteredCerts.length,
+      cost,
+    };
+  }, [filteredCalls, filteredCerts, selectedStudents, achievementMap, partner]);
 
   const byPeriod = useMemo(() => {
-    const map = new Map<string, { sessions: number; completed: number; minutes: number; usageMinutes: number; pages: number; parts: number; certs: number; students: Set<string> }>();
-    const ensure = (k: string) => {
-      if (!map.has(k)) map.set(k, { sessions: 0, completed: 0, minutes: 0, usageMinutes: 0, pages: 0, parts: 0, certs: 0, students: new Set() });
-      return map.get(k)!;
+    const map = new Map<string, { sessions: number; completed: number; minutes: number; certs: number; students: Set<string> }>();
+    const ensure = (key: string) => {
+      if (!map.has(key)) map.set(key, { sessions: 0, completed: 0, minutes: 0, certs: 0, students: new Set() });
+      return map.get(key)!;
     };
-    filteredSessions.forEach(s => {
-      const e = ensure(periodKey(s.date, grouping));
-      e.sessions++;
-      if (s.status === "مكتملة") e.completed++;
-      e.minutes += parseMinutes(s.duration);
-      e.pages += metricNumber(s.pages_reached);
-      e.parts += metricNumber(s.parts_reached);
-      e.students.add(s.user_id);
+
+    filteredCalls.forEach(call => {
+      const date = callDate(call);
+      if (!date) return;
+      const entry = ensure(periodKey(date, grouping));
+      entry.sessions += 1;
+      if (isCompletedCall(call)) {
+        entry.completed += 1;
+        entry.minutes += callMinutes(call);
+      }
+      entry.students.add(call.student_id);
     });
-    filteredUsage.forEach(u => {
-      ensure(periodKey(u.session_date, grouping)).usageMinutes += metricNumber(u.minutes_used);
+
+    filteredCerts.forEach(cert => {
+      ensure(periodKey(cert.created_at.slice(0, 10), grouping)).certs += 1;
     });
-    filteredCerts.forEach(c => { ensure(periodKey(c.created_at.slice(0, 10), grouping)).certs++; });
+
     return Array.from(map.entries())
       .sort((a, b) => (a[0] < b[0] ? 1 : -1))
-      .map(([key, v]) => ({
+      .map(([key, value]) => ({
         key,
         label: periodLabel(key, grouping),
-        ...v,
-        displayMinutes: v.minutes > 0 ? v.minutes : v.usageMinutes,
-        students: v.students.size,
+        ...value,
+        students: value.students.size,
       }));
-  }, [filteredSessions, filteredUsage, filteredCerts, grouping]);
+  }, [filteredCalls, filteredCerts, grouping]);
 
   const byStudent = useMemo(() => {
-    const map = new Map<string, { sessions: number; completed: number; minutes: number; usageMinutes: number; pages: number; parts: number; certs: number }>();
-    const ensure = (k: string) => {
-      if (!map.has(k)) map.set(k, { sessions: 0, completed: 0, minutes: 0, usageMinutes: 0, pages: 0, parts: 0, certs: 0 });
-      return map.get(k)!;
+    const map = new Map<string, {
+      sessions: number;
+      completed: number;
+      minutes: number;
+      pages: number;
+      parts: number;
+      certs: number;
+    }>();
+
+    const ensure = (studentId: string) => {
+      if (!map.has(studentId)) {
+        const achievement = achievementMap.get(studentId);
+        map.set(studentId, {
+          sessions: 0,
+          completed: 0,
+          minutes: 0,
+          pages: metricNumber(achievement?.pages_memorized),
+          parts: metricNumber(achievement?.parts_memorized),
+          certs: 0,
+        });
+      }
+      return map.get(studentId)!;
     };
-    filteredSessions.forEach(s => {
-      const e = ensure(s.user_id);
-      e.sessions++;
-      if (s.status === "مكتملة") e.completed++;
-      e.minutes += parseMinutes(s.duration);
-      e.pages += metricNumber(s.pages_reached);
-      e.parts += metricNumber(s.parts_reached);
+
+    selectedStudents.forEach(student => ensure(student.id));
+
+    filteredCalls.forEach(call => {
+      const entry = ensure(call.student_id);
+      entry.sessions += 1;
+      if (isCompletedCall(call)) {
+        entry.completed += 1;
+        entry.minutes += callMinutes(call);
+      }
     });
-    filteredUsage.forEach(u => {
-      ensure(u.student_id).usageMinutes += metricNumber(u.minutes_used);
+
+    filteredCerts.forEach(cert => {
+      ensure(cert.user_id).certs += 1;
     });
-    filteredCerts.forEach(c => { ensure(c.user_id).certs++; });
+
     return Array.from(map.entries())
-      .map(([id, v]) => ({
+      .map(([id, value]) => ({
         id,
-        name: students.find(s => s.id === id)?.name || "طالب",
-        ...v,
-        displayMinutes: v.minutes > 0 ? v.minutes : v.usageMinutes,
+        name: students.find(student => student.id === id)?.name || "طالب",
+        ...value,
       }))
-      .sort((a, b) => b.displayMinutes - a.displayMinutes);
-  }, [filteredSessions, filteredUsage, filteredCerts, students]);
+      .sort((a, b) => b.minutes - a.minutes || b.completed - a.completed);
+  }, [filteredCalls, filteredCerts, selectedStudents, achievementMap, students]);
 
   const applyPreset = (months: number) => {
     const d = new Date();
@@ -300,10 +342,9 @@ const AdminPartnerReport = () => {
         [],
         ["إجمالي الجلسات", summary.sessions],
         ["الجلسات المكتملة", summary.completed],
-        ["دقائق الجلسات", Math.round(summary.minutes)],
-        ["الدقائق المحسوبة على الدعم", Math.round(summary.usageMinutes)],
-        ["الصفحات", summary.pages],
-        ["الأجزاء", summary.parts],
+        ["دقائق الاتصال الفعلية", Number(summary.minutes.toFixed(1))],
+        ["الصفحات المنجزة التراكمية", summary.pages],
+        ["الأجزاء المكتملة التراكمية", summary.parts],
         ["الشهادات", summary.certs],
         ["الطلاب النشطون", summary.activeStudents],
         ["التكلفة (ريال)", Math.round(summary.cost)],
@@ -311,14 +352,14 @@ const AdminPartnerReport = () => {
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(info), "الملخص");
 
       const periodsSheet = [
-        ["الفترة", "الجلسات", "المكتملة", "الدقائق", "الصفحات", "الأجزاء", "الشهادات", "الطلاب"],
-        ...byPeriod.map(p => [p.label, p.sessions, p.completed, Math.round(p.minutes), p.pages, p.parts, p.certs, p.students]),
+        ["الفترة", "الجلسات", "المكتملة", "الدقائق الفعلية", "الشهادات", "الطلاب"],
+        ...byPeriod.map(p => [p.label, p.sessions, p.completed, Number(p.minutes.toFixed(1)), p.certs, p.students]),
       ];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(periodsSheet), "حسب الفترة");
 
       const studentsSheet = [
         ["الطالب", "الجلسات", "المكتملة", "الدقائق", "الصفحات", "الأجزاء", "الشهادات"],
-        ...byStudent.map(s => [s.name, s.sessions, s.completed, Math.round(s.minutes), s.pages, s.parts, s.certs]),
+        ...byStudent.map(s => [s.name, s.sessions, s.completed, Number(s.minutes.toFixed(1)), s.pages, s.parts, s.certs]),
       ];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(studentsSheet), "حسب الطالب");
 
@@ -477,7 +518,7 @@ const AdminPartnerReport = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "الجلسات", value: formatMetric(summary.sessions), sub: `${formatMetric(summary.completed)} مكتملة`, icon: BookOpen },
-          { label: "الدقائق", value: formatMetric(summary.minutes > 0 ? summary.minutes : summary.usageMinutes, true), sub: `${formatMetric(summary.usageMinutes, true)} على الدعم`, icon: Clock },
+          { label: "الدقائق", value: summary.minutes.toLocaleString("en-US", { maximumFractionDigits: 1 }), sub: "من وقت الاتصال الفعلي", icon: Clock },
           { label: "الطلاب النشطون", value: formatMetric(summary.activeStudents), sub: `${formatMetric(students.length)} مسكّن`, icon: Users },
           { label: "الشهادات", value: formatMetric(summary.certs), sub: `${formatMetric(summary.pages)} صفحة · ${formatMetric(summary.parts)} جزء`, icon: Award },
         ].map((s, i) => (
@@ -513,8 +554,6 @@ const AdminPartnerReport = () => {
                     <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">الجلسات</th>
                     <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">المكتملة</th>
                     <th className="min-w-[95px] whitespace-nowrap px-3 py-3 text-center font-bold">الدقائق</th>
-                    <th className="min-w-[95px] whitespace-nowrap px-3 py-3 text-center font-bold">الصفحات</th>
-                    <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">الأجزاء</th>
                     <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">الشهادات</th>
                     <th className="min-w-[90px] whitespace-nowrap px-3 py-3 text-center font-bold">الطلاب</th>
                   </tr>
@@ -525,9 +564,7 @@ const AdminPartnerReport = () => {
                       <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-foreground">{p.label}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.sessions)}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.completed)}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.displayMinutes, true)}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.pages)}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.parts)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{p.minutes.toLocaleString("en-US", { maximumFractionDigits: 1 })}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.certs)}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(p.students)}</td>
                     </tr>
@@ -545,6 +582,9 @@ const AdminPartnerReport = () => {
             المنجزات حسب الطالب
             <Badge variant="secondary">{byStudent.length}</Badge>
           </CardTitle>
+          <p className="text-[11px] leading-5 text-muted-foreground">
+            الجلسات والمكتملة والدقائق والشهادات حسب الفترة المحددة. الصفحات والأجزاء هي إجمالي الإنجاز التراكمي الحقيقي للطالب حتى الآن.
+          </p>
         </CardHeader>
         <CardContent className="p-0">
           {byStudent.length === 0 ? (
@@ -569,7 +609,7 @@ const AdminPartnerReport = () => {
                       <td className="sticky right-0 z-[1] whitespace-nowrap bg-card px-4 py-3 text-right font-bold text-foreground">{s.name}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.sessions)}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.completed)}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.displayMinutes, true)}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{s.minutes.toLocaleString("en-US", { maximumFractionDigits: 1 })}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.pages)}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.parts)}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-center font-semibold tabular-nums text-foreground">{formatMetric(s.certs)}</td>
