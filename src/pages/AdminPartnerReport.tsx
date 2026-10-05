@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, Clock, Users, BookOpen, Award, FileSpreadsheet, Loader2, RefreshCw, Trash2, UserMinus, UserCheck } from "lucide-react";
+import { buildStudentQuranProgressMap, type QuranProgressSession } from "@/lib/quranProgress";
 
 type Grouping = "month" | "week" | "day";
 
@@ -88,6 +89,7 @@ const AdminPartnerReport = () => {
   const [students, setStudents] = useState<{ id: string; name: string }[]>([]);
   const [calls, setCalls] = useState<CallRow[]>([]);
   const [achievements, setAchievements] = useState<AchievementRow[]>([]);
+  const [progressSessions, setProgressSessions] = useState<QuranProgressSession[]>([]);
   const [certificates, setCertificates] = useState<{ user_id: string; created_at: string }[]>([]);
   const [assignments, setAssignments] = useState<{ id: string; student_id: string; status: string; assigned_at: string; name: string; phone: string | null; track: string | null; program_name: string | null }[]>([]);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -135,11 +137,11 @@ const AdminPartnerReport = () => {
 
       const studentIds = (psRes.data || []).filter(s => s.status === "active").map(s => s.student_id);
       if (studentIds.length === 0) {
-        setStudents([]); setCalls([]); setAchievements([]); setCertificates([]);
+        setStudents([]); setCalls([]); setAchievements([]); setProgressSessions([]); setCertificates([]);
         return;
       }
 
-      const [profRes, callRes, achievementRes, certRes] = await Promise.all([
+      const [profRes, callRes, achievementRes, progressRes, certRes] = await Promise.all([
         supabase.from("student_profiles").select("user_id, full_name").in("user_id", studentIds),
         supabase
           .from("video_call_sessions")
@@ -149,15 +151,21 @@ const AdminPartnerReport = () => {
           .from("student_achievements")
           .select("student_id, pages_memorized, parts_memorized, sessions_count, total_minutes, certificates_count")
           .in("student_id", studentIds),
+        supabase
+          .from("session_records")
+          .select("user_id, status, notes, pages_reached, parts_reached")
+          .in("user_id", studentIds),
         supabase.from("certificates").select("user_id, created_at").in("user_id", studentIds),
       ]);
 
       if (callRes.error) throw callRes.error;
       if (achievementRes.error) throw achievementRes.error;
+      if (progressRes.error) throw progressRes.error;
 
       setStudents((profRes.data || []).map(p => ({ id: p.user_id, name: p.full_name })));
       setCalls((callRes.data || []) as CallRow[]);
       setAchievements((achievementRes.data || []) as AchievementRow[]);
+      setProgressSessions((progressRes.data || []) as QuranProgressSession[]);
       setCertificates(certRes.data || []);
     } catch (error: any) {
       toast({ title: "خطأ في تحميل التقرير", description: error.message, variant: "destructive" });
@@ -233,6 +241,11 @@ const AdminPartnerReport = () => {
     [achievements]
   );
 
+  const historicalQuranProgressMap = useMemo(
+    () => buildStudentQuranProgressMap(progressSessions),
+    [progressSessions]
+  );
+
   const selectedStudents = useMemo(
     () => students.filter(student => matchStudent(student.id)),
     [students, studentFilter]
@@ -241,8 +254,16 @@ const AdminPartnerReport = () => {
   const summary = useMemo(() => {
     const completedCalls = lifetimeCalls.filter(isCompletedCall);
     const minutes = completedCalls.reduce((sum, call) => sum + callMinutes(call), 0);
-    const pages = selectedStudents.reduce((sum, student) => sum + metricNumber(achievementMap.get(student.id)?.pages_memorized), 0);
-    const parts = selectedStudents.reduce((sum, student) => sum + metricNumber(achievementMap.get(student.id)?.parts_memorized), 0);
+    const pages = selectedStudents.reduce((sum, student) => {
+      const achievement = metricNumber(achievementMap.get(student.id)?.pages_memorized);
+      const historical = metricNumber(historicalQuranProgressMap.get(student.id)?.pages);
+      return sum + Math.max(achievement, historical);
+    }, 0);
+    const parts = selectedStudents.reduce((sum, student) => {
+      const achievement = metricNumber(achievementMap.get(student.id)?.parts_memorized);
+      const historical = metricNumber(historicalQuranProgressMap.get(student.id)?.parts);
+      return sum + Math.max(achievement, historical);
+    }, 0);
     const activeStudents = new Set(lifetimeCalls.map(call => call.student_id)).size;
     const cost = minutes * Number(partner?.cost_per_minute || 0);
     return {
@@ -255,7 +276,7 @@ const AdminPartnerReport = () => {
       certs: lifetimeCerts.length,
       cost,
     };
-  }, [lifetimeCalls, lifetimeCerts, selectedStudents, achievementMap, partner]);
+  }, [lifetimeCalls, lifetimeCerts, selectedStudents, achievementMap, historicalQuranProgressMap, partner]);
 
   const byPeriod = useMemo(() => {
     const map = new Map<string, { sessions: number; completed: number; minutes: number; certs: number; students: Set<string> }>();
@@ -303,12 +324,19 @@ const AdminPartnerReport = () => {
     const ensure = (studentId: string) => {
       if (!map.has(studentId)) {
         const achievement = achievementMap.get(studentId);
+        const historical = historicalQuranProgressMap.get(studentId);
         map.set(studentId, {
           sessions: 0,
           completed: 0,
           minutes: 0,
-          pages: metricNumber(achievement?.pages_memorized),
-          parts: metricNumber(achievement?.parts_memorized),
+          pages: Math.max(
+            metricNumber(achievement?.pages_memorized),
+            metricNumber(historical?.pages),
+          ),
+          parts: Math.max(
+            metricNumber(achievement?.parts_memorized),
+            metricNumber(historical?.parts),
+          ),
           certs: 0,
         });
       }
@@ -337,7 +365,7 @@ const AdminPartnerReport = () => {
         ...value,
       }))
       .sort((a, b) => b.minutes - a.minutes || b.completed - a.completed);
-  }, [lifetimeCalls, lifetimeCerts, selectedStudents, achievementMap, students]);
+  }, [lifetimeCalls, lifetimeCerts, selectedStudents, achievementMap, historicalQuranProgressMap, students]);
 
   const applyPreset = (months: number) => {
     const d = new Date();
@@ -606,7 +634,7 @@ const AdminPartnerReport = () => {
             <Badge variant="secondary">{byStudent.length}</Badge>
           </CardTitle>
           <p className="text-[11px] leading-5 text-muted-foreground">
-            يعرض هذا الجدول كامل منجزات الطالب منذ البداية، حتى لو تحققت قبل تاريخ إضافته إلى الشريك: جميع الجلسات والمكتملة والدقائق والصفحات والأجزاء والشهادات.
+            يعرض هذا الجدول كامل منجزات الطالب منذ البداية. الصفحات والأجزاء تُستخرج من أعلى موضع قرآني وصل إليه الطالب تاريخيًا في سجلات الجلسات، مع اعتماد مصحف المدينة 604 صفحة و30 جزءًا.
           </p>
         </CardHeader>
         <CardContent className="p-0">
