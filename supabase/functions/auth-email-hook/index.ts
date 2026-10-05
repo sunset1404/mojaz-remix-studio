@@ -15,10 +15,10 @@ const corsHeaders = {
 }
 
 // Configuration
-const SITE_NAME = "Mojaz Reimagined"
+const SITE_NAME = "مجاز"
 const SENDER_DOMAIN = "notify.eqraa.org.sa"
 const ROOT_DOMAIN = "eqraa.org.sa"
-const FROM_DOMAIN = "eqraa.org.sa"
+const FROM_DOMAIN = "notify.eqraa.org.sa"
 const SITE_URL = `https://${ROOT_DOMAIN}`
 
 // Template mapping for preview mode
@@ -129,17 +129,18 @@ const handler = createAuthEmailHandler({
   sendUrl: Deno.env.get('LOVABLE_SEND_URL'),
   emails: {
     signup: {
-      subject: 'Confirm your email',
+      subject: 'تفعيل حسابك - مجاز',
       render: (data) =>
         React.createElement(SignupEmail, {
           siteName: SITE_NAME,
           siteUrl: SITE_URL,
           recipient: data.email,
           confirmationUrl: data.url,
+          token: data.token ?? '',
         }),
     },
     invite: {
-      subject: "You've been invited",
+      subject: 'دعوة للانضمام إلى مجاز',
       render: (data) =>
         React.createElement(InviteEmail, {
           siteName: SITE_NAME,
@@ -148,7 +149,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     magiclink: {
-      subject: 'Your login link',
+      subject: 'رابط الدخول إلى مجاز',
       render: (data) =>
         React.createElement(MagicLinkEmail, {
           siteName: SITE_NAME,
@@ -156,15 +157,16 @@ const handler = createAuthEmailHandler({
         }),
     },
     recovery: {
-      subject: 'Reset your password',
+      subject: 'إعادة تعيين كلمة المرور - مجاز',
       render: (data) =>
         React.createElement(RecoveryEmail, {
           siteName: SITE_NAME,
           confirmationUrl: data.url,
+          token: data.token ?? '',
         }),
     },
     email_change: {
-      subject: 'Confirm your new email',
+      subject: 'تأكيد تغيير البريد الإلكتروني - مجاز',
       render: (data) =>
         React.createElement(EmailChangeEmail, {
           siteName: SITE_NAME,
@@ -175,7 +177,7 @@ const handler = createAuthEmailHandler({
         }),
     },
     reauthentication: {
-      subject: 'Your verification code',
+      subject: 'رمز التحقق - مجاز',
       render: (data) =>
         React.createElement(ReauthenticationEmail, { token: data.token ?? '' }),
     },
