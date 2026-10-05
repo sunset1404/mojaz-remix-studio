@@ -20,6 +20,8 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
   const [endSurah, setEndSurah] = useState(data.endSurah);
   const [endAyah, setEndAyah] = useState(data.endAyah);
   const [notes, setNotes] = useState(data.notes);
+  const [pagesMemorized, setPagesMemorized] = useState<number>(data.pagesMemorized || 0);
+  const [partsMemorized, setPartsMemorized] = useState<number>(data.partsMemorized || 0);
   const [startMaxAyahs, setStartMaxAyahs] = useState(0);
   const [endMaxAyahs, setEndMaxAyahs] = useState(0);
   const [rating, setRating] = useState<number>(data.rating || 0);
@@ -27,10 +29,10 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
   const handleConfirm = () => {
     if (isExam) {
       const scoreRating = Math.max(0, Math.min(5, Math.round((computeTotalScore(scores) / 100) * 5)));
-      onConfirm({ rating: scoreRating, scores, startSurah: '', startAyah: '', endSurah: '', endAyah: '', notes });
+      onConfirm({ rating: scoreRating, scores, startSurah: '', startAyah: '', endSurah: '', endAyah: '', pagesMemorized, partsMemorized, notes });
       return;
     }
-    onConfirm({ rating, scores, startSurah, startAyah, endSurah, endAyah, notes });
+    onConfirm({ rating, scores, startSurah, startAyah, endSurah, endAyah, pagesMemorized, partsMemorized, notes });
   };
 
   return (
@@ -148,6 +150,35 @@ export function SessionConfirmDialog({ data, onConfirm, onCancel, isExam }: Sess
                     onChange={(e) => setEndAyah(e.target.value)}
                     className="w-20 rounded-xl border border-border bg-background px-3 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1.5">
+                  <label className="text-foreground text-xs font-semibold">إجمالي الصفحات المنجزة</label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={604}
+                    value={pagesMemorized}
+                    onChange={(e) => setPagesMemorized(Math.max(0, Math.min(604, Number(e.target.value) || 0)))}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-center text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <p className="text-[10px] leading-4 text-muted-foreground">عدد صفحات المصحف التي أتمها الطالب حتى الآن.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-foreground text-xs font-semibold">الأجزاء المكتملة</label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={30}
+                    value={partsMemorized}
+                    onChange={(e) => setPartsMemorized(Math.max(0, Math.min(30, Number(e.target.value) || 0)))}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-center text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <p className="text-[10px] leading-4 text-muted-foreground">كل جزء يكتمل يُضاف إلى الإجمالي من 30.</p>
                 </div>
               </div>
 
