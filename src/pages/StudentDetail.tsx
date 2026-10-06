@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   User, BookOpen, Clock, Trophy, Award,
   Star, Calendar, Phone, MapPin, GraduationCap,
-  Target, TrendingUp, ChevronDown, Pencil
+  Target, TrendingUp, ChevronDown, Pencil, Plus
 } from "lucide-react";
 import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { SurahSelect } from "@/components/video-call/SurahSelect";
+import { AyahSelect } from "@/components/video-call/AyahSelect";
 import { buildUnifiedStudentMetrics, emptyStudentMetrics, type UnifiedVideoCall } from "@/lib/studentAchievementMetrics";
 
 const StudentDetail = () => {
@@ -32,6 +34,22 @@ const StudentDetail = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editSession, setEditSession] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+  const [reciterName, setReciterName] = useState("المقرئ");
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualSaving, setManualSaving] = useState(false);
+  const [manualStartMax, setManualStartMax] = useState(0);
+  const [manualEndMax, setManualEndMax] = useState(0);
+  const [manualForm, setManualForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    time: new Date().toTimeString().slice(0, 5),
+    durationMinutes: "",
+    startSurah: "",
+    startAyah: "",
+    endSurah: "",
+    endAyah: "",
+    notes: "",
+    rating: "",
+  });
   const [form, setForm] = useState({
     date: "",
     time: "",
@@ -82,6 +100,78 @@ const StudentDetail = () => {
     toast({ title: "تم الحفظ", description: "تم تحديث سجل الجلسة" });
   };
 
+  const resetManualForm = () => {
+    setManualForm({
+      date: new Date().toISOString().slice(0, 10),
+      time: new Date().toTimeString().slice(0, 5),
+      durationMinutes: "",
+      startSurah: "",
+      startAyah: "",
+      endSurah: "",
+      endAyah: "",
+      notes: "",
+      rating: "",
+    });
+    setManualStartMax(0);
+    setManualEndMax(0);
+  };
+
+  const saveManualAchievement = async () => {
+    if (!studentId || !user) return;
+    if (!manualForm.startSurah || !manualForm.startAyah || !manualForm.endSurah || !manualForm.endAyah) {
+      toast({ title: "أكمل نطاق التلاوة", description: "حدد السورة والآية من وإلى.", variant: "destructive" });
+      return;
+    }
+
+    const durationMinutes = Number(manualForm.durationMinutes || 0);
+    if (!Number.isFinite(durationMinutes) || durationMinutes < 0 || durationMinutes > 480) {
+      toast({ title: "مدة غير صحيحة", description: "أدخل مدة الجلسة بالدقائق من 0 إلى 480.", variant: "destructive" });
+      return;
+    }
+
+    setManualSaving(true);
+    const noteLines = [
+      `بدأ من: ${manualForm.startSurah} آية ${manualForm.startAyah}`,
+      `انتهى عند: ${manualForm.endSurah} آية ${manualForm.endAyah}`,
+      "نوع الجلسة: خارج التطبيق / إدخال يدوي",
+      manualForm.notes.trim() ? `ملاحظات: ${manualForm.notes.trim()}` : "",
+    ].filter(Boolean);
+
+    const payload = {
+      user_id: studentId,
+      other_user_name: reciterName || "المقرئ",
+      date: manualForm.date,
+      time: manualForm.time,
+      duration: `${Math.round(durationMinutes)} دقيقة`,
+      status: "مكتملة",
+      rating: manualForm.rating ? Number(manualForm.rating) : null,
+      notes: noteLines.join("\n"),
+      parts_reached: null,
+      pages_reached: null,
+    };
+
+    const { data, error } = await supabase
+      .from("session_records")
+      .insert(payload)
+      .select("*")
+      .single();
+
+    setManualSaving(false);
+
+    if (error) {
+      toast({ title: "تعذر حفظ المنجز", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    setSessions((prev) => [data, ...prev]);
+    setManualOpen(false);
+    resetManualForm();
+    toast({
+      title: "تم تسجيل المنجز",
+      description: "حُسب هذا الإدخال كجلسة مكتملة مستقلة، حتى لو تمت الجلسة خارج التطبيق.",
+    });
+  };
+
   useEffect(() => {
     if (!user || !studentId) return;
     setLoading(true);
@@ -116,12 +206,18 @@ const StudentDetail = () => {
         .select("avatar_url")
         .eq("user_id", studentId)
         .maybeSingle(),
-    ]).then(([profileRes, achRes, sessionsRes, callsRes, certsRes, avatarRes]) => {
+      supabase
+        .from("reciter_profiles")
+        .select("full_name")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]).then(([profileRes, achRes, sessionsRes, callsRes, certsRes, avatarRes, reciterRes]) => {
       setStudent(profileRes.data);
       setAchievements(achRes.data);
       setSessions(sessionsRes.data || []);
       setCalls(callsRes.error ? [] : ((callsRes.data || []) as UnifiedVideoCall[]));
       setCertificates(certsRes.error ? [] : (certsRes.data || []));
+      setReciterName(reciterRes.data?.full_name || user.user_metadata?.full_name || "المقرئ");
       const path = avatarRes.data?.avatar_url;
       if (path) {
         const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
@@ -299,10 +395,26 @@ const StudentDetail = () => {
           transition={{ delay: 0.6 }}
           className="glass-card rounded-2xl p-5"
         >
-          <h2 className="font-bold text-foreground mb-3 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-primary" />
-            سجل الجلسات
-          </h2>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="font-bold text-foreground flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-primary" />
+              سجل الجلسات
+            </h2>
+            <Button
+              size="sm"
+              onClick={() => {
+                resetManualForm();
+                setManualOpen(true);
+              }}
+              className="gap-1.5 rounded-xl"
+            >
+              <Plus className="w-4 h-4" />
+              إضافة منجز
+            </Button>
+          </div>
+          <p className="mb-3 text-[11px] leading-5 text-muted-foreground">
+            أي منجز تضيفه هنا يُسجل كجلسة مكتملة مستقلة، سواء تمت عبر Google Meet أو أي وسيلة خارج التطبيق.
+          </p>
           {sessions.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-4">لا توجد جلسات مسجلة</p>
           ) : (
@@ -404,6 +516,131 @@ const StudentDetail = () => {
           )}
         </motion.div>
       </div>
+
+      {/* Manual / external achievement session dialog */}
+      <Dialog open={manualOpen} onOpenChange={(open) => {
+        setManualOpen(open);
+        if (!open) resetManualForm();
+      }}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>إضافة منجز / جلسة خارج التطبيق</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs leading-6 text-muted-foreground">
+              كل حفظ لهذا النموذج يُحسب كجلسة مكتملة مستقلة للطالب، حتى لو كان اللقاء عبر Google Meet أو اتصال خارجي.
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">التاريخ</Label>
+                <Input
+                  type="date"
+                  value={manualForm.date}
+                  onChange={(e) => setManualForm({ ...manualForm, date: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">الوقت</Label>
+                <Input
+                  type="time"
+                  value={manualForm.time}
+                  onChange={(e) => setManualForm({ ...manualForm, time: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs">مدة الجلسة بالدقائق</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={480}
+                value={manualForm.durationMinutes}
+                onChange={(e) => setManualForm({ ...manualForm, durationMinutes: e.target.value.replace(/[^0-9]/g, "") })}
+                placeholder="مثال: 30"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">بدأ من</Label>
+              <div className="flex gap-2">
+                <SurahSelect
+                  value={manualForm.startSurah}
+                  onChange={(name, maxAyahs) => {
+                    setManualStartMax(maxAyahs);
+                    setManualForm({ ...manualForm, startSurah: name, startAyah: "" });
+                  }}
+                />
+                <AyahSelect
+                  value={manualForm.startAyah}
+                  max={manualStartMax}
+                  onChange={(ayah) => setManualForm({ ...manualForm, startAyah: ayah })}
+                  disabled={!manualForm.startSurah}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">انتهى عند</Label>
+              <div className="flex gap-2">
+                <SurahSelect
+                  value={manualForm.endSurah}
+                  onChange={(name, maxAyahs) => {
+                    setManualEndMax(maxAyahs);
+                    setManualForm({ ...manualForm, endSurah: name, endAyah: "" });
+                  }}
+                />
+                <AyahSelect
+                  value={manualForm.endAyah}
+                  max={manualEndMax}
+                  onChange={(ayah) => setManualForm({ ...manualForm, endAyah: ayah })}
+                  disabled={!manualForm.endSurah}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs">التقييم</Label>
+              <div className="mt-1 flex items-center gap-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Button
+                    key={i}
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setManualForm({ ...manualForm, rating: String(i + 1) })}
+                    className="h-8 w-8"
+                  >
+                    <Star
+                      className={`w-6 h-6 ${i < Number(manualForm.rating || 0) ? "text-gold fill-current" : "text-muted-foreground/40"}`}
+                    />
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs">ملاحظات إضافية</Label>
+              <Textarea
+                rows={3}
+                value={manualForm.notes}
+                onChange={(e) => setManualForm({ ...manualForm, notes: e.target.value })}
+                placeholder="أي ملاحظات على التلاوة أو الحفظ"
+              />
+            </div>
+
+            <Button
+              onClick={saveManualAchievement}
+              disabled={manualSaving}
+              className="w-full gradient-primary text-primary-foreground"
+            >
+              {manualSaving ? "جاري الحفظ..." : "حفظ المنجز واحتسابه جلسة"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit session dialog */}
       <Dialog open={!!editSession} onOpenChange={(o) => !o && setEditSession(null)}>
