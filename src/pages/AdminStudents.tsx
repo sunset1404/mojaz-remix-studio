@@ -28,6 +28,7 @@ import { useNavigate } from "react-router-dom";
 import { ExamEvaluationsSection } from "@/components/exam-evaluation/ExamEvaluationsSection";
 import ProgramAssignSelect, { useProgramsList } from "@/components/admin/ProgramAssignSelect";
 import RestoreAccountButton from "@/components/admin/RestoreAccountButton";
+import { buildUnifiedStudentMetrics, emptyStudentMetrics, type UnifiedStudentMetrics, type UnifiedSessionRecord, type UnifiedVideoCall } from "@/lib/studentAchievementMetrics";
 
 interface StudentProfile {
   id: string | null;
@@ -82,6 +83,7 @@ const emptyForm = {
 const AdminStudents = () => {
   const [students, setStudents] = useState<StudentProfile[]>([]);
   const [achievements, setAchievements] = useState<StudentAchievement[]>([]);
+  const [metrics, setMetrics] = useState<Map<string, UnifiedStudentMetrics>>(new Map());
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState<string>("all");
@@ -99,7 +101,7 @@ const AdminStudents = () => {
   const navigate = useNavigate();
   const programs = useProgramsList();
 
-  const CACHE_KEY = "admin_students_cache_v1";
+  const CACHE_KEY = "admin_students_cache_v2";
 
   useEffect(() => { fetchData(); }, []);
 
@@ -109,22 +111,46 @@ const AdminStudents = () => {
       if (cached) {
         const p = JSON.parse(cached);
         if (p?.accounts) setStudents(p.accounts);
-        if (p?.achievements) setAchievements(p.achievements);
         setLoading(false);
-      } else setLoading(true);
-    } catch { setLoading(true); }
+      } else {
+        setLoading(true);
+      }
+    } catch {
+      setLoading(true);
+    }
 
     try {
-      const [accRes, achRes] = await Promise.all([
-        supabase.functions.invoke("list-student-accounts", { body: { track: "general" } }),
-        supabase.from("student_achievements").select("*"),
-      ]);
+      const accRes = await supabase.functions.invoke("list-student-accounts", { body: { track: "general" } });
       if (accRes.error) throw accRes.error;
       const accounts = (accRes.data as any)?.accounts || [];
-      const achs = achRes.data || [];
+      const userIds = accounts.map((account: any) => account.user_id).filter(Boolean);
+
+      const [achRes, sessionRes, callRes, certRes] = await Promise.all([
+        supabase.from("student_achievements").select("*"),
+        userIds.length
+          ? supabase.from("session_records").select("id, user_id, date, time, duration, status, notes, pages_reached, parts_reached, created_at").in("user_id", userIds)
+          : Promise.resolve({ data: [], error: null } as any),
+        userIds.length
+          ? supabase.from("video_call_sessions").select("id, student_id, status, started_at, ended_at, created_at").in("student_id", userIds)
+          : Promise.resolve({ data: [], error: null } as any),
+        userIds.length
+          ? supabase.from("certificates").select("user_id, created_at").in("user_id", userIds)
+          : Promise.resolve({ data: [], error: null } as any),
+      ]);
+
+      if (achRes.error) throw achRes.error;
+      if (sessionRes.error) throw sessionRes.error;
+
+      const unified = buildUnifiedStudentMetrics(
+        (sessionRes.data || []) as UnifiedSessionRecord[],
+        callRes.error ? [] : ((callRes.data || []) as UnifiedVideoCall[]),
+        certRes.error ? [] : (certRes.data || []),
+      );
+
       setStudents(accounts);
-      setAchievements(achs);
-      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ accounts, achievements: achs })); } catch {}
+      setAchievements(achRes.data || []);
+      setMetrics(unified);
+      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ accounts })); } catch {}
     } catch (e: any) {
       toast({ title: "خطأ في تحميل البيانات", description: e.message, variant: "destructive" });
     } finally {
@@ -231,6 +257,7 @@ const AdminStudents = () => {
   };
 
   const getAchievement = (uid: string) => achievements.find((a) => a.student_id === uid);
+  const getMetric = (uid: string) => metrics.get(uid) || emptyStudentMetrics(uid);
 
   const stats = useMemo(() => {
     const total = students.length;
@@ -245,12 +272,12 @@ const AdminStudents = () => {
     const topNationalities = Object.entries(nationalityMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
     const trackMap: Record<string, number> = {};
     students.forEach((s) => { if (s.preferred_track) trackMap[s.preferred_track] = (trackMap[s.preferred_track] || 0) + 1; });
-    const totalSessions = achievements.reduce((sum, a) => sum + a.sessions_count, 0);
-    const totalMinutes = achievements.reduce((sum, a) => sum + a.total_minutes, 0);
+    const totalSessions = Array.from(metrics.values()).reduce((sum, metric) => sum + metric.sessions, 0);
+    const totalMinutes = Array.from(metrics.values()).reduce((sum, metric) => sum + metric.minutes, 0);
     const avgCommitment = achievements.length > 0
       ? achievements.reduce((sum, a) => sum + Number(a.commitment_rate), 0) / achievements.length : 0;
     return { total, males, females, active, unconfirmed, incomplete, deleted, topNationalities, trackMap, totalSessions, totalMinutes, avgCommitment };
-  }, [students, achievements]);
+  }, [students, achievements, metrics]);
 
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
@@ -402,6 +429,7 @@ const AdminStudents = () => {
               <div className="space-y-2">
                 {filteredStudents.map((student, i) => {
                   const ach = getAchievement(student.user_id);
+                  const metric = getMetric(student.user_id);
                   const rowKey = student.id || student.user_id;
                   const isExpanded = expandedStudent === rowKey;
                   const stateInfo = STATE_LABELS[student.account_state || "active"] || STATE_LABELS.active;
@@ -475,11 +503,15 @@ const AdminStudents = () => {
                                   </div>
                                   <div className="space-y-1.5 text-xs">
                                     <h4 className="text-xs font-bold text-primary mb-1">الأداء</h4>
-                                    {ach ? (
+                                    {metric.sessions > 0 || ach ? (
                                       <>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">الجلسات:</span><span>{ach.sessions_count}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">الدقائق:</span><span>{Math.round(ach.total_minutes)}</span></div>
-                                        <div className="flex justify-between"><span className="text-muted-foreground">الالتزام:</span><span>{Math.round(Number(ach.commitment_rate))}%</span></div>
+                                        <div className="flex justify-between"><span className="text-muted-foreground">الجلسات:</span><span>{metric.sessions}</span></div>
+                                        <div className="flex justify-between"><span className="text-muted-foreground">المكتملة:</span><span>{metric.completed}</span></div>
+                                        <div className="flex justify-between"><span className="text-muted-foreground">الدقائق:</span><span>{Math.round(metric.minutes)}</span></div>
+                                        <div className="flex justify-between"><span className="text-muted-foreground">الصفحات:</span><span>{metric.pages}</span></div>
+                                        <div className="flex justify-between"><span className="text-muted-foreground">الأجزاء:</span><span>{metric.parts}</span></div>
+                                        <div className="flex justify-between"><span className="text-muted-foreground">الشهادات:</span><span>{metric.certificates}</span></div>
+                                        <div className="flex justify-between"><span className="text-muted-foreground">الالتزام:</span><span>{Math.round(Number(ach?.commitment_rate || 0))}%</span></div>
                                       </>
                                     ) : <p className="text-muted-foreground">لا توجد بيانات أداء بعد</p>}
                                   </div>
