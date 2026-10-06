@@ -649,6 +649,9 @@ const StudentDetail = () => {
           <DialogHeader>
             <DialogTitle>تعديل سجل الجلسة</DialogTitle>
           </DialogHeader>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-6 text-amber-900">
+            هذا الخيار لتصحيح جلسة موجودة فقط ولا يزيد عدد الجلسات. إذا كانت جلسة جديدة أو لقاءً خارجيًا فاستخدم «إضافة منجز».
+          </div>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
               <div>
