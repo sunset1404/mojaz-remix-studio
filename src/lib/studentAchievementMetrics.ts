@@ -181,11 +181,17 @@ function recordCreatedAt(record: UnifiedSessionRecord) {
 }
 
 function recordSignature(record: UnifiedSessionRecord) {
+  // Progress content is part of the signature so two intentional manual
+  // achievement entries on the same day/time are not collapsed together.
+  // Exact duplicate submits still collapse inside the short duplicate window.
   return [
     record.user_id,
     record.date || "",
     record.time || "",
     normalizeDigits(record.duration || ""),
+    normalizeArabic(record.notes || ""),
+    metricNumber(record.pages_reached),
+    metricNumber(record.parts_reached),
   ].join("|");
 }
 
@@ -288,6 +294,22 @@ function completedBoundaryCount(boundaries: readonly number[], ayahId: number, m
   const nextBoundary = boundaries[current + 1];
   const completed = nextBoundary && ayahId >= nextBoundary - 1 ? current : current - 1;
   return Math.min(maxValue, Math.max(0, completed));
+}
+
+export function quranPositionToProgress(surahName: string, ayahValue: string | number) {
+  const normalized = normalizeArabic(surahName);
+  const withoutAl = normalized.startsWith("ال") ? normalized.slice(2) : normalized;
+  const surahId = surahNameToId.get(normalized) || surahNameToId.get(withoutAl);
+  const ayah = Number(normalizeDigits(String(ayahValue || "")));
+  if (!surahId || !Number.isFinite(ayah)) return { pages: 0, parts: 0 };
+
+  const ayahId = toGlobalAyahId(surahId, ayah);
+  if (!ayahId) return { pages: 0, parts: 0 };
+
+  return {
+    pages: completedBoundaryCount(PAGE_STARTS, ayahId, 604),
+    parts: completedBoundaryCount(JUZ_STARTS, ayahId, 30),
+  };
 }
 
 function calculateQuranProgress(records: UnifiedSessionRecord[]) {

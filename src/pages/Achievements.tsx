@@ -3,6 +3,7 @@ import { Trophy, Star, BookOpen, Target, Award, Flame, Check, X, BookOpenCheck, 
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { buildUnifiedStudentMetrics, emptyStudentMetrics, type UnifiedStudentMetrics, type UnifiedSessionRecord, type UnifiedVideoCall } from "@/lib/studentAchievementMetrics";
 
 type Achievement = {
   id: number;
@@ -61,6 +62,7 @@ const Achievements = () => {
   const [completedDays, setCompletedDays] = useState<string[]>([]);
   const [missedDays, setMissedDays] = useState<string[]>([]);
   const [loadingPlan, setLoadingPlan] = useState(true);
+  const [unifiedMetric, setUnifiedMetric] = useState<UnifiedStudentMetrics | null>(null);
   const [achievementData, setAchievementData] = useState<{
     sessions_count: number;
     total_minutes: number;
@@ -75,19 +77,50 @@ const Achievements = () => {
     const fetchPlan = async () => {
     if (!user) { setLoadingPlan(false); return; }
 
-    // Fetch achievements data
-    const { data: achData } = await supabase
-      .from("student_achievements")
-      .select("*")
-      .eq("student_id", user.id)
-      .maybeSingle();
-    if (achData) setAchievementData(achData);
-
-    const { data } = await supabase
+    const [achResult, sessionsResult, callsResult, certsResult, planResult] = await Promise.all([
+      supabase
+        .from("student_achievements")
+        .select("*")
+        .eq("student_id", user.id)
+        .maybeSingle(),
+      isReciter
+        ? Promise.resolve({ data: [], error: null } as any)
+        : supabase
+            .from("session_records")
+            .select("id, user_id, date, time, duration, status, notes, pages_reached, parts_reached, created_at")
+            .eq("user_id", user.id),
+      isReciter
+        ? Promise.resolve({ data: [], error: null } as any)
+        : supabase
+            .from("video_call_sessions")
+            .select("id, student_id, status, started_at, ended_at, created_at")
+            .eq("student_id", user.id),
+      isReciter
+        ? Promise.resolve({ data: [], error: null } as any)
+        : supabase
+            .from("certificates")
+            .select("user_id, created_at")
+            .eq("user_id", user.id),
+      supabase
         .from("weekly_plans")
         .select("days")
         .eq("user_id", user.id)
-        .maybeSingle();
+        .maybeSingle(),
+    ]);
+
+    const achData = achResult.data;
+    if (achData) setAchievementData(achData);
+
+    if (!isReciter) {
+      const metricsMap = buildUnifiedStudentMetrics(
+        (sessionsResult.data || []) as UnifiedSessionRecord[],
+        callsResult.error ? [] : ((callsResult.data || []) as UnifiedVideoCall[]),
+        certsResult.error ? [] : (certsResult.data || []),
+      );
+      setUnifiedMetric(metricsMap.get(user.id) || emptyStudentMetrics(user.id));
+    }
+
+    const data = planResult.data;
 
       if (data?.days) {
         setPlanDays(data.days);
@@ -145,11 +178,20 @@ const Achievements = () => {
       setLoadingPlan(false);
     };
     fetchPlan();
-  }, [user]);
+  }, [user, isReciter]);
 
-  // Build dynamic student achievements from real DB data
+  const studentMetricValues = {
+    sessions_count: unifiedMetric?.sessions ?? achievementData?.sessions_count ?? 0,
+    total_minutes: unifiedMetric?.minutes ?? achievementData?.total_minutes ?? 0,
+    parts_memorized: unifiedMetric?.parts ?? achievementData?.parts_memorized ?? 0,
+    pages_memorized: unifiedMetric?.pages ?? achievementData?.pages_memorized ?? 0,
+    certificates_count: unifiedMetric?.certificates ?? achievementData?.certificates_count ?? 0,
+    commitment_rate: achievementData?.commitment_rate ?? 0,
+  };
+
+  // Build dynamic student achievements from the same metrics used by admin/partner pages.
   const studentAchievements: Achievement[] = studentAchievementsBase.map((a) => {
-    const rawValue = achievementData ? (achievementData as Record<string, number>)[a.thresholdKey] ?? 0 : 0;
+    const rawValue = Number((studentMetricValues as Record<string, number>)[a.thresholdKey] ?? 0);
     const value = Number(rawValue);
     const earned = value >= a.earnedThreshold;
     const total = a.total ?? a.earnedThreshold;
@@ -171,9 +213,14 @@ const Achievements = () => {
     ? "تابع مسيرتك وإنجازاتك في الإقراء"
     : "تابع مسيرتك وإنجازاتك القرآنية";
 
-  // Build real stats from DB data
-  const totalHours = achievementData ? Math.round(achievementData.total_minutes / 60) : 0;
-  const totalSessions = achievementData?.sessions_count ?? 0;
+  // Build real stats from the unified student metric source.
+  const totalMinutesValue = isReciter
+    ? Number(achievementData?.total_minutes ?? 0)
+    : Number(unifiedMetric?.minutes ?? achievementData?.total_minutes ?? 0);
+  const totalHours = Math.round(totalMinutesValue / 60);
+  const totalSessions = isReciter
+    ? Number(achievementData?.sessions_count ?? 0)
+    : Number(unifiedMetric?.sessions ?? achievementData?.sessions_count ?? 0);
   const earnedCount = achievements.filter((a) => a.earned).length;
   const totalCount = achievements.length;
 
@@ -184,8 +231,8 @@ const Achievements = () => {
     { label: "معدل الالتزام", value: `${achievementData?.commitment_rate ?? 0}%`, icon: Star },
   ];
 
-  // Level calculation based on total_minutes
-  const totalMinutes = achievementData?.total_minutes ?? 0;
+  // Level calculation based on the same total minutes used everywhere else.
+  const totalMinutes = totalMinutesValue;
   const level = Math.floor(totalMinutes / 300) + 1;
   const pointsInLevel = totalMinutes % 300;
   const pointsToNext = 300 - pointsInLevel;

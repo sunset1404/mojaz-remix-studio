@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { buildUnifiedStudentMetrics, emptyStudentMetrics, type UnifiedSessionRecord, type UnifiedVideoCall } from "@/lib/studentAchievementMetrics";
 
 interface StudentPerformance {
   student_id: string;
@@ -48,24 +49,41 @@ const ReciterStudentPerformance = () => {
 
     const studentIds = assignedStudents.map(s => s.user_id);
 
-    // Get achievements for all assigned students
-    const { data: achievements } = await supabase
-      .from("student_achievements")
-      .select("*")
-      .in("student_id", studentIds);
+    const [achievementsRes, sessionsRes, callsRes, certsRes] = await Promise.all([
+      supabase.from("student_achievements").select("*").in("student_id", studentIds),
+      supabase
+        .from("session_records")
+        .select("id, user_id, date, time, duration, status, notes, pages_reached, parts_reached, created_at")
+        .in("user_id", studentIds),
+      supabase
+        .from("video_call_sessions")
+        .select("id, student_id, status, started_at, ended_at, created_at")
+        .in("student_id", studentIds),
+      supabase
+        .from("certificates")
+        .select("user_id, created_at")
+        .in("user_id", studentIds),
+    ]);
+
+    const metricsMap = buildUnifiedStudentMetrics(
+      (sessionsRes.data || []) as UnifiedSessionRecord[],
+      callsRes.error ? [] : ((callsRes.data || []) as UnifiedVideoCall[]),
+      certsRes.error ? [] : (certsRes.data || []),
+    );
 
     const merged: StudentPerformance[] = assignedStudents.map(sp => {
-      const ach = achievements?.find(a => a.student_id === sp.user_id);
+      const ach = achievementsRes.data?.find(a => a.student_id === sp.user_id);
+      const metric = metricsMap.get(sp.user_id) || emptyStudentMetrics(sp.user_id);
       return {
         student_id: sp.user_id,
         full_name: sp.full_name,
-        sessions_count: ach?.sessions_count ?? 0,
-        total_minutes: Number(ach?.total_minutes ?? 0),
-        parts_memorized: ach?.parts_memorized ?? 0,
-        pages_memorized: ach?.pages_memorized ?? 0,
+        sessions_count: metric.sessions,
+        total_minutes: metric.minutes,
+        parts_memorized: metric.parts,
+        pages_memorized: metric.pages,
         commitment_rate: Number(ach?.commitment_rate ?? 0),
-        certificates_count: ach?.certificates_count ?? 0,
-        completions: ach?.completions ?? 0,
+        certificates_count: metric.certificates,
+        completions: Math.max(Number(ach?.completions ?? 0), metric.parts >= 30 ? 1 : 0),
       };
     });
 

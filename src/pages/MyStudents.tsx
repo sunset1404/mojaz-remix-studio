@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { buildUnifiedStudentMetrics, emptyStudentMetrics, type UnifiedSessionRecord, type UnifiedVideoCall } from "@/lib/studentAchievementMetrics";
 
 type FilterType = "all" | "favorites";
 
@@ -29,15 +30,21 @@ const MyStudents = () => {
           const studentIds = data.map(s => s.user_id);
           const safeIds = studentIds.length > 0 ? studentIds : ["none"];
           
-          const [{ data: achievements }, { data: profiles }] = await Promise.all([
-            supabase.from("student_achievements").select("student_id, parts_memorized").in("student_id", safeIds),
+          const [sessionsRes, callsRes, certsRes, profilesRes] = await Promise.all([
+            supabase.from("session_records").select("id, user_id, date, time, duration, status, notes, pages_reached, parts_reached, created_at").in("user_id", safeIds),
+            supabase.from("video_call_sessions").select("id, student_id, status, started_at, ended_at, created_at").in("student_id", safeIds),
+            supabase.from("certificates").select("user_id, created_at").in("user_id", safeIds),
             supabase.from("profiles").select("user_id, avatar_url").in("user_id", safeIds),
           ]);
-          
-          const achMap: Record<string, number> = {};
-          achievements?.forEach(a => { achMap[a.student_id] = a.parts_memorized; });
+
+          const metricsMap = buildUnifiedStudentMetrics(
+            (sessionsRes.data || []) as UnifiedSessionRecord[],
+            callsRes.error ? [] : ((callsRes.data || []) as UnifiedVideoCall[]),
+            certsRes.error ? [] : (certsRes.data || []),
+          );
           
           const avatarMap: Record<string, string | null> = {};
+          const profiles = profilesRes.data || [];
           profiles?.forEach(p => {
             if (p.avatar_url) {
               const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(p.avatar_url);
@@ -47,7 +54,7 @@ const MyStudents = () => {
           
           setStudents(data.map(s => ({
             ...s,
-            parts_memorized: achMap[s.user_id] || 0,
+            parts_memorized: (metricsMap.get(s.user_id) || emptyStudentMetrics(s.user_id)).parts,
             avatarUrl: avatarMap[s.user_id] || null,
           })));
           setLoading(false);
