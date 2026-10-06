@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { buildUnifiedStudentMetrics, emptyStudentMetrics, type UnifiedVideoCall } from "@/lib/studentAchievementMetrics";
 
 const StudentDetail = () => {
   const { studentId } = useParams();
@@ -24,6 +25,8 @@ const StudentDetail = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [achievements, setAchievements] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [calls, setCalls] = useState<UnifiedVideoCall[]>([]);
+  const [certificates, setCertificates] = useState<{ user_id: string; created_at: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCalling, setIsCalling] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -101,14 +104,24 @@ const StudentDetail = () => {
         .eq("user_id", studentId)
         .order("created_at", { ascending: false }),
       supabase
+        .from("video_call_sessions")
+        .select("id, student_id, status, started_at, ended_at, created_at")
+        .eq("student_id", studentId),
+      supabase
+        .from("certificates")
+        .select("user_id, created_at")
+        .eq("user_id", studentId),
+      supabase
         .from("profiles")
         .select("avatar_url")
         .eq("user_id", studentId)
         .maybeSingle(),
-    ]).then(([profileRes, achRes, sessionsRes, avatarRes]) => {
+    ]).then(([profileRes, achRes, sessionsRes, callsRes, certsRes, avatarRes]) => {
       setStudent(profileRes.data);
       setAchievements(achRes.data);
       setSessions(sessionsRes.data || []);
+      setCalls(callsRes.error ? [] : ((callsRes.data || []) as UnifiedVideoCall[]));
+      setCertificates(certsRes.error ? [] : (certsRes.data || []));
       const path = avatarRes.data?.avatar_url;
       if (path) {
         const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
@@ -119,6 +132,16 @@ const StudentDetail = () => {
       setLoading(false);
     });
   }, [user, studentId]);
+
+  const metric = useMemo(() => {
+    if (!studentId) return emptyStudentMetrics("");
+    const map = buildUnifiedStudentMetrics(
+      sessions,
+      calls,
+      certificates,
+    );
+    return map.get(studentId) || emptyStudentMetrics(studentId);
+  }, [sessions, calls, certificates, studentId]);
 
   if (loading) {
     return (
@@ -137,13 +160,13 @@ const StudentDetail = () => {
     );
   }
 
-  const level = achievements ? Math.floor((achievements.total_minutes || 0) / 300) + 1 : 1;
+  const level = Math.floor(metric.minutes / 300) + 1;
 
   const statsCards = [
-    { label: "الجلسات", value: achievements?.sessions_count || 0, icon: Calendar, color: "primary" },
-    { label: "الدقائق", value: achievements?.total_minutes || 0, icon: Clock, color: "gold" },
-    { label: "الأجزاء", value: `${achievements?.parts_memorized || 0}/30`, icon: BookOpen, color: "primary" },
-    { label: "الصفحات", value: achievements?.pages_memorized || 0, icon: Target, color: "gold" },
+    { label: "الجلسات", value: metric.sessions, icon: Calendar, color: "primary" },
+    { label: "الدقائق", value: Math.round(metric.minutes), icon: Clock, color: "gold" },
+    { label: "الأجزاء", value: `${metric.parts}/30`, icon: BookOpen, color: "primary" },
+    { label: "الصفحات", value: metric.pages, icon: Target, color: "gold" },
   ];
 
   return (
@@ -253,7 +276,7 @@ const StudentDetail = () => {
               <p className="text-[10px] text-muted-foreground mt-1">ختمات</p>
             </div>
             <div className="bg-gold/10 rounded-xl p-3 text-center">
-              <span className="text-2xl font-bold text-gold">{achievements?.certificates_count || 0}</span>
+              <span className="text-2xl font-bold text-gold">{metric.certificates}</span>
               <p className="text-[10px] text-muted-foreground mt-1">شهادات</p>
             </div>
             <div className="bg-primary/5 rounded-xl p-3 text-center">
