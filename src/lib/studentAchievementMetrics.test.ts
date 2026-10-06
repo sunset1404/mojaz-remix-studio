@@ -39,6 +39,38 @@ describe("student achievement metrics", () => {
     expect(metric.duplicateRecordsIgnored).toBe(1);
   });
 
+  it("counts every distinct manual progress entry as a completed session", () => {
+    const records: UnifiedSessionRecord[] = [
+      {
+        id: "manual-1",
+        user_id: studentId,
+        date: "2026-09-01",
+        time: "20:00",
+        duration: "25 دقيقة",
+        status: "مكتملة",
+        notes: "بدأ من: البقرة آية 1\nانتهى عند: البقرة آية 40",
+        created_at: "2026-09-01T17:00:00.000Z",
+      },
+      {
+        id: "manual-2",
+        user_id: studentId,
+        date: "2026-09-01",
+        time: "20:00",
+        duration: "25 دقيقة",
+        status: "مكتملة",
+        notes: "بدأ من: البقرة آية 41\nانتهى عند: البقرة آية 80",
+        created_at: "2026-09-01T17:00:30.000Z",
+      },
+    ];
+
+    const metric = buildUnifiedStudentMetrics(records, [], []).get(studentId)!;
+
+    expect(metric.sessions).toBe(2);
+    expect(metric.completed).toBe(2);
+    expect(metric.minutes).toBe(50);
+    expect(metric.duplicateRecordsIgnored).toBe(0);
+  });
+
   it("uses the real call duration when it matches the saved session", () => {
     const records: UnifiedSessionRecord[] = [
       {
