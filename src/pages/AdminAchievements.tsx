@@ -12,6 +12,7 @@ import {
   BookOpen, Clock, Target, Award, Zap,
   CheckCircle2, Info,
 } from "lucide-react";
+import { buildUnifiedStudentMetrics, emptyStudentMetrics, type UnifiedStudentMetrics, type UnifiedSessionRecord, type UnifiedVideoCall } from "@/lib/studentAchievementMetrics";
 
 type StudentRow = {
   id: string;
@@ -19,6 +20,7 @@ type StudentRow = {
   full_name: string;
   nationality: string;
   achievement?: AchievementRow | null;
+  metric: UnifiedStudentMetrics;
 };
 
 type AchievementRow = {
@@ -54,19 +56,42 @@ const AdminAchievements = () => {
       return;
     }
 
-    const { data: achievementsData } = await supabase
-      .from("student_achievements")
-      .select("*");
+    const userIds = (studentData || []).map((student) => student.user_id);
+    const [achievementsRes, sessionsRes, callsRes, certsRes] = await Promise.all([
+      supabase.from("student_achievements").select("*"),
+      userIds.length
+        ? supabase.from("session_records").select("id, user_id, date, time, duration, status, notes, pages_reached, parts_reached, created_at").in("user_id", userIds)
+        : Promise.resolve({ data: [], error: null } as any),
+      userIds.length
+        ? supabase.from("video_call_sessions").select("id, student_id, status, started_at, ended_at, created_at").in("student_id", userIds)
+        : Promise.resolve({ data: [], error: null } as any),
+      userIds.length
+        ? supabase.from("certificates").select("user_id, created_at").in("user_id", userIds)
+        : Promise.resolve({ data: [], error: null } as any),
+    ]);
+
+    if (sessionsRes.error) {
+      toast({ title: "خطأ في جلب سجلات الجلسات", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
 
     const achievementsMap = new Map<string, AchievementRow>();
-    achievementsData?.forEach((a) => achievementsMap.set(a.student_id, a as AchievementRow));
+    achievementsRes.data?.forEach((achievement) => achievementsMap.set(achievement.student_id, achievement as AchievementRow));
 
-    const rows: StudentRow[] = (studentData || []).map((s) => ({
-      id: s.id,
-      user_id: s.user_id,
-      full_name: s.full_name,
-      nationality: s.nationality,
-      achievement: achievementsMap.get(s.user_id) || null,
+    const metricsMap = buildUnifiedStudentMetrics(
+      (sessionsRes.data || []) as UnifiedSessionRecord[],
+      callsRes.error ? [] : ((callsRes.data || []) as UnifiedVideoCall[]),
+      certsRes.error ? [] : (certsRes.data || []),
+    );
+
+    const rows: StudentRow[] = (studentData || []).map((student) => ({
+      id: student.id,
+      user_id: student.user_id,
+      full_name: student.full_name,
+      nationality: student.nationality,
+      achievement: achievementsMap.get(student.user_id) || null,
+      metric: metricsMap.get(student.user_id) || emptyStudentMetrics(student.user_id),
     }));
 
     setStudents(rows);
@@ -107,9 +132,9 @@ const AdminAchievements = () => {
   );
 
   const totalStudents = students.length;
-  const withRecords = students.filter((s) => s.achievement).length;
-  const totalSessions = students.reduce((sum, s) => sum + (s.achievement?.sessions_count ?? 0), 0);
-  const totalHours = Math.round(students.reduce((sum, s) => sum + (s.achievement?.total_minutes ?? 0), 0) / 60);
+  const withRecords = students.filter((student) => student.metric.sessions > 0).length;
+  const totalSessions = students.reduce((sum, student) => sum + student.metric.sessions, 0);
+  const totalHours = Math.round(students.reduce((sum, student) => sum + student.metric.minutes, 0) / 60);
 
   const formatLastUpdated = (dateStr?: string) => {
     if (!dateStr) return null;
@@ -148,9 +173,10 @@ const AdminAchievements = () => {
         <div className="text-sm text-foreground/80 space-y-1">
           <p className="font-semibold text-foreground">كيف تُحسب الإنجازات تلقائياً؟</p>
           <ul className="space-y-0.5 text-muted-foreground text-xs list-disc list-inside">
-            <li>الجلسات والدقائق: تُجمع من كل جلسة مكتملة تلقائياً</li>
-            <li>الأجزاء والصفحات: تُحدَّث حين يُدخل المقرئ رقم الجزء/الصفحة بعد كل جلسة</li>
-            <li>الشهادات: تُحسب تلقائياً عند إصدار شهادة للطالب</li>
+            <li>الجلسات: من سجل الطالب الكامل بعد إزالة السجلات المكررة، مع إضافة المكالمات الفعلية غير المسجلة إن وجدت.</li>
+            <li>الدقائق: مدة الاتصال الفعلية عند توفرها، وإلا مدة سجل الجلسة بعد استبعاد القيم الشاذة.</li>
+            <li>الأجزاء والصفحات: من أعلى تقدم قرآني تاريخي أو القيم الصريحة المسجلة، بنفس معادلة صفحة الطالب والشريك.</li>
+            <li>الشهادات: من الشهادات الفعلية الصادرة للطالب.</li>
             <li>نسبة الالتزام: جلسات الأسبوع الحالي ÷ الأيام المجدولة في الخطة الأسبوعية</li>
           </ul>
         </div>
@@ -219,6 +245,7 @@ const AdminAchievements = () => {
               ) : (
                 filtered.map((student) => {
                   const ach = student.achievement;
+                  const metric = student.metric;
                   return (
                     <TableRow key={student.id}>
                       <TableCell>
@@ -238,16 +265,16 @@ const AdminAchievements = () => {
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-bold text-foreground">{ach?.sessions_count ?? 0}</span>
+                        <span className="font-bold text-foreground">{metric.sessions}</span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-bold text-foreground">{ach?.total_minutes ?? 0}</span>
+                        <span className="font-bold text-foreground">{Math.round(metric.minutes)}</span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-bold text-foreground">{ach?.parts_memorized ?? 0}</span>
+                        <span className="font-bold text-foreground">{metric.parts}</span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-bold text-foreground">{ach?.pages_memorized ?? 0}</span>
+                        <span className="font-bold text-foreground">{metric.pages}</span>
                       </TableCell>
                       <TableCell className="text-center">
                         <span className={`font-bold text-sm ${
@@ -258,7 +285,7 @@ const AdminAchievements = () => {
                         </span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-bold text-foreground">{ach?.certificates_count ?? 0}</span>
+                        <span className="font-bold text-foreground">{metric.certificates}</span>
                       </TableCell>
                       <TableCell className="text-center">
                         <span className="font-bold text-gold">{ach?.completions ?? 0}</span>

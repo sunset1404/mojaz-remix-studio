@@ -11,41 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, Clock, Users, BookOpen, Award, FileSpreadsheet, Loader2, RefreshCw, Trash2, UserMinus, UserCheck } from "lucide-react";
+import { buildUnifiedStudentMetrics, emptyStudentMetrics, type UnifiedSessionRecord, type UnifiedVideoCall } from "@/lib/studentAchievementMetrics";
 
 type Grouping = "month" | "week" | "day";
-
-interface CallRow {
-  id: string;
-  student_id: string;
-  reciter_id: string;
-  status: string | null;
-  started_at: string | null;
-  ended_at: string | null;
-  created_at: string | null;
-}
-
-interface AchievementRow {
-  student_id: string;
-  pages_memorized: number;
-  parts_memorized: number;
-  sessions_count: number;
-  total_minutes: number;
-  certificates_count: number;
-}
-
-const callDate = (call: CallRow) => (call.started_at || call.created_at || "").slice(0, 10);
-
-const callMinutes = (call: CallRow) => {
-  if (!call.started_at || !call.ended_at) return 0;
-  const started = new Date(call.started_at).getTime();
-  const ended = new Date(call.ended_at).getTime();
-  if (!Number.isFinite(started) || !Number.isFinite(ended) || ended <= started) return 0;
-  return (ended - started) / 60000;
-};
-
-const isStartedCall = (call: CallRow) => Boolean(call.started_at);
-const isCompletedCall = (call: CallRow) =>
-  Boolean(call.started_at && call.ended_at && new Date(call.ended_at).getTime() >= new Date(call.started_at).getTime());
 
 const metricNumber = (value: unknown): number => {
   const numeric = Number(value ?? 0);
@@ -86,8 +54,8 @@ const AdminPartnerReport = () => {
   const [exporting, setExporting] = useState(false);
   const [partner, setPartner] = useState<{ full_name: string; organization_name: string | null; cost_per_minute: number; total_support_amount: number } | null>(null);
   const [students, setStudents] = useState<{ id: string; name: string }[]>([]);
-  const [calls, setCalls] = useState<CallRow[]>([]);
-  const [achievements, setAchievements] = useState<AchievementRow[]>([]);
+  const [sessionRecords, setSessionRecords] = useState<UnifiedSessionRecord[]>([]);
+  const [calls, setCalls] = useState<UnifiedVideoCall[]>([]);
   const [certificates, setCertificates] = useState<{ user_id: string; created_at: string }[]>([]);
   const [assignments, setAssignments] = useState<{ id: string; student_id: string; status: string; assigned_at: string; name: string; phone: string | null; track: string | null; program_name: string | null }[]>([]);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -135,42 +103,28 @@ const AdminPartnerReport = () => {
 
       const studentIds = (psRes.data || []).filter(s => s.status === "active").map(s => s.student_id);
       if (studentIds.length === 0) {
-        setStudents([]); setCalls([]); setAchievements([]); setCertificates([]);
+        setStudents([]); setSessionRecords([]); setCalls([]); setCertificates([]);
         return;
       }
 
-      const [profRes, callRes, achievementRes, certRes] = await Promise.all([
+      const [profRes, sessionRes, callRes, certRes] = await Promise.all([
         supabase.from("student_profiles").select("user_id, full_name").in("user_id", studentIds),
         supabase
-          .from("video_call_sessions")
-          .select("id, student_id, reciter_id, status, started_at, ended_at, created_at")
-          .in("student_id", studentIds),
+          .from("session_records")
+          .select("id, user_id, date, time, duration, status, notes, pages_reached, parts_reached, created_at")
+          .in("user_id", studentIds),
         supabase
-          .from("student_achievements")
-          .select("student_id, pages_memorized, parts_memorized, sessions_count, total_minutes, certificates_count")
+          .from("video_call_sessions")
+          .select("id, student_id, status, started_at, ended_at, created_at")
           .in("student_id", studentIds),
         supabase.from("certificates").select("user_id, created_at").in("user_id", studentIds),
       ]);
 
-      if (callRes.error) throw callRes.error;
-      if (achievementRes.error) throw achievementRes.error;
-
-      let canonicalAchievements = achievementRes.data || [];
-      try {
-        const { data: rpcData, error: rpcError } = await (supabase as any).rpc(
-          "get_admin_partner_student_achievements",
-          { p_partner_id: partnerId! },
-        );
-        if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
-          canonicalAchievements = rpcData;
-        }
-      } catch {
-        // Compatibility fallback until the migration is deployed.
-      }
+      if (sessionRes.error) throw sessionRes.error;
 
       setStudents((profRes.data || []).map(p => ({ id: p.user_id, name: p.full_name })));
-      setCalls((callRes.data || []) as CallRow[]);
-      setAchievements((canonicalAchievements || []) as AchievementRow[]);
+      setSessionRecords((sessionRes.data || []) as UnifiedSessionRecord[]);
+      setCalls(callRes.error ? [] : ((callRes.data || []) as UnifiedVideoCall[]));
       setCertificates(certRes.data || []);
     } catch (error: any) {
       toast({ title: "خطأ في تحميل التقرير", description: error.message, variant: "destructive" });
@@ -213,37 +167,9 @@ const AdminPartnerReport = () => {
   const inRange = (iso: string) => !!iso && iso >= from && iso <= to;
   const matchStudent = (id: string) => studentFilter === "all" || studentFilter === id;
 
-  const filteredCalls = useMemo(
-    () => calls.filter(call => {
-      const date = callDate(call);
-      return isStartedCall(call)
-        && inRange(date)
-        && matchStudent(call.student_id);
-    }),
-    [calls, from, to, studentFilter]
-  );
-  const filteredCerts = useMemo(
-    () => certificates.filter(c => {
-      const date = c.created_at.slice(0, 10);
-      return inRange(date)
-        && matchStudent(c.user_id);
-    }),
-    [certificates, from, to, studentFilter]
-  );
-
-  // Full lifetime history for each student, independent of assignment date or date filters.
-  const lifetimeCalls = useMemo(
-    () => calls.filter(call => isStartedCall(call) && matchStudent(call.student_id)),
-    [calls, studentFilter]
-  );
-  const lifetimeCerts = useMemo(
-    () => certificates.filter(cert => matchStudent(cert.user_id)),
-    [certificates, studentFilter]
-  );
-
-  const achievementMap = useMemo(
-    () => new Map(achievements.map(item => [item.student_id, item])),
-    [achievements]
+  const unifiedMetrics = useMemo(
+    () => buildUnifiedStudentMetrics(sessionRecords, calls, certificates),
+    [sessionRecords, calls, certificates]
   );
 
   const selectedStudents = useMemo(
@@ -251,30 +177,30 @@ const AdminPartnerReport = () => {
     [students, studentFilter]
   );
 
+  const selectedMetrics = useMemo(
+    () => selectedStudents.map(student => unifiedMetrics.get(student.id) || emptyStudentMetrics(student.id)),
+    [selectedStudents, unifiedMetrics]
+  );
+
+  const filteredCerts = useMemo(
+    () => certificates.filter(c => {
+      const date = (c.created_at || "").slice(0, 10);
+      return inRange(date) && matchStudent(c.user_id);
+    }),
+    [certificates, from, to, studentFilter]
+  );
+
   const summary = useMemo(() => {
-    const completedCalls = lifetimeCalls.filter(isCompletedCall);
-    const minutes = completedCalls.reduce((sum, call) => sum + callMinutes(call), 0);
-    const pages = selectedStudents.reduce(
-      (sum, student) => sum + metricNumber(achievementMap.get(student.id)?.pages_memorized),
-      0,
-    );
-    const parts = selectedStudents.reduce(
-      (sum, student) => sum + metricNumber(achievementMap.get(student.id)?.parts_memorized),
-      0,
-    );
-    const activeStudents = new Set(lifetimeCalls.map(call => call.student_id)).size;
+    const minutes = selectedMetrics.reduce((sum, metric) => sum + metric.minutes, 0);
+    const pages = selectedMetrics.reduce((sum, metric) => sum + metric.pages, 0);
+    const parts = selectedMetrics.reduce((sum, metric) => sum + metric.parts, 0);
+    const sessions = selectedMetrics.reduce((sum, metric) => sum + metric.sessions, 0);
+    const completed = selectedMetrics.reduce((sum, metric) => sum + metric.completed, 0);
+    const certs = selectedMetrics.reduce((sum, metric) => sum + metric.certificates, 0);
+    const activeStudents = selectedMetrics.filter(metric => metric.sessions > 0).length;
     const cost = minutes * Number(partner?.cost_per_minute || 0);
-    return {
-      minutes,
-      pages,
-      parts,
-      completed: completedCalls.length,
-      sessions: lifetimeCalls.length,
-      activeStudents,
-      certs: lifetimeCerts.length,
-      cost,
-    };
-  }, [lifetimeCalls, lifetimeCerts, selectedStudents, achievementMap, partner]);
+    return { minutes, pages, parts, completed, sessions, activeStudents, certs, cost };
+  }, [selectedMetrics, partner]);
 
   const byPeriod = useMemo(() => {
     const map = new Map<string, { sessions: number; completed: number; minutes: number; certs: number; students: Set<string> }>();
@@ -283,20 +209,23 @@ const AdminPartnerReport = () => {
       return map.get(key)!;
     };
 
-    filteredCalls.forEach(call => {
-      const date = callDate(call);
-      if (!date) return;
-      const entry = ensure(periodKey(date, grouping));
-      entry.sessions += 1;
-      if (isCompletedCall(call)) {
-        entry.completed += 1;
-        entry.minutes += callMinutes(call);
-      }
-      entry.students.add(call.student_id);
+    selectedMetrics.forEach(metric => {
+      metric.events.forEach(event => {
+        if (!event.date || !inRange(event.date)) return;
+        const entry = ensure(periodKey(event.date, grouping));
+        entry.sessions += 1;
+        if (event.completed) {
+          entry.completed += 1;
+          entry.minutes += event.minutes;
+        }
+        entry.students.add(metric.studentId);
+      });
     });
 
     filteredCerts.forEach(cert => {
-      ensure(periodKey(cert.created_at.slice(0, 10), grouping)).certs += 1;
+      const date = (cert.created_at || "").slice(0, 10);
+      if (!date) return;
+      ensure(periodKey(date, grouping)).certs += 1;
     });
 
     return Array.from(map.entries())
@@ -307,56 +236,26 @@ const AdminPartnerReport = () => {
         ...value,
         students: value.students.size,
       }));
-  }, [filteredCalls, filteredCerts, grouping]);
+  }, [selectedMetrics, filteredCerts, grouping, from, to]);
 
-  const byStudent = useMemo(() => {
-    const map = new Map<string, {
-      sessions: number;
-      completed: number;
-      minutes: number;
-      pages: number;
-      parts: number;
-      certs: number;
-    }>();
-
-    const ensure = (studentId: string) => {
-      if (!map.has(studentId)) {
-        const achievement = achievementMap.get(studentId);
-        map.set(studentId, {
-          sessions: 0,
-          completed: 0,
-          minutes: 0,
-          pages: metricNumber(achievement?.pages_memorized),
-          parts: metricNumber(achievement?.parts_memorized),
-          certs: 0,
-        });
-      }
-      return map.get(studentId)!;
-    };
-
-    selectedStudents.forEach(student => ensure(student.id));
-
-    lifetimeCalls.forEach(call => {
-      const entry = ensure(call.student_id);
-      entry.sessions += 1;
-      if (isCompletedCall(call)) {
-        entry.completed += 1;
-        entry.minutes += callMinutes(call);
-      }
-    });
-
-    lifetimeCerts.forEach(cert => {
-      ensure(cert.user_id).certs += 1;
-    });
-
-    return Array.from(map.entries())
-      .map(([id, value]) => ({
-        id,
-        name: students.find(student => student.id === id)?.name || "طالب",
-        ...value,
-      }))
-      .sort((a, b) => b.minutes - a.minutes || b.completed - a.completed);
-  }, [lifetimeCalls, lifetimeCerts, selectedStudents, achievementMap, students]);
+  const byStudent = useMemo(
+    () => selectedStudents
+      .map(student => {
+        const metric = unifiedMetrics.get(student.id) || emptyStudentMetrics(student.id);
+        return {
+          id: student.id,
+          name: student.name,
+          sessions: metric.sessions,
+          completed: metric.completed,
+          minutes: metric.minutes,
+          pages: metric.pages,
+          parts: metric.parts,
+          certs: metric.certificates,
+        };
+      })
+      .sort((a, b) => b.minutes - a.minutes || b.completed - a.completed),
+    [selectedStudents, unifiedMetrics]
+  );
 
   const applyPreset = (months: number) => {
     const d = new Date();
@@ -625,7 +524,7 @@ const AdminPartnerReport = () => {
             <Badge variant="secondary">{byStudent.length}</Badge>
           </CardTitle>
           <p className="text-[11px] leading-5 text-muted-foreground">
-            يعرض هذا الجدول كامل منجزات الطالب منذ البداية. الصفحات والأجزاء تُقرأ من نفس سجل إنجازات الطالب المستخدم في صفحة تفاصيله، حتى تتطابق الأرقام بين الصفحتين.
+            جميع الأرقام هنا تُحسب بنفس المحرك المستخدم في صفحة الطالب: سجل الجلسات الكامل بعد إزالة التكرار، مدة الاتصال الفعلية عند توفرها، والتقدم القرآني التاريخي نفسه.
           </p>
         </CardHeader>
         <CardContent className="p-0">
