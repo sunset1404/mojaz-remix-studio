@@ -12,6 +12,7 @@ import {
   BookOpen, Clock, Target, Award, Zap,
   CheckCircle2, Info,
 } from "lucide-react";
+import { buildUnifiedStudentMetrics, emptyStudentMetrics, type UnifiedStudentMetrics, type UnifiedSessionRecord, type UnifiedVideoCall } from "@/lib/studentAchievementMetrics";
 
 type StudentRow = {
   id: string;
