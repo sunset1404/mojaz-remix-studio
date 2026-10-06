@@ -181,11 +181,17 @@ function recordCreatedAt(record: UnifiedSessionRecord) {
 }
 
 function recordSignature(record: UnifiedSessionRecord) {
+  // Progress content is part of the signature so two intentional manual
+  // achievement entries on the same day/time are not collapsed together.
+  // Exact duplicate submits still collapse inside the short duplicate window.
   return [
     record.user_id,
     record.date || "",
     record.time || "",
     normalizeDigits(record.duration || ""),
+    normalizeArabic(record.notes || ""),
+    metricNumber(record.pages_reached),
+    metricNumber(record.parts_reached),
   ].join("|");
 }
 
