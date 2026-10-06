@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { SurahSelect } from "@/components/video-call/SurahSelect";
 import { AyahSelect } from "@/components/video-call/AyahSelect";
-import { buildUnifiedStudentMetrics, emptyStudentMetrics, type UnifiedVideoCall } from "@/lib/studentAchievementMetrics";
+import { buildUnifiedStudentMetrics, emptyStudentMetrics, quranPositionToProgress, type UnifiedVideoCall } from "@/lib/studentAchievementMetrics";
 
 const StudentDetail = () => {
   const { studentId } = useParams();
@@ -137,6 +137,7 @@ const StudentDetail = () => {
       manualForm.notes.trim() ? `ملاحظات: ${manualForm.notes.trim()}` : "",
     ].filter(Boolean);
 
+    const progress = quranPositionToProgress(manualForm.endSurah, manualForm.endAyah);
     const payload = {
       user_id: studentId,
       other_user_name: reciterName || "المقرئ",
@@ -146,8 +147,8 @@ const StudentDetail = () => {
       status: "مكتملة",
       rating: manualForm.rating ? Number(manualForm.rating) : null,
       notes: noteLines.join("\n"),
-      parts_reached: null,
-      pages_reached: null,
+      parts_reached: progress.parts,
+      pages_reached: progress.pages,
     };
 
     const { data, error } = await supabase
