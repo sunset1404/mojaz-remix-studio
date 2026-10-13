@@ -43,6 +43,23 @@ export default function PaymentCallback() {
                 return;
             }
 
+            // Moyasar already reports failure in the redirect (e.g. 3DS error)
+            const urlStatus = searchParams.get("status");
+            if (urlStatus && urlStatus !== "paid") {
+                const bankMsg = searchParams.get("message");
+                await (supabase as any)
+                    .from("payment_invoice_metadata")
+                    .update({ moyassar_payment_id: paymentId })
+                    .eq("id", paymentRef);
+                setStatus("failed");
+                setMessage(
+                    bankMsg?.includes("3DS")
+                        ? "تعذّر التحقق من البطاقة لدى البنك (3DS). يرجى المحاولة مرة أخرى أو استخدام بطاقة أخرى."
+                        : bankMsg || "لم يتم اعتماد الدفع من البنك"
+                );
+                return;
+            }
+
             // Update metadata with payment id
             await (supabase as any)
                 .from("payment_invoice_metadata")

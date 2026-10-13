@@ -68,8 +68,10 @@ async function handler(req: Request): Promise<Response> {
         });
 
         if (!result?.success) {
+            // A declined/failed payment is a normal outcome, not a server error
+            const notCompleted = result?.error === "Payment not completed";
             return new Response(JSON.stringify(result), {
-                status: 400,
+                status: notCompleted ? 200 : 400,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
