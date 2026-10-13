@@ -22,6 +22,16 @@ const PaymentRecoveryListener = () => {
       lastRunRef.current = now;
 
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const session = sessionData?.session;
+        if (!session?.access_token) return;
+        if (session.expires_at && session.expires_at * 1000 < Date.now() + 30_000) {
+          const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError || !refreshed?.session) return;
+        }
+        const { data: userCheck, error: userErr } = await supabase.auth.getUser();
+        if (userErr || !userCheck?.user) return;
+
         const { data, error } = await supabase.functions.invoke("recover-subscription-payments", {
           body: {},
         });
